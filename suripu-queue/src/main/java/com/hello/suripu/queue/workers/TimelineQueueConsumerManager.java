@@ -31,7 +31,7 @@ public class TimelineQueueConsumerManager implements Managed {
     private final ExecutorService timelineExecutor;
     private final ExecutorService consumerExecutor;
 
-    private boolean isRunning = false;
+    private boolean isRunning = false; // mutable
 
     // metrics
     private final Meter messagesProcessed;
@@ -40,6 +40,10 @@ public class TimelineQueueConsumerManager implements Managed {
     private final Meter validSleepScore;
     private final Meter invalidSleepScore;
     private final Meter noTimeline;
+
+    private long totalMessagesProcessed;
+    private long totalIdleIterations;
+    private long totalRunningIterations;
 
     public TimelineQueueConsumerManager(final TimelineQueueProcessor queueProcessor,
                                         final TimelineProcessor timelineProcessor,
@@ -60,6 +64,18 @@ public class TimelineQueueConsumerManager implements Managed {
 
     }
 
+    public long getProcessed() {
+        return this.totalMessagesProcessed;
+    }
+
+    public long getRunningIterations() {
+        return this.totalRunningIterations;
+    }
+
+    public long getIdleIterations() {
+        return this.totalIdleIterations;
+    }
+
     @Override
     public void start() throws Exception {
         consumerExecutor.execute(new Runnable() {
@@ -71,7 +87,7 @@ public class TimelineQueueConsumerManager implements Managed {
                     processMessages();
                 } catch (Exception exception) {
                     isRunning = false;
-                    exception.printStackTrace();
+                    LOGGER.error("key=suripu-queue-consumer error=fail-to-start-consumer-thread msg={}", exception.getMessage());
                 }
             }
         });
@@ -97,6 +113,9 @@ public class TimelineQueueConsumerManager implements Managed {
             final List<Future<Optional<TimelineQueueProcessor.TimelineMessage>>> futures = Lists.newArrayListWithCapacity(messages.size());
 
             if (!messages.isEmpty()) {
+                this.totalRunningIterations++;
+                LOGGER.debug("key=suripu-queue-consumer action=processing size={}", messages.size());
+
                 // generate all the timelines
                 for (final TimelineQueueProcessor.TimelineMessage message : messages) {
                     final TimelineGenerator generator = new TimelineGenerator(this.timelineProcessor, message);
@@ -125,20 +144,24 @@ public class TimelineQueueConsumerManager implements Managed {
                 // delete messages
                 if (!processedHandlers.isEmpty()) {
                     LOGGER.debug("key=suripu-queue-consumer action=delete-messages num={}", processedHandlers.size());
-                    messagesProcessed.mark(processedHandlers.size());
                     final int deleted = queueProcessor.deleteMessages(processedHandlers);
+                    messagesProcessed.mark(processedHandlers.size());
                     messagesDeleted.mark(deleted);
+                    this.totalMessagesProcessed += processedHandlers.size();
                 }
 
                 numEmptyQueueIterations = 0;
 
             } else {
                 numEmptyQueueIterations++;
-                LOGGER.debug("key=suripu-queue-consumer action=empty-iteration value={}", numEmptyQueueIterations);
+                LOGGER.info("key=suripu-queue-consumer action=empty-iteration value={}", numEmptyQueueIterations);
                 Thread.sleep(SLEEP_WHEN_NO_MESSAGES_MILLIS);
+                this.totalIdleIterations++;
             }
 
         } while (isRunning);
+
+        LOGGER.info("key=suripu-queue-consumer action=process-messages-done");
     }
 
 }

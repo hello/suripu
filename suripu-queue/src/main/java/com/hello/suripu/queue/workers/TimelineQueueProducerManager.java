@@ -51,7 +51,7 @@ public class TimelineQueueProducerManager implements Managed {
 
     // main thread scheduler
     private final ScheduledExecutorService producerExecutor;
-    private ScheduledFuture scheduledFuture;
+    private ScheduledFuture scheduledFuture; // mutable, get set each time start() is called
     private final long scheduleIntervalMinutes;
 
     private final ImmutableMap<Integer, List<Integer>> GMTHourToTimeZoneMap; // map GMT hour to offsetMillis of TZ at 1pm
@@ -74,10 +74,10 @@ public class TimelineQueueProducerManager implements Managed {
     private final Meter sentFailures;
     private final Meter accountsProcessed;
 
-    // internal metrics
-    private int totalMessages = 0;
-    private int totalMessagesSent = 0;
-    private int totalMessagesFail = 0;
+    // TODO: internal metrics
+    private long totalMessages = 0;
+    private long totalMessagesSent = 0;
+    private long totalMessagesFail = 0;
 
     public TimelineQueueProducerManager(final AmazonSQSAsync sqsClient,
                                         final SenseDataDAO senseDataDAO,
@@ -127,6 +127,18 @@ public class TimelineQueueProducerManager implements Managed {
 
     }
 
+    public long getTotalMessagesCreated() {
+        return this.totalMessages;
+    }
+
+    public long getTotalMessagesSent() {
+        return this.totalMessagesSent;
+    }
+
+    public long getTotalMessagesFailed() {
+        return this.totalMessagesFail;
+    }
+
     private void startProducing() {
         scheduledFuture = this.producerExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -170,13 +182,13 @@ public class TimelineQueueProducerManager implements Managed {
         // get list of users with sense-data in the last 24 hours for a timezone
         final Map<Long, String> accountIds = getCurrentTimezoneAccountIds(now, offsetMillisList);
 
-        LOGGER.debug("key=suripu-queue-producer action=get-valid-accounts GMT_hour={} offset_millis={} num_accounts={}",
-                nowHour, offsetMillisList.get(0), accountIds.size());
-        this.accountsProcessed.mark(accountIds.size());
-
         // process account-ids
         final List<SendMessageBatchRequestEntry> messages  = Lists.newArrayList();
         final TimelineQueueProtos.Message.Builder builder = TimelineQueueProtos.Message.newBuilder();
+
+        final long startTotal = this.totalMessages;
+        final long startSent = this.totalMessagesSent;
+        final long startFail = this.totalMessagesFail;
 
         for (final Map.Entry<Long, String> entry : accountIds.entrySet()) {
 
@@ -193,15 +205,15 @@ public class TimelineQueueProducerManager implements Managed {
             // add message to batch
             messages.add(new SendMessageBatchRequestEntry(messageId, TimelineQueueProcessor.encodeMessage(message)));
 
+            this.totalMessages++;
+            this.messagesCreated.mark();
+
             // not enough, keep piling
             if (messages.size() < this.startSendingMessageSize) {
                 continue;
             }
 
             // now, send the batch
-            this.messagesCreated.mark(messages.size());
-            LOGGER.debug("key=suripu-queue-producer action=send-batch size={}", messages.size());
-
             final BatchResult result = sendBatchMessages(messages);
 
             totalMessagesSent += result.success;
@@ -222,7 +234,7 @@ public class TimelineQueueProducerManager implements Managed {
 
         // finished the last batch of messages
         int attempts = 0;
-        while (messages.size() > 0) {
+        while (!messages.isEmpty()) {
             attempts++;
 
             this.messagesCreated.mark(messages.size());
@@ -249,12 +261,11 @@ public class TimelineQueueProducerManager implements Managed {
             }
         }
 
-        LOGGER.debug("key=suripu-queue-producer action=send-messages-completed");
-        LOGGER.debug("key=suripu-queue-producer action=summary now={} num_timezones={} first={}", now, offsetMillisList.size(), offsetMillisList.get(0));
-        LOGGER.debug("key=suripu-queue-producer action=summary num_account_ids={}", accountIds.size());
-        LOGGER.debug("key=suripu-queue-producer action=summary total_messages_created{}", totalMessages);
-        LOGGER.debug("key=suripu-queue-producer action=summary send_success={}", totalMessagesSent);
-        LOGGER.debug("key=suripu-queue-producer action=summary send_failures={}", totalMessagesFail);
+        LOGGER.info("key=suripu-queue-producer action=send-messages-completed");
+        LOGGER.info("key=suripu-queue-producer action=summary now={} num_timezones={} first_tz={} " +
+                        "num_accounts={} total_msg_created={} send_success={} send_fail={}",
+                now, offsetMillisList.size(), offsetMillisList.get(0), accountIds.size(),
+                totalMessages - startTotal, totalMessagesSent - startSent, totalMessagesFail - startFail);
     }
 
     /**
@@ -281,16 +292,21 @@ public class TimelineQueueProducerManager implements Managed {
             for (final AccountData account : validAccounts) {
                 accountIdDateMap.put(account.accountId, targetNight);
             }
+
+            LOGGER.debug("key=suripu-queue-producer action=get-valid-accounts GMT_hour={} offset_millis={} accounts={}",
+                    now.getHourOfDay(), offsetMillisList, validAccounts.size());
         }
+
+        this.accountsProcessed.mark(accountIdDateMap.size());
         return accountIdDateMap;
     }
 
     private BatchResult sendBatchMessages(final List<SendMessageBatchRequestEntry> messages) throws ExecutionException, InterruptedException
     {
+        LOGGER.debug("key=suripu-queue-producer action=send-batch size={}", messages.size());
+
         final List<List<SendMessageBatchRequestEntry>> batches = Lists.partition(messages, MAX_BATCH_SIZE);
         final List<Future<SendMessageBatchResult>> futures = Lists.newArrayListWithCapacity(batches.size());
-
-        LOGGER.debug("key=suripu-queue-producer action=send-batch-messages size={}", batches.size());
 
         this.messagesSent.mark(messages.size());
 
@@ -314,14 +330,13 @@ public class TimelineQueueProducerManager implements Managed {
 
             // process failures
             final List<BatchResultErrorEntry> failedEntries = result.getFailed();
-            if (!failedEntries.isEmpty()) {
-                for (final BatchResultErrorEntry entry : failedEntries) {
-                    final String failedId = entry.getId();
-                    failedAccountIdDates.add(failedId);
-                    LOGGER.error("key=suripu-queue-producer error=failed-message msg_id={} error_code={}",
-                            failedId, entry.getCode());
-                }
+            for (final BatchResultErrorEntry entry : failedEntries) {
+                final String failedId = entry.getId();
+                failedAccountIdDates.add(failedId);
+                LOGGER.error("key=suripu-queue-producer error=failed-message msg_id={} error_code={}",
+                        failedId, entry.getCode());
             }
+
         }
 
         return new BatchResult(success, failedAccountIdDates);
@@ -332,14 +347,16 @@ public class TimelineQueueProducerManager implements Managed {
         final List<SendMessageBatchRequestEntry> messages = Lists.newArrayList();
 
         for (final String failedId : failedIds) {
-            String [] splitId = failedId.split("_");
+            final String [] splitId = failedId.split("_");
 
-            final TimelineQueueProtos.Message failedMsg = TimelineQueueProtos.Message.newBuilder()
-                    .setAccountId(Long.valueOf(splitId[0]))
-                    .setTargetDate(splitId[1])
-                    .setTimestamp(DateTime.now().getMillis()).build();
+            if (splitId.length == 2) {
+                final TimelineQueueProtos.Message failedMsg = TimelineQueueProtos.Message.newBuilder()
+                        .setAccountId(Long.valueOf(splitId[0]))
+                        .setTargetDate(splitId[1])
+                        .setTimestamp(DateTime.now().getMillis()).build();
 
-            messages.add(new SendMessageBatchRequestEntry(failedId, TimelineQueueProcessor.encodeMessage(failedMsg)));
+                messages.add(new SendMessageBatchRequestEntry(failedId, TimelineQueueProcessor.encodeMessage(failedMsg)));
+            }
         }
 
         return messages;

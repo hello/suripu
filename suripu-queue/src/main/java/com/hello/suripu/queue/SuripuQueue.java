@@ -50,7 +50,7 @@ import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
 import com.hello.suripu.queue.models.QueueHealthCheck;
 import com.hello.suripu.queue.models.SenseDataDAO;
 import com.hello.suripu.queue.modules.RolloutQueueModule;
-import com.hello.suripu.queue.resources.HealthCheckResource;
+import com.hello.suripu.queue.resources.StatsResource;
 import com.hello.suripu.queue.workers.TimelineQueueConsumerManager;
 import com.hello.suripu.queue.workers.TimelineQueueProcessor;
 import com.hello.suripu.queue.workers.TimelineQueueProducerManager;
@@ -58,9 +58,7 @@ import com.hello.suripu.queue.workers.TimelineQueueWorkerCommand;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import org.skife.jdbi.v2.DBI;
@@ -116,39 +114,37 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
         // setup SQS
         final SQSConfiguration sqsConfig = configuration.getSqsConfiguration();
         final int maxConnections = sqsConfig.getSqsMaxConnections();
-        final AmazonSQSAsync sqsAsync = new AmazonSQSAsyncClient(provider, new ClientConfiguration()
+        final AmazonSQSAsync sqsClient = new AmazonSQSBufferedAsyncClient(
+                new AmazonSQSAsyncClient(provider, new ClientConfiguration()
                 .withMaxConnections(maxConnections)
-                .withConnectionTimeout(500));
-        final AmazonSQSAsync sqs = new AmazonSQSBufferedAsyncClient(sqsAsync);
+                .withConnectionTimeout(500)));
 
         final Region region = Region.getRegion(Regions.US_EAST_1);
-        sqs.setRegion(region);
+        sqsClient.setRegion(region);
 
         // get SQS queue url
-        final Optional<String> optionalSqsQueueUrl = TimelineQueueProcessor.getSQSQueueURL(sqs, sqsConfig.getSqsQueueName());
+        final Optional<String> optionalSqsQueueUrl = TimelineQueueProcessor.getSQSQueueURL(sqsClient, sqsConfig.getSqsQueueName());
         if (!optionalSqsQueueUrl.isPresent()) {
             LOGGER.error("key=suripu-queue error=no-sqs-queue-found value=queue-name-{}", sqsConfig.getSqsQueueName());
             throw new Exception("Invalid queue name");
         }
+
         final String sqsQueueUrl = optionalSqsQueueUrl.get();
 
-        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final DBI sensorDB = new DBI(managedDataSourceFactory.build(configuration.getSensorDB()));
+        //final DBI sensorDB = managedDataSourceFactory.build()  new DBI(managedDataSourceFactory.build(configuration.getSensorDB()));
+
+        final DBIFactory factory = new DBIFactory();
+        final DBI sensorDB = factory.build(environment, configuration.getSensorDB(), "sensors-postgresql");
+        final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "common-postgresql");
 
         sensorDB.registerArgumentFactory(new JodaArgumentFactory());
-        sensorDB.registerContainerFactory(new OptionalContainerFactory());
         sensorDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
-        sensorDB.registerContainerFactory(new ImmutableListContainerFactory());
 
         final SenseDataDAO senseDataDAO = sensorDB.onDemand(SenseDataDAO.class);
 
         // stuff needed to create timeline processor
-        final DBI commonDB = new DBI(managedDataSourceFactory.build(configuration.getCommonDB()));
-
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
-        commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
-        commonDB.registerContainerFactory(new ImmutableListContainerFactory());
 
         final DeviceReadDAO deviceDAO = commonDB.onDemand(DeviceReadDAO.class);
         final FeedbackReadDAO feedbackDAO = commonDB.onDemand(FeedbackReadDAO.class);
@@ -237,7 +233,7 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
         final long keepAliveTimeSeconds = 2L;
 
         // create queue consumer
-        final TimelineQueueProcessor queueProcessor = new TimelineQueueProcessor(sqsQueueUrl, sqs, configuration.getSqsConfiguration());
+        final TimelineQueueProcessor queueProcessor = new TimelineQueueProcessor(sqsQueueUrl, sqsClient, configuration.getSqsConfiguration());
 
         // thread pool to run consumer
         final ExecutorService consumerExecutor = environment.managedExecutorService("consumer",
@@ -262,7 +258,7 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
         final ScheduledExecutorService producerExecutor = environment.managedScheduledExecutorService("producer", configuration.getNumProducerThreads());
 
         final TimelineQueueProducerManager producerManager = new TimelineQueueProducerManager(
-                sqs,
+                sqsClient,
                 senseDataDAO,
                 sqsQueueUrl,
                 producerExecutor,
@@ -272,8 +268,9 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
 
         environment.manage(producerManager);
 
-        final QueueHealthCheck queueHealthCheck = new QueueHealthCheck("suripu-queue");
+        final QueueHealthCheck queueHealthCheck = new QueueHealthCheck("suripu-queue", sqsClient, sqsQueueUrl);
         environment.addHealthCheck(queueHealthCheck);
-        environment.addResource(new HealthCheckResource(queueHealthCheck));
+
+        environment.addResource(new StatsResource(producerManager, consumerManager));
     }
 }

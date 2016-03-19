@@ -95,7 +95,11 @@ logging:
   # Logger-specific levels.
   loggers:
     # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu: DEBUG
+    com.hello.suripu: INFO
+    com.hello.suripu.queue: DEBUG
+    com.hello.suripu.core: WARN
+    com.hello.suripu.coredw: WARN
+    com.hello.suripu.algorithm: WARN
 
 
 sleep_stats_version: v_0_2
@@ -142,7 +146,11 @@ dynamodb:
     sleep_hmm: http://localhost:7777
     sleep_stats: http://localhost:7777
 
-num_queue_producer_threads: 1
-num_queue_consumer_threads: 1
 
-queue_producer_interval_minutes: 10
+num_queue_producer_threads: 2
+num_send_message_threads: 5
+
+num_queue_consumer_threads: 2
+num_compute_timeline_threads: 5
+
+queue_producer_interval_minutes: 5
