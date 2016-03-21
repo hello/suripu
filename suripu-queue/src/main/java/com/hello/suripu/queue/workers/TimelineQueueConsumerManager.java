@@ -88,6 +88,13 @@ public class TimelineQueueConsumerManager implements Managed {
                 } catch (Exception exception) {
                     isRunning = false;
                     LOGGER.error("key=suripu-queue-consumer error=fail-to-start-consumer-thread msg={}", exception.getMessage());
+                    LOGGER.error("key=suripu-queue-consumer error=dead-forcing-exit");
+                    try {
+                        // sleep 5 secs messages to flush
+                        Thread.sleep(5000L);
+                    } catch (InterruptedException ignored) {
+                    }
+                    System.exit(1);
                 }
             }
         });
