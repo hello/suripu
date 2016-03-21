@@ -19,7 +19,7 @@ import com.hello.suripu.api.queue.TimelineQueueProtos;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.queue.configuration.SQSConfiguration;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
-import com.hello.suripu.queue.workers.TimelineQueueProcessor;
+import com.hello.suripu.queue.timeline.TimelineQueueProcessor;
 import com.opencsv.CSVReader;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.cli.EnvironmentCommand;

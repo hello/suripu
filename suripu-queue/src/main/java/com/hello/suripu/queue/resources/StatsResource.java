@@ -1,7 +1,7 @@
 package com.hello.suripu.queue.resources;
 
-import com.hello.suripu.queue.workers.TimelineQueueConsumerManager;
-import com.hello.suripu.queue.workers.TimelineQueueProducerManager;
+import com.hello.suripu.queue.timeline.TimelineQueueConsumerManager;
+import com.hello.suripu.queue.timeline.TimelineQueueProducerManager;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

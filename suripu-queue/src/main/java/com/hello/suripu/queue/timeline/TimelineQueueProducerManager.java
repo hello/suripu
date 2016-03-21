@@ -1,4 +1,4 @@
-package com.hello.suripu.queue.workers;
+package com.hello.suripu.queue.timeline;
 
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.model.BatchResultErrorEntry;

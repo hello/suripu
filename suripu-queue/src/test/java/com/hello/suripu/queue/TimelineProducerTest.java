@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.queue.models.AccountData;
 import com.hello.suripu.queue.models.SenseDataDAO;
-import com.hello.suripu.queue.workers.TimelineQueueProducerManager;
+import com.hello.suripu.queue.timeline.TimelineQueueProducerManager;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;

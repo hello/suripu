@@ -1,4 +1,4 @@
-package com.hello.suripu.queue.workers;
+package com.hello.suripu.queue.cli;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -49,6 +49,8 @@ import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.queue.configuration.SQSConfiguration;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
 import com.hello.suripu.queue.modules.RolloutQueueModule;
+import com.hello.suripu.queue.timeline.TimelineGenerator;
+import com.hello.suripu.queue.timeline.TimelineQueueProcessor;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.cli.EnvironmentCommand;
 import com.yammer.dropwizard.config.Environment;

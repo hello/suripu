@@ -1,4 +1,4 @@
-package com.hello.suripu.queue.workers;
+package com.hello.suripu.queue.timeline;
 
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
 import com.google.common.base.Optional;
