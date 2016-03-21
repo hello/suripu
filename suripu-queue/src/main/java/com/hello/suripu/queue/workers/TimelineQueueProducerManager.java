@@ -356,6 +356,8 @@ public class TimelineQueueProducerManager implements Managed {
                         .setTimestamp(DateTime.now().getMillis()).build();
 
                 messages.add(new SendMessageBatchRequestEntry(failedId, TimelineQueueProcessor.encodeMessage(failedMsg)));
+            } else {
+                LOGGER.error("key=suripu-queue-producer error=bogus-message-id message=id={}", failedId);
             }
         }
 
