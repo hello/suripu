@@ -420,3 +420,7 @@ UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
   (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
 WHERE questions.id = S.question_id;
 
+---- update light-anomaly-detection questions
+UPDATE questions
+SET question_text='Was your sleep or nighttime routine last night different from usual?'
+WHERE category='anomaly_light';
