@@ -1,4 +1,4 @@
-package com.hello.suripu.queue.workers;
+package com.hello.suripu.queue.cli;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -49,6 +49,8 @@ import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.queue.configuration.SQSConfiguration;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
 import com.hello.suripu.queue.modules.RolloutQueueModule;
+import com.hello.suripu.queue.timeline.TimelineGenerator;
+import com.hello.suripu.queue.timeline.TimelineQueueProcessor;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.cli.EnvironmentCommand;
 import com.yammer.dropwizard.config.Environment;
@@ -73,9 +75,6 @@ import java.util.concurrent.TimeUnit;
 // docs: http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/Welcome.html
 public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineQueueWorkerCommand.class);
-
-    private static int NUM_EMPTY_ITERATIONS_BEFORE_DYING = 100;
-
     private Boolean isRunning = false;
     private ExecutorService executor;
 
@@ -130,7 +129,6 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
 
         final TimelineQueueProcessor queueProcessor = new TimelineQueueProcessor(sqsQueueUrl, sqs, sqsConfiguration);
 
-
         if (task.equalsIgnoreCase("send")) {
             // producer -- debugging, create 10 messages for testing
             Integer numMessages = 30;
@@ -147,10 +145,9 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
             queueProcessor.sendMessages(accountId, numMessages);
 
         } else {
-
             // consumer
-            final int numGeneratorThreads = configuration.getNumGeneratorThreads();
-            executor = environment.managedExecutorService("timeline_queue", numGeneratorThreads, numGeneratorThreads, 2, TimeUnit.SECONDS);
+            final int numConsumerThreads = configuration.getNumConsumerThreads();
+            executor = environment.managedExecutorService("timeline_queue", numConsumerThreads, numConsumerThreads, 2, TimeUnit.SECONDS);
             isRunning = true;
             processMessages(queueProcessor, provider, configuration);
         }

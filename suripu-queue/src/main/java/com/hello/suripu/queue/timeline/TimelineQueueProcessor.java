@@ -1,4 +1,4 @@
-package com.hello.suripu.queue.workers;
+package com.hello.suripu.queue.timeline;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;

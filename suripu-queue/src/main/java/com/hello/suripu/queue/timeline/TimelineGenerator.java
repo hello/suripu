@@ -1,4 +1,4 @@
-package com.hello.suripu.queue.workers;
+package com.hello.suripu.queue.timeline;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Timeline;
@@ -12,8 +12,9 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 /**
- * Created by kingshy on 1/11/16.
+ * Created by kingshy on 1/11/16
  */
+
 public class TimelineGenerator implements Callable<Optional<TimelineQueueProcessor.TimelineMessage>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineGenerator.class);
 
@@ -27,17 +28,21 @@ public class TimelineGenerator implements Callable<Optional<TimelineQueueProcess
 
     @Override
     public Optional<TimelineQueueProcessor.TimelineMessage> call() throws Exception {
-        final TimelineProcessor newTimelineProcessor = timelineProcessor.copyMeWithNewUUID(UUID.randomUUID());
-        final TimelineResult result = newTimelineProcessor.retrieveTimelinesFast(message.accountId, message.targetDate, Optional.<TimelineFeedback>absent());
-        if (!result.getTimelineLogV2().isEmpty()) {
-            final Timeline timeline = result.timelines.get(0);
-            if (timeline.score > 0) {
-                LOGGER.debug("account {}, date {}, score {}", message.accountId, message.targetDate, timeline.score);
-            } else {
-                LOGGER.debug("account {}, date {}, NO SCORE!", message.accountId, message.targetDate);
+        try {
+            final TimelineProcessor newTimelineProcessor = timelineProcessor.copyMeWithNewUUID(UUID.randomUUID());
+            final TimelineResult result = newTimelineProcessor.retrieveTimelinesFast(message.accountId, message.targetDate, Optional.<TimelineFeedback>absent());
+            if (!result.getTimelineLogV2().isEmpty()) {
+                final Timeline timeline = result.timelines.get(0);
+                if (timeline.score > 0) {
+                    LOGGER.debug("account {}, date {}, score {}", message.accountId, message.targetDate, timeline.score);
+                } else {
+                    LOGGER.debug("account {}, date {}, NO SCORE!", message.accountId, message.targetDate);
+                }
+                message.setScore(timeline.score);
+                return Optional.of(message);
             }
-            message.setScore(timeline.score);
-            return Optional.of(message);
+        } catch (Exception exception) {
+            LOGGER.error("key=consumer-timeline-generator error=timeline-processor msg={}", exception.getMessage());
         }
         return Optional.absent();
     }
