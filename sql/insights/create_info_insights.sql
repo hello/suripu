@@ -472,3 +472,14 @@ INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
 In addition to getting the right amount of sleep, you''ll want to make sure your room conditions are optimal. Check them a bit before sleep so that you can make any adjustments and ensure your room is in the best state it can be for a great night’s sleep.
 
 Also check your Sleep Timeline to see if you''re moving around during the night, or if you aren''t reaching deep sleep often enough. If you aren''t sleeping as well as you could be even with an optimal sleeping environment, remember that things like caffeine intake or your stress level can cause agitated sleep, and affect your Sleep Score.');
+
+--- jyfan goals 2016-03-21
+ALTER TYPE insight_category ADD VALUE 'goal_go_outside';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('goal_go_outside', 'Here Comes the Sun','Weeklong Goal',
+'It can be easy to spend all day at your desk; according to one government estimate, the average American spends 90% of their life indoors. But being outdoors can be great for your health. So this week, make a habit out of spending a little bit of time outside every day. Even just 15 minutes will do the trick.
+
+ Sunshine kick-starts the production of vitamin D, whose amazing mood-elevating and disease-fighting powers have been observed in many population-based studies. Vitamin D is helpful against everything from osteoporosis to mood disorders. The sweet spot in getting enough light for vitamin D production seems to be around 10 to 15 minutes a day for most people; after that, make sure to put on sunscreen.
+
+ Additionally, light is an essential signal that regulates your sleep-wake cycle. Getting light when the sun is out lets your body know when it should be awake and alert, and conversely, when it should be relaxed and ready for sleep. Think about taking a walk outside during the day as an investment for getting good sleep later that night.')
