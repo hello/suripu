@@ -12,6 +12,6 @@ import org.joda.time.DateTimeZone;
 public class GoalGoOutside {
     public static Optional<InsightCard> getInsights(final Long accountId) {
         final String categoryName = "Goal Go Outside";
-        return Optional.of(new InsightCard(accountId, GoalMsgEN.GOAL_GO_OUTSIDE_MARKETING_TITLE, GoalMsgEN.GOAL_GO_OUTSIDE_MARKETING_MSG, InsightCard.Category.GOAL_GO_OUTSIDE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName, InsightCard.InsightType.BASIC));
+        return Optional.of(new InsightCard(accountId, GoalMsgEN.GOAL_GO_OUTSIDE_TITLE, GoalMsgEN.GOAL_GO_OUTSIDE_MSG, InsightCard.Category.GOAL_GO_OUTSIDE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName, InsightCard.InsightType.BASIC));
     }
 }

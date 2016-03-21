@@ -5,7 +5,7 @@ package com.hello.suripu.core.models.Insights.Message;
  */
 public class GoalMsgEN {
 
-    public final static String GOAL_GO_OUTSIDE_MARKETING_TITLE = "goal go outside short";
-    public final static String GOAL_GO_OUTSIDE_MARKETING_MSG = "This week, try to spend 15 minutes outside every day. For example, take a short walk after lunch.";
+    public final static String GOAL_GO_OUTSIDE_TITLE = "goal go outside short";
+    public final static String GOAL_GO_OUTSIDE_MSG = "This week, try to spend 15 minutes outside every day. For example, take a short walk after lunch.";
 
 }
