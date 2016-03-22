@@ -482,4 +482,4 @@ INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
 
 Sunshine kick-starts the production of vitamin D, whose amazing mood-elevating and disease-fighting powers have been observed in many population-based studies. Vitamin D is helpful against everything from osteoporosis to mood disorders. The sweet spot in getting enough light for vitamin D production seems to be around 10 to 15 minutes a day for most people; after that, make sure to put on sunscreen.
 
-Additionally, light is an essential signal that regulates your sleep-wake cycle. Getting light when the sun is out lets your body know when it should be awake and alert, and conversely, when it should be relaxed and ready for sleep. Think about taking a walk outside during the day as an investment for getting good sleep later that night.')
+Additionally, light is an essential signal that regulates your sleep-wake cycle. Getting light when the sun is out lets your body know when it should be awake and alert, and conversely, when it should be relaxed and ready for sleep. Think about taking a walk outside during the day as an investment for getting good sleep later that night.');
