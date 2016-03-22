@@ -137,4 +137,8 @@ public class BaseResource {
     protected Boolean useAudioPeakEnergy(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.AUDIO_PEAK_ENERGY_DB, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasSleepSoundsEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SOUNDS_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
 }
