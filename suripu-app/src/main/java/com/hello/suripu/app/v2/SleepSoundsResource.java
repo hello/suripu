@@ -21,6 +21,7 @@ import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.JsonError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/v2/sleep_sounds")
-public class SleepSoundsResource {
+public class SleepSoundsResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsResource.class);
 
     private final DurationDAO durationDAO;
@@ -235,14 +236,19 @@ public class SleepSoundsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public SoundResult getSounds(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
         final Long accountId = accessToken.accountId;
+        final List<Sound> sounds = Lists.newArrayList();
+
+        if (!hasSleepSoundsEnabled(accountId)) {
+            LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=false account-id={}", accountId);
+            return new SoundResult(sounds);
+        }
+        LOGGER.info("endpoint=sleep-sounds sleep-sounds-enabled=true account-id={}", accountId);
 
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         if (!deviceIdPair.isPresent()) {
             LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
-
-        final List<Sound> sounds = Lists.newArrayList();
 
         final String senseId = deviceIdPair.get().externalDeviceId;
         final Optional<FileSync.FileManifest> manifestOptional = fileManifestDAO.getManifest(senseId);

@@ -2,15 +2,21 @@ package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
+import com.hello.suripu.app.modules.RolloutAppModule;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FileInfoDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.Feature;
 import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.SenseStateAtTime;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
@@ -24,6 +30,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,9 +56,19 @@ public class SleepSoundsResourceTest {
     private FileInfoDAO fileInfoDAO;
     private FileManifestDAO fileManifestDAO;
     private SleepSoundsResource sleepSoundsResource;
+    private FeatureStore featureStore;
 
     @Before
     public void setUp() {
+        featureStore = Mockito.mock(FeatureStore.class);
+        Mockito.when(featureStore.getData())
+                .thenReturn(
+                        ImmutableMap.of(
+                                FeatureFlipper.SLEEP_SOUNDS_ENABLED,
+                                new Feature("sleep_sounds_enabled", Collections.EMPTY_LIST, Collections.EMPTY_LIST, (float) 100.0)));
+        final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(module);
+
         deviceDAO = Mockito.mock(DeviceDAO.class);
         senseStateDynamoDB = Mockito.mock(SenseStateDynamoDB.class);
         durationDAO = Mockito.mock(DurationDAO.class);
