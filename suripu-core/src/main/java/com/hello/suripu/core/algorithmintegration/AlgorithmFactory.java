@@ -3,12 +3,11 @@ package com.hello.suripu.core.algorithmintegration;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
-import com.hello.suripu.core.db.NeuralNetDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
-import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.util.AlgorithmType;
 
 import java.util.Map;
@@ -23,7 +22,7 @@ public class AlgorithmFactory {
 
     private final ImmutableMap<AlgorithmType,TimelineAlgorithm> algorithmMap;
 
-    public static AlgorithmFactory create(final SleepHmmDAO sleepHmmDAO, final OnlineHmmModelsDAO priorsDAO, final DefaultModelEnsembleDAO defaultModelEnsembleDAO, final FeatureExtractionModelsDAO featureExtractionModelsDAO, final NeuralNetDAO neuralNetDAO, final Optional<UUID> uuid) {
+    public static AlgorithmFactory create(final SleepHmmDAO sleepHmmDAO, final OnlineHmmModelsDAO priorsDAO, final DefaultModelEnsembleDAO defaultModelEnsembleDAO, final FeatureExtractionModelsDAO featureExtractionModelsDAO, final NeuralNetServiceClientConfiguration neuralNetDAO, final Optional<UUID> uuid) {
         final Map<AlgorithmType,TimelineAlgorithm> algorithmMap = Maps.newHashMap();
 
         algorithmMap.put(AlgorithmType.VOTING,new VotingAlgorithm(uuid));

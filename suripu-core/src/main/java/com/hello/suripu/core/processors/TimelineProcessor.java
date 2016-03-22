@@ -8,6 +8,7 @@ import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
+import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
@@ -15,7 +16,6 @@ import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
-import com.hello.suripu.core.db.NeuralNetDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
@@ -120,7 +120,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final CalibrationDAO calibrationDAO,
                                                             final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
                                                             final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
-                                                            final NeuralNetDAO neuralNetDAO) {
+                                                            final NeuralNetServiceClientConfiguration neuralNetDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 

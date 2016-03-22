@@ -2,6 +2,7 @@ package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
+import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
@@ -451,4 +452,12 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("messeji_http_client")
     private MessejiHttpClientConfiguration messejiHttpClientConfiguration;
     public MessejiHttpClientConfiguration getMessejiHttpClientConfiguration() { return messejiHttpClientConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("neural_net_service_http_client")
+    private NeuralNetServiceClientConfiguration neuralNetServiceClientConfiguration;
+    public NeuralNetServiceClientConfiguration getNeuralNetServiceClientConfiguration() { return neuralNetServiceClientConfiguration; }
+
+
 }

@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
+import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.CalibrationDAO;
@@ -30,8 +31,6 @@ import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackReadDAO;
-import com.hello.suripu.core.db.NeuralNetDAO;
-import com.hello.suripu.core.db.NeuralNetsFromS3;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
@@ -326,9 +325,8 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 seedModelConfig.getBucket(),
                 seedModelConfig.getKey());
 
-        final NeuralNetDAO neuralNetDAO = NeuralNetsFromS3.createFromConfigBucket(amazonS3,
-                config.getNeuralNetConfiguration().getBucket(),
-                config.getNeuralNetConfiguration().getKey());
+        /* Neural net endpoint information */
+        final NeuralNetServiceClientConfiguration neuralNetServiceClientConfiguration = config.getNeuralNetServiceClientConfiguration();
 
         return TimelineProcessor.createTimelineProcessor(
                 pillDataDAODynamoDB,
@@ -345,7 +343,7 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 calibrationDAO,
                 defaultModelEnsembleDAO,
                 userTimelineTestGroupDAO,
-                neuralNetDAO);
+                neuralNetServiceClientConfiguration);
 
     }
 

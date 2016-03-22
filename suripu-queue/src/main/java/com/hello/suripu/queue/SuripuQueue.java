@@ -16,6 +16,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
+import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.CalibrationDAO;
@@ -212,6 +213,9 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
                 seedModelConfig.getBucket(),
                 seedModelConfig.getKey());
 
+        /* Neural net endpoint information */
+        final NeuralNetServiceClientConfiguration neuralNetServiceClientConfiguration = configuration.getNeuralNetServiceClientConfiguration();
+
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 pillDataDAODynamoDB,
                 deviceDAO,
@@ -226,7 +230,8 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
                 featureExtractionDAO,
                 calibrationDAO,
                 defaultModelEnsembleDAO,
-                userTimelineTestGroupDAO);
+                userTimelineTestGroupDAO,
+                neuralNetServiceClientConfiguration);
 
 
 

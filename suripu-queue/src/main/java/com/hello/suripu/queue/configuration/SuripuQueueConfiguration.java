@@ -1,6 +1,7 @@
 package com.hello.suripu.queue.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
@@ -123,5 +124,12 @@ public class SuripuQueueConfiguration extends Configuration {
     @Min(1)
     private long producerScheduleIntervalMinutes = 10L;
     public long getProducerScheduleIntervalMinutes() { return this.producerScheduleIntervalMinutes; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("neural_net_service_http_client")
+    private NeuralNetServiceClientConfiguration neuralNetServiceClientConfiguration;
+    public NeuralNetServiceClientConfiguration getNeuralNetServiceClientConfiguration() { return neuralNetServiceClientConfiguration; }
+
 
 }

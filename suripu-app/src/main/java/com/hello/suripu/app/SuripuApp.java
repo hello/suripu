@@ -22,6 +22,7 @@ import com.hello.suripu.app.cli.MovePillDataToDynamoDBCommand;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
 import com.hello.suripu.app.configuration.MessejiHttpClientConfiguration;
+import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.app.messeji.MessejiHttpClient;
@@ -75,8 +76,6 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.NeuralNetDAO;
-import com.hello.suripu.core.db.NeuralNetsFromS3;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
@@ -303,8 +302,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
         final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
-        /* Neural net data DAOs */
-        final NeuralNetDAO neuralNetDAO = NeuralNetsFromS3.createFromConfigBucket(amazonS3,configuration.getNeuralNetConfiguration().getBucket(),configuration.getNeuralNetConfiguration().getKey());
+        /* Neural net endpoint information */
+        final NeuralNetServiceClientConfiguration neuralNetServiceClientConfiguration = configuration.getNeuralNetServiceClientConfiguration();
 
         /* Default model ensemble for all users  */
         final S3BucketConfiguration timelineModelEnsemblesConfig = configuration.getTimelineModelEnsemblesConfiguration();
@@ -430,7 +429,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 calibrationDAO,
                 defaultModelEnsembleDAO,
                 userTimelineTestGroupDAO,
-                neuralNetDAO);
+                neuralNetServiceClientConfiguration);
                 
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO,timelineLogger, timelineProcessor));
