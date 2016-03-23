@@ -430,11 +430,11 @@ ALTER TYPE question_category ADD VALUE 'goal_go_outside';
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
   VALUES (
-      'How did you do on this week''s goal?', -- text
+      'How often did you spend 15 min outside?', -- text
       'EN', -- lang
       'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
       'choice', --response_type,
-      '{"I was able to spend at least 15 minutes outside for at least 4 days this week", "I was able to spend at least 15 minutes outside for at least 1 day this week", "I was not able to spend as much time outside as I would have liked, I''ll try again next week!", "I am not able to complete this goal", "I didn''t try to complete this goal"}', --text responses
+      '{"4 days or more", "1 day or more", "Didn''t do"}', --text responses
       null, -- dependency
       'anytime', -- ask_time
       'goal_go_outside' --category
@@ -442,11 +442,11 @@ INSERT INTO questions (question_text, lang, frequency, response_type, responses,
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
   VALUES (
-      'How was your sleep last week?', -- text
+      'Was having a weekly goal helpful?', -- text
       'EN', -- lang
       'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
       'choice', --response_type,
-      '{"It was good, an improvement from before", "It was good, as usual", "It was acceptable, an improvement from before", "It was acceptable, as usual", "It was acceptable, but worsened from before", "It was poor, but improved", "It was poor, as usual", "It was poor, and worsened from before"}', --text responses
+      '{"Yes", "No, not helpful"}', --text responses
       null, -- dependency
       'anytime', -- ask_time
       'goal_go_outside' --category
@@ -454,11 +454,11 @@ INSERT INTO questions (question_text, lang, frequency, response_type, responses,
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
   VALUES (
-      'Was having a weekly goal helpful?', -- text
+      'How was your sleep last week?', -- text
       'EN', -- lang
       'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
       'choice', --response_type,
-      '{"Yes, I''d like to receive more goals", "This particular goal wasn''t helpful, but I''d like to get more goals", "No, I don''t think weekly goals in general will be helpful"}', --text responses
+      '{"Good, as usual", "Better", "Same"}', --text responses
       null, -- dependency
       'anytime', -- ask_time
       'goal_go_outside' --category
@@ -467,6 +467,11 @@ INSERT INTO questions (question_text, lang, frequency, response_type, responses,
 INSERT INTO response_choices (question_id, response_text)
     (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 3));
 
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 3) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
 
 
 
