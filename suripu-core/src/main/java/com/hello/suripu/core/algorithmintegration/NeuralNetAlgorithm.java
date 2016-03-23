@@ -38,9 +38,9 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NeuralNetAlgorithm.class);
 
-    public NeuralNetAlgorithm(final NeuralNetServiceClientConfiguration neuralNetDAO) {
+    public NeuralNetAlgorithm(final NeuralNetServiceClientConfiguration neuralNetDAO,final NeuralNetEndpoint endpoint) {
         this.neuralNetServiceConfig = neuralNetDAO;
-        this.endpoint = new NeuralNetHttpEndpoint(neuralNetServiceConfig.getEndpoint());
+        this.endpoint = endpoint;
     }
 
 
@@ -272,7 +272,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     @Override
     public TimelineAlgorithm cloneWithNewUUID(Optional<UUID> uuid) {
-        return new NeuralNetAlgorithm(neuralNetServiceConfig);
+        return new NeuralNetAlgorithm(neuralNetServiceConfig,endpoint);
     }
 
 
