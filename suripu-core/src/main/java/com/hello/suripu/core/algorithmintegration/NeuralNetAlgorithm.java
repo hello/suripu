@@ -2,6 +2,8 @@ package com.hello.suripu.core.algorithmintegration;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.BetaPdf;
 import com.hello.suripu.algorithm.hmm.GaussianPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
@@ -9,6 +11,7 @@ import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
+import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -23,7 +26,9 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -32,6 +37,29 @@ import java.util.UUID;
 public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
+
+    final static double POISSON_MEAN_FOR_MOTION = 3.0;
+    final static double POISSON_MEAN_FOR_NO_MOTION = 0.1;
+    final static double MIN_HMM_PDF_EVAL = 1e-320;
+
+    final static int MAX_ON_BED_SEARCH_WINDOW = 30; //minutes
+    final static int MAX_OFF_BED_SEARCH_WINDOW = 30; //minutes
+
+    //DO NOT CHANGE THE ORDER OF THESE
+    public enum SensorIndices {
+        LIGHT(0),
+        DIFFLIGHT(1),
+        WAVES(2),
+        SOUND_DISTURBANCE(3),
+        SOUND_VOLUME(4),
+        MY_MOTION_DURATION(5),
+        PARTNER_MOTION_DURATION(6),
+        MY_MOTION_MAX_NORM(7);
+
+        private final int index;
+        SensorIndices(int index) { this.index = index; }
+        public int index() { return index; }
+    }
 
     private final NeuralNetEndpoint endpoint;
 
@@ -79,17 +107,17 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
                 value = 0.0;
             }
 
-            x[0][getIndex(t0,s.dateTime)] = value;
+            x[SensorIndices.LIGHT.index()][getIndex(t0,s.dateTime)] = value;
         }
 
         //diff light
         for (int t = 1; t < x[0].length; t++) {
-            x[1][t] = x[0][t] - x[0][t-1];
+            x[SensorIndices.DIFFLIGHT.index()][t] = x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1];
         }
 
         //waves
         for (final Sample s : waves) {
-            x[2][getIndex(t0,s.dateTime)] = s.value;
+            x[SensorIndices.WAVES.index()][getIndex(t0,s.dateTime)] = s.value;
         }
 
         //sound disturbance counts
@@ -100,7 +128,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
                 value = 0.0;
             }
 
-            x[3][getIndex(t0,s.dateTime)] = value;
+            x[SensorIndices.SOUND_DISTURBANCE.index()][getIndex(t0,s.dateTime)] = value;
         }
 
         //sould volume
@@ -110,20 +138,44 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             if (value < 0.0) {
                 value = 0.0;
             }
-            x[4][getIndex(t0,s.dateTime)] = value;
+            x[SensorIndices.SOUND_VOLUME.index()][getIndex(t0,s.dateTime)] = value;
         }
 
         for (final TrackerMotion m : oneDaysSensorData.originalTrackerMotions) {
-            x[5][getIndex(t0,m.timestamp)] = m.onDurationInSeconds;
+            x[SensorIndices.MY_MOTION_DURATION.index()][getIndex(t0,m.timestamp)] = m.onDurationInSeconds;
         }
 
         for (final TrackerMotion m : oneDaysSensorData.originalPartnerTrackerMotions) {
-            x[6][getIndex(t0,m.timestamp)] = m.onDurationInSeconds;
+            x[SensorIndices.PARTNER_MOTION_DURATION.index()][getIndex(t0,m.timestamp)] = m.onDurationInSeconds;
         }
 
 
         return x;
     }
+
+    static protected long getTime(final long t0, final int index) {
+        return t0 + DateTimeConstants.MILLIS_PER_MINUTE*index;
+    }
+
+    static protected Integer getOffset(final long time, final TreeMap<Long,Integer> offsetMap) {
+        final Long higher = offsetMap.higherKey(time);
+        final Long lower = offsetMap.lowerKey(time);
+
+        if (lower == null && higher == null) {
+            throw new AlgorithmException(String.format("unable to map offset from t=%s in map of size %d",new DateTime(time).toString(),offsetMap.size()));
+        }
+
+        if (lower == null) {
+            return offsetMap.get(higher);
+        }
+        else {
+            return offsetMap.get(lower);
+        }
+
+    }
+
+
+
 
     @Override
     public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged) {
@@ -144,6 +196,12 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             if (light.isEmpty()) {
                 return Optional.absent();
+            }
+
+            final TreeMap<Long,Integer> offsetMap = Maps.newTreeMap();
+
+            for (final Sample s : light) {
+                offsetMap.put(s.dateTime,s.offsetMillis);
             }
 
             final long t0 = light.get(0).dateTime; //utc local
@@ -198,7 +256,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             //segment this shit
             final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.LOGMATH, obsModels.length, A, pi, obsModels, 0);
 
-            final HmmDecodedResult res = hmm.decode(sleepProbsWithDeltaProb,new Integer[]{obsModels.length - 1},1e-320);
+            final HmmDecodedResult res = hmm.decode(sleepProbsWithDeltaProb,new Integer[]{obsModels.length - 1},MIN_HMM_PDF_EVAL);
 
 
             if (res.bestPath.size() <= 1) {
@@ -213,6 +271,9 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         LOGGER.info("\n{}\n{}",f,res.bestPath);
 */
 
+            int isleep = 0;
+            int iwake = 0;
+
             final List<Event> events = Lists.newArrayList();
             boolean foundSleep = false;
             Integer prevState = res.bestPath.get(0);
@@ -226,34 +287,19 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
                 final long eventTime = i * DateTimeConstants.MILLIS_PER_MINUTE + t0;
                 if (state.equals(3) && !prevState.equals(3) && !foundSleep) {
                     LOGGER.info("SLEEP at idx={}, p={}",i,sleepMeas[0][i]);
-
-                    events.add(Event.createFromType(Event.Type.SLEEP,
-                            eventTime,
-                            eventTime+DateTimeConstants.MILLIS_PER_MINUTE,
-                            light.get(i).offsetMillis,
-                            Optional.of(English.FALL_ASLEEP_MESSAGE),
-                            Optional.<SleepSegment.SoundInfo>absent(),
-                            Optional.<Integer>absent()));
-
                     foundSleep = true;
-
+                    isleep = i;
                 }
                 else if (!state.equals(3) && prevState.equals(3)) {
                     LOGGER.info("WAKE at idx={}, p={}",i,sleepMeas[0][i]);
-
-                    events.add(Event.createFromType(Event.Type.WAKE_UP,
-                            eventTime,
-                            eventTime+DateTimeConstants.MILLIS_PER_MINUTE,
-                            light.get(i).offsetMillis,
-                            Optional.of(English.WAKE_UP_MESSAGE),
-                            Optional.<SleepSegment.SoundInfo>absent(),
-                            Optional.<Integer>absent()));
+                    iwake = i;
                 }
-
 
                 prevState = state;
 
             }
+
+            events.addAll(getAllEvents(offsetMap,t0,isleep,iwake,x[SensorIndices.MY_MOTION_DURATION.index()]));
 
             return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events));
 
@@ -261,12 +307,121 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             e.printStackTrace();
         }
 
-
-
-
-
         return Optional.absent();
     }
+
+    static protected List<Event> getAllEvents(final TreeMap<Long,Integer> offsetMap, final long t0, final int iSleep, final int iWake, final double [] myMotionDuration) {
+        int iInBed = iSleep - 5;
+        int iOutOfBed = iWake + 5;
+
+        final double[][] x = {myMotionDuration};
+        final double[][] A = {{0.99, 0.01}, {0.001, 0.999}};
+        final double[] pi = {0.5, 0.5};
+        final HmmPdfInterface[] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION, 0), new PoissonPdf(POISSON_MEAN_FOR_MOTION, 0)};
+
+        final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.LOGMATH, 2, A, pi, obsModels, 0);
+
+
+        final HmmDecodedResult result = hmm.decode(x, new Integer[]{0, 1}, MIN_HMM_PDF_EVAL);
+
+        //check to make sure it found a motion cluster SOMEWHERE
+        boolean valid = false;
+        for (final Iterator<Integer> it = result.bestPath.iterator(); it.hasNext(); ) {
+            if (it.next() == 1) {
+                valid = true;
+                break;
+            }
+        }
+
+        if (valid) {
+            boolean foundCluster = false;
+
+            //go backwards from sleep and find beginning of next motion cluster encountered
+            for (int i = iSleep; i >= 0; i--) {
+                final Integer state = result.bestPath.get(i);
+
+                if (state.equals(1)) {
+                    //if motion cluster start was found too far before sleep, then stop search and use default
+                    if (iSleep - i > MAX_ON_BED_SEARCH_WINDOW) {
+                        break;
+                    }
+
+                    foundCluster = true;
+                    continue;
+                }
+
+                if (state.equals(0) && foundCluster) {
+                    iInBed = i;
+                    break;
+                }
+            }
+
+            foundCluster = false;
+            for (int i = iWake; i < myMotionDuration.length; i++) {
+                final Integer state = result.bestPath.get(i);
+
+                if (state.equals(1)) {
+                    //if motion cluster start was found too far after wake, then stop search and use default
+                    if (i - iWake > MAX_OFF_BED_SEARCH_WINDOW) {
+                        break;
+                    }
+                    foundCluster = true;
+                }
+
+                if (state.equals(0) && foundCluster) {
+                    iOutOfBed = i;
+                    break;
+                }
+            }
+            //go forwards from wake to find end of next motion cluster encountered
+        }
+        else {
+            LOGGER.warn("action=return_default_on_bed");
+        }
+
+        final long inBedTime = getTime(t0,iInBed);
+        final long sleepTime = getTime(t0,iSleep);
+        final long wakeTime = getTime(t0,iWake);
+        final long outOfBedTime = getTime(t0,iOutOfBed);
+
+        final List<Event> events = Lists.newArrayList();
+        //create all events
+
+        events.add(Event.createFromType(Event.Type.IN_BED,
+                inBedTime,
+                inBedTime+DateTimeConstants.MILLIS_PER_MINUTE,
+                getOffset(inBedTime,offsetMap),
+                Optional.of(English.IN_BED_MESSAGE),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.<Integer>absent()));
+
+        events.add(Event.createFromType(Event.Type.SLEEP,
+                sleepTime,
+                sleepTime+DateTimeConstants.MILLIS_PER_MINUTE,
+                getOffset(sleepTime,offsetMap),
+                Optional.of(English.FALL_ASLEEP_MESSAGE),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.<Integer>absent()));
+
+        events.add(Event.createFromType(Event.Type.WAKE_UP,
+                wakeTime,
+                wakeTime+DateTimeConstants.MILLIS_PER_MINUTE,
+                getOffset(wakeTime,offsetMap),
+                Optional.of(English.WAKE_UP_MESSAGE),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.<Integer>absent()));
+
+        events.add(Event.createFromType(Event.Type.OUT_OF_BED,
+                outOfBedTime,
+                outOfBedTime+DateTimeConstants.MILLIS_PER_MINUTE,
+                getOffset(outOfBedTime,offsetMap),
+                Optional.of(English.OUT_OF_BED_MESSAGE),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.<Integer>absent()));
+
+        return events;
+    }
+
 
     @Override
     public TimelineAlgorithm cloneWithNewUUID(Optional<UUID> uuid) {
