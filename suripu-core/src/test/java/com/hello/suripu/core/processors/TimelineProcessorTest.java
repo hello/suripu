@@ -5,9 +5,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.api.datascience.NeuralNetProtos;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.algorithmintegration.NeuralNetAlgorithmOutput;
+import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
@@ -15,7 +16,6 @@ import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
-import com.hello.suripu.core.db.NeuralNetDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
@@ -414,15 +414,13 @@ public class TimelineProcessorTest {
         }
     };
 
-    final public NeuralNetDAO neuralNetDAO = new NeuralNetDAO() {
-        @Override
-        public Optional<NeuralNetProtos.NeuralNetMessage> getNetDataById(String id) {
-            return Optional.absent();
-        }
+
+
+    final public NeuralNetEndpoint neuralNetEndpoint = new NeuralNetEndpoint() {
 
         @Override
-        public List<String> getAvailableIds() {
-            return Lists.newArrayList();
+        public Optional<NeuralNetAlgorithmOutput> getNetOutput(String netId, double[][] sensorData) {
+            return Optional.absent();
         }
     };
 
@@ -455,7 +453,7 @@ public class TimelineProcessorTest {
                 pillDataReadDAO,deviceReadDAO,deviceDataReadAllSensorsDAO,
                 ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAO,
                 senseColorDAO,priorsDAO,featureExtractionModelsDAO,calibrationDAO,
-                defaultModelEnsembleDAO,userTimelineTestGroupDAO,neuralNetDAO);
+                defaultModelEnsembleDAO,userTimelineTestGroupDAO, neuralNetEndpoint);
 
 
         final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());
