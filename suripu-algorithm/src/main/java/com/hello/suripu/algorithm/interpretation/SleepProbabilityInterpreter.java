@@ -1,8 +1,6 @@
 package com.hello.suripu.algorithm.interpretation;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.hmm.BetaPdf;
 import com.hello.suripu.algorithm.hmm.GaussianPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
@@ -11,13 +9,8 @@ import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfCompositeBuilder;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
-import org.joda.time.DateTimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Created by benjo on 3/24/16.
@@ -25,9 +18,9 @@ import java.util.TreeMap;
 public class SleepProbabilityInterpreter {
 
     final static Logger LOGGER = LoggerFactory.getLogger(SleepProbabilityInterpreter.class);
-
+    final static double MIN_GAUSSIAN_LOG_PDF_EVAL = -10000;
     final static HmmPdfInterface[] obsModelsMain = {new BetaPdf(2.0,10.0,0),new BetaPdf(6.0,6.0,0),new BetaPdf(10.0,2.0,0)};
-    final static HmmPdfInterface[] obsModelsDiff = {new GaussianPdf(-0.02,0.02,1),new GaussianPdf(0.00,0.02,1),new GaussianPdf(0.02,0.02,1)};
+    final static HmmPdfInterface[] obsModelsDiff = {new GaussianPdf(-0.02,0.02,1,MIN_GAUSSIAN_LOG_PDF_EVAL),new GaussianPdf(0.00,0.02,1,MIN_GAUSSIAN_LOG_PDF_EVAL),new GaussianPdf(0.02,0.02,1,MIN_GAUSSIAN_LOG_PDF_EVAL)};
 
     final static double MIN_HMM_PDF_EVAL = 1e-320;
     final static int MAX_ON_BED_SEARCH_WINDOW = 30; //minutes
@@ -36,8 +29,11 @@ public class SleepProbabilityInterpreter {
     final static int DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE = 1;
     final static int DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP = 5;
 
-    final static double POISSON_MEAN_FOR_MOTION = 3.0;
+    final static double POISSON_MEAN_FOR_A_LITTLE_MOTION = 1.0;
+    final static double POISSON_MEAN_FOR_MOTION = 5.0;
     final static double POISSON_MEAN_FOR_NO_MOTION = 0.1;
+
+    final static double MIN_SLEEP_PROB = 0.001;
 
     final static int MIN_SLEEP_DURATION = 60; //insanity check
 
@@ -62,8 +58,21 @@ public class SleepProbabilityInterpreter {
         int iInBed = -1;
         int iOutOfBed = -1;
 
+        if (sleepProbabilities.length <= 1 || myMotionDurations.length <= 1) {
+            return Optional.absent();
+        }
+
+
+
         final double [] sleep = sleepProbabilities.clone();
-        final double [][] sleepMeas = {sleep};
+
+        //a sleep prob of 0.0 can screw up the decode b/c of a negative inf likelihood
+        for (int t = 0; t < sleep.length; t++) {
+            if (sleep[t] < MIN_SLEEP_PROB) {
+                sleep[t] = MIN_SLEEP_PROB;
+            }
+        }
+
 
         final double [] dsleep = new double[sleep.length];
 
@@ -155,14 +164,18 @@ public class SleepProbabilityInterpreter {
 
         {
             final double[][] x = {myMotionDurations};
-            final double[][] A = {{0.99, 0.01}, {0.001, 0.999}};
-            final double[] pi = {0.5, 0.5};
-            final HmmPdfInterface[] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION, 0), new PoissonPdf(POISSON_MEAN_FOR_MOTION, 0)};
+            final double[][] A = {
+                    {0.998, 1e-3, 1e-3},
+                    {1e-5, 0.90, 0.10},
+                    {1e-5, 0.10, 0.90}
+            };
+            final double[] pi = {0.5, 0.5,0.5};
+            final HmmPdfInterface[] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION, 0), new PoissonPdf(POISSON_MEAN_FOR_MOTION, 0),new PoissonPdf(POISSON_MEAN_FOR_A_LITTLE_MOTION, 0)};
 
-            final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.LOGMATH, 2, A, pi, obsModels, 0);
+            final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.LOGMATH, 3, A, pi, obsModels, 0);
 
 
-            final HmmDecodedResult result = hmm.decode(x, new Integer[]{0, 1}, MIN_HMM_PDF_EVAL);
+            final HmmDecodedResult result = hmm.decode(x, new Integer[]{0, 1,2}, MIN_HMM_PDF_EVAL);
 
 
             boolean foundCluster = false;
@@ -171,9 +184,9 @@ public class SleepProbabilityInterpreter {
             for (int i = iSleep; i >= 0; i--) {
                 final Integer state = result.bestPath.get(i);
 
-                if (state.equals(1)) {
+                if (!state.equals(0)) {
                     //if motion cluster start was found too far before sleep, then stop search and use default
-                    if (iSleep - i > MAX_ON_BED_SEARCH_WINDOW) {
+                    if (iSleep - i > MAX_ON_BED_SEARCH_WINDOW && !foundCluster) {
                         LOGGER.warn("action=return_default_in_bed");
                         break;
                     }
@@ -192,9 +205,9 @@ public class SleepProbabilityInterpreter {
             for (int i = iWake; i < myMotionDurations.length; i++) {
                 final Integer state = result.bestPath.get(i);
 
-                if (state.equals(1)) {
+                if (!state.equals(0)) {
                     //if motion cluster start was found too far after wake, then stop search and use default
-                    if (i - iWake > MAX_OFF_BED_SEARCH_WINDOW) {
+                    if (i - iWake > MAX_OFF_BED_SEARCH_WINDOW && !foundCluster) {
                         LOGGER.warn("action=return_default_out_of_bed");
                         break;
                     }
@@ -202,7 +215,7 @@ public class SleepProbabilityInterpreter {
                 }
 
                 if (state.equals(0) && foundCluster) {
-                    iOutOfBed = i;
+                    iOutOfBed = i - 1;
                     break;
                 }
             }
