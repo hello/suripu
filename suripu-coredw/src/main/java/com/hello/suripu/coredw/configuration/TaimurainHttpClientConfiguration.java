@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by jakepiccolo on 2/23/16.
  */
-public class TaimurainHttpClientConfiguration {
+public class TaimurainHttpClientConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("http_client_config")
