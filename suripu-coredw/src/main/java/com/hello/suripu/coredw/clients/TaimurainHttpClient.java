@@ -20,6 +20,7 @@ import java.util.List;
  * Created by benjo on 3/23/16.
  */
 public class TaimurainHttpClient implements NeuralNetEndpoint {
+    public final static String EVALUATION_ENDPOINT = "/v1/neuralnet/evaluate";
     public static TaimurainHttpClient create(final HttpClient httpClient,final String endpoint) {
        return new TaimurainHttpClient(httpClient,endpoint);
     }
@@ -55,7 +56,7 @@ public class TaimurainHttpClient implements NeuralNetEndpoint {
 
 
         try  {
-            final HttpPost httppost = new HttpPost(endpoint);
+            final HttpPost httppost = new HttpPost(endpoint + EVALUATION_ENDPOINT);
 
             final InputStreamEntity reqEntity = new InputStreamEntity(new ByteArrayInputStream(builder.build().toByteArray()), -1, ContentType.APPLICATION_OCTET_STREAM);
             reqEntity.setChunked(true);
@@ -65,9 +66,7 @@ public class TaimurainHttpClient implements NeuralNetEndpoint {
             final HttpResponse response = httpClient.execute(httppost);
             LOGGER.debug("Executing request: " + httppost.getRequestLine());
 
-            final NeuralNetMessages.NeuralNetOutput output = NeuralNetMessages.NeuralNetOutput.getDefaultInstance();
-
-            output.parseFrom(response.getEntity().getContent());
+            final NeuralNetMessages.NeuralNetOutput output = NeuralNetMessages.NeuralNetOutput.parseFrom(response.getEntity().getContent());
 
             final double [][] outputMatrix = new double[output.getMatCount()][0];
 
