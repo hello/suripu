@@ -5,6 +5,7 @@ import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
+import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -127,9 +128,10 @@ public class SuripuQueueConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("neural_net_service_http_client")
-    private NeuralNetServiceClientConfiguration neuralNetServiceClientConfiguration;
-    public NeuralNetServiceClientConfiguration getNeuralNetServiceClientConfiguration() { return neuralNetServiceClientConfiguration; }
+    @JsonProperty("taimurain_http_client")
+    private TaimurainHttpClientConfiguration taimurainHttpClientConfiguration;
+    public TaimurainHttpClientConfiguration getTaimurainHttpClientConfiguration() { return taimurainHttpClientConfiguration; }
+
 
 
 }

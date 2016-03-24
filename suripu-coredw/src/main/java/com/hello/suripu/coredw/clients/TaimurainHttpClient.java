@@ -1,13 +1,14 @@
-package com.hello.suripu.core.algorithmintegration;
+package com.hello.suripu.coredw.clients;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.api.datascience.NeuralNetMessages;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import com.hello.suripu.core.algorithmintegration.NeuralNetAlgorithmOutput;
+import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,14 +17,19 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Created by benjo on 3/22/16.
+ * Created by benjo on 3/23/16.
  */
-public class NeuralNetHttpEndpoint implements NeuralNetEndpoint {
+public class TaimurainHttpClient implements NeuralNetEndpoint {
+    public static TaimurainHttpClient create(final HttpClient httpClient,final String endpoint) {
+       return new TaimurainHttpClient(httpClient,endpoint);
+    }
 
-    private final Logger LOGGER = LoggerFactory.getLogger(NeuralNetHttpEndpoint.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(TaimurainHttpClient.class);
     private final String endpoint;
+    final HttpClient httpClient;
 
-    public NeuralNetHttpEndpoint(final String endpoint) {
+    public TaimurainHttpClient(final HttpClient httpClient, final String endpoint) {
+        this.httpClient = httpClient;
         this.endpoint = endpoint;
     }
 
@@ -48,7 +54,7 @@ public class NeuralNetHttpEndpoint implements NeuralNetEndpoint {
         }
 
 
-        try (final CloseableHttpClient httpclient = HttpClients.createDefault()) {
+        try  {
             final HttpPost httppost = new HttpPost(endpoint);
 
             final InputStreamEntity reqEntity = new InputStreamEntity(new ByteArrayInputStream(builder.build().toByteArray()), -1, ContentType.APPLICATION_OCTET_STREAM);
@@ -56,32 +62,29 @@ public class NeuralNetHttpEndpoint implements NeuralNetEndpoint {
 
             httppost.setEntity(reqEntity);
 
-            LOGGER.info("Executing request: " + httppost.getRequestLine());
+            final HttpResponse response = httpClient.execute(httppost);
+            LOGGER.debug("Executing request: " + httppost.getRequestLine());
 
-            try(CloseableHttpResponse response = httpclient.execute(httppost)) {
-                final NeuralNetMessages.NeuralNetOutput output = NeuralNetMessages.NeuralNetOutput.getDefaultInstance();
+            final NeuralNetMessages.NeuralNetOutput output = NeuralNetMessages.NeuralNetOutput.getDefaultInstance();
 
-                output.parseFrom(response.getEntity().getContent());
+            output.parseFrom(response.getEntity().getContent());
 
-                final double [][] outputMatrix = new double[output.getMatCount()][0];
+            final double [][] outputMatrix = new double[output.getMatCount()][0];
 
-                for (int i = 0; i < output.getMatCount(); i++) {
-                    final List<Double> vec = output.getMat(i).getVecList();
+            for (int i = 0; i < output.getMatCount(); i++) {
+                final List<Double> vec = output.getMat(i).getVecList();
 
-                    outputMatrix[i] = new double [vec.size()];
+                outputMatrix[i] = new double [vec.size()];
 
-                    for (int t = 0; t < vec.size(); t++) {
-                        outputMatrix[i][t] = vec.get(t);
-                    }
-
+                for (int t = 0; t < vec.size(); t++) {
+                    outputMatrix[i][t] = vec.get(t);
                 }
 
-                return Optional.of(new NeuralNetAlgorithmOutput(outputMatrix));
+            }
 
-            }
-            catch (IOException e) {
-                LOGGER.error(e.getMessage());
-            }
+            return Optional.of(new NeuralNetAlgorithmOutput(outputMatrix));
+
+
 
         }
         catch (IOException e) {

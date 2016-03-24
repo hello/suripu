@@ -9,7 +9,6 @@ import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
-import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -32,14 +31,13 @@ import java.util.UUID;
  */
 public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
+    public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
 
-    private final NeuralNetServiceClientConfiguration neuralNetServiceConfig;
     private final NeuralNetEndpoint endpoint;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NeuralNetAlgorithm.class);
 
-    public NeuralNetAlgorithm(final NeuralNetServiceClientConfiguration neuralNetDAO,final NeuralNetEndpoint endpoint) {
-        this.neuralNetServiceConfig = neuralNetDAO;
+    public NeuralNetAlgorithm(final NeuralNetEndpoint endpoint) {
         this.endpoint = endpoint;
     }
 
@@ -134,7 +132,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             final double [][] x = getSensorData(oneDaysSensorData);
 
 
-            final Optional<NeuralNetAlgorithmOutput> outputOptional = endpoint.getNetOutput(neuralNetServiceConfig.getSleepNetId(),x);
+            final Optional<NeuralNetAlgorithmOutput> outputOptional = endpoint.getNetOutput(DEFAULT_SLEEP_NET_ID,x);
 
             if (!outputOptional.isPresent()) {
                 return Optional.absent();
@@ -272,7 +270,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     @Override
     public TimelineAlgorithm cloneWithNewUUID(Optional<UUID> uuid) {
-        return new NeuralNetAlgorithm(neuralNetServiceConfig,endpoint);
+        return new NeuralNetAlgorithm(endpoint);
     }
 
 

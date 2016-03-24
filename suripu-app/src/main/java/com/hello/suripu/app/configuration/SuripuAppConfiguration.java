@@ -2,13 +2,13 @@ package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.NeuralNetServiceClientConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
+import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -455,9 +455,9 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("neural_net_service_http_client")
-    private NeuralNetServiceClientConfiguration neuralNetServiceClientConfiguration;
-    public NeuralNetServiceClientConfiguration getNeuralNetServiceClientConfiguration() { return neuralNetServiceClientConfiguration; }
+    @JsonProperty("taimurain_http_client")
+    private TaimurainHttpClientConfiguration taimurainHttpClientConfiguration;
+    public TaimurainHttpClientConfiguration getTaimurainHttpClientConfiguration() { return taimurainHttpClientConfiguration; }
 
 
 }
