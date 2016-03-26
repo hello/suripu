@@ -251,8 +251,4 @@ public class InsightCard implements Comparable<InsightCard> {
         return new InsightCard(card.accountId.get(), card.title, card.message, card.category,
                 card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), categoryName, card.insightType);
     }
-
-    public static MarketingInsightsSeen getMarketingSeen(final Set<Category> categories, final DateTime updated) {
-        return new MarketingInsightsSeen(categories, updated);
-    }
 }

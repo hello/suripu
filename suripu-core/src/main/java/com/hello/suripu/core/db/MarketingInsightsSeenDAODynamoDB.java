@@ -65,26 +65,11 @@ public class MarketingInsightsSeenDAODynamoDB {
         }
     }
 
+
     private Map<String, AttributeValue> getKey(final Long accountId) {
         return ImmutableMap.of(MarketingInsightsSeenAttribute.ACCOUNT_ID.shortName(), new AttributeValue().withN(String.valueOf(accountId)));
     }
 
-    private Optional<InsightCard.MarketingInsightsSeen> toMarketingInsightsSeen(final Map<String, AttributeValue> item) {
-        if (!item.keySet().containsAll(this.requiredAttributes)) {
-            LOGGER.warn("key=marketing-insights-ddb warning=missing-attributes values={}", item.keySet());
-            return Optional.absent();
-        }
-
-        final List<String> categories = item.get(MarketingInsightsSeenAttribute.CATEGORIES.shortName()).getNS();
-        final Set<InsightCard.Category> insightCategories = Sets.newHashSet();
-        for (final String category: categories) {
-            insightCategories.add(InsightCard.Category.fromInteger(Integer.valueOf(category)));
-        }
-
-        final String updated = item.get(MarketingInsightsSeenAttribute.UPDATED.shortName()).getS();
-        return Optional.of(InsightCard.getMarketingSeen(insightCategories, DateTimeUtil.datetimeStringToDateTime(updated)));
-
-    }
 
     public MarketingInsightsSeenDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         this.dynamoDBClient = dynamoDBClient;
@@ -97,6 +82,7 @@ public class MarketingInsightsSeenDAODynamoDB {
         this.requiredAttributes = ImmutableSet.copyOf(names);
     }
 
+
    public CreateTableResult createTable(final Long readCapacityUnits, final Long writeCapacityUnits) {
        return Util.createTable(dynamoDBClient, tableName, MarketingInsightsSeenAttribute.ACCOUNT_ID, readCapacityUnits, writeCapacityUnits);
    }
@@ -108,7 +94,7 @@ public class MarketingInsightsSeenDAODynamoDB {
         final Response<Optional<Map<String, AttributeValue>>> response = Util.getWithBackoff(dynamoDBClient, tableName, key);
 
         if (response.data.isPresent()) {
-            return toMarketingInsightsSeen(response.data.get());
+            return fromDynamoDBItem(response.data.get());
         }
 
         // MAYBE IF I GET PREGNANT, THIS CODE WONT CRASH ANYMORE
@@ -143,5 +129,21 @@ public class MarketingInsightsSeenDAODynamoDB {
 
         // AND THEN I TOLD HER TO STOP BEING A STUPID COW, CRASHING ALL THE TIME
         return false;
+    }
+
+    private Optional<InsightCard.MarketingInsightsSeen> fromDynamoDBItem(final Map<String, AttributeValue> item) {
+        if (!item.keySet().containsAll(this.requiredAttributes)) {
+            LOGGER.warn("key=marketing-insights-ddb warning=missing-attributes values={}", item.keySet());
+            return Optional.absent();
+        }
+
+        final List<String> categories = item.get(MarketingInsightsSeenAttribute.CATEGORIES.shortName()).getNS();
+        final Set<InsightCard.Category> insightCategories = Sets.newHashSet();
+        for (final String category: categories) {
+            insightCategories.add(InsightCard.Category.fromInteger(Integer.valueOf(category)));
+        }
+
+        final String updated = item.get(MarketingInsightsSeenAttribute.UPDATED.shortName()).getS();
+        return Optional.of(new InsightCard.MarketingInsightsSeen(insightCategories, DateTimeUtil.datetimeStringToDateTime(updated)));
     }
 }
