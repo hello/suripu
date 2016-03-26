@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
-
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -76,6 +75,16 @@ public class InsightCard implements Comparable<InsightCard> {
             throw new IllegalArgumentException("Invalid Category string");
         }
 
+    }
+
+    static public class MarketingInsightsSeen {
+        public final Set<Category> seenCategories;
+        public final DateTime updated;
+
+        public MarketingInsightsSeen(final Set<Category> seenCategories, final DateTime updated) {
+            this.seenCategories = seenCategories;
+            this.updated = updated;
+        }
     }
 
     public static final int ONE_DAY = 1;
@@ -243,4 +252,7 @@ public class InsightCard implements Comparable<InsightCard> {
                 card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), categoryName, card.insightType);
     }
 
+    public static MarketingInsightsSeen getMarketingSeen(final Set<Category> categories, final DateTime updated) {
+        return new MarketingInsightsSeen(categories, updated);
+    }
 }

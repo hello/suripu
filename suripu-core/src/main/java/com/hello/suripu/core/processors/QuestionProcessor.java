@@ -339,7 +339,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
             return true;
         }
 
-        LOGGER.debug("key=nothing-anomaly-light value=account-{}-night-{}", accountId, nightDate);
+            LOGGER.debug("key=nothing-anomaly-light value=account-{}-night-{}", accountId, nightDate);
         return false;
     }
 
