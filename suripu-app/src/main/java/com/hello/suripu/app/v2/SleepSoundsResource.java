@@ -395,13 +395,14 @@ public class SleepSoundsResource extends BaseResource {
      *
      * @param maxDecibels Maximum desired decibels for Sense to play (at 100%)
      * @param volumePercent "Perceived" volume percentage (100% is loudest, 50% is half of that, etc).
+     *                      Must be in (0, 100].
      * @return Linear scaling factor for Sense to convert to decibels.
      */
     @VisibleForTesting
     protected static Integer convertVolumePercent(final Double maxDecibels,
                                                   final Integer volumePercent) {
-        if (volumePercent > 100 || volumePercent < 0) {
-            throw new IllegalArgumentException(String.format("volumePercent must be in the range [0, 100], not %s", volumePercent));
+        if (volumePercent > 100 || volumePercent <= 0) {
+            throw new IllegalArgumentException(String.format("volumePercent must be in the range (0, 100], not %s", volumePercent));
         }
         // Formula/constants obtained from http://www.sengpielaudio.com/calculator-loudness.htm
         final double decibelOffsetFromMaximum = 33.22 * Math.log10(volumePercent / 100.0);

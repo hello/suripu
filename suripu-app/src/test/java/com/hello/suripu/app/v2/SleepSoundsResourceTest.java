@@ -408,7 +408,6 @@ public class SleepSoundsResourceTest {
         assertThat(SleepSoundsResource.convertVolumePercent(100), is(100));
         assertThat(SleepSoundsResource.convertVolumePercent(50), is(83));
         assertThat(SleepSoundsResource.convertVolumePercent(25), is(67));
-        assertThat(SleepSoundsResource.convertVolumePercent(0), is(0));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -418,7 +417,7 @@ public class SleepSoundsResourceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testConvertVolumePercentTooSmall() {
-        SleepSoundsResource.convertVolumePercent(-1);
+        SleepSoundsResource.convertVolumePercent(0);
     }
     // endregion convertVolumePercent
 }
