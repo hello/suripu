@@ -5,7 +5,6 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
@@ -58,7 +57,6 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
     protected void run(Bootstrap<SuripuAppConfiguration> bootstrap, Namespace namespace, SuripuAppConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
-        listAllTables(awsCredentialsProvider);
         createUserInfoTable(configuration, awsCredentialsProvider);
         createAlarmTable(configuration, awsCredentialsProvider);
         createFeaturesTable(configuration, awsCredentialsProvider);
@@ -95,16 +93,6 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createMarketingInsightsSeenTable(configuration, awsCredentialsProvider);
     }
 
-    private void listAllTables(final AWSCredentialsProvider awsCredentialsProvider) {
-        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
-        client.setEndpoint("http://localhost:7777");
-
-        System.out.println("Listing Tables");
-        final ListTablesResult listResult = client.listTables();
-        for (final String tname : listResult.getTableNames()) {
-            System.out.println(String.format("List: Table %s already exists.", tname));
-        }
-    }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
         final DynamoDBConfiguration config = configuration.getSmartAlarmLogDBConfiguration();
