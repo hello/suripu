@@ -40,7 +40,7 @@ public class Sound {
         switch (fileInfo.fileType) {
             case SLEEP_SOUND:
             case ALARM:
-                return create(fileInfo.id, fileInfo.name, fileInfo.previewUri, fileInfo.path, fileInfo.uri);
+                return create(fileInfo.id, fileInfo.previewUri, fileInfo.name, fileInfo.path, fileInfo.uri);
             default:
                 throw new IllegalArgumentException(String.format("Invalid FileType for Sound: %s", fileInfo.fileType));
         }

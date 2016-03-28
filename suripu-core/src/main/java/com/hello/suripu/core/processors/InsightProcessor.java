@@ -65,7 +65,7 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Created by kingshy on 10/24/14.
+ * Created by kingshy on 10/24/14
  */
 public class InsightProcessor {
 
@@ -156,8 +156,6 @@ public class InsightProcessor {
 
     /**
      * for new users, first 4 days
-     * @param accountId
-     * @param accountAge
      */
     private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge) {
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
@@ -200,12 +198,15 @@ public class InsightProcessor {
 
     /**
      * logic to determine what kind of insights to generate
-     * @param accountId
      */
     @VisibleForTesting
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                   final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
+        if (recentCategories.contains(InsightCard.Category.GOAL_GO_OUTSIDE)) {
+            return Optional.absent();
+        }
+        
         final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTime);
 
         if (toGenerateWeeklyCategory.isPresent()) {
