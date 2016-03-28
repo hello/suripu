@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import org.junit.After;
@@ -44,11 +43,6 @@ public abstract class DynamoDBIT<T> {
         clientConfiguration.setMaxErrorRetry(0);
         this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
-
-        final ListTablesResult res = this.amazonDynamoDBClient.listTables();
-        for (final String tablename : res.getTableNames()) {
-            LOGGER.debug("table {} exist", tablename);
-        }
 
         this.dao = createDAO();
 
