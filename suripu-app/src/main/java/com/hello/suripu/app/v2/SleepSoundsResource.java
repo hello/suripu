@@ -24,6 +24,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.JsonError;
+import org.apache.commons.codec.DecoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Arrays;
 import java.util.List;
 
 @Path("/v2/sleep_sounds")
@@ -373,7 +375,18 @@ public class SleepSoundsResource extends BaseResource {
             {
                 final String sdCardPath = file.getDownloadInfo().getSdCardPath();
                 final String sdCardFilename = file.getDownloadInfo().getSdCardFilename();
-                if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path)) {
+
+                final byte[] fileInfoSha;
+                try {
+                    fileInfoSha = fileInfo.getShaBytes();
+                } catch (DecoderException e) {
+                    LOGGER.error("method=canPlayFile exception=DecoderException file-info-path={} file-info-sha={} error={}",
+                            fileInfo.path, fileInfo.sha, e);
+                    continue;
+                }
+
+                if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path) &&
+                        Arrays.equals(fileInfoSha, file.getDownloadInfo().getSha1().toByteArray())) {
                     return true;
                 }
             }

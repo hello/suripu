@@ -3,6 +3,7 @@ package com.hello.suripu.app.v2;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ByteString;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
@@ -24,6 +25,7 @@ import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -390,6 +392,7 @@ public class SleepSoundsResourceTest {
                         .setDownloadInfo(FileSync.FileManifest.FileDownload.newBuilder()
                                 .setSdCardFilename("file")
                                 .setSdCardPath("path/to")
+                                .setSha1(ByteString.copyFrom(Hex.decodeHex("11".toCharArray())))
                                 .build())
                         .build())
                 .build();
