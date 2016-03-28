@@ -5,6 +5,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
@@ -19,6 +20,7 @@ import com.hello.suripu.core.db.FileManifestDynamoDB;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
+import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
@@ -56,6 +58,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
     protected void run(Bootstrap<SuripuAppConfiguration> bootstrap, Namespace namespace, SuripuAppConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
+        listAllTables(awsCredentialsProvider);
         createUserInfoTable(configuration, awsCredentialsProvider);
         createAlarmTable(configuration, awsCredentialsProvider);
         createFeaturesTable(configuration, awsCredentialsProvider);
@@ -89,6 +92,18 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createPillDataTable(configuration, awsCredentialsProvider);
         createSenseStateTable(configuration, awsCredentialsProvider);
         createFileManifestTable(configuration, awsCredentialsProvider);
+        createMarketingInsightsSeenTable(configuration, awsCredentialsProvider);
+    }
+
+    private void listAllTables(final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        client.setEndpoint("http://localhost:7777");
+
+        System.out.println("Listing Tables");
+        final ListTablesResult listResult = client.listTables();
+        for (final String tname : listResult.getTableNames()) {
+            System.out.println(String.format("List: Table %s already exists.", tname));
+        }
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -629,5 +644,21 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         }
     }
 
+    private void createMarketingInsightsSeenTable(SuripuAppConfiguration configuration, AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getMarketingInsightsSeenConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        final MarketingInsightsSeenDAODynamoDB dynamoDB = new MarketingInsightsSeenDAODynamoDB(client, tableName);
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = dynamoDB.createTable(1L, 1L);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
 
 }

@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
+import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
@@ -97,6 +98,7 @@ public class InsightProcessorTest {
         final WakeStdDevData wakeStdDevData = Mockito.mock(WakeStdDevData.class);
         final CalibrationDAO calibrationDAO = Mockito.mock(CalibrationDAO.class);
         final AccountInfoProcessor accountInfoProcessor = Mockito.mock(AccountInfoProcessor.class);
+        final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB = Mockito.mock(MarketingInsightsSeenDAODynamoDB.class);
 
         //Prepping for taking care of @NotNull check for light
         final int light = 2;
@@ -154,7 +156,8 @@ public class InsightProcessorTest {
                 accountInfoProcessor,
                 lightData,
                 wakeStdDevData,
-                calibrationDAO);
+                calibrationDAO,
+                marketingInsightsSeenDAODynamoDB);
 
         //only to get rid of null pointer exception
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);
@@ -230,7 +233,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
         //Tests - Look for weekly Insight, try to generate wake variance, get Optional.absent() b/c no data
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
         final Optional<InsightCard.Category> wakeCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
@@ -261,7 +264,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
         //Tests - Look for weekly Insight, do not try to generate b/c recent
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
         final Optional<InsightCard.Category> wakeCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
@@ -294,7 +297,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
         //Tests - Look for weekly Insight, do not try to generate b/c wrong date
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
@@ -322,7 +325,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
         //Tests - Look for weekly Insight, do not try to generate b/c wrong date
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
