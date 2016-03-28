@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
@@ -398,6 +399,21 @@ public class SleepSoundsResourceTest {
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(1));
         assertThat(soundResult.sounds.get(0).id, is(soundId));
+    }
+
+    @Test(expected = WebApplicationException.class)
+    public void testGetSoundsNotFeatureFlipped() {
+        Mockito.when(featureStore.getData())
+                .thenReturn(
+                        ImmutableMap.of(
+                                FeatureFlipper.SLEEP_SOUNDS_ENABLED,
+                                new Feature("sleep_sounds_enabled", Collections.EMPTY_LIST, Collections.EMPTY_LIST, (float) 0.0)));
+        final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(module);
+        sleepSoundsResource = SleepSoundsResource.create(
+                durationDAO, senseStateDynamoDB, deviceDAO,
+                messejiClient, fileInfoDAO, fileManifestDAO);
+        sleepSoundsResource.getSounds(token);
     }
 
     // endregion getSounds

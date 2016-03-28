@@ -242,7 +242,7 @@ public class SleepSoundsResource extends BaseResource {
 
         if (!hasSleepSoundsEnabled(accountId)) {
             LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=false account-id={}", accountId);
-            return new SoundResult(sounds);
+            throw new WebApplicationException(Response.Status.NO_CONTENT);
         }
         LOGGER.info("endpoint=sleep-sounds sleep-sounds-enabled=true account-id={}", accountId);
 
