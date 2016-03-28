@@ -1,5 +1,8 @@
 package com.hello.suripu.core.models;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -52,6 +55,10 @@ public class FileInfo {
         checkNotNull(name, "name must not be null");
         checkNotNull(firmwareVersion, "firmwareVersion must not be null");
         checkNotNull(isPublic, "isPublic must not be null");
+    }
+
+    public byte[] getShaBytes() throws DecoderException {
+        return Hex.decodeHex(sha.toCharArray());
     }
 
     public static Builder newBuilder() {
