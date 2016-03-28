@@ -45,6 +45,8 @@ import java.util.List;
 public class SleepSoundsResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsResource.class);
 
+    private static final Integer MIN_SOUNDS = 5; // Anything less than this and we return an empty list.
+
     private final DurationDAO durationDAO;
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
@@ -266,6 +268,10 @@ public class SleepSoundsResource extends BaseResource {
             if (canPlayFile(manifestOptional.get(), fileInfo)) {
                 sounds.add(Sound.fromFileInfo(fileInfo));
             }
+        }
+
+        if (sounds.size() < MIN_SOUNDS) {
+            return new SoundResult(Lists.<Sound>newArrayList());
         }
 
         return new SoundResult(sounds);

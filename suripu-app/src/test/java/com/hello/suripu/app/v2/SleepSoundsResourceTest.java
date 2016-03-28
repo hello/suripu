@@ -1,8 +1,8 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
@@ -361,19 +361,22 @@ public class SleepSoundsResourceTest {
 
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
 
-        final FileInfo fileInfo = FileInfo.newBuilder()
-                .withId(soundId)
-                .withPreviewUri("preview")
-                .withName("name")
-                .withPath("/path/to/file")
-                .withUri("url")
-                .withFirmwareVersion(1)
-                .withIsPublic(true)
-                .withSha("11")
-                .withFileType(FileInfo.FileType.SLEEP_SOUND)
-                .build();
-        final FileInfo unplayableFileInfo = FileInfo.newBuilder()
-                .withId(soundId + 1)
+        final List<FileInfo> fileInfoList = Lists.newArrayList();
+        for (int i = 0; i < 5; i++) {
+            fileInfoList.add(FileInfo.newBuilder()
+                    .withId(soundId + i)
+                    .withPreviewUri("preview")
+                    .withName("name")
+                    .withPath("/path/to/file")
+                    .withUri("url")
+                    .withFirmwareVersion(1)
+                    .withIsPublic(true)
+                    .withSha("11")
+                    .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                    .build());
+        }
+        fileInfoList.add(FileInfo.newBuilder()
+                .withId(soundId + fileInfoList.size())
                 .withPreviewUri("preview")
                 .withName("name")
                 .withPath("/wrong/path/to/file")
@@ -382,8 +385,8 @@ public class SleepSoundsResourceTest {
                 .withIsPublic(true)
                 .withSha("11")
                 .withFileType(FileInfo.FileType.SLEEP_SOUND)
-                .build();
-        final List<FileInfo> fileInfoList = ImmutableList.of(fileInfo, unplayableFileInfo);
+                .build());
+
         Mockito.when(fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND)).thenReturn(fileInfoList);
 
         final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
@@ -397,8 +400,47 @@ public class SleepSoundsResourceTest {
         Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
 
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
-        assertThat(soundResult.sounds.size(), is(1));
-        assertThat(soundResult.sounds.get(0).id, is(soundId));
+        assertThat(soundResult.sounds.size(), is(5));
+        for (int i = 0; i < soundResult.sounds.size(); i++) {
+            assertThat(soundResult.sounds.get(i).id, is(soundId + i));
+        }
+    }
+
+    @Test
+    public void testGetSoundsNotEnoughSounds() {
+        final Long soundId = 1L;
+
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+
+        final List<FileInfo> fileInfoList = Lists.newArrayList();
+        for (int i = 0; i < 3; i++) {
+            fileInfoList.add(FileInfo.newBuilder()
+                    .withId(soundId + i)
+                    .withPreviewUri("preview")
+                    .withName("name")
+                    .withPath("/path/to/file")
+                    .withUri("url")
+                    .withFirmwareVersion(1)
+                    .withIsPublic(true)
+                    .withSha("11")
+                    .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                    .build());
+        }
+
+        Mockito.when(fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND)).thenReturn(fileInfoList);
+
+        final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
+                .addFileInfo(FileSync.FileManifest.File.newBuilder()
+                        .setDownloadInfo(FileSync.FileManifest.FileDownload.newBuilder()
+                                .setSdCardFilename("file")
+                                .setSdCardPath("path/to")
+                                .build())
+                        .build())
+                .build();
+        Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
+
+        final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
+        assertThat(soundResult.sounds.size(), is(0));
     }
 
     @Test(expected = WebApplicationException.class)
