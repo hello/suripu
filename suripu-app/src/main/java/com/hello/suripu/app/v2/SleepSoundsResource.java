@@ -2,6 +2,7 @@ package com.hello.suripu.app.v2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.input.FileSync;
@@ -164,9 +165,10 @@ public class SleepSoundsResource extends BaseResource {
         }
 
         // Send to Messeji
+        final Integer volumeScalingFactor = convertVolumePercent(playRequest.volumePercent);
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
-                durationOptional.get(), sound, 0, 0, playRequest.volumePercent);
+                durationOptional.get(), sound, 0, 0, volumeScalingFactor);
 
         if (messageId.isPresent()) {
             LOGGER.debug("messeji-status=success message-id={} sense-id={}", messageId.get(), senseId);
@@ -377,6 +379,44 @@ public class SleepSoundsResource extends BaseResource {
             }
         }
         return false;
+    }
+
+    /**
+     * Convert a perceived volume percentage to a linear decibel scaling coefficient.
+     * Uses formula from http://www.sengpielaudio.com/calculator-loudness.htm
+     *
+     * Perception of Loudness (x):   (+20dB = 400%, +10db=200%, -10db=50%, -20db=25%, etc)
+     * 10 Db gain would seem to be about twice as loud.
+     *
+     * Example: If maxDecibels is 60, then for different volumePercents this method returns:
+     * convertVolumePercent(60, 100) => 100 // 1.0 * 60 = 60Db
+     * convertVolumePercent(60,  50) =>  83 // .83 * 60 = 50Db
+     * convertVolumePercent(60,  25) =>  67 // .67 * 60 = 40Db
+     *
+     * @param maxDecibels Maximum desired decibels for Sense to play (at 100%)
+     * @param volumePercent "Perceived" volume percentage (100% is loudest, 50% is half of that, etc).
+     * @return Linear scaling factor for Sense to convert to decibels.
+     */
+    @VisibleForTesting
+    protected static Integer convertVolumePercent(final Double maxDecibels,
+                                                  final Integer volumePercent) {
+        if (volumePercent > 100 || volumePercent < 0) {
+            throw new IllegalArgumentException(String.format("volumePercent must be in the range [0, 100], not %s", volumePercent));
+        }
+        // Formula/constants obtained from http://www.sengpielaudio.com/calculator-loudness.htm
+        final double decibelOffsetFromMaximum = 33.22 * Math.log10(volumePercent / 100.0);
+        final double decibels = maxDecibels + decibelOffsetFromMaximum;
+        return (int) Math.round((decibels / maxDecibels) * 100);
+    }
+
+    /**
+     * Uses 60 decibels for the max decibels, otherwise identical to {@link SleepSoundsResource#convertVolumePercent(Double, Integer)}
+     * @param volumePercent "Perceived" volume percentage (100% is loudest, 50% is half of that, etc).
+     * @return Linear scaling factor for sense to convert to decibels.
+     */
+    @VisibleForTesting
+    protected static Integer convertVolumePercent(final Integer volumePercent) {
+        return convertVolumePercent(60.0, volumePercent);
     }
 
 }

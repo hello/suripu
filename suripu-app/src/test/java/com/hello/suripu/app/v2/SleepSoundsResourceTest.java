@@ -401,4 +401,24 @@ public class SleepSoundsResourceTest {
     }
 
     // endregion getSounds
+
+    // region convertVolumePercent
+    @Test
+    public void testConvertVolumePercent() throws Exception {
+        assertThat(SleepSoundsResource.convertVolumePercent(100), is(100));
+        assertThat(SleepSoundsResource.convertVolumePercent(50), is(83));
+        assertThat(SleepSoundsResource.convertVolumePercent(25), is(67));
+        assertThat(SleepSoundsResource.convertVolumePercent(0), is(0));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConvertVolumePercentTooLarge() {
+        SleepSoundsResource.convertVolumePercent(200);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConvertVolumePercentTooSmall() {
+        SleepSoundsResource.convertVolumePercent(-1);
+    }
+    // endregion convertVolumePercent
 }
