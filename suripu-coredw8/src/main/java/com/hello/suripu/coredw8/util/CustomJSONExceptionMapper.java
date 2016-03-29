@@ -102,7 +102,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
             return Response
                     .status(Response.Status.NO_CONTENT)
                     .entity("")
-                    .type(MediaType.TEXT_PLAIN)
+                    .type(MediaType.APPLICATION_JSON)
                     .build();
         }
 
