@@ -55,5 +55,15 @@ public class MarketingInsightsSeenDynamoDBIT extends DynamoDBIT<MarketingInsight
         assertThat(categorySet2.size(), is(2));
         assertThat(categorySet2.contains(category2), is(true));
 
+        // add same category
+        final boolean result3 = dao.updateSeenCategories(accountId, category2);
+        assertThat(result3, is(true));
+
+        final Optional<MarketingInsightsSeen> seen3 = dao.getSeenCategories(accountId);
+        assertThat(seen3.isPresent(), is(true));
+        assertThat(seen3.get().seenCategories.size(), is(2));
+        assertThat(seen3.get().seenCategories.contains(category2), is(true));
+
+
     }
 }

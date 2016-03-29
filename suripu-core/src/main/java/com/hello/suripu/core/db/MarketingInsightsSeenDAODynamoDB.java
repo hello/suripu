@@ -40,7 +40,7 @@ public class MarketingInsightsSeenDAODynamoDB {
     public enum MarketingInsightsSeenAttribute implements Attribute {
         ACCOUNT_ID("account_id", "N"), // hash-key
         CATEGORIES("categories", "NS"),
-        UPDATED("updated", "S");
+        UPDATED("updated_utc", "S");
 
         private final String name;
         private final String type;
