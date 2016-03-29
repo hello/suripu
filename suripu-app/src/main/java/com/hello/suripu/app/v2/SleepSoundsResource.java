@@ -227,13 +227,24 @@ public class SleepSoundsResource extends BaseResource {
 
 
     //region sounds
-    protected class SoundResult {
+    protected static class SoundResult {
         @JsonProperty("sounds")
         @NotNull
         public final List<Sound> sounds;
 
-        public SoundResult(final List<Sound> sounds) {
+        @JsonProperty("state")
+        @NotNull
+        public final State state;
+
+        public SoundResult(final List<Sound> sounds, final State state) {
             this.sounds = sounds;
+            this.state = state;
+        }
+
+        enum State {
+            OK,
+            SOUNDS_NOT_DOWNLOADED, // Sounds have not *yet* been downloaded to Sense, but should be.
+            FEATURE_UNAVAILABLE    // Sense cannot play sounds
         }
     }
 
@@ -261,7 +272,7 @@ public class SleepSoundsResource extends BaseResource {
         if (!manifestOptional.isPresent()) {
             LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
             // If no File manifest, Sense cannot play sounds so return an empty list.
-            return new SoundResult(sounds);
+            return new SoundResult(sounds, SoundResult.State.FEATURE_UNAVAILABLE);
         }
 
         final List<FileInfo> sleepSoundFileInfoList = fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND);
@@ -273,10 +284,12 @@ public class SleepSoundsResource extends BaseResource {
         }
 
         if (sounds.size() < MIN_SOUNDS) {
-            return new SoundResult(Lists.<Sound>newArrayList());
+            LOGGER.warn("endpoint=sounds error=not-enough-sounds sense-id={} num-sounds={}",
+                    senseId, sounds.size());
+            return new SoundResult(Lists.<Sound>newArrayList(), SoundResult.State.SOUNDS_NOT_DOWNLOADED);
         }
 
-        return new SoundResult(sounds);
+        return new SoundResult(sounds, SoundResult.State.OK);
     }
     //endregion sounds
 

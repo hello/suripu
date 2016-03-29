@@ -355,6 +355,7 @@ public class SleepSoundsResourceTest {
 
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(0));
+        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.FEATURE_UNAVAILABLE));
     }
 
     @Test
@@ -404,6 +405,7 @@ public class SleepSoundsResourceTest {
 
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(5));
+        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.OK));
         for (int i = 0; i < soundResult.sounds.size(); i++) {
             assertThat(soundResult.sounds.get(i).id, is(soundId + i));
         }
@@ -445,6 +447,7 @@ public class SleepSoundsResourceTest {
 
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(0));
+        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.SOUNDS_NOT_DOWNLOADED));
     }
 
     @Test(expected = WebApplicationException.class)
