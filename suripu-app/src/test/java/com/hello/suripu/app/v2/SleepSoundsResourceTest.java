@@ -355,7 +355,7 @@ public class SleepSoundsResourceTest {
 
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(0));
-        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.FEATURE_UNAVAILABLE));
+        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.SENSE_UPDATE_REQUIRED));
     }
 
     @Test

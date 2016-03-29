@@ -243,8 +243,8 @@ public class SleepSoundsResource extends BaseResource {
 
         enum State {
             OK,
-            SOUNDS_NOT_DOWNLOADED, // Sounds have not *yet* been downloaded to Sense, but should be.
-            FEATURE_UNAVAILABLE    // Sense cannot play sounds
+            SOUNDS_NOT_DOWNLOADED,      // Sounds have not *yet* been downloaded to Sense, but should be.
+            SENSE_UPDATE_REQUIRED       // Sense cannot play sounds because it has old firmware
         }
     }
 
@@ -272,7 +272,7 @@ public class SleepSoundsResource extends BaseResource {
         if (!manifestOptional.isPresent()) {
             LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
             // If no File manifest, Sense cannot play sounds so return an empty list.
-            return new SoundResult(sounds, SoundResult.State.FEATURE_UNAVAILABLE);
+            return new SoundResult(sounds, SoundResult.State.SENSE_UPDATE_REQUIRED);
         }
 
         final List<FileInfo> sleepSoundFileInfoList = fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND);
