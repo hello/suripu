@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Util;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -38,7 +39,7 @@ public class MarketingInsightsSeenDAODynamoDB {
 
     public enum MarketingInsightsSeenAttribute implements Attribute {
         ACCOUNT_ID("account_id", "N"), // hash-key
-        CATEGORIES("cats", "NS"),
+        CATEGORIES("categories", "NS"),
         UPDATED("updated", "S");
 
         private final String name;
@@ -88,7 +89,7 @@ public class MarketingInsightsSeenDAODynamoDB {
    }
 
 
-    public Optional<InsightCard.MarketingInsightsSeen> getSeenCategories(final Long accountId) {
+    public Optional<MarketingInsightsSeen> getSeenCategories(final Long accountId) {
 
         final Map<String, AttributeValue> key = getKey(accountId);
         final Response<Optional<Map<String, AttributeValue>>> response = Util.getWithBackoff(dynamoDBClient, tableName, key);
@@ -118,7 +119,7 @@ public class MarketingInsightsSeenDAODynamoDB {
             return false;
         }
 
-        if (result.getAttributes().size() > 0) {
+        if (!result.getAttributes().isEmpty()) {
             final List<String> categories = result.getAttributes().get(MarketingInsightsSeenAttribute.CATEGORIES.shortName()).getNS();
             final String updatedCategory = String.valueOf(category.getValue());
 
@@ -131,7 +132,7 @@ public class MarketingInsightsSeenDAODynamoDB {
         return false;
     }
 
-    private Optional<InsightCard.MarketingInsightsSeen> fromDynamoDBItem(final Map<String, AttributeValue> item) {
+    private Optional<MarketingInsightsSeen> fromDynamoDBItem(final Map<String, AttributeValue> item) {
         if (!item.keySet().containsAll(this.requiredAttributes)) {
             LOGGER.warn("key=marketing-insights-ddb warning=missing-attributes values={}", item.keySet());
             return Optional.absent();
@@ -144,6 +145,6 @@ public class MarketingInsightsSeenDAODynamoDB {
         }
 
         final String updated = item.get(MarketingInsightsSeenAttribute.UPDATED.shortName()).getS();
-        return Optional.of(new InsightCard.MarketingInsightsSeen(insightCategories, DateTimeUtil.datetimeStringToDateTime(updated)));
+        return Optional.of(new MarketingInsightsSeen(insightCategories, DateTimeUtil.datetimeStringToDateTime(updated)));
     }
 }

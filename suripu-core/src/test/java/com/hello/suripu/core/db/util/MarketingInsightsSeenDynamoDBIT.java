@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DynamoDBIT;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
 import org.junit.Test;
 
 import java.util.Set;
@@ -35,7 +36,7 @@ public class MarketingInsightsSeenDynamoDBIT extends DynamoDBIT<MarketingInsight
         final boolean result = dao.updateSeenCategories(accountId, category);
         assertThat(result, is(true));
 
-        final Optional<InsightCard.MarketingInsightsSeen> seen = dao.getSeenCategories(accountId);
+        final Optional<MarketingInsightsSeen> seen = dao.getSeenCategories(accountId);
         assertThat(seen.isPresent(), is(true));
 
         final Set<InsightCard.Category> categorySet = seen.get().seenCategories;
@@ -47,7 +48,7 @@ public class MarketingInsightsSeenDynamoDBIT extends DynamoDBIT<MarketingInsight
         final boolean result2 = dao.updateSeenCategories(accountId, category2);
         assertThat(result2, is(true));
 
-        final Optional<InsightCard.MarketingInsightsSeen> seen2 = dao.getSeenCategories(accountId);
+        final Optional<MarketingInsightsSeen> seen2 = dao.getSeenCategories(accountId);
         assertThat(seen2.isPresent(), is(true));
 
         final Set<InsightCard.Category> categorySet2 = seen2.get().seenCategories;
