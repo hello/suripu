@@ -149,6 +149,12 @@ public class Util {
     public static AttributeValueUpdate putAction(final Boolean value) {
         return new AttributeValueUpdate(new AttributeValue().withBOOL(value), "PUT");
     }
+
+    // number set
+    public static AttributeValueUpdate addToSetAction(final Integer value) {
+        return new AttributeValueUpdate(new AttributeValue().withNS(String.valueOf(value)), "ADD");
+    }
+
     // endregion AttributeValueUpdate
 
 
