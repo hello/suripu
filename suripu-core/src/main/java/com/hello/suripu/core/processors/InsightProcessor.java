@@ -280,7 +280,6 @@ public class InsightProcessor {
         //Check if date condition is correct?
         //Check if feature flipper on
         //Get all historical insights
-        final Set<InsightCard.Category> allHistoricalCategories = this.getAllHistoricalInsightCategories(accountId);
         //Build set of marketing insights minus already generated insights
         //Pull random insight out of set of marketing insights
         return Optional.absent();
@@ -467,17 +466,6 @@ public class InsightProcessor {
 
     public ImmutableMap<InsightCard.Category, String> categoryNames() {
         return categoryNames(trendsInsightsDAO);
-    }
-
-    private Set<InsightCard.Category> getAllHistoricalInsightCategories(final Long accountId) {
-        // get all insights ever generated for account
-        final List<InsightCard> cards = this.insightsDAODynamoDB.getInsights(accountId);
-
-        final Set<InsightCard.Category> seenCategories = new HashSet<>();
-        for (InsightCard card : cards) {
-            seenCategories.add(card.category);
-        }
-        return seenCategories;
     }
 
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {

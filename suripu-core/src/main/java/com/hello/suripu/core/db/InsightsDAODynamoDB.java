@@ -143,19 +143,6 @@ public class InsightsDAODynamoDB {
     }
 
     @Timed
-    public ImmutableList<InsightCard> getInsights(final Long accountId) {
-        final Condition selectByAccountId = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
-
-        final Map<String, Condition> queryConditions = new HashMap<>();
-        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
-
-        return this.getData(queryConditions);
-
-    }
-
-    @Timed
     public ImmutableList<InsightCard> getInsightsByCategory(final Long accountId, final InsightCard.Category category, final int limit) {
 
         final Condition selectByAccountId = new Condition()
@@ -175,42 +162,6 @@ public class InsightsDAODynamoDB {
         queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByCategory);
 
         return this.getData(queryConditions, limit, true);
-    }
-
-    private ImmutableList<InsightCard> getData(final Map<String, Condition> queryConditions) {
-        final List<InsightCard> insightCards = new ArrayList<>();
-        Map<String, AttributeValue> lastEvaluatedKey = null;
-        int loopCount = 0;
-
-        do {
-            final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(this.tableName)
-                    .withKeyConditions(queryConditions)
-                    .withAttributesToGet(this.attributesToFetch)
-                    .withExclusiveStartKey(lastEvaluatedKey);
-
-            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-            final List<Map<String, AttributeValue>> items = queryResult.getItems();
-
-            if (queryResult.getItems() != null) {
-                for (final Map<String, AttributeValue> item : items) {
-                    if (!item.keySet().containsAll(requiredAttributes)) {
-                        LOGGER.warn("Missing field in item {}", item);
-                        continue;
-                    }
-                    final InsightCard card = this.createInsightCard(item);
-                    insightCards.add(card);
-                }
-            }
-
-            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-            loopCount++;
-
-        } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT);
-
-        Collections.sort(insightCards, Collections.reverseOrder());
-
-        return ImmutableList.copyOf(insightCards);
     }
 
     private ImmutableList<InsightCard> getData(final Map<String, Condition> queryConditions, final int limit, final Boolean scanForward) {
