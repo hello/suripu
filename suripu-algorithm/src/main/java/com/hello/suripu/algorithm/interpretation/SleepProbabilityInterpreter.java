@@ -54,6 +54,37 @@ public class SleepProbabilityInterpreter {
         }
     }
 
+    /*
+     *  This takes the output of a neural network that outputs p(sleep), and a motion signal (on duration seconds) from the pill
+     *  and will output when it thinks you got in bed, fell asleep, woke up, and got out of bed.
+     *
+     *
+     *
+     *  There are two steps:
+     *  Step 1) Segment sleep with a hidden Markov model.  The general notion is that p(sleep) can jump around a bit, so we want to segment
+     *  this into states.
+     *  State 0 - pre sleep (awake)
+     *  State 1 - entering sleep
+     *  State 2 - unsure if sleeping
+     *  State 3 - definitely sleeping
+     *  State 4 - waking rapidly
+     *  State 5 - waking / unsure if sleeping
+     *  State 6 - post sleep (awake)
+     *
+     *  The general idea is that when you first get to State 3, you're asleep.
+     *  The last time you leave state 3 is when you woke up.
+     *
+     *  So, you can go between states 2 and 3 all night, and we still consider you asleep.
+     *  As soon as you get to states 4 or 5 from 2 or 3, you're considered awake.
+     *
+     *  Sensor data for this HMM is p(sleep) and diff[p(sleep)], and the obs model is
+     *  a composite obs models is  a beta distribution for p(sleep) and a gaussian for
+     *  the differential p(sleep) signal
+     *
+     *  Initial state is always state 0, and final state is always state 6.
+     *
+     *  There has got to be a better way of doing this.  Oh well.
+     */
     public static Optional<EventIndices> getEventIndices(final double [] sleepProbabilities, final double [] myMotionDurations) {
 
         int iSleep = -1;
@@ -165,6 +196,29 @@ public class SleepProbabilityInterpreter {
         }
 
 
+        /*
+         *  Step 2:  Figure out when you got into and out of bed based off of motion and sleep.
+         *
+         *  The general idea is that you got into bed before you went to sleep, and you got out of bed after you woke up.
+         *  So for sleep, you go backwards from when we think you fell asleep, and find the beginning of the previous motion segment.
+         *  For wake, you go forwards from wake, and find the end of the next motion segment.
+         *
+         *
+         *  Motion data is sporadic, meaning that you'll get one minute with five seconds of motion, and then ten minutes later
+         *  you'll get another minute with six seconds of motion, and then maybe two hours of no motion.  The idea is that these two minutes
+         *  of motion, spaced ten minutes apart constitute a "segment" of motion.
+         *
+         *  Motion segments are determined by an HMM, again.
+         *  State 0: No motion for long duration
+         *  State 1: moderate amount of motion for short duration
+         *  State 2: no motion for short duration.
+         *
+         *  States 1 and 2 are considered in a motion segment.
+         *
+         *  So for the above example, it'd be  [.... 0 0 0 0 1 2 2 2 2 2 2 2 2 2 2 1 0 0 0 0 0 ....]
+         *
+         */
+
         {
             final double[][] x = {myMotionDurations};
             final double[][] A = {
@@ -186,7 +240,7 @@ public class SleepProbabilityInterpreter {
                 motionInts.add(Integer.valueOf((int)d));
             }
 
-            LOGGER.debug("\nclusterpath={};\nmotion={};\n",result.bestPath,motionInts);
+            //LOGGER.debug("\nclusterpath={};\nmotion={};\n",result.bestPath,motionInts);
 
             boolean foundCluster = false;
 

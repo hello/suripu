@@ -99,7 +99,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         for (final Sample s : light) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
 
-            //get local time
+            //get local time, enforce artificial light constraint (light before 8pm and after 5am is considered "natural" and thus should be ignored)
             final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
             if (time.getHourOfDay() >= 5 && time.getHourOfDay() < 20) {
                 continue;
