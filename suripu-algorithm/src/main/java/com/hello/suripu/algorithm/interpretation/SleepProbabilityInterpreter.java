@@ -1,6 +1,7 @@
 package com.hello.suripu.algorithm.interpretation;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.hmm.BetaPdf;
 import com.hello.suripu.algorithm.hmm.GaussianPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
@@ -11,6 +12,8 @@ import com.hello.suripu.algorithm.hmm.PdfCompositeBuilder;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Created by benjo on 3/24/16.
@@ -26,10 +29,10 @@ public class SleepProbabilityInterpreter {
     final static int MAX_ON_BED_SEARCH_WINDOW = 30; //minutes
     final static int MAX_OFF_BED_SEARCH_WINDOW = 30; //minutes
 
-    final static int DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE = 1;
-    final static int DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP = 5;
+    final protected static int DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE = 1;
+    final protected static int DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP = 5;
 
-    final static double POISSON_MEAN_FOR_A_LITTLE_MOTION = 1.0;
+    final static double POISSON_MEAN_FOR_A_LITTLE_MOTION = 0.1;
     final static double POISSON_MEAN_FOR_MOTION = 5.0;
     final static double POISSON_MEAN_FOR_NO_MOTION = 0.1;
 
@@ -167,7 +170,7 @@ public class SleepProbabilityInterpreter {
             final double[][] A = {
                     {0.998, 1e-3, 1e-3},
                     {1e-5, 0.90, 0.10},
-                    {1e-5, 0.10, 0.90}
+                    {0.0, 0.10, 0.90}
             };
             final double[] pi = {0.5, 0.5,0.5};
             final HmmPdfInterface[] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION, 0), new PoissonPdf(POISSON_MEAN_FOR_MOTION, 0),new PoissonPdf(POISSON_MEAN_FOR_A_LITTLE_MOTION, 0)};
@@ -177,6 +180,13 @@ public class SleepProbabilityInterpreter {
 
             final HmmDecodedResult result = hmm.decode(x, new Integer[]{0, 1,2}, MIN_HMM_PDF_EVAL);
 
+            final List<Integer> motionInts = Lists.newArrayList();
+
+            for (final double d : myMotionDurations) {
+                motionInts.add(Integer.valueOf((int)d));
+            }
+
+            LOGGER.debug("\nclusterpath={};\nmotion={};\n",result.bestPath,motionInts);
 
             boolean foundCluster = false;
 
@@ -219,6 +229,21 @@ public class SleepProbabilityInterpreter {
                     break;
                 }
             }
+        }
+
+        //sanity checks, make sure event times are not the same
+        final int outOfBedBounds = iWake + DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE;
+
+        if (iOutOfBed < outOfBedBounds) {
+            LOGGER.info("action=moving_out_of_bed change={}",outOfBedBounds - iOutOfBed );
+            iOutOfBed = outOfBedBounds;
+        }
+
+        final int inBedBounds = iSleep - DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP;
+
+        if (iInBed > inBedBounds) {
+            LOGGER.info("action=moving_in_bed change={}",inBedBounds - iInBed );
+            iInBed = inBedBounds;
         }
 
         LOGGER.info("IN_BED at idx={}, psleep={}",iInBed,sleep[iInBed]);
