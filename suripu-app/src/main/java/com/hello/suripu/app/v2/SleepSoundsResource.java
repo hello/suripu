@@ -417,10 +417,9 @@ public class SleepSoundsResource extends BaseResource {
                 if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path)) {
                     if (Arrays.equals(fileInfoSha, file.getDownloadInfo().getSha1().toByteArray())) {
                         return true;
-                    } else {
-                        LOGGER.warn("device-id={} file-info-path={} file-info-sha={} error=sha-does-not-match",
-                                senseManifest.getSenseId(), fileInfo.path, fileInfo.sha);
                     }
+                    LOGGER.warn("device-id={} file-info-path={} file-info-sha={} error=sha-does-not-match",
+                                senseManifest.getSenseId(), fileInfo.path, fileInfo.sha);
                 }
             } else {
                 LOGGER.debug("device-id={} error=incomplete-download-info", senseManifest.getSenseId());
