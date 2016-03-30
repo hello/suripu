@@ -99,7 +99,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         for (final Sample s : light) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
 
-            final DateTime time = new DateTime(s.dateTime, DateTimeZone.UTC);
+            //get local time
+            final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
             if (time.getHourOfDay() >= 5 && time.getHourOfDay() < 20) {
                 continue;
             }
