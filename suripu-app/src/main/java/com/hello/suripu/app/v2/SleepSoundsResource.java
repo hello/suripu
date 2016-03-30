@@ -47,6 +47,8 @@ import java.util.List;
 public class SleepSoundsResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsResource.class);
 
+    private static final Integer MIN_SOUNDS = 5; // Anything less than this and we return an empty list.
+
     // Fade in/out sounds over this many seconds on Sense
     private static final Integer FADE_IN = 1;
     private static final Integer FADE_OUT = 3;
@@ -229,13 +231,24 @@ public class SleepSoundsResource extends BaseResource {
 
 
     //region sounds
-    protected class SoundResult {
+    protected static class SoundResult {
         @JsonProperty("sounds")
         @NotNull
         public final List<Sound> sounds;
 
-        public SoundResult(final List<Sound> sounds) {
+        @JsonProperty("state")
+        @NotNull
+        public final State state;
+
+        public SoundResult(final List<Sound> sounds, final State state) {
             this.sounds = sounds;
+            this.state = state;
+        }
+
+        enum State {
+            OK,
+            SOUNDS_NOT_DOWNLOADED,      // Sounds have not *yet* been downloaded to Sense, but should be.
+            SENSE_UPDATE_REQUIRED       // Sense cannot play sounds because it has old firmware
         }
     }
 
@@ -248,7 +261,7 @@ public class SleepSoundsResource extends BaseResource {
 
         if (!hasSleepSoundsEnabled(accountId)) {
             LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=false account-id={}", accountId);
-            return new SoundResult(sounds);
+            throw new WebApplicationException(Response.Status.NO_CONTENT);
         }
         LOGGER.info("endpoint=sleep-sounds sleep-sounds-enabled=true account-id={}", accountId);
 
@@ -263,7 +276,7 @@ public class SleepSoundsResource extends BaseResource {
         if (!manifestOptional.isPresent()) {
             LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
             // If no File manifest, Sense cannot play sounds so return an empty list.
-            return new SoundResult(sounds);
+            return new SoundResult(sounds, SoundResult.State.SENSE_UPDATE_REQUIRED);
         }
 
         final List<FileInfo> sleepSoundFileInfoList = fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND);
@@ -274,7 +287,13 @@ public class SleepSoundsResource extends BaseResource {
             }
         }
 
-        return new SoundResult(sounds);
+        if (sounds.size() < MIN_SOUNDS) {
+            LOGGER.warn("endpoint=sounds error=not-enough-sounds sense-id={} num-sounds={}",
+                    senseId, sounds.size());
+            return new SoundResult(Lists.<Sound>newArrayList(), SoundResult.State.SOUNDS_NOT_DOWNLOADED);
+        }
+
+        return new SoundResult(sounds, SoundResult.State.OK);
     }
     //endregion sounds
 
