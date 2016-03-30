@@ -9,6 +9,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,9 +63,11 @@ public class TaimurainHttpClient implements NeuralNetEndpoint {
             reqEntity.setChunked(true);
 
             httppost.setEntity(reqEntity);
-
+            final long startTime = DateTime.now().getMillis();
             final HttpResponse response = httpClient.execute(httppost);
-            LOGGER.debug("Executing request: " + httppost.getRequestLine());
+            final long endTime = DateTime.now().getMillis();
+
+            LOGGER.info("action=posted_neuralnet duration={} endpoint={}",endTime - startTime);
 
             final NeuralNetMessages.NeuralNetOutput output = NeuralNetMessages.NeuralNetOutput.parseFrom(response.getEntity().getContent());
 
