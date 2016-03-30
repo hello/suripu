@@ -2,7 +2,9 @@ package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -36,6 +38,7 @@ import org.mockito.Mockito;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -59,6 +62,15 @@ public class InsightProcessorTest {
     private final DateTime FAKE_DATE_NONE = DateTime.parse("2015-09-11").withTimeAtStartOfDay();
 
     private DeviceDataDAO deviceDataDAO;
+
+    private static final ImmutableSet<InsightCard.Category> marketingInsightPool = ImmutableSet.copyOf(Sets.newHashSet(InsightCard.Category.DRIVE,
+            InsightCard.Category.EAT,
+            InsightCard.Category.LEARN,
+            InsightCard.Category.LOVE,
+            InsightCard.Category.PLAY,
+            InsightCard.Category.RUN,
+            InsightCard.Category.SWIM,
+            InsightCard.Category.WORK));
 
     private static RolloutClient featureFlipOn() {
         final Long FAKE_ACCOUNT_ID = 9999L;
@@ -363,6 +375,57 @@ public class InsightProcessorTest {
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.SLEEP_QUALITY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.BED_LIGHT_DURATION);
+    }
+
+    @Test
+    public void test_selectMarketingInsight() {
+        //All marketing insights are available, we pull a random one
+
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        final Set<InsightCard.Category> marketingInsightsSeen= Sets.newHashSet(InsightCard.Category.LIGHT);
+
+        final Random random = new Random();
+
+        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        assertThat(marketingInsightPool.contains(marketingInsightToGenerate.get()), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void test_selectMarketingInsight_2() {
+        //All marketing insights are already seen, so we do not generate Marketing Insight
+
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.DRIVE,
+                InsightCard.Category.EAT,
+                InsightCard.Category.LEARN,
+                InsightCard.Category.LOVE,
+                InsightCard.Category.PLAY,
+                InsightCard.Category.RUN,
+                InsightCard.Category.SWIM,
+                InsightCard.Category.WORK);
+
+        final Random random = new Random();
+
+        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void test_getAllowedCategories() {
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        final Set<InsightCard.Category> marketingInsightsSeen = new HashSet<>();
+        marketingInsightsSeen.add(InsightCard.Category.RUN);
+
+        final Set<InsightCard.Category> allowedCategories = spyInsightProcessor.getAllowedCategories(marketingInsightPool, marketingInsightsSeen);
+
+        assertThat(allowedCategories.size(), is(7));
+        assertThat(allowedCategories.contains(InsightCard.Category.RUN), is(Boolean.FALSE));
     }
 
     @Test

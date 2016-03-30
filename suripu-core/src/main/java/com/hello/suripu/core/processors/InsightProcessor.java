@@ -4,7 +4,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -21,6 +23,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
@@ -60,6 +63,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -76,6 +80,8 @@ public class InsightProcessor {
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK = 4;
 
+    private static final Random random = new Random();
+
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceReadDAO deviceReadDAO;
@@ -90,6 +96,15 @@ public class InsightProcessor {
     private final AccountInfoProcessor accountInfoProcessor;
     private final CalibrationDAO calibrationDAO;
     private final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB;
+
+    private static final ImmutableSet<InsightCard.Category> marketingInsightPool = ImmutableSet.copyOf(Sets.newHashSet(InsightCard.Category.DRIVE,
+            InsightCard.Category.EAT,
+            InsightCard.Category.LEARN,
+            InsightCard.Category.LOVE,
+            InsightCard.Category.PLAY,
+            InsightCard.Category.RUN,
+            InsightCard.Category.SWIM,
+            InsightCard.Category.WORK));
 
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
                             @NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
@@ -234,7 +249,21 @@ public class InsightProcessor {
             }
         }
 
-        //Generate random marketing insight here. Will pull historical categoreis for all time again
+        //Generate random marketing insight here
+        final Optional<InsightCard.Category> toGenerateOneTimeCategory;
+        if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_MARKETING_SCHEDULE, accountId, Collections.EMPTY_LIST)) {
+            toGenerateOneTimeCategory = Optional.absent();
+        } else {
+            toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTime);
+        }
+
+        if (toGenerateOneTimeCategory.isPresent()) {
+            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateOneTimeCategory.get(), accountId);
+            final Optional<InsightCard.Category> generatedRandomOneTimeInsight = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, toGenerateOneTimeCategory.get());
+            if (generatedRandomOneTimeInsight.isPresent()) {
+                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomOneTimeInsight.get(), accountId);
+            }
+        }
 
         //logic for generating old random insight
         final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime, featureFlipper);
@@ -276,13 +305,71 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    public Optional<InsightCard.Category> selectRandomOneTimeInsightToGenerate(final Long accountId, final Set<InsightCard.Category> historicalCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
-        //Check if date condition is correct?
-        //Check if feature flipper on
-        //Get all historical insights
-        //Build set of marketing insights minus already generated insights
-        //Pull random insight out of set of marketing insights
+    private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTime) {
+        //Get all historical insight categories
+        final Optional<MarketingInsightsSeen> marketingInsightsSeenOptional = marketingInsightsSeenDAODynamoDB.getSeenCategories(accountId);
+        if (marketingInsightsSeenOptional.isPresent()) {
+            return selectMarketingInsightToGenerate(currentTime, marketingInsightsSeenOptional.get().seenCategories, random);
+        }
+
+        return selectMarketingInsightToGenerate(currentTime, new HashSet<InsightCard.Category>(), random);
+    }
+
+    @VisibleForTesting
+    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTime, final Set<InsightCard.Category> marketingSeenCategories, final Random random) {
+        final Integer dayOfMonth = currentTime.getDayOfMonth();
+        LOGGER.debug("The day of the month is {}", dayOfMonth);
+
+        //Check date condition
+        switch (dayOfMonth) {
+            case 1:
+            case 4:
+            case 7:
+            case 10:
+            case 13:
+            case 16:
+            case 19:
+
+                //Build set of marketing insights minus already generated insights
+                final Set<InsightCard.Category> allowedCategories;
+                if (!marketingSeenCategories.isEmpty()) {
+                    allowedCategories = getAllowedCategories(marketingInsightPool, marketingSeenCategories);
+                } else {
+                    allowedCategories = marketingInsightPool;
+                }
+
+                //Pull random insight out of set of allowed marketing insights
+                final Optional<InsightCard.Category> pickedRandomInsight = pickRandomInsightCategory(allowedCategories, random);
+                return pickedRandomInsight;
+        }
+
         return Optional.absent();
+    }
+
+    @VisibleForTesting
+    public Set<InsightCard.Category> getAllowedCategories(final Set<InsightCard.Category> insightPool, final Set<InsightCard.Category> seenPool) {
+        //For category in seen pool, if it is in insight pool, remove from insight pool
+        final Set<InsightCard.Category> allowedPool = Sets.newHashSet();
+
+        for (InsightCard.Category category : insightPool) {
+            if (!seenPool.contains(category)) {
+                allowedPool.add(category);
+            }
+        }
+
+        return allowedPool;
+    }
+
+    @VisibleForTesting
+    public Optional<InsightCard.Category> pickRandomInsightCategory(final Set<InsightCard.Category> allowedPool, final Random random) {
+        if (allowedPool.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final InsightCard.Category[] asList = allowedPool.toArray(new InsightCard.Category[allowedPool.size()]);
+        final Integer randomIndex = random.nextInt(allowedPool.size());
+
+        return Optional.of(asList[randomIndex]);
     }
 
     @VisibleForTesting
@@ -369,6 +456,7 @@ public class InsightProcessor {
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case DRIVE:
+                marketingInsightsSeenDAODynamoDB.updateSeenCategories(accountId, category);
                 insightCardOptional = Drive.getMarketingInsights(accountId);
                 break;
             case EAT:
@@ -424,6 +512,10 @@ public class InsightProcessor {
         }
 
         if (insightCardOptional.isPresent()) {
+            if (marketingInsightPool.contains(category)) {
+                marketingInsightsSeenDAODynamoDB.updateSeenCategories(accountId, category);
+            }
+
             // save to dynamo
             LOGGER.debug("Successfully generated {} category insight card for accountId {}, now inserting into DynamoDB", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
