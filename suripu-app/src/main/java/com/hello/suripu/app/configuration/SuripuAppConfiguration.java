@@ -452,12 +452,14 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("messeji_http_client")
     private MessejiHttpClientConfiguration messejiHttpClientConfiguration;
     public MessejiHttpClientConfiguration getMessejiHttpClientConfiguration() { return messejiHttpClientConfiguration; }
-
+    
     @Valid
     @NotNull
+    @JsonProperty("marketing_insights_seen")
+    private DynamoDBConfiguration marketingInsightsSeenConfiguration;
+    public DynamoDBConfiguration getMarketingInsightsSeenConfiguration() { return this.marketingInsightsSeenConfiguration; }
+
     @JsonProperty("taimurain_http_client")
     private TaimurainHttpClientConfiguration taimurainHttpClientConfiguration;
     public TaimurainHttpClientConfiguration getTaimurainHttpClientConfiguration() { return taimurainHttpClientConfiguration; }
-
-
 }

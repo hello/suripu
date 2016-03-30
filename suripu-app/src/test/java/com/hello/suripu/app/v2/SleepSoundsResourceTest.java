@@ -1,16 +1,23 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.protobuf.ByteString;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
+import com.hello.suripu.app.modules.RolloutAppModule;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FileInfoDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.Feature;
 import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.SenseStateAtTime;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
@@ -18,12 +25,15 @@ import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,9 +59,19 @@ public class SleepSoundsResourceTest {
     private FileInfoDAO fileInfoDAO;
     private FileManifestDAO fileManifestDAO;
     private SleepSoundsResource sleepSoundsResource;
+    private FeatureStore featureStore;
 
     @Before
     public void setUp() {
+        featureStore = Mockito.mock(FeatureStore.class);
+        Mockito.when(featureStore.getData())
+                .thenReturn(
+                        ImmutableMap.of(
+                                FeatureFlipper.SLEEP_SOUNDS_ENABLED,
+                                new Feature("sleep_sounds_enabled", Collections.EMPTY_LIST, Collections.EMPTY_LIST, (float) 100.0)));
+        final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(module);
+
         deviceDAO = Mockito.mock(DeviceDAO.class);
         senseStateDynamoDB = Mockito.mock(SenseStateDynamoDB.class);
         durationDAO = Mockito.mock(DurationDAO.class);
@@ -335,6 +355,7 @@ public class SleepSoundsResourceTest {
 
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(0));
+        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.SENSE_UPDATE_REQUIRED));
     }
 
     @Test
@@ -343,19 +364,22 @@ public class SleepSoundsResourceTest {
 
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
 
-        final FileInfo fileInfo = FileInfo.newBuilder()
-                .withId(soundId)
-                .withPreviewUri("preview")
-                .withName("name")
-                .withPath("/path/to/file")
-                .withUri("url")
-                .withFirmwareVersion(1)
-                .withIsPublic(true)
-                .withSha("11")
-                .withFileType(FileInfo.FileType.SLEEP_SOUND)
-                .build();
-        final FileInfo unplayableFileInfo = FileInfo.newBuilder()
-                .withId(soundId + 1)
+        final List<FileInfo> fileInfoList = Lists.newArrayList();
+        for (int i = 0; i < 5; i++) {
+            fileInfoList.add(FileInfo.newBuilder()
+                    .withId(soundId + i)
+                    .withPreviewUri("preview")
+                    .withName("name")
+                    .withPath("/path/to/file")
+                    .withUri("url")
+                    .withFirmwareVersion(1)
+                    .withIsPublic(true)
+                    .withSha("11")
+                    .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                    .build());
+        }
+        fileInfoList.add(FileInfo.newBuilder()
+                .withId(soundId + fileInfoList.size())
                 .withPreviewUri("preview")
                 .withName("name")
                 .withPath("/wrong/path/to/file")
@@ -364,8 +388,8 @@ public class SleepSoundsResourceTest {
                 .withIsPublic(true)
                 .withSha("11")
                 .withFileType(FileInfo.FileType.SLEEP_SOUND)
-                .build();
-        final List<FileInfo> fileInfoList = ImmutableList.of(fileInfo, unplayableFileInfo);
+                .build());
+
         Mockito.when(fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND)).thenReturn(fileInfoList);
 
         final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
@@ -373,15 +397,92 @@ public class SleepSoundsResourceTest {
                         .setDownloadInfo(FileSync.FileManifest.FileDownload.newBuilder()
                                 .setSdCardFilename("file")
                                 .setSdCardPath("path/to")
+                                .setSha1(ByteString.copyFrom(Hex.decodeHex("11".toCharArray())))
                                 .build())
                         .build())
                 .build();
         Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
 
         final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
-        assertThat(soundResult.sounds.size(), is(1));
-        assertThat(soundResult.sounds.get(0).id, is(soundId));
+        assertThat(soundResult.sounds.size(), is(5));
+        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.OK));
+        for (int i = 0; i < soundResult.sounds.size(); i++) {
+            assertThat(soundResult.sounds.get(i).id, is(soundId + i));
+        }
+    }
+
+    @Test
+    public void testGetSoundsNotEnoughSounds() throws Exception {
+        final Long soundId = 1L;
+
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+
+        final List<FileInfo> fileInfoList = Lists.newArrayList();
+        for (int i = 0; i < 3; i++) {
+            fileInfoList.add(FileInfo.newBuilder()
+                    .withId(soundId + i)
+                    .withPreviewUri("preview")
+                    .withName("name")
+                    .withPath("/path/to/file")
+                    .withUri("url")
+                    .withFirmwareVersion(1)
+                    .withIsPublic(true)
+                    .withSha("11")
+                    .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                    .build());
+        }
+
+        Mockito.when(fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND)).thenReturn(fileInfoList);
+
+        final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
+                .addFileInfo(FileSync.FileManifest.File.newBuilder()
+                        .setDownloadInfo(FileSync.FileManifest.FileDownload.newBuilder()
+                                .setSdCardFilename("file")
+                                .setSdCardPath("path/to")
+                                .setSha1(ByteString.copyFrom(Hex.decodeHex("11".toCharArray())))
+                                .build())
+                        .build())
+                .build();
+        Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
+
+        final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
+        assertThat(soundResult.sounds.size(), is(0));
+        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.SOUNDS_NOT_DOWNLOADED));
+    }
+
+    @Test(expected = WebApplicationException.class)
+    public void testGetSoundsNotFeatureFlipped() {
+        Mockito.when(featureStore.getData())
+                .thenReturn(
+                        ImmutableMap.of(
+                                FeatureFlipper.SLEEP_SOUNDS_ENABLED,
+                                new Feature("sleep_sounds_enabled", Collections.EMPTY_LIST, Collections.EMPTY_LIST, (float) 0.0)));
+        final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(module);
+        sleepSoundsResource = SleepSoundsResource.create(
+                durationDAO, senseStateDynamoDB, deviceDAO,
+                messejiClient, fileInfoDAO, fileManifestDAO);
+        sleepSoundsResource.getSounds(token);
     }
 
     // endregion getSounds
+
+    // region convertVolumePercent
+    @Test
+    public void testConvertVolumePercent() throws Exception {
+        assertThat(SleepSoundsResource.convertVolumePercent(100), is(100));
+        assertThat(SleepSoundsResource.convertVolumePercent(50), is(83));
+        assertThat(SleepSoundsResource.convertVolumePercent(25), is(67));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConvertVolumePercentTooLarge() {
+        SleepSoundsResource.convertVolumePercent(200);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConvertVolumePercentTooSmall() {
+        SleepSoundsResource.convertVolumePercent(0);
+    }
+    // endregion convertVolumePercent
 }

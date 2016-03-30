@@ -388,3 +388,8 @@ file_manifest:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: file_manifest
+
+marketing_insights_seen:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: marketing_insights_seen

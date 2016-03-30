@@ -52,6 +52,7 @@ import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
 import com.hello.suripu.queue.models.QueueHealthCheck;
 import com.hello.suripu.queue.models.SenseDataDAO;
 import com.hello.suripu.queue.modules.RolloutQueueModule;
+import com.hello.suripu.queue.resources.ConfigurationResource;
 import com.hello.suripu.queue.resources.StatsResource;
 import com.hello.suripu.queue.timeline.TimelineQueueConsumerManager;
 import com.hello.suripu.queue.timeline.TimelineQueueProcessor;
@@ -284,5 +285,6 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
         environment.addHealthCheck(queueHealthCheck);
 
         environment.addResource(new StatsResource(producerManager, consumerManager));
+        environment.addResource(new ConfigurationResource(configuration));
     }
 }
