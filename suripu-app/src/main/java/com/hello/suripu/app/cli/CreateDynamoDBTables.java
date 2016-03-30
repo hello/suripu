@@ -19,6 +19,7 @@ import com.hello.suripu.core.db.FileManifestDynamoDB;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
+import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
@@ -89,7 +90,9 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createPillDataTable(configuration, awsCredentialsProvider);
         createSenseStateTable(configuration, awsCredentialsProvider);
         createFileManifestTable(configuration, awsCredentialsProvider);
+        createMarketingInsightsSeenTable(configuration, awsCredentialsProvider);
     }
+
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
         final DynamoDBConfiguration config = configuration.getSmartAlarmLogDBConfiguration();
@@ -629,5 +632,21 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         }
     }
 
+    private void createMarketingInsightsSeenTable(SuripuAppConfiguration configuration, AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getMarketingInsightsSeenConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        final MarketingInsightsSeenDAODynamoDB dynamoDB = new MarketingInsightsSeenDAODynamoDB(client, tableName);
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = dynamoDB.createTable(1L, 1L);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
 
 }

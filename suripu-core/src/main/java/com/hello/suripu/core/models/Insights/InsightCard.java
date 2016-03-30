@@ -4,11 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
-
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -242,5 +239,4 @@ public class InsightCard implements Comparable<InsightCard> {
         return new InsightCard(card.accountId.get(), card.title, card.message, card.category,
                 card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), categoryName, card.insightType);
     }
-
 }

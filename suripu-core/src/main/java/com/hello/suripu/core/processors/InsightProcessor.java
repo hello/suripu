@@ -12,6 +12,7 @@ import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
+import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
@@ -48,7 +49,6 @@ import com.hello.suripu.core.processors.insights.WakeVariance;
 import com.hello.suripu.core.processors.insights.Work;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
@@ -65,7 +65,7 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Created by kingshy on 10/24/14.
+ * Created by kingshy on 10/24/14
  */
 public class InsightProcessor {
 
@@ -89,6 +89,7 @@ public class InsightProcessor {
     private final WakeStdDevData wakeStdDevData;
     private final AccountInfoProcessor accountInfoProcessor;
     private final CalibrationDAO calibrationDAO;
+    private final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB;
 
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
                             @NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
@@ -102,7 +103,8 @@ public class InsightProcessor {
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
                             @NotNull final LightData lightData,
                             @NotNull final WakeStdDevData wakeStdDevData,
-                            @NotNull final CalibrationDAO calibrationDAO
+                            @NotNull final CalibrationDAO calibrationDAO,
+                            @NotNull final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -117,6 +119,7 @@ public class InsightProcessor {
         this.wakeStdDevData = wakeStdDevData;
         this.accountInfoProcessor = accountInfoProcessor;
         this.calibrationDAO = calibrationDAO;
+        this.marketingInsightsSeenDAODynamoDB = marketingInsightsSeenDAODynamoDB;
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
@@ -153,8 +156,6 @@ public class InsightProcessor {
 
     /**
      * for new users, first 4 days
-     * @param accountId
-     * @param accountAge
      */
     private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge) {
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
@@ -197,7 +198,6 @@ public class InsightProcessor {
 
     /**
      * logic to determine what kind of insights to generate
-     * @param accountId
      */
     @VisibleForTesting
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
@@ -207,7 +207,7 @@ public class InsightProcessor {
             return Optional.absent();
         }
         
-        final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(accountId, recentCategories, currentTime);
+        final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTime);
 
         if (toGenerateWeeklyCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory.get(), accountId);
@@ -252,7 +252,7 @@ public class InsightProcessor {
 
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
 
         //Generate some Insights weekly
         final Integer dayOfWeek = currentTime.getDayOfWeek();
@@ -500,6 +500,12 @@ public class InsightProcessor {
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
         private @Nullable CalibrationDAO calibrationDAO;
+        private @Nullable MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB;
+
+        public Builder withMarketingInsightsSeenDAO(final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAO) {
+            this.marketingInsightsSeenDAODynamoDB = marketingInsightsSeenDAO;
+            return this;
+        }
 
         public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
             this.deviceReadDAO = deviceReadDAO;
@@ -563,6 +569,7 @@ public class InsightProcessor {
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
+            checkNotNull(marketingInsightsSeenDAODynamoDB, "marketInsightsSeenDAO cannot be null");
 
             return new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceReadDAO,
                     trendsInsightsDAO,
@@ -573,7 +580,8 @@ public class InsightProcessor {
                     accountInfoProcessor,
                     lightData,
                     wakeStdDevData,
-                    calibrationDAO);
+                    calibrationDAO,
+                    marketingInsightsSeenDAODynamoDB);
         }
     }
 }
