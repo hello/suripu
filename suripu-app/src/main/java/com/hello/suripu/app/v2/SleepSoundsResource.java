@@ -280,6 +280,9 @@ public class SleepSoundsResource extends BaseResource {
         }
 
         final List<FileInfo> sleepSoundFileInfoList = fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND);
+        LOGGER.debug("device-id={} sleep-sound-file-info-list-size={} file-manifest-file-count={}",
+                senseId, sleepSoundFileInfoList.size(), manifestOptional.get().getFileInfoCount());
+
         // O(n*m) but n and m are so small this is probably faster than doing something fancier.
         for (final FileInfo fileInfo : sleepSoundFileInfoList) {
             if (canPlayFile(manifestOptional.get(), fileInfo)) {
@@ -408,12 +411,23 @@ public class SleepSoundsResource extends BaseResource {
                     continue;
                 }
 
-                if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path) &&
-                        Arrays.equals(fileInfoSha, file.getDownloadInfo().getSha1().toByteArray())) {
-                    return true;
+                LOGGER.trace("method=canPlayFile device-id={} sd-card-path={} sd-card-filename={} file-info-path={}",
+                        senseManifest.getSenseId(), sdCardPath, sdCardFilename, fileInfo.path);
+
+                if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path)) {
+                    if (Arrays.equals(fileInfoSha, file.getDownloadInfo().getSha1().toByteArray())) {
+                        return true;
+                    } else {
+                        LOGGER.warn("device-id={} file-info-path={} file-info-sha={} error=sha-does-not-match",
+                                senseManifest.getSenseId(), fileInfo.path, fileInfo.sha);
+                    }
                 }
+            } else {
+                LOGGER.debug("device-id={} error=incomplete-download-info", senseManifest.getSenseId());
             }
         }
+        LOGGER.debug("device-id={} error=cannot-play-file file-info-path={}",
+                senseManifest.getSenseId(), fileInfo.path);
         return false;
     }
 
