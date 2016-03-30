@@ -256,12 +256,12 @@ public class InsightProcessor {
         } else {
             toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTime);
         }
-
         if (toGenerateOneTimeCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateOneTimeCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedRandomOneTimeInsight = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, toGenerateOneTimeCategory.get());
             if (generatedRandomOneTimeInsight.isPresent()) {
                 LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomOneTimeInsight.get(), accountId);
+                return generatedRandomOneTimeInsight;
             }
         }
 
@@ -305,7 +305,8 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTime) {
+    @VisibleForTesting
+    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTime) {
         //Get all historical insight categories
         final Optional<MarketingInsightsSeen> marketingInsightsSeenOptional = marketingInsightsSeenDAODynamoDB.getSeenCategories(accountId);
         if (marketingInsightsSeenOptional.isPresent()) {
