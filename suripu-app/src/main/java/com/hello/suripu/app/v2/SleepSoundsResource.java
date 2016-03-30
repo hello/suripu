@@ -47,6 +47,10 @@ import java.util.List;
 public class SleepSoundsResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsResource.class);
 
+    // Fade in/out sounds over this many seconds on Sense
+    private static final Integer FADE_IN = 1;
+    private static final Integer FADE_OUT = 3;
+
     private final DurationDAO durationDAO;
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
@@ -170,7 +174,7 @@ public class SleepSoundsResource extends BaseResource {
         final Integer volumeScalingFactor = convertVolumePercent(playRequest.volumePercent);
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
-                durationOptional.get(), sound, 0, 0, volumeScalingFactor);
+                durationOptional.get(), sound, FADE_IN, FADE_OUT, volumeScalingFactor);
 
         if (messageId.isPresent()) {
             LOGGER.debug("messeji-status=success message-id={} sense-id={}", messageId.get(), senseId);
@@ -214,7 +218,7 @@ public class SleepSoundsResource extends BaseResource {
         final String senseId = deviceIdPair.get().externalDeviceId;
 
         final Optional<Long> messageId = messejiClient.stopAudio(
-                senseId, MessejiClient.Sender.fromAccountId(accountId), stopRequest.order, 0);
+                senseId, MessejiClient.Sender.fromAccountId(accountId), stopRequest.order, FADE_OUT);
         if (messageId.isPresent()) {
             return Response.status(Response.Status.ACCEPTED).entity("").build();
         } else {
