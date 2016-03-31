@@ -434,7 +434,7 @@ INSERT INTO questions (question_text, lang, frequency, response_type, responses,
       'EN', -- lang
       'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
       'choice', --response_type,
-      '{"4 days or more", "1 day or more", "Didn''t do"}', --text responses
+      '{"4 days or more", "1 day or more", "I didn''t"}', --text responses
       null, -- dependency
       'anytime', -- ask_time
       'goal_go_outside' --category
@@ -458,7 +458,7 @@ INSERT INTO questions (question_text, lang, frequency, response_type, responses,
       'EN', -- lang
       'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
       'choice', --response_type,
-      '{"Good, as usual", "Better", "Same"}', --text responses
+      '{"Good, as usual", "Better", "The same"}', --text responses
       null, -- dependency
       'anytime', -- ask_time
       'goal_go_outside' --category
