@@ -25,6 +25,7 @@ import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.processors.SleepSoundsProcessor;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -353,9 +354,9 @@ public class SleepSoundsResourceTest {
 
         Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.<FileSync.FileManifest>absent());
 
-        final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
+        final SleepSoundsProcessor.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(0));
-        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.SENSE_UPDATE_REQUIRED));
+        assertThat(soundResult.state, is(SleepSoundsProcessor.SoundResult.State.SENSE_UPDATE_REQUIRED));
     }
 
     @Test
@@ -403,9 +404,9 @@ public class SleepSoundsResourceTest {
                 .build();
         Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
 
-        final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
+        final SleepSoundsProcessor.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(5));
-        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.OK));
+        assertThat(soundResult.state, is(SleepSoundsProcessor.SoundResult.State.OK));
         for (int i = 0; i < soundResult.sounds.size(); i++) {
             assertThat(soundResult.sounds.get(i).id, is(soundId + i));
         }
@@ -445,13 +446,14 @@ public class SleepSoundsResourceTest {
                 .build();
         Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
 
-        final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
+        final SleepSoundsProcessor.SoundResult soundResult = sleepSoundsResource.getSounds(token);
         assertThat(soundResult.sounds.size(), is(0));
-        assertThat(soundResult.state, is(SleepSoundsResource.SoundResult.State.SOUNDS_NOT_DOWNLOADED));
+        assertThat(soundResult.state, is(SleepSoundsProcessor.SoundResult.State.SOUNDS_NOT_DOWNLOADED));
     }
 
     @Test(expected = WebApplicationException.class)
     public void testGetSoundsNotFeatureFlipped() {
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
         Mockito.when(featureStore.getData())
                 .thenReturn(
                         ImmutableMap.of(
