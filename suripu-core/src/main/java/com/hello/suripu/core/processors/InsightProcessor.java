@@ -80,7 +80,7 @@ public class InsightProcessor {
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK = 4;
 
-    private static final Random random = new Random();
+    private static final Random RANDOM = new Random();
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
@@ -305,15 +305,14 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    @VisibleForTesting
-    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTime) {
+    private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTime) {
         //Get all historical insight categories
         final Optional<MarketingInsightsSeen> marketingInsightsSeenOptional = marketingInsightsSeenDAODynamoDB.getSeenCategories(accountId);
         if (marketingInsightsSeenOptional.isPresent()) {
-            return selectMarketingInsightToGenerate(currentTime, marketingInsightsSeenOptional.get().seenCategories, random);
+            return selectMarketingInsightToGenerate(currentTime, marketingInsightsSeenOptional.get().seenCategories, RANDOM);
         }
 
-        return selectMarketingInsightToGenerate(currentTime, new HashSet<InsightCard.Category>(), random);
+        return selectMarketingInsightToGenerate(currentTime, new HashSet<InsightCard.Category>(), RANDOM);
     }
 
     @VisibleForTesting
@@ -331,16 +330,8 @@ public class InsightProcessor {
             case 16:
             case 19:
 
-                //Build set of marketing insights minus already generated insights
-                final Set<InsightCard.Category> allowedCategories;
-                if (!marketingSeenCategories.isEmpty()) {
-                    allowedCategories = getAllowedCategories(marketingInsightPool, marketingSeenCategories);
-                } else {
-                    allowedCategories = marketingInsightPool;
-                }
-
                 //Pull random insight out of set of allowed marketing insights
-                final Optional<InsightCard.Category> pickedRandomInsight = pickRandomInsightCategory(allowedCategories, random);
+                final Optional<InsightCard.Category> pickedRandomInsight = pickRandomInsightCategory(marketingInsightPool, marketingSeenCategories, random);
                 return pickedRandomInsight;
         }
 
@@ -348,7 +339,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Set<InsightCard.Category> getAllowedCategories(final Set<InsightCard.Category> insightPool, final Set<InsightCard.Category> seenPool) {
+    public Optional<InsightCard.Category> pickRandomInsightCategory(final Set<InsightCard.Category> insightPool, final Set<InsightCard.Category> seenPool, final Random random) {
         //For category in seen pool, if it is in insight pool, remove from insight pool
         final Set<InsightCard.Category> allowedPool = Sets.newHashSet();
 
@@ -358,19 +349,15 @@ public class InsightProcessor {
             }
         }
 
-        return allowedPool;
-    }
-
-    @VisibleForTesting
-    public Optional<InsightCard.Category> pickRandomInsightCategory(final Set<InsightCard.Category> allowedPool, final Random random) {
+        //Pick random category out of allowed pool
         if (allowedPool.isEmpty()) {
             return Optional.absent();
         }
 
-        final InsightCard.Category[] asList = allowedPool.toArray(new InsightCard.Category[allowedPool.size()]);
+        final InsightCard.Category[] allowedPoolList = allowedPool.toArray(new InsightCard.Category[allowedPool.size()]);
         final Integer randomIndex = random.nextInt(allowedPool.size());
 
-        return Optional.of(asList[randomIndex]);
+        return Optional.of(allowedPoolList[randomIndex]);
     }
 
     @VisibleForTesting
