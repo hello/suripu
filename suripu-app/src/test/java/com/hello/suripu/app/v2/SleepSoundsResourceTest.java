@@ -81,7 +81,7 @@ public class SleepSoundsResourceTest {
         fileManifestDAO = Mockito.mock(FileManifestDAO.class);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, fileInfoDAO, fileManifestDAO);
+                messejiClient, SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO));
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
@@ -463,7 +463,7 @@ public class SleepSoundsResourceTest {
         ObjectGraphRoot.getInstance().init(module);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, fileInfoDAO, fileManifestDAO);
+                messejiClient, SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO));
         sleepSoundsResource.getSounds(token);
     }
 

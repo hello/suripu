@@ -4,16 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.FileInfoDAO;
-import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.SenseStateAtTime;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
@@ -45,8 +41,6 @@ import java.util.List;
 public class SleepSoundsResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsResource.class);
 
-    private static final Integer MIN_SOUNDS = 5; // Anything less than this and we return an empty list.
-
     // Fade in/out sounds over this many seconds on Sense
     private static final Integer FADE_IN = 1;
     private static final Integer FADE_OUT = 3;
@@ -55,24 +49,18 @@ public class SleepSoundsResource extends BaseResource {
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
     private final MessejiClient messejiClient;
-    private final FileInfoDAO fileInfoDAO;
-    private final FileManifestDAO fileManifestDAO;
     private final SleepSoundsProcessor sleepSoundsProcessor;
 
     private SleepSoundsResource(final DurationDAO durationDAO,
                                 final SenseStateDynamoDB senseStateDynamoDB,
                                 final DeviceDAO deviceDAO,
                                 final MessejiClient messejiClient,
-                                final FileInfoDAO fileInfoDAO,
-                                final FileManifestDAO fileManifestDAO,
                                 final SleepSoundsProcessor sleepSoundsProcessor)
     {
         this.durationDAO = durationDAO;
         this.senseStateDynamoDB = senseStateDynamoDB;
         this.deviceDAO = deviceDAO;
         this.messejiClient = messejiClient;
-        this.fileInfoDAO = fileInfoDAO;
-        this.fileManifestDAO = fileManifestDAO;
         this.sleepSoundsProcessor = sleepSoundsProcessor;
     }
 
@@ -80,11 +68,9 @@ public class SleepSoundsResource extends BaseResource {
                                              final SenseStateDynamoDB senseStateDynamoDB,
                                              final DeviceDAO deviceDAO,
                                              final MessejiClient messejiClient,
-                                             final FileInfoDAO fileInfoDAO,
-                                             final FileManifestDAO fileManifestDAO)
+                                             final SleepSoundsProcessor sleepSoundsProcessor)
     {
-        final SleepSoundsProcessor sleepSoundsProcessor = SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO);
-        return new SleepSoundsResource(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO, sleepSoundsProcessor);
+        return new SleepSoundsResource(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, sleepSoundsProcessor);
     }
 
 
@@ -132,19 +118,6 @@ public class SleepSoundsResource extends BaseResource {
     public Response play(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                          @Valid final PlayRequest playRequest)
     {
-        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getById(playRequest.soundId);
-        if (!fileInfoOptional.isPresent()) {
-            LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-found", playRequest.soundId);
-            return invalid_request("invalid sound id");
-        }
-
-        if (fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
-            LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-sleep-sound", playRequest.soundId);
-            return invalid_request("invalid sound id");
-        }
-
-        final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
-
         final Optional<Duration> durationOptional = durationDAO.getById(playRequest.durationId);
         if (!durationOptional.isPresent()) {
             LOGGER.warn("dao=durationDAO method=getById id={} error=not-found", playRequest.durationId);
@@ -161,24 +134,16 @@ public class SleepSoundsResource extends BaseResource {
 
         final String senseId = deviceIdPair.get().externalDeviceId;
 
-        // Make sure that this Sense can play this sound
-        final Optional<FileSync.FileManifest> fileManifestOptional = fileManifestDAO.getManifest(senseId);
-        if (!fileManifestOptional.isPresent()) {
-            LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
-            return invalid_request("cannot play sound");
-        }
-
-        if (!SleepSoundsProcessor.canPlayFile(fileManifestOptional.get(), fileInfoOptional.get())) {
-            LOGGER.warn("sense-id={} error=cannot-play-file file-info-id={} path={}",
-                    senseId, fileInfoOptional.get().id, fileInfoOptional.get().path);
-            return invalid_request("cannot play sound");
+        final Optional<Sound> soundOptional = sleepSoundsProcessor.getSound(senseId, playRequest.soundId);
+        if (!soundOptional.isPresent()) {
+            return invalid_request("invalid sound id");
         }
 
         // Send to Messeji
         final Integer volumeScalingFactor = convertVolumePercent(playRequest.volumePercent);
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
-                durationOptional.get(), sound, FADE_IN, FADE_OUT, volumeScalingFactor);
+                durationOptional.get(), soundOptional.get(), FADE_IN, FADE_OUT, volumeScalingFactor);
 
         if (messageId.isPresent()) {
             LOGGER.debug("messeji-status=success message-id={} sense-id={}", messageId.get(), senseId);
@@ -319,14 +284,13 @@ public class SleepSoundsResource extends BaseResource {
             return NOT_PLAYING;
         }
 
-        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(audioState.getFilePath());
-        if (!fileInfoOptional.isPresent() || fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
+        final Optional<Sound> soundOptional = sleepSoundsProcessor.getSound(audioState.getFilePath());
+        if (!soundOptional.isPresent()) {
             LOGGER.warn("error=sound-file-not-found account-id={} device-id={} file-path={}",
                     accountId, deviceId, audioState.getFilePath());
             return NOT_PLAYING;
         }
-
-        final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
+        final Sound sound = soundOptional.get();
 
         if (audioState.hasVolumePercent()) {
             return SleepSoundStatus.create(sound, durationOptional.get(), audioState.getVolumePercent());

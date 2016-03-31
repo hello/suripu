@@ -95,12 +95,54 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor {
         return new SoundResult(sounds, SoundResult.State.OK);
     }
 
+    public Optional<Sound> getSound(final String filePath) {
+        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(filePath);
+        if (!fileInfoOptional.isPresent() || fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
+            LOGGER.warn("dao=fileInfoDAO error=path-not-found file-path={}", filePath);
+            return Optional.absent();
+        }
+
+        final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
+        return Optional.of(sound);
+    }
+
+    /**
+     * @return a sleep sound for this Sense to play, but only if this Sense can play the sound and if the sound ID is valid.
+     */
+    public Optional<Sound> getSound(final String senseId, final Long soundId) {
+        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getById(soundId);
+        if (!fileInfoOptional.isPresent()) {
+            LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-found", soundId);
+            return Optional.absent();
+        }
+
+        if (fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
+            LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-sleep-sound", soundId);
+            return Optional.absent();
+        }
+
+        // Make sure that this Sense can play this sound
+        final Optional<FileSync.FileManifest> fileManifestOptional = fileManifestDAO.getManifest(senseId);
+        if (!fileManifestOptional.isPresent()) {
+            LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
+            return Optional.absent();
+        }
+
+        if (!canPlayFile(fileManifestOptional.get(), fileInfoOptional.get())) {
+            LOGGER.warn("sense-id={} error=cannot-play-file file-info-id={} path={}",
+                    senseId, fileInfoOptional.get().id, fileInfoOptional.get().path);
+            return Optional.absent();
+        }
+
+        final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
+        return Optional.of(sound);
+    }
 
     private static String getFullPath(final String sdCardPath, final String sdCardFilename) {
         return "/" + sdCardPath + "/" + sdCardFilename;
     }
 
-    public static Boolean canPlayFile(final FileSync.FileManifest senseManifest, final FileInfo fileInfo) {
+    private static Boolean canPlayFile(final FileSync.FileManifest senseManifest, final FileInfo fileInfo) {
         for (final FileSync.FileManifest.File file : senseManifest.getFileInfoList()) {
             if (file.hasDownloadInfo() &&
                     file.getDownloadInfo().hasSdCardFilename() &&
