@@ -46,7 +46,9 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
     final static int MAX_ON_BED_SEARCH_WINDOW = 30; //minutes
     final static int MAX_OFF_BED_SEARCH_WINDOW = 30; //minutes
 
-    //DO NOT CHANGE THE ORDER OF THESE
+    //DO NOT CHANGE THE INDICES
+    //as long as index is right, the order shouldn't matter
+    //but why would you mess with the order anyway?
     public enum SensorIndices {
         LIGHT(0),
         DIFFLIGHT(1),
@@ -159,21 +161,21 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         return t0 + DateTimeConstants.MILLIS_PER_MINUTE*index;
     }
 
+    /* Get the timezone offset based on the sensor data.  This should keep daylight savings from ever being a problem */
     static protected Integer getOffset(final long time, final TreeMap<Long,Integer> offsetMap) {
         final Long higher = offsetMap.higherKey(time);
         final Long lower = offsetMap.lowerKey(time);
 
         if (lower == null && higher == null) {
+            LOGGER.error("action=exception_due_to_empty_offset_map map_size={} t={}",offsetMap.size(),time);
             throw new AlgorithmException(String.format("unable to map offset from t=%s in map of size %d",new DateTime(time).toString(),offsetMap.size()));
         }
 
         if (lower == null) {
             return offsetMap.get(higher);
         }
-        else {
-            return offsetMap.get(lower);
-        }
 
+        return offsetMap.get(lower);
     }
 
 
@@ -210,14 +212,15 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             final Optional<SleepProbabilityInterpreter.EventIndices> indicesOptional = SleepProbabilityInterpreter.getEventIndices(algorithmOutput.output[1],x[SensorIndices.MY_MOTION_DURATION.index()]);
 
             if (!indicesOptional.isPresent()) {
-                LOGGER.warn("status=no_event_indices");
+                LOGGER.warn("action=return_no_indices reason=no_event_indices_from_sleep_probability_interpreter");
                 return Optional.absent();
             }
 
             return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,getAllEvents(offsetMap,t0,indicesOptional.get())));
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("action=caught_exception exception=Exception error=invalid_index_calculation");
+            LOGGER.debug(e.getMessage());
         }
 
         return Optional.absent();

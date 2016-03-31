@@ -67,7 +67,7 @@ public class TaimurainHttpClient implements NeuralNetEndpoint {
             final HttpResponse response = httpClient.execute(httppost);
             final long endTime = DateTime.now().getMillis();
 
-            LOGGER.info("action=posted_neuralnet duration={} endpoint={}",endTime - startTime);
+            LOGGER.info("action=posted_neuralnet duration={} endpoint={} net_id={}",endTime - startTime,netId);
 
             final NeuralNetMessages.NeuralNetOutput output = NeuralNetMessages.NeuralNetOutput.parseFrom(response.getEntity().getContent());
 
@@ -90,7 +90,8 @@ public class TaimurainHttpClient implements NeuralNetEndpoint {
 
         }
         catch (IOException e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error("action=caught_exception exception=IOException message=\"{}\" ",e.getMessage());
+            LOGGER.debug(e.getMessage());
         }
 
 
