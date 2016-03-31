@@ -403,32 +403,48 @@ public class InsightProcessorTest {
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.BED_LIGHT_DURATION);
     }
 
-//    @Test
-//    public void test_generateGeneralInsights_8() {
-//
-//        final RolloutClient mockFeatureFlipper = featureFlipMarketingScheduleOn();
-//        final InsightProcessor insightProcessor = setUp();
-//        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
-//        Mockito.when(spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_ACCOUNT_ID, FAKE_DATE_1)).thenReturn(Optional.of(InsightCard.Category.DRIVE)); //Need to make method public for this to work
-//
-        //actually simulating recent categories
-//        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-//        recentCategories.add(InsightCard.Category.LIGHT);
-//
-//        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
+    @Test
+    public void test_selectMarketingInsightToGenerate() {
+        final InsightProcessor insightProcessor = setUp();
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.RUN);
 
-        //TEST - no high priority insight to generate (function not finished yet TODO: finish that)
-        //TEST - select marketing insight to generate, generate marketing insight (can't mock b/c of random)
-//        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1);
-//        Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.DRIVE);
-//
-        //Don't look for random old insight because marketing insight generated
-//        Mockito.verify(spyInsightProcessor, Mockito.never()).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
-//        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.HUMIDITY);
-//        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.TEMPERATURE);
-//        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.SLEEP_QUALITY);
-//        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.BED_LIGHT_DURATION);
-//    }
+        final Random random = new Random();
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+
+        //TEST - correct date, and there are categories to pick from
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void test_selectMarketingInsightToGenerate_2() {
+        final InsightProcessor insightProcessor = setUp();
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.RUN);
+
+        final Random random = new Random();
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_NONE, marketingInsightsSeen, random);
+
+        //TEST - incorrect date
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void test_selectMarketingInsightToGenerate_3() {
+        final InsightProcessor insightProcessor = setUp();
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.DRIVE,
+                InsightCard.Category.EAT,
+                InsightCard.Category.LEARN,
+                InsightCard.Category.LOVE,
+                InsightCard.Category.PLAY,
+                InsightCard.Category.RUN,
+                InsightCard.Category.SWIM,
+                InsightCard.Category.WORK);
+
+        final Random random = new Random();
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+
+        //TEST - correct date, but there are no categories to pick from
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
+    }
 
     @Test
     public void test_selectMarketingInsight() {
@@ -441,6 +457,7 @@ public class InsightProcessorTest {
 
         final Random random = new Random();
 
+        //TEST No marketing insights have been generated yet, so marketingInsightToGenerate can be any of the entire pool
         Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
         assertThat(marketingInsightPool.contains(marketingInsightToGenerate.get()), is(Boolean.TRUE));
     }
@@ -463,6 +480,7 @@ public class InsightProcessorTest {
 
         final Random random = new Random();
 
+        //TEST All marketing insights have been generated, so we do not have a marketingInsightToGenerate
         Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
         assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
     }
@@ -478,6 +496,7 @@ public class InsightProcessorTest {
         final Random random = new Random();
         final Optional<InsightCard.Category> randomInsightCategory = spyInsightProcessor.pickRandomInsightCategory(marketingInsightPool, marketingInsightsSeen, random);
 
+        //TEST b/c run has already been generated, randomInsightCategory will never be run
         assertThat(randomInsightCategory.get() == InsightCard.Category.RUN, is(Boolean.FALSE));
     }
 
