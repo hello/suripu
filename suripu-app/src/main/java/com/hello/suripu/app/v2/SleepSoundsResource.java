@@ -51,7 +51,7 @@ public class SleepSoundsResource extends BaseResource {
 
     // Fade in/out sounds over this many seconds on Sense
     private static final Integer FADE_IN = 1;
-    private static final Integer FADE_OUT = 3;
+    private static final Integer FADE_OUT = 1;
 
     private final DurationDAO durationDAO;
     private final SenseStateDynamoDB senseStateDynamoDB;
