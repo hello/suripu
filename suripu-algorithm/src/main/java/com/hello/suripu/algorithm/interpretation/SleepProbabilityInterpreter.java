@@ -150,7 +150,7 @@ public class SleepProbabilityInterpreter {
 
 
             if (res.bestPath.size() <= 1) {
-                LOGGER.error("path size <= 1");
+                LOGGER.info("action=return_invalid_indices reason=path_size_less_than_one");
                 return Optional.absent();
             }
 /*
@@ -169,7 +169,7 @@ public class SleepProbabilityInterpreter {
                 final Integer state = res.bestPath.get(i);
 
                 if (!state.equals(prevState)) {
-                    LOGGER.info("FROM {} ---> {} at {}", prevState, state, i);
+                    LOGGER.info("action=hmm_decode from_state={} to_state={} index={}", prevState, state, i);
                 }
 
                 if (state.equals(3) && !prevState.equals(3) && !foundSleep) {
@@ -251,7 +251,7 @@ public class SleepProbabilityInterpreter {
                 if (!state.equals(0)) {
                     //if motion cluster start was found too far before sleep, then stop search and use default
                     if (iSleep - i > MAX_ON_BED_SEARCH_WINDOW && !foundCluster) {
-                        LOGGER.warn("action=return_default_in_bed");
+                        LOGGER.warn("action=return_default_in_bed reason=motion_cluster_too_far_out");
                         break;
                     }
 
@@ -272,7 +272,7 @@ public class SleepProbabilityInterpreter {
                 if (!state.equals(0)) {
                     //if motion cluster start was found too far after wake, then stop search and use default
                     if (i - iWake > MAX_OFF_BED_SEARCH_WINDOW && !foundCluster) {
-                        LOGGER.warn("action=return_default_out_of_bed");
+                        LOGGER.warn("action=return_default_out_of_bed reason=motion_cluster_too_far_out");
                         break;
                     }
                     foundCluster = true;
@@ -289,21 +289,21 @@ public class SleepProbabilityInterpreter {
         final int outOfBedBounds = iWake + DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE;
 
         if (iOutOfBed < outOfBedBounds) {
-            LOGGER.info("action=moving_out_of_bed change={}",outOfBedBounds - iOutOfBed );
+            LOGGER.info("action=moving_out_of_bed reason=default_bounds_violation change={}",outOfBedBounds - iOutOfBed );
             iOutOfBed = outOfBedBounds;
         }
 
         final int inBedBounds = iSleep - DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP;
 
         if (iInBed > inBedBounds) {
-            LOGGER.info("action=moving_in_bed change={}",inBedBounds - iInBed );
+            LOGGER.info("action=moving_in_bed reason=default_bounds_violation change={}",inBedBounds - iInBed );
             iInBed = inBedBounds;
         }
 
-        LOGGER.info("IN_BED at idx={}, psleep={}",iInBed,sleep[iInBed]);
-        LOGGER.info("SLEEP at idx={}, psleep={}",iSleep,sleep[iSleep]);
-        LOGGER.info("WAKE_UP at idx={}, psleep={}",iWake,sleep[iWake]);
-        LOGGER.info("OUT_OF_BED at idx={}, psleep={}",iOutOfBed,sleep[iOutOfBed]);
+        LOGGER.info("timeline_event=IN_BED idx={} psleep={}",iInBed,sleep[iInBed]);
+        LOGGER.info("timeline_event=SLEEP  idx={} psleep={}",iSleep,sleep[iSleep]);
+        LOGGER.info("timeline_event=WAKE_UP idx={} psleep={}",iWake,sleep[iWake]);
+        LOGGER.info("timeline_event=OUT_OF_BED idx={} psleep={}",iOutOfBed,sleep[iOutOfBed]);
 
         return Optional.of(new EventIndices(iInBed,iSleep,iWake,iOutOfBed));
 
