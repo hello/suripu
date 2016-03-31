@@ -18,6 +18,8 @@ import java.util.List;
 
 /**
  * Created by jakepiccolo on 3/30/16.
+ *
+ * Helper class for determining what sleep sounds are available on a Sense, and why.
  */
 public class SleepSoundsProcessor extends FeatureFlippedProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsProcessor.class);
@@ -36,6 +38,10 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor {
         return new SleepSoundsProcessor(fileInfoDAO, fileManifestDAO);
     }
 
+
+    /**
+     * Class to communicate the sleep sounds for a Sense, along with the state of sleep sound functionality on Sense.
+     */
     public static class SoundResult {
         @JsonProperty("sounds")
         @NotNull
@@ -58,6 +64,11 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor {
         }
     }
 
+    /**
+     * @param accountId User's account ID
+     * @param senseId Sense ID paired to this account
+     * @return SoundResult containing the list of Sounds for the account/Sense.
+     */
     public SoundResult getSounds(final Long accountId, final String senseId) {
         final List<Sound> sounds = Lists.newArrayList();
 
@@ -95,6 +106,10 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor {
         return new SoundResult(sounds, SoundResult.State.OK);
     }
 
+    /**
+     * @param filePath Full path of the file found on Sense.
+     * @return Sound if the filePath maps to one, else absent.
+     */
     public Optional<Sound> getSound(final String filePath) {
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(filePath);
         if (!fileInfoOptional.isPresent() || fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
