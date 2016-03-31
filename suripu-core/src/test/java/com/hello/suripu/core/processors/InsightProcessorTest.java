@@ -447,6 +447,22 @@ public class InsightProcessorTest {
     }
 
     @Test
+    public void test_selectMarketingInsightToGenerate_4() {
+        final InsightProcessor insightProcessor = setUp();
+
+        Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet();
+
+        final Random random = new Random();
+        
+        for (int i = 0; i < marketingInsightPool.size(); i ++) {
+            final Optional<InsightCard.Category> randomInsightCategory = insightProcessor.pickRandomInsightCategory(marketingInsightPool, marketingInsightsSeen, random);
+            assertThat(randomInsightCategory.isPresent(), is(Boolean.TRUE));
+            assertThat(marketingInsightsSeen.contains(randomInsightCategory), is(Boolean.FALSE));
+            marketingInsightsSeen.add(randomInsightCategory.get());
+        }
+    }
+
+    @Test
     public void test_selectMarketingInsight() {
         //All marketing insights are available, we pull a random one
 
