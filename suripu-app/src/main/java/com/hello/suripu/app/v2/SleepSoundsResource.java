@@ -272,21 +272,21 @@ public class SleepSoundsResource extends BaseResource {
 
         final State.AudioState audioState = senseStateAtTime.state.getAudioState();
         if (!(audioState.hasDurationSeconds() && audioState.hasFilePath())) {
-            LOGGER.warn("error=inconsistent-sense-state account-id={} device-id={} audio-state-playing={} audio-state-has-duration={} audio-state-has-file-path={}",
+            LOGGER.warn("error=inconsistent-sense-state account-id={} sense-id={} audio-state-playing={} audio-state-has-duration={} audio-state-has-file-path={}",
                     accountId, deviceId, audioState.getPlayingAudio(), audioState.getDurationSeconds(), audioState.getFilePath());
             return NOT_PLAYING;
         }
 
         final Optional<Duration> durationOptional = durationDAO.getByDurationSeconds(audioState.getDurationSeconds());
         if (!durationOptional.isPresent()) {
-            LOGGER.warn("error=duration-not-found account-id={} device-id={} duration-seconds={}",
+            LOGGER.warn("error=duration-not-found account-id={} sense-id={} duration-seconds={}",
                     accountId, deviceId, audioState.getDurationSeconds());
             return NOT_PLAYING;
         }
 
         final Optional<Sound> soundOptional = sleepSoundsProcessor.getSound(audioState.getFilePath());
         if (!soundOptional.isPresent()) {
-            LOGGER.warn("error=sound-file-not-found account-id={} device-id={} file-path={}",
+            LOGGER.warn("error=sound-file-not-found account-id={} sense-id={} file-path={}",
                     accountId, deviceId, audioState.getFilePath());
             return NOT_PLAYING;
         }
