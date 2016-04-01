@@ -100,6 +100,7 @@ import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
+import com.hello.suripu.core.flipper.DynamoDBAdapter;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -443,6 +444,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
         environment.addResource(new AppCheckinResource(2015000000));
 
+
+
         // data science resource stuff
         final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
         final AccountPreferencesDAO accountPreferencesDAO = AccountPreferencesDynamoDB.create(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
@@ -489,5 +492,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 new HttpClientBuilder().using(messejiHttpClientConfiguration.getHttpClientConfiguration()).build(),
                 messejiHttpClientConfiguration.getEndpoint());
         environment.addResource(SleepSoundsResource.create(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO));
+
+        final LogResponseFilter logResponseFilter = new LogResponseFilter(new DynamoDBAdapter(featureStore, 5));
+        environment.addFilter(logResponseFilter, "/*");
     }
 }
