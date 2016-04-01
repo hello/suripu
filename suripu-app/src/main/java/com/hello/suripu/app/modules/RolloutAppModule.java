@@ -10,6 +10,7 @@ import com.hello.suripu.app.v2.TrendsResource;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
 import com.hello.suripu.core.processors.QuestionProcessor;
+import com.hello.suripu.core.processors.SleepSoundsProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
@@ -28,7 +29,8 @@ import javax.inject.Singleton;
         DeviceResource.class,
         TrendsResource.class,
         QuestionProcessor.class,
-        SleepSoundsResource.class
+        SleepSoundsResource.class,
+        SleepSoundsProcessor.class
 })
 public class RolloutAppModule {
     private final FeatureStore featureStore;

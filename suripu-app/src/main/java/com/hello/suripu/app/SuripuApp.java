@@ -114,6 +114,7 @@ import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.QuestionProcessor;
+import com.hello.suripu.core.processors.SleepSoundsProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.store.StoreFeedbackDAO;
@@ -488,6 +489,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final MessejiClient messejiClient = MessejiHttpClient.create(
                 new HttpClientBuilder().using(messejiHttpClientConfiguration.getHttpClientConfiguration()).build(),
                 messejiHttpClientConfiguration.getEndpoint());
-        environment.addResource(SleepSoundsResource.create(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO));
+        environment.addResource(SleepSoundsResource.create(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO)));
     }
 }
