@@ -424,3 +424,69 @@ WHERE questions.id = S.question_id;
 UPDATE questions
 SET question_text='Was your sleep or nighttime routine last night different from usual?'
 WHERE category='anomaly_light';
+
+---- New questions for goals 1 go outside 2016-03-22
+ALTER TYPE question_category ADD VALUE 'goal_go_outside';
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How often did you spend 15 min outside?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"4 days or more", "1 day or more", "I didn''t"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'goal_go_outside' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'Was having a weekly goal helpful?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No, not helpful"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'goal_go_outside' --category
+  );
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How was your sleep last week?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Good, as usual", "Better", "The same"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'goal_go_outside' --category
+  );
+
+INSERT INTO response_choices (question_id, response_text)
+    (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 3));
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 3) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
