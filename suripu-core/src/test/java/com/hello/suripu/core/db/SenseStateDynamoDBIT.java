@@ -132,5 +132,39 @@ public class SenseStateDynamoDBIT extends DynamoDBIT<SenseStateDynamoDB> {
                 is(State.AudioState.newBuilder(state2.state.getAudioState()).setVolumePercent(state1.state.getAudioState().getVolumePercent()).build()));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testUpdateStateNoFilePath() {
+        final String senseId = "sense";
+        final DateTime origTime = new DateTime(2016, 1, 1, 0, 0, 0, DateTimeZone.UTC);
+
+        final SenseStateAtTime state = new SenseStateAtTime(State.SenseState.newBuilder()
+                .setSenseId(senseId)
+                .setAudioState(State.AudioState.newBuilder()
+                        .setPlayingAudio(true)
+                        .setDurationSeconds(10)
+                        .build())
+                .build(),
+                origTime);
+
+        dao.updateState(state);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testUpdateStateNoDurationSeconds() {
+        final String senseId = "sense";
+        final DateTime origTime = new DateTime(2016, 1, 1, 0, 0, 0, DateTimeZone.UTC);
+
+        final SenseStateAtTime state = new SenseStateAtTime(State.SenseState.newBuilder()
+                .setSenseId(senseId)
+                .setAudioState(State.AudioState.newBuilder()
+                        .setFilePath("file")
+                        .setPlayingAudio(true)
+                        .build())
+                .build(),
+                origTime);
+
+        dao.updateState(state);
+    }
+
 
 }

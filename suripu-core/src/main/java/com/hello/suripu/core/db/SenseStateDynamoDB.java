@@ -128,6 +128,11 @@ public class SenseStateDynamoDB {
             updates.put(SenseStateAttribute.PLAYING_AUDIO.shortName(), Util.putAction(audioState.getPlayingAudio()));
 
             if (audioState.getPlayingAudio()) {
+                if (!audioState.hasFilePath() || !audioState.hasDurationSeconds()) {
+                    LOGGER.error("error=invalid-sense-state sense-id={} audio-playing={} has-file-path={} has-duration-seconds={}",
+                            state.state.getSenseId(), audioState.getPlayingAudio(), audioState.hasFilePath(), audioState.hasDurationSeconds());
+                    throw new IllegalArgumentException("If playing audio, file_path and duration_seconds must both be present.");
+                }
                 updates.put(SenseStateAttribute.SLEEP_SOUND_FILE.shortName(), Util.putAction(audioState.getFilePath()));
                 updates.put(SenseStateAttribute.SLEEP_SOUND_DURATION.shortName(), Util.putAction((long) audioState.getDurationSeconds()));
                 if (audioState.hasVolumePercent()) {
