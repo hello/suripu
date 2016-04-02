@@ -12,8 +12,8 @@ import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
-import com.hello.suripu.core.models.questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -151,7 +152,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         // check if we have already generated a list of questions
         // and if the user has answered any
-        final Map<Integer, Question> preGeneratedQuestions = new HashMap<>();
+        final LinkedHashMap<Integer, Question> preGeneratedQuestions = Maps.newLinkedHashMap();
 
         // grab user question and response status for today if this is not a "get-more questions" request
         final DateTime expiration = today.plusDays(1);
@@ -161,7 +162,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         int answered = 0;
         boolean foundAnomalyQuestion = false;
 
-        if (questionResponseList.size() != 0) {
+        if (!questionResponseList.isEmpty()) {
             // check number of today's question the user has answered
             for (final AccountQuestionResponses question : questionResponseList) {
                 if (question.responded) {

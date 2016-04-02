@@ -93,7 +93,7 @@ public interface QuestionResponseReadDAO {
     @SqlQuery("SELECT Q.*, R.created AS response_created " +
             "FROM account_questions Q " +
             "LEFT OUTER JOIN responses R ON R.account_question_id = Q.id " +
-            "WHERE Q.account_id = :account_id AND Q.expires_local_utc_ts >= :expiration ORDER BY Q.id DESC")
+            "WHERE Q.account_id = :account_id AND Q.expires_local_utc_ts >= :expiration ORDER BY Q.id")
     ImmutableList<AccountQuestionResponses> getQuestionsResponsesByDate(@Bind("account_id") long accountId,
                                                                         @Bind("expiration") DateTime expiration);
 
