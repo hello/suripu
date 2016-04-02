@@ -12,8 +12,8 @@ import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
-import com.hello.suripu.core.models.questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -151,7 +152,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         // check if we have already generated a list of questions
         // and if the user has answered any
-        final Map<Integer, Question> preGeneratedQuestions = new HashMap<>();
+        final LinkedHashMap<Integer, Question> preGeneratedQuestions = Maps.newLinkedHashMap();
 
         // grab user question and response status for today if this is not a "get-more questions" request
         final DateTime expiration = today.plusDays(1);
@@ -160,8 +161,9 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         // check if we have generated any questions for this user TODAY
         int answered = 0;
         boolean foundAnomalyQuestion = false;
+        boolean hasCBTIGoals = hasCBTIGoalGoOutside(accountId);
 
-        if (questionResponseList.size() != 0) {
+        if (!questionResponseList.isEmpty()) {
             // check number of today's question the user has answered
             for (final AccountQuestionResponses question : questionResponseList) {
                 if (question.responded) {
@@ -174,8 +176,15 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 if (preGeneratedQuestions.containsKey(qid)) {
                     continue;
                 }
-                    final Long accountQId = question.id;
-                    final Question questionTemplate = this.questionIdMap.get(qid);
+
+                // get Question template
+                final Long accountQId = question.id;
+                if (!this.questionIdMap.containsKey(qid)) {
+                    LOGGER.error("key=question-processor error=question-id-not-found value={}", qid);
+                    continue;
+                }
+
+                final Question questionTemplate = this.questionIdMap.get(qid);
 
                 // if anomaly NOT enabled, SKIP
                 if (questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
@@ -186,14 +195,16 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                     foundAnomalyQuestion = true;
                 }
 
+                // question inserted into queue
                 preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
                         accountQId,
                         today,
                         question.questionCreationDate));
             }
 
-            if (!foundAnomalyQuestion && checkPause && answered >= numQuestions) {
-                // user has answered today's quota
+            // check if user has answered today's quota
+            // make exception for CBTI questions, and light-anomaly
+            if (!hasCBTIGoals && !foundAnomalyQuestion && checkPause && answered >= numQuestions) {
                 LOGGER.debug("User has answered all questions for today {}", accountId);
                 return Collections.emptyList();
             }

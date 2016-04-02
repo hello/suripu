@@ -18,6 +18,7 @@ public class FeatureFlipper {
     public final static String BYPASS_OTA_CHECKS = "bypass_ota_checks";
 
     public final static String CALIBRATION = "calibration";
+    public final static String CBTI_GOAL_CO_OUTSIDE = "cbti_goal_go_outside";
     public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
     public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
 
