@@ -157,4 +157,9 @@ public class FeatureFlippedProcessor {
     protected Boolean hasSleepSoundsEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SOUNDS_ENABLED, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasCBTIGoalGoOutside(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.CBTI_GOAL_CO_OUTSIDE, accountId, Collections.EMPTY_LIST);
+    }
+
 }

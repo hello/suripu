@@ -161,6 +161,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         // check if we have generated any questions for this user TODAY
         int answered = 0;
         boolean foundAnomalyQuestion = false;
+        boolean hasCBTIGoals = hasCBTIGoalGoOutside(accountId);
 
         if (!questionResponseList.isEmpty()) {
             // check number of today's question the user has answered
@@ -201,8 +202,9 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                         question.questionCreationDate));
             }
 
-            if (!foundAnomalyQuestion && checkPause && answered >= numQuestions) {
-                // user has answered today's quota
+            // check if user has answered today's quota
+            // make exception for CBTI questions, and light-anomaly
+            if (!hasCBTIGoals && !foundAnomalyQuestion && checkPause && answered >= numQuestions) {
                 LOGGER.debug("User has answered all questions for today {}", accountId);
                 return Collections.emptyList();
             }
