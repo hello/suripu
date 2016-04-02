@@ -2,7 +2,9 @@ package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -22,6 +24,7 @@ import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
@@ -36,6 +39,7 @@ import org.mockito.Mockito;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -60,6 +64,17 @@ public class InsightProcessorTest {
 
     private DeviceDataDAO deviceDataDAO;
 
+    private static final ImmutableSet<InsightCard.Category> marketingInsightPool = ImmutableSet.copyOf(Sets.newHashSet(InsightCard.Category.DRIVE,
+            InsightCard.Category.EAT,
+            InsightCard.Category.LEARN,
+            InsightCard.Category.LOVE,
+            InsightCard.Category.PLAY,
+            InsightCard.Category.RUN,
+            InsightCard.Category.SWIM,
+            InsightCard.Category.WORK));
+
+    private static final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.DRIVE);
+
     private static RolloutClient featureFlipOn() {
         final Long FAKE_ACCOUNT_ID = 9999L;
 
@@ -69,11 +84,22 @@ public class InsightProcessorTest {
         return mockFeatureFlipper;
     }
 
+    private static RolloutClient featureFlipMarketingScheduleOn() {
+        final Long FAKE_ACCOUNT_ID = 9999L;
+
+        RolloutClient mockFeatureFlipper = Mockito.mock(RolloutClient.class);
+        Mockito.when(mockFeatureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_MARKETING_SCHEDULE, FAKE_ACCOUNT_ID, Collections.EMPTY_LIST)).thenReturn(Boolean.TRUE);
+
+        return mockFeatureFlipper;
+    }
+
     private static RolloutClient featureFlipOff() {
         final Long FAKE_ACCOUNT_ID = 9999L;
 
         RolloutClient mockFeatureFlipper = Mockito.mock(RolloutClient.class);
         Mockito.when(mockFeatureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_HUMIDITY, FAKE_ACCOUNT_ID, Collections.EMPTY_LIST)).thenReturn(Boolean.FALSE);
+
+        Mockito.when(mockFeatureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_MARKETING_SCHEDULE, FAKE_ACCOUNT_ID, Collections.EMPTY_LIST)).thenReturn(Boolean.FALSE);
 
         return mockFeatureFlipper;
     }
@@ -144,6 +170,19 @@ public class InsightProcessorTest {
         Mockito.when(deviceDataDAO.getBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class),Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class)))
                 .thenReturn(successfulResponse);
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.HUMIDITY, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
+
+        //Specify which marketing insights have been seen (ever)
+        Mockito.when(marketingInsightsSeenDAODynamoDB.getSeenCategories(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(new MarketingInsightsSeen(marketingInsightsSeen, DateTime.now())));
+
+        //Taking care of exception when updating marketing insights seen
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.DRIVE)).thenReturn(Boolean.TRUE);
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.EAT)).thenReturn(Boolean.TRUE);
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.LEARN)).thenReturn(Boolean.TRUE);
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.LOVE)).thenReturn(Boolean.TRUE);
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.PLAY)).thenReturn(Boolean.TRUE);
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.RUN)).thenReturn(Boolean.TRUE);
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.SWIM)).thenReturn(Boolean.TRUE);
+        Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.WORK)).thenReturn(Boolean.TRUE);
 
         //Initialize InsightProcessor
         final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceDAO,
@@ -232,7 +271,7 @@ public class InsightProcessorTest {
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, try to generate wake variance, get Optional.absent() b/c no data
+        //TEST - Look for weekly Insight, try to generate wake variance, get Optional.absent() b/c no data
         Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
@@ -263,7 +302,7 @@ public class InsightProcessorTest {
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, do not try to generate b/c recent
+        //TEST - Look for weekly Insight, do not try to generate b/c recent
         Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
@@ -296,7 +335,7 @@ public class InsightProcessorTest {
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, do not try to generate b/c wrong date
+        //TEST - Look for weekly Insight, do not try to generate b/c wrong date
         Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
@@ -324,7 +363,7 @@ public class InsightProcessorTest {
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, do not try to generate b/c wrong date
+        //TEST - Look for weekly Insight, do not try to generate b/c wrong date
         Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
@@ -351,18 +390,130 @@ public class InsightProcessorTest {
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
-        //Tests - Correct date for weekly insight, but Goal inserted, so do nothing
-        Mockito.verify(spyInsightProcessor, Mockito.never()).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1);
-        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
+        //TEST - Correct date for weekly insight, but Goal inserted, so do nothing
+        Mockito.verify(spyInsightProcessor, Mockito.never()).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
 
         //look for high priority Insight - get nothing
 
         //Don't look for random old insight because Goal inserted. No other insights generated
-        Mockito.verify(spyInsightProcessor, Mockito.never()).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.HUMIDITY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.SLEEP_QUALITY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.BED_LIGHT_DURATION);
+    }
+
+    @Test
+    public void test_selectMarketingInsightToGenerate() {
+        final InsightProcessor insightProcessor = setUp();
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.RUN);
+
+        final Random random = new Random();
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+
+        //TEST - correct date, and there are categories to pick from
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void test_selectMarketingInsightToGenerate_2() {
+        final InsightProcessor insightProcessor = setUp();
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.RUN);
+
+        final Random random = new Random();
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_NONE, marketingInsightsSeen, random);
+
+        //TEST - incorrect date
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void test_selectMarketingInsightToGenerate_3() {
+        final InsightProcessor insightProcessor = setUp();
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.DRIVE,
+                InsightCard.Category.EAT,
+                InsightCard.Category.LEARN,
+                InsightCard.Category.LOVE,
+                InsightCard.Category.PLAY,
+                InsightCard.Category.RUN,
+                InsightCard.Category.SWIM,
+                InsightCard.Category.WORK);
+
+        final Random random = new Random();
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+
+        //TEST - correct date, but there are no categories to pick from
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void test_selectMarketingInsightToGenerate_4() {
+        final InsightProcessor insightProcessor = setUp();
+
+        Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet();
+
+        final Random random = new Random();
+        
+        for (int i = 0; i < marketingInsightPool.size(); i ++) {
+            final Optional<InsightCard.Category> randomInsightCategory = insightProcessor.pickRandomInsightCategory(marketingInsightPool, marketingInsightsSeen, random);
+            assertThat(randomInsightCategory.isPresent(), is(Boolean.TRUE));
+            assertThat(marketingInsightsSeen.contains(randomInsightCategory), is(Boolean.FALSE));
+            marketingInsightsSeen.add(randomInsightCategory.get());
+        }
+    }
+
+    @Test
+    public void test_selectMarketingInsight() {
+        //All marketing insights are available, we pull a random one
+
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        final Set<InsightCard.Category> marketingInsightsSeen= Sets.newHashSet(InsightCard.Category.LIGHT);
+
+        final Random random = new Random();
+
+        //TEST No marketing insights have been generated yet, so marketingInsightToGenerate can be any of the entire pool
+        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        assertThat(marketingInsightPool.contains(marketingInsightToGenerate.get()), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void test_selectMarketingInsight_2() {
+        //All marketing insights are already seen, so we do not generate Marketing Insight
+
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.DRIVE,
+                InsightCard.Category.EAT,
+                InsightCard.Category.LEARN,
+                InsightCard.Category.LOVE,
+                InsightCard.Category.PLAY,
+                InsightCard.Category.RUN,
+                InsightCard.Category.SWIM,
+                InsightCard.Category.WORK);
+
+        final Random random = new Random();
+
+        //TEST All marketing insights have been generated, so we do not have a marketingInsightToGenerate
+        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void test_pickRandomInsightCategory() {
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        final Set<InsightCard.Category> marketingInsightsSeen = new HashSet<>();
+        marketingInsightsSeen.add(InsightCard.Category.RUN);
+
+        final Random random = new Random();
+        final Optional<InsightCard.Category> randomInsightCategory = spyInsightProcessor.pickRandomInsightCategory(marketingInsightPool, marketingInsightsSeen, random);
+
+        //TEST b/c run has already been generated, randomInsightCategory will never be run
+        assertThat(randomInsightCategory.get() == InsightCard.Category.RUN, is(Boolean.FALSE));
     }
 
     @Test

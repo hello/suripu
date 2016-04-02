@@ -98,6 +98,14 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
     private Response handleWebApplicationException(Throwable exception, Response defaultResponse) {
         WebApplicationException webAppException = (WebApplicationException) exception;
 
+        if (webAppException.getResponse().getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
+            return Response
+                    .status(Response.Status.NO_CONTENT)
+                    .entity("")
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+
         if (webAppException.getResponse().getStatus() == 401) {
             return Response
                     .status(Response.Status.UNAUTHORIZED)

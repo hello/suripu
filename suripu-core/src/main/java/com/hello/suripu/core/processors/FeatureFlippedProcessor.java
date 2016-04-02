@@ -153,4 +153,8 @@ public class FeatureFlippedProcessor {
     protected Boolean hasInBedSearchEnabled(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.IN_BED_SEARCH,accountId,Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasSleepSoundsEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SOUNDS_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
 }
