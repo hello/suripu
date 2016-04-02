@@ -159,7 +159,7 @@ public class FeatureFlippedProcessor {
     }
 
     protected Boolean hasCBTIGoalGoOutside(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.CBTI_GOAL_CO_OUTSIDE, accountId, Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.CBTI_GOAL_GO_OUTSIDE, accountId, Collections.EMPTY_LIST);
     }
 
 }

@@ -8,7 +8,8 @@ public enum QuestionCategory {
     ONBOARDING("onboarding"),
     BASE("base"),
     DAILY("daily"),
-    ANOMALY_LIGHT("anomaly_light");
+    ANOMALY_LIGHT("anomaly_light"),
+    GOAL_GO_OUTSIDE("goal_go_outside");
 
     private String value;
 
