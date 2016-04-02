@@ -175,8 +175,15 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 if (preGeneratedQuestions.containsKey(qid)) {
                     continue;
                 }
-                    final Long accountQId = question.id;
-                    final Question questionTemplate = this.questionIdMap.get(qid);
+
+                // get Question template
+                final Long accountQId = question.id;
+                if (!this.questionIdMap.containsKey(qid)) {
+                    LOGGER.error("key=question-processor error=question-id-not-found value={}", qid);
+                    continue;
+                }
+
+                final Question questionTemplate = this.questionIdMap.get(qid);
 
                 // if anomaly NOT enabled, SKIP
                 if (questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
@@ -187,6 +194,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                     foundAnomalyQuestion = true;
                 }
 
+                // question inserted into queue
                 preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
                         accountQId,
                         today,
