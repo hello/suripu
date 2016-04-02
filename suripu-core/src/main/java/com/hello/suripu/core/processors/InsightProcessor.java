@@ -249,6 +249,20 @@ public class InsightProcessor {
             }
         }
 
+        //logic for generating old random insight
+        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime, featureFlipper);
+        if (!toGenerateRandomCategory.isPresent()) {
+            return Optional.absent();
+        }
+        LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateRandomCategory.get(), accountId);
+
+        final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, toGenerateRandomCategory.get());
+        if (generatedRandomCategory.isPresent()) {
+            LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomCategory.get(), accountId);
+            return generatedRandomCategory;
+        }
+
+
         //Generate random marketing insight here
         final Optional<InsightCard.Category> toGenerateOneTimeCategory;
         if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_MARKETING_SCHEDULE, accountId, Collections.EMPTY_LIST)) {
@@ -263,19 +277,6 @@ public class InsightProcessor {
                 LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomOneTimeInsight.get(), accountId);
                 return generatedRandomOneTimeInsight;
             }
-        }
-
-        //logic for generating old random insight
-        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime, featureFlipper);
-        if (!toGenerateRandomCategory.isPresent()) {
-            return Optional.absent();
-        }
-        LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateRandomCategory.get(), accountId);
-
-        final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, toGenerateRandomCategory.get());
-        if (generatedRandomCategory.isPresent()) {
-            LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomCategory.get(), accountId);
-            return generatedRandomCategory;
         }
 
         return Optional.absent();
