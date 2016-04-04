@@ -117,4 +117,84 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         TestCase.assertEquals(indices.iWake + SleepProbabilityInterpreter.DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE,indices.iOutOfBed,1);
 
     }
+
+    @Test
+    public void testNoInBedWhenSleepIsProbable() {
+        final double [] p = new double [961];
+        final double [] m = new double [961];
+
+        m[20] = 5;
+        m[25] = 5.0;
+        m[30] = 8.0;
+
+        m[169] = 20;
+        m[175] = 5;
+        m[180] = 5.0;
+        m[185] = 8.0;
+        m[190] = 6.0;
+
+        m[510] = 3.0;
+        m[511] = 3.0;
+        m[512] = 3.0;
+        m[520] = 20.0;
+
+        for (int t=20; t < 200; t++) {
+            p[t] = 0.50;
+        }
+
+        for (int t=200; t < 500; t++) {
+            p[t] = 0.95;
+        }
+
+        final Optional<SleepProbabilityInterpreter.EventIndices> indicesOptional = SleepProbabilityInterpreter.getEventIndices(p,m);
+
+        TestCase.assertTrue(indicesOptional.isPresent());
+
+        final SleepProbabilityInterpreter.EventIndices indices = indicesOptional.get();
+
+        TestCase.assertEquals(20,indices.iInBed,2);
+        TestCase.assertEquals(indices.iSleep,200,10);
+        TestCase.assertEquals(indices.iWake,500,10);
+        TestCase.assertEquals(520,indices.iOutOfBed,3);
+    }
+
+    @Test
+    public void testNoInBedWhenSleepIsProbableWithGap() {
+        final double [] p = new double [961];
+        final double [] m = new double [961];
+
+        m[20] = 5;
+        m[25] = 5.0;
+        m[30] = 8.0;
+
+        m[169] = 20;
+        m[175] = 5;
+        m[180] = 5.0;
+        m[185] = 8.0;
+        m[190] = 6.0;
+
+        m[510] = 3.0;
+        m[511] = 3.0;
+        m[512] = 3.0;
+        m[520] = 20.0;
+
+        for (int t=20; t < 100; t++) {
+            p[t] = 0.50;
+        }
+
+        for (int t=200; t < 500; t++) {
+            p[t] = 0.95;
+        }
+
+        final Optional<SleepProbabilityInterpreter.EventIndices> indicesOptional = SleepProbabilityInterpreter.getEventIndices(p,m);
+
+        TestCase.assertTrue(indicesOptional.isPresent());
+
+        final SleepProbabilityInterpreter.EventIndices indices = indicesOptional.get();
+
+        TestCase.assertEquals(169,indices.iInBed,2);
+        TestCase.assertEquals(indices.iSleep,200,10);
+        TestCase.assertEquals(indices.iWake,500,10);
+        TestCase.assertEquals(520,indices.iOutOfBed,3);
+    }
 }
