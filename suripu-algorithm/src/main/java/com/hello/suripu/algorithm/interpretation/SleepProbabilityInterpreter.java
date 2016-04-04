@@ -91,6 +91,7 @@ public class SleepProbabilityInterpreter {
         int iWake = -1;
         int iInBed = -1;
         int iOutOfBed = -1;
+        int firstProbableSleepIndex = 0;
 
         if (sleepProbabilities.length <= 1 || myMotionDurations.length <= 1) {
             return Optional.absent();
@@ -131,7 +132,7 @@ public class SleepProbabilityInterpreter {
 
             final double[][] A = new double[obsModels.length][obsModels.length];
             A[0][0] = 0.99; A[0][1] = 0.01;
-            A[1][1] = 0.98; A[1][2] = 0.01; A[1][3] = 0.01;
+            A[1][1] = 0.98; A[1][2] = 0.01; A[1][3] = 0.01;  A[1][0] = 1e-8; //allow going back
             A[2][2] = 0.98; A[2][3] = 0.01; A[2][4] = 0.01;
             A[3][3] = 0.99; A[3][2] = 0.001;                A[3][4] = 0.01;
             A[4][4] = 0.99; A[4][5] = 0.01;                                A[4][6] = 0.01;
@@ -164,12 +165,29 @@ public class SleepProbabilityInterpreter {
 
 
             boolean foundSleep = false;
+            boolean foundProbableSleep = false;
             Integer prevState = res.bestPath.get(0);
             for (int i = 1; i < res.bestPath.size(); i++) {
                 final Integer state = res.bestPath.get(i);
 
                 if (!state.equals(prevState)) {
                     LOGGER.info("action=hmm_decode from_state={} to_state={} index={}", prevState, state, i);
+                }
+
+                //in case we go back to initial state (highly unlikely)
+                if (state.equals(0) && foundProbableSleep) {
+                    foundProbableSleep = false;
+                    LOGGER.info("action=reseting_probable_sleep  index={}",i);
+                }
+
+                if (state.equals(0) && foundSleep) {
+                    foundSleep = false;
+                    LOGGER.info("action=reseting_sleep  index={}",i);
+                }
+
+                if ((state.equals(2) || state.equals(3)) && !foundProbableSleep) {
+                    foundProbableSleep = true;
+                    firstProbableSleepIndex = i;
                 }
 
                 if (state.equals(3) && !prevState.equals(3) && !foundSleep) {
@@ -222,11 +240,11 @@ public class SleepProbabilityInterpreter {
         {
             final double[][] x = {myMotionDurations};
             final double[][] A = {
-                    {0.998, 1e-3, 1e-3},
+                    {0.999, 1e-3, 0.0},
                     {1e-5, 0.90, 0.10},
                     {0.0, 0.10, 0.90}
             };
-            final double[] pi = {0.5, 0.5,0.5};
+            final double[] pi = {1.0,0.0,0.0};
             final HmmPdfInterface[] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION, 0), new PoissonPdf(POISSON_MEAN_FOR_MOTION, 0),new PoissonPdf(POISSON_MEAN_FOR_A_LITTLE_MOTION, 0)};
 
             final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.LOGMATH, 3, A, pi, obsModels, 0);
@@ -245,12 +263,12 @@ public class SleepProbabilityInterpreter {
             boolean foundCluster = false;
 
             //go backwards from sleep and find beginning of next motion cluster encountered
-            for (int i = iSleep; i >= 0; i--) {
+            for (int i = firstProbableSleepIndex; i >= 0; i--) {
                 final Integer state = result.bestPath.get(i);
 
                 if (!state.equals(0)) {
                     //if motion cluster start was found too far before sleep, then stop search and use default
-                    if (iSleep - i > MAX_ON_BED_SEARCH_WINDOW && !foundCluster) {
+                    if (firstProbableSleepIndex - i > MAX_ON_BED_SEARCH_WINDOW && !foundCluster) {
                         LOGGER.warn("action=return_default_in_bed reason=motion_cluster_too_far_out");
                         break;
                     }
