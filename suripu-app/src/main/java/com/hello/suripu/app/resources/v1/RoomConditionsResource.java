@@ -45,7 +45,7 @@ public class RoomConditionsResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
     private final static ImmutableSet<String> hiddenSensors = ImmutableSet.copyOf(Sets.newHashSet("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
-    private static final Integer NO_SOUND_FILL_VALUE = 25; // 25 decibels when Sense isn't capturing audio
+    private static final Integer NO_SOUND_FILL_VALUE_DB = 25; // 25 decibels when Sense isn't capturing audio
 
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceDAO deviceDAO;
@@ -232,7 +232,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
                 queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, useAudioPeakEnergy(accessToken.accountId), NO_SOUND_FILL_VALUE);
+                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, useAudioPeakEnergy(accessToken.accountId), NO_SOUND_FILL_VALUE_DB);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -281,7 +281,7 @@ public class RoomConditionsResource extends BaseResource {
         final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
                 queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
                 slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional,
-                useAudioPeakEnergy(accessToken.accountId), NO_SOUND_FILL_VALUE);
+                useAudioPeakEnergy(accessToken.accountId), NO_SOUND_FILL_VALUE_DB);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -557,7 +557,7 @@ public class RoomConditionsResource extends BaseResource {
         final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
                 queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
                 slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional,
-                useAudioPeakEnergy(accountId), NO_SOUND_FILL_VALUE);
+                useAudioPeakEnergy(accountId), NO_SOUND_FILL_VALUE_DB);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
