@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
+import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
@@ -67,6 +68,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -117,11 +119,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                                                             final CalibrationDAO calibrationDAO,
                                                             final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
-                                                            final UserTimelineTestGroupDAO userTimelineTestGroupDAO) {
+                                                            final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                                            final NeuralNetEndpoint neuralNetEndpoint) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
-        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,Optional.<UUID>absent());
+        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoint,Optional.<UUID>absent());
 
         return new TimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
@@ -257,10 +260,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
 
         //chain of fail-overs of algorithm (i.e)
-        AlgorithmType[] algorithmChain = new AlgorithmType[]{AlgorithmType.HMM, AlgorithmType.VOTING};
+        final LinkedList<AlgorithmType> algorithmChain = Lists.newLinkedList();
+        algorithmChain.add(AlgorithmType.HMM);
+        algorithmChain.add(AlgorithmType.VOTING);
 
         if (this.hasOnlineHmmAlgorithmEnabled(accountId)) {
-            algorithmChain = new AlgorithmType[]{AlgorithmType.ONLINE_HMM, AlgorithmType.HMM, AlgorithmType.VOTING};
+            algorithmChain.addFirst(AlgorithmType.ONLINE_HMM);
+        }
+
+        if (this.hasNeuralNetAlgorithmEnabled(accountId)) {
+            algorithmChain.addFirst(AlgorithmType.NEURAL_NET);
         }
 
         final DateTime startTimeLocalUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
@@ -324,6 +333,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
 
         for (final AlgorithmType alg : algorithmChain) {
+            LOGGER.info("action=try_algorithm algorithm_type={}",alg);
             final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
 
             if (!timelineAlgorithm.isPresent()) {

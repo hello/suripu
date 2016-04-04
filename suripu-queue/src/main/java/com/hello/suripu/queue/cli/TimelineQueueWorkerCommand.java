@@ -44,7 +44,9 @@ import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.clients.TaimurainHttpClient;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
+import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.queue.configuration.SQSConfiguration;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
@@ -53,6 +55,7 @@ import com.hello.suripu.queue.timeline.TimelineGenerator;
 import com.hello.suripu.queue.timeline.TimelineQueueProcessor;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.cli.EnvironmentCommand;
+import com.yammer.dropwizard.client.HttpClientBuilder;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
@@ -324,6 +327,13 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 seedModelConfig.getBucket(),
                 seedModelConfig.getKey());
 
+        /* Neural net endpoint information */
+        final TaimurainHttpClientConfiguration taimurainHttpClientConfiguration = config.getTaimurainHttpClientConfiguration();
+
+        final TaimurainHttpClient taimurainHttpClient = TaimurainHttpClient.create(
+                new HttpClientBuilder().using(taimurainHttpClientConfiguration.getHttpClientConfiguration()).build(),
+                taimurainHttpClientConfiguration.getEndpoint());
+
         return TimelineProcessor.createTimelineProcessor(
                 pillDataDAODynamoDB,
                 deviceDAO,
@@ -338,7 +348,8 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 featureExtractionDAO,
                 calibrationDAO,
                 defaultModelEnsembleDAO,
-                userTimelineTestGroupDAO);
+                userTimelineTestGroupDAO,
+                taimurainHttpClient);
 
     }
 

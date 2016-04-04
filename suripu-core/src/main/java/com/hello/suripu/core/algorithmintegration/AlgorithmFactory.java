@@ -7,7 +7,6 @@ import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
-import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.util.AlgorithmType;
 
 import java.util.Map;
@@ -22,13 +21,13 @@ public class AlgorithmFactory {
 
     private final ImmutableMap<AlgorithmType,TimelineAlgorithm> algorithmMap;
 
-    public static AlgorithmFactory create(final SleepHmmDAO sleepHmmDAO, final OnlineHmmModelsDAO priorsDAO, final DefaultModelEnsembleDAO defaultModelEnsembleDAO, final FeatureExtractionModelsDAO featureExtractionModelsDAO, final Optional<UUID> uuid) {
+    public static AlgorithmFactory create(final SleepHmmDAO sleepHmmDAO, final OnlineHmmModelsDAO priorsDAO, final DefaultModelEnsembleDAO defaultModelEnsembleDAO, final FeatureExtractionModelsDAO featureExtractionModelsDAO, final NeuralNetEndpoint neuralNetEndpoint, final Optional<UUID> uuid) {
         final Map<AlgorithmType,TimelineAlgorithm> algorithmMap = Maps.newHashMap();
 
         algorithmMap.put(AlgorithmType.VOTING,new VotingAlgorithm(uuid));
         algorithmMap.put(AlgorithmType.ONLINE_HMM,new OnlineHmmAlgorithm(priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,uuid));
         algorithmMap.put(AlgorithmType.HMM,new YeOldeHmmAlgorithm(sleepHmmDAO,uuid));
-
+        algorithmMap.put(AlgorithmType.NEURAL_NET, new NeuralNetAlgorithm(neuralNetEndpoint));
         return new AlgorithmFactory(algorithmMap);
     }
 

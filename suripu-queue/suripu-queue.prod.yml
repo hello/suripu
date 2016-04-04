@@ -129,6 +129,12 @@ timeline_seed_model:
   bucket: hello-timeline-models
   key: normal4.base64
 
+taimurain_http_client:
+  endpoint: http://timeline-service-internal-480944492.us-east-1.elb.amazonaws.com:80
+  http_client_config:
+    keepAlive: 0s
+    timeout: 10000ms
+
 dynamodb:
   region: us-east-1
   tables:

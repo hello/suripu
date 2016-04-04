@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
+import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -117,5 +118,13 @@ public class SuripuQueueConfiguration extends Configuration {
     @Min(1)
     private long producerScheduleIntervalMinutes = 10L;
     public long getProducerScheduleIntervalMinutes() { return this.producerScheduleIntervalMinutes; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("taimurain_http_client")
+    private TaimurainHttpClientConfiguration taimurainHttpClientConfiguration;
+    public TaimurainHttpClientConfiguration getTaimurainHttpClientConfiguration() { return taimurainHttpClientConfiguration; }
+
+
 
 }
