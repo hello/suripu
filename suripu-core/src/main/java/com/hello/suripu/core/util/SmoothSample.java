@@ -113,4 +113,22 @@ public class SmoothSample {
         }
         return sampleValuesArray;
     }
+
+    /**
+     * @param samples List of samples
+     * @param oldValue Value to replace
+     * @param newValue Value to replace oldValue with
+     * @return New list with oldValue samples replaced by newValue samples.
+     */
+    public static List<Sample> replaceAll(final List<Sample> samples, final float oldValue, final float newValue) {
+        final List<Sample> newSamples = Lists.newArrayListWithExpectedSize(samples.size());
+        for (final Sample sample: samples) {
+            if (sample.value == oldValue) {
+                newSamples.add(new Sample(sample.dateTime, newValue, sample.offsetMillis));
+            } else {
+                newSamples.add(sample);
+            }
+        }
+        return newSamples;
+    }
 }

@@ -456,7 +456,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional, useAudioPeakEnergy, missingDataDefaultValue);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional, useAudioPeakEnergy);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;
@@ -552,7 +552,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibrationOptional, useAudioPeakEnergy, missingDataDefaultValue);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibrationOptional, useAudioPeakEnergy);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;

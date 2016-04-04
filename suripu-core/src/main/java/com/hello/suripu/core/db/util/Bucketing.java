@@ -144,8 +144,7 @@ public class Bucketing {
 
 
     public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor,
-                                                    final Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy,
-                                                    final Integer noSoundFillValue) {
+                                                    final Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
 
@@ -172,14 +171,7 @@ public class Bucketing {
                 audioPeakDB = deviceData.audioPeakDisturbancesDB;
             }
 
-            final float soundValue;
-            if (audioPeakDB == 0) {
-                // 0 value means Sense wasn't capturing audio. For example, when playing sleep sounds.
-                // So we overwrite it to be a more "normal" value.
-                soundValue = noSoundFillValue;
-            } else {
-                soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(audioPeakDB), deviceData.firmwareVersion);
-            }
+            final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(audioPeakDB), deviceData.firmwareVersion);
 
             final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);

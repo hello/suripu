@@ -1,10 +1,14 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.models.Sample;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -70,5 +74,21 @@ public class SmoothSampleTest {
         final double[] movingAveragesWindowSize3 = SmoothSample.smooth(noiseFreeValues, SmoothSample.DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION);
         assertThat(movingAveragesWindowSize2, equalTo(expectedValuesMovingAveragesWindowSize2));
         assertThat(movingAveragesWindowSize3, equalTo(expectedValuesMovingAveragesWindowSize3));
+    }
+
+    @Test
+    public void testReplaceAll() {
+        final List<Sample> samples = ImmutableList.of(
+                new Sample(0, (float) 0, 0),
+                new Sample(1, (float) 20, 0)
+        );
+
+        final List<Sample> replace0With100 = SmoothSample.replaceAll(samples, (float) 0, (float) 100);
+        assertThat(replace0With100.get(0).value, equalTo((float) 100));
+        assertThat(replace0With100.get(1).value, equalTo((float) 20));
+
+        final List<Sample> replace20With100 = SmoothSample.replaceAll(samples, (float) 20, (float) 100);
+        assertThat(replace20With100.get(0).value, equalTo((float) 0));
+        assertThat(replace20With100.get(1).value, equalTo((float) 100));
     }
 }

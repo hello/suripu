@@ -113,12 +113,12 @@ public class BucketingTest {
     @Test
     public void testPopulateMapAllEmpty() {
         final List<DeviceData> deviceDataList = Lists.newArrayList();
-        final AllSensorSampleMap map = Bucketing.populateMapAll(deviceDataList, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false, 0);
+        final AllSensorSampleMap map = Bucketing.populateMapAll(deviceDataList, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false);
         assertThat(map.isEmpty(), is(true));
     }
 
     @Test
-    public void testPopulateMapSoundFillValue() {
+    public void testPopulateMapNoSound() {
         final List<DeviceData> deviceDataList = ImmutableList.of(
                 new DeviceData.Builder()
                         .withAmbientLight(0)
@@ -159,8 +159,8 @@ public class BucketingTest {
                         .withHoldCount(0)
                         .build()
         );
-        final AllSensorSampleMap map = Bucketing.populateMapAll(deviceDataList, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false, 25);
-        assertThat(map.get(Sensor.SOUND).get(0L).value, is((float) 25.0));
+        final AllSensorSampleMap map = Bucketing.populateMapAll(deviceDataList, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false);
+        assertThat(map.get(Sensor.SOUND).get(0L).value, is((float) 0));
         assertThat(map.get(Sensor.SOUND).get(1L).value, greaterThan((float) 25.0));
     }
 

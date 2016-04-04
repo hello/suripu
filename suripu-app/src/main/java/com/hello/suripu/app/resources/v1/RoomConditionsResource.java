@@ -45,7 +45,9 @@ public class RoomConditionsResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
     private final static ImmutableSet<String> hiddenSensors = ImmutableSet.copyOf(Sets.newHashSet("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
-    private static final Integer NO_SOUND_FILL_VALUE_DB = 25; // 25 decibels when Sense isn't capturing audio
+
+    private static final Float NO_SOUND_CAPTURED_DB = (float) 0;    // The Sound value when Sense didn't capture audio
+    private static final Float NO_SOUND_FILL_VALUE_DB = (float) 25; // Replace with 25 decibels when Sense isn't capturing audio
 
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceDAO deviceDAO;
@@ -230,9 +232,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
+        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                 queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, useAudioPeakEnergy(accessToken.accountId), NO_SOUND_FILL_VALUE_DB);
+                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, useAudioPeakEnergy(accessToken.accountId));
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -278,10 +280,10 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
+        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                 queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
                 slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional,
-                useAudioPeakEnergy(accessToken.accountId), NO_SOUND_FILL_VALUE_DB);
+                useAudioPeakEnergy(accessToken.accountId));
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -554,10 +556,10 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
+        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                 queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
                 slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional,
-                useAudioPeakEnergy(accountId), NO_SOUND_FILL_VALUE_DB);
+                useAudioPeakEnergy(accountId));
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -592,16 +594,18 @@ public class RoomConditionsResource extends BaseResource {
     private List<Sample> adjustTimeSeries (final List<Sample> samples, final String sensor, final String senseId) {
         if (Sensor.PARTICULATES.name().equalsIgnoreCase(sensor) && this.hasDustSmoothEnabled(senseId)) {
             return SmoothSample.convert(samples);
+        } else if (Sensor.SOUND.name().equalsIgnoreCase(sensor)) {
+            return SmoothSample.replaceAll(samples, NO_SOUND_CAPTURED_DB, NO_SOUND_FILL_VALUE_DB);
         }
         return samples;
     }
 
     private AllSensorSampleList adjustTimeSeriesAllSensors (final AllSensorSampleList allSensorSampleList, final String senseId) {
-        if (!this.hasDustSmoothEnabled(senseId)) {
-            return allSensorSampleList;
+        if (hasDustSmoothEnabled(senseId)) {
+            allSensorSampleList.update(Sensor.PARTICULATES, SmoothSample.convert(allSensorSampleList.get(Sensor.PARTICULATES)));
         }
-
-        allSensorSampleList.update(Sensor.PARTICULATES, SmoothSample.convert(allSensorSampleList.get(Sensor.PARTICULATES)));
+        allSensorSampleList.update(Sensor.SOUND, SmoothSample.replaceAll(allSensorSampleList.get(Sensor.SOUND),
+                NO_SOUND_CAPTURED_DB, NO_SOUND_FILL_VALUE_DB));
         return allSensorSampleList;
     }
 }
