@@ -91,7 +91,7 @@ public class SleepProbabilityInterpreter {
         int iWake = -1;
         int iInBed = -1;
         int iOutOfBed = -1;
-        int iProbableSleepIndex = 0; //when p of sleep first gets to around 0.5
+        int iProbableSleep = 0; //when p of sleep first gets to around 0.5
 
         if (sleepProbabilities.length <= 1 || myMotionDurations.length <= 1) {
             return Optional.absent();
@@ -187,7 +187,7 @@ public class SleepProbabilityInterpreter {
 
                 if ((state.equals(2) || state.equals(3)) && !foundProbableSleep) {
                     foundProbableSleep = true;
-                    iProbableSleepIndex = i;
+                    iProbableSleep = i;
                 }
 
                 if (state.equals(3) && !prevState.equals(3) && !foundSleep) {
@@ -263,12 +263,12 @@ public class SleepProbabilityInterpreter {
             boolean foundCluster = false;
 
             //go backwards from sleep and find beginning of next motion cluster encountered
-            for (int i = iProbableSleepIndex; i >= 0; i--) {
+            for (int i = iProbableSleep; i >= 0; i--) {
                 final Integer state = result.bestPath.get(i);
 
                 if (!state.equals(0)) {
                     //if motion cluster start was found too far before sleep, then stop search and use default
-                    if (iProbableSleepIndex - i > MAX_ON_BED_SEARCH_WINDOW && !foundCluster) {
+                    if (iProbableSleep - i > MAX_ON_BED_SEARCH_WINDOW && !foundCluster) {
                         LOGGER.warn("action=return_default_in_bed reason=motion_cluster_too_far_out");
                         break;
                     }
