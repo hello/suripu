@@ -1,12 +1,16 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.util.Bucketing;
+import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
@@ -19,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.core.Is.is;
 
@@ -103,6 +108,60 @@ public class BucketingTest {
         data = generateMap(startDate.plusDays(1));
         merged = Bucketing.mergeResults(generated, data);
         assertThat(merged.size(), is(generated.size() + data.size()));
+    }
+
+    @Test
+    public void testPopulateMapAllEmpty() {
+        final List<DeviceData> deviceDataList = Lists.newArrayList();
+        final AllSensorSampleMap map = Bucketing.populateMapAll(deviceDataList, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false, 0);
+        assertThat(map.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testPopulateMapSoundFillValue() {
+        final List<DeviceData> deviceDataList = ImmutableList.of(
+                new DeviceData.Builder()
+                        .withAmbientLight(0)
+                        .withAmbientAirQualityRaw(0)
+                        .withFirmwareVersion(1)
+                        .withAccountId(1L)
+                        .withAlreadyCalibratedAudioPeakBackgroundDB(0)
+                        .withAlreadyCalibratedAudioPeakDisturbancesDB(0)
+                        .withAlreadyCalibratedPeakEnergyDB(0)
+                        .withAmbientDustMax(0)
+                        .withAmbientDustMin(0)
+                        .withAmbientDustVariance(0)
+                        .withAmbientHumidity(0)
+                        .withAmbientTemperature(0)
+                        .withAudioNumDisturbances(0)
+                        .withDateTimeUTC(new DateTime(0))
+                        .withOffsetMillis(0)
+                        .withWaveCount(0)
+                        .withHoldCount(0)
+                        .build(),
+                new DeviceData.Builder()
+                        .withAmbientLight(0)
+                        .withAmbientAirQualityRaw(0)
+                        .withFirmwareVersion(1)
+                        .withAccountId(1L)
+                        .withAlreadyCalibratedAudioPeakBackgroundDB(0)
+                        .withAlreadyCalibratedAudioPeakDisturbancesDB(50000)
+                        .withAlreadyCalibratedPeakEnergyDB(10000)
+                        .withAmbientDustMax(0)
+                        .withAmbientDustMin(0)
+                        .withAmbientDustVariance(0)
+                        .withAmbientHumidity(0)
+                        .withAmbientTemperature(0)
+                        .withAudioNumDisturbances(1)
+                        .withDateTimeUTC(new DateTime(1))
+                        .withOffsetMillis(0)
+                        .withWaveCount(0)
+                        .withHoldCount(0)
+                        .build()
+        );
+        final AllSensorSampleMap map = Bucketing.populateMapAll(deviceDataList, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false, 25);
+        assertThat(map.get(Sensor.SOUND).get(0L).value, is((float) 25.0));
+        assertThat(map.get(Sensor.SOUND).get(1L).value, greaterThan((float) 25.0));
     }
 
 

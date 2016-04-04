@@ -477,7 +477,24 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
             final Optional<Calibration> calibrationOptional,
-            final Boolean useAudioPeakEnergy) {
+            final Boolean useAudioPeakEnergy)
+    {
+        return generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
+                queryStartTimestampInUTC, queryEndTimestampInUTC, accountId, externalDeviceId,
+                slotDurationInMinutes, missingDataDefaultValue, color, calibrationOptional, useAudioPeakEnergy, missingDataDefaultValue);
+    }
+
+    public AllSensorSampleList generateTimeSeriesByUTCTimeAllSensorsWithSoundFillValue(
+            final Long queryStartTimestampInUTC,
+            final Long queryEndTimestampInUTC,
+            final Long accountId,
+            final String externalDeviceId,
+            final int slotDurationInMinutes,
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color,
+            final Optional<Calibration> calibrationOptional,
+            final Boolean useAudioPeakEnergy,
+            final Integer noSoundCapturedFillValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = timestampToDateTimeUTC(queryEndTimestampInUTC);
@@ -497,7 +514,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional, useAudioPeakEnergy);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional, useAudioPeakEnergy, noSoundCapturedFillValue);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;
