@@ -9,11 +9,13 @@ import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
+import com.hello.suripu.core.models.sleep_sounds.DurationMap;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.SenseStateAtTime;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
+import com.hello.suripu.core.models.sleep_sounds.SoundMap;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -197,7 +199,59 @@ public class SleepSoundsResource extends BaseResource {
     //endregion stop
 
 
+    //region combinedState
+    private class CombinedState {
+        @JsonProperty("availableDurations")
+        @NotNull
+        public final DurationResult durationResult;
+
+        @JsonProperty("availableSounds")
+        @NotNull
+        public final SleepSoundsProcessor.SoundResult soundResult;
+
+        @JsonProperty("status")
+        @NotNull
+        public final SleepSoundStatus sleepSoundStatus;
+
+        public CombinedState(final DurationResult durationResult, final SleepSoundsProcessor.SoundResult soundResult, final SleepSoundStatus sleepSoundStatus) {
+            this.durationResult = durationResult;
+            this.soundResult = soundResult;
+            this.sleepSoundStatus = sleepSoundStatus;
+        }
+    }
+
+    @GET
+    @Path("combined_state")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CombinedState getCombinedState(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
+        final Long accountId = accessToken.accountId;
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        final String senseId = deviceIdPair.get().externalDeviceId;
+
+        final SleepSoundsProcessor.SoundResult soundResult = getSounds(accountId, senseId);
+        final DurationResult durationResult = new DurationResult(durationDAO.all());
+        final SleepSoundStatus sleepSoundStatus = getStatus(accountId, senseId, soundResult, durationResult);
+        return new CombinedState(durationResult, soundResult, sleepSoundStatus);
+    }
+
+    //endregion combinedState
+
+
     //region sounds
+    private SleepSoundsProcessor.SoundResult getSounds(final Long accountId, final String senseId) {
+        final SleepSoundsProcessor.SoundResult result = sleepSoundsProcessor.getSounds(accountId, senseId);
+
+        if (result.state == SleepSoundsProcessor.SoundResult.State.FEATURE_DISABLED) {
+            throw new WebApplicationException(Response.Status.NO_CONTENT);
+        }
+
+        return result;
+    }
+
     @GET
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
@@ -210,26 +264,29 @@ public class SleepSoundsResource extends BaseResource {
         }
 
         final String senseId = deviceIdPair.get().externalDeviceId;
-
-        final SleepSoundsProcessor.SoundResult result = sleepSoundsProcessor.getSounds(accountId, senseId);
-
-        if (result.state == SleepSoundsProcessor.SoundResult.State.FEATURE_DISABLED) {
-            throw new WebApplicationException(Response.Status.NO_CONTENT);
-        }
-
-        return result;
+        return getSounds(accountId, senseId);
     }
     //endregion sounds
 
 
     //region durations
-    private class DurationResult {
+    private class DurationResult implements DurationMap {
         @JsonProperty("durations")
         @NotNull
         public final List<Duration> durations;
 
         public DurationResult(final List<Duration> durations) {
             this.durations= durations;
+        }
+
+        @Override
+        public Optional<Duration> getDurationBySeconds(Integer durationSeconds) {
+            for (final Duration duration: durations) {
+                if (duration.durationSeconds.isPresent() && duration.durationSeconds.get() == durationSeconds) {
+                    return Optional.of(duration);
+                }
+            }
+            return Optional.absent();
         }
     }
 
@@ -244,20 +301,9 @@ public class SleepSoundsResource extends BaseResource {
 
 
     //region status
-    @GET
-    @Path("/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public SleepSoundStatus getStatus(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
+    private SleepSoundStatus getStatus(final Long accountId, final String deviceId, final SoundMap soundMap, final DurationMap durationMap) {
+
         final SleepSoundStatus NOT_PLAYING = SleepSoundStatus.create();
-        final Long accountId = accessToken.accountId;
-
-        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
-        if (!deviceIdPair.isPresent()) {
-            LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
-            return NOT_PLAYING;
-        }
-
-        final String deviceId = deviceIdPair.get().externalDeviceId;
 
         final Optional<SenseStateAtTime> senseStateAtTimeOptional = senseStateDynamoDB.getState(deviceId);
         if (!senseStateAtTimeOptional.isPresent()) {
@@ -277,14 +323,14 @@ public class SleepSoundsResource extends BaseResource {
             return NOT_PLAYING;
         }
 
-        final Optional<Duration> durationOptional = durationDAO.getByDurationSeconds(audioState.getDurationSeconds());
+        final Optional<Duration> durationOptional = durationMap.getDurationBySeconds(audioState.getDurationSeconds());
         if (!durationOptional.isPresent()) {
             LOGGER.warn("error=duration-not-found account-id={} sense-id={} duration-seconds={}",
                     accountId, deviceId, audioState.getDurationSeconds());
             return NOT_PLAYING;
         }
 
-        final Optional<Sound> soundOptional = sleepSoundsProcessor.getSound(audioState.getFilePath());
+        final Optional<Sound> soundOptional = soundMap.getSoundByFilePath(audioState.getFilePath());
         if (!soundOptional.isPresent()) {
             LOGGER.warn("error=sound-file-not-found account-id={} sense-id={} file-path={}",
                     accountId, deviceId, audioState.getFilePath());
@@ -297,7 +343,24 @@ public class SleepSoundsResource extends BaseResource {
         } else {
             return SleepSoundStatus.create(sound, durationOptional.get());
         }
+    }
 
+    @GET
+    @Path("/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SleepSoundStatus getStatus(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
+        final SleepSoundStatus NOT_PLAYING = SleepSoundStatus.create();
+        final Long accountId = accessToken.accountId;
+
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
+            return NOT_PLAYING;
+        }
+
+        final String deviceId = deviceIdPair.get().externalDeviceId;
+
+        return getStatus(accountId, deviceId, sleepSoundsProcessor, durationDAO);
     }
     //endregion status
 

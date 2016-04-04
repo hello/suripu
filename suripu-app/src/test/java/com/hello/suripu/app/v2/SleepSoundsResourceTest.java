@@ -197,7 +197,7 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetStatusInvalidDuration() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.<Duration>absent());
+        Mockito.when(durationDAO.getDurationBySeconds(Mockito.anyInt())).thenReturn(Optional.<Duration>absent());
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
                         .setSenseId(senseId)
@@ -217,7 +217,7 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetStatusInvalidPath() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(Duration.create(1L, "path", 30)));
+        Mockito.when(durationDAO.getDurationBySeconds(Mockito.anyInt())).thenReturn(Optional.of(Duration.create(1L, "path", 30)));
         Mockito.when(fileInfoDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.<FileInfo>absent());
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
@@ -253,7 +253,7 @@ public class SleepSoundsResourceTest {
     public void testGetStatusAllCorrect() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
         final Duration duration = Duration.create(1L, "path", 30);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(duration));
+        Mockito.when(durationDAO.getDurationBySeconds(Mockito.anyInt())).thenReturn(Optional.of(duration));
         final FileInfo fileInfo = makeFileInfo(1L, "preview", "name", "path", "url");
         Mockito.when(fileInfoDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.of(fileInfo));
         final SenseStateAtTime state = new SenseStateAtTime(

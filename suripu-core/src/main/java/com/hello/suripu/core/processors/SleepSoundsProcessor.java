@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.FileInfoDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
+import com.hello.suripu.core.models.sleep_sounds.SoundMap;
 import org.apache.commons.codec.DecoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ import java.util.List;
  *
  * Helper class for determining what sleep sounds are available on a Sense, and why.
  */
-public class SleepSoundsProcessor extends FeatureFlippedProcessor {
+public class SleepSoundsProcessor extends FeatureFlippedProcessor implements SoundMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsProcessor.class);
 
     private static final Integer MIN_SOUNDS = 5; // Anything less than this and we return an empty list.
@@ -42,7 +43,7 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor {
     /**
      * Class to communicate the sleep sounds for a Sense, along with the state of sleep sound functionality on Sense.
      */
-    public static class SoundResult {
+    public static class SoundResult implements SoundMap {
         @JsonProperty("sounds")
         @NotNull
         public final List<Sound> sounds;
@@ -54,6 +55,16 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor {
         public SoundResult(final List<Sound> sounds, final State state) {
             this.sounds = sounds;
             this.state = state;
+        }
+
+        @Override
+        public Optional<Sound> getSoundByFilePath(String filePath) {
+            for (final Sound sound : sounds) {
+                if (sound.filePath == filePath) {
+                    return Optional.of(sound);
+                }
+            }
+            return Optional.absent();
         }
 
         public enum State {
@@ -110,7 +121,7 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor {
      * @param filePath Full path of the file found on Sense.
      * @return Sound if the filePath maps to one, else absent.
      */
-    public Optional<Sound> getSound(final String filePath) {
+    public Optional<Sound> getSoundByFilePath(final String filePath) {
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(filePath);
         if (!fileInfoOptional.isPresent() || fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
             LOGGER.warn("dao=fileInfoDAO error=path-not-found file-path={}", filePath);
