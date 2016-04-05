@@ -44,6 +44,7 @@ import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isIn;
 
 /**
  * Created by jyfan on 9/4/15.
@@ -60,6 +61,7 @@ public class InsightProcessorTest {
 
     private final DateTime FAKE_DATE_1 = DateTime.parse("2015-09-01").withTimeAtStartOfDay();
     private final DateTime FAKE_DATE_10 = DateTime.parse("2015-09-10").withTimeAtStartOfDay();
+    private final DateTime FAKE_DATE_13 = DateTime.parse("2015-09-13").withTimeAtStartOfDay();
     private final DateTime FAKE_DATE_NONE = DateTime.parse("2015-09-11").withTimeAtStartOfDay();
 
     private DeviceDataDAO deviceDataDAO;
@@ -109,6 +111,9 @@ public class InsightProcessorTest {
         final Long FAKE_ACCOUNT_ID = 9999L;
         final Long FAKE_DEVICE_ID = 9998L;
         final Long FAKE_PILL_ID = 9997L;
+
+        //No Marketing Insights seen yet
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet();
 
         deviceDataDAO = Mockito.mock(DeviceDataDAO.class);
         final DeviceDataDAODynamoDB deviceDataDAODynamoDB = Mockito.mock(DeviceDataDAODynamoDB.class);
@@ -401,6 +406,39 @@ public class InsightProcessorTest {
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.SLEEP_QUALITY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.BED_LIGHT_DURATION);
+    }
+
+    @Test
+    public void test_generateGeneralInsights_8() {
+
+        //Turn on feature flip for marketing schedule
+        final RolloutClient mockFeatureFlipper = featureFlipMarketingScheduleOn();
+
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        //actually simulating recent categories
+        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+        recentCategories.add(InsightCard.Category.LIGHT);
+
+        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
+
+        //TEST - Incorrect date for weekly insight - get nothing
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_13);
+
+        //look for high priority Insight - get nothing
+
+        //Look for random old insight - light is already generated, so we do nothing
+        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.LIGHT);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.HUMIDITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.TEMPERATURE);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.SLEEP_QUALITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.BED_LIGHT_DURATION);
+
+        //Look for marketing insight - can't spy on private random, so do assert
+
+        assertThat(insightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_DATE_13, mockFeatureFlipper).get(), isIn(marketingInsightPool));
     }
 
     @Test
