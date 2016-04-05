@@ -22,6 +22,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.SleepSoundsProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.JsonError;
+import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,6 +115,7 @@ public class SleepSoundsResource extends BaseResource {
         }
     }
 
+    @Timed
     @POST
     @Path("/play")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -174,6 +176,7 @@ public class SleepSoundsResource extends BaseResource {
         }
     }
 
+    @Timed
     @POST
     @Path("/stop")
     public Response stop(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
@@ -220,6 +223,7 @@ public class SleepSoundsResource extends BaseResource {
         }
     }
 
+    @Timed
     @GET
     @Path("combined_state")
     @Produces(MediaType.APPLICATION_JSON)
@@ -252,6 +256,7 @@ public class SleepSoundsResource extends BaseResource {
         return result;
     }
 
+    @Timed
     @GET
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
@@ -290,6 +295,7 @@ public class SleepSoundsResource extends BaseResource {
         }
     }
 
+    @Timed
     @GET
     @Path("/durations")
     @Produces(MediaType.APPLICATION_JSON)
@@ -345,6 +351,7 @@ public class SleepSoundsResource extends BaseResource {
         }
     }
 
+    @Timed
     @GET
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
