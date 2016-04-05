@@ -203,7 +203,7 @@ public class SleepSoundsResource extends BaseResource {
 
 
     //region combinedState
-    private class CombinedState {
+    protected class CombinedState {
         @JsonProperty("availableDurations")
         @NotNull
         public final DurationResult durationResult;
@@ -275,7 +275,7 @@ public class SleepSoundsResource extends BaseResource {
 
 
     //region durations
-    private class DurationResult implements DurationMap {
+    protected class DurationResult implements DurationMap {
         @JsonProperty("durations")
         @NotNull
         public final List<Duration> durations;
