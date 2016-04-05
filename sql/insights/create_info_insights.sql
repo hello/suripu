@@ -483,3 +483,12 @@ INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
 Sunshine kick-starts the production of vitamin D, whose amazing mood-elevating and disease-fighting powers have been observed in many population-based studies. Vitamin D is helpful against everything from osteoporosis to mood disorders. The sweet spot in getting enough light for vitamin D production seems to be around 10 to 15 minutes a day for most people; after that, make sure to put on sunscreen.
 
 Additionally, light is an essential signal that regulates your sleep-wake cycle. Getting light when the sun is out lets your body know when it should be awake and alert, and conversely, when it should be relaxed and ready for sleep. Think about taking a walk outside during the day as an investment for getting good sleep later that night.');
+
+--- jyfan goals 2016-04-05
+ALTER TYPE insight_category ADD VALUE 'goal_coffee';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('goal_coffee', 'Coffee is a Morning Drink','Weeklong Goal',
+'Consuming caffeinated beverages late in the day can disrupt your sleep. It can make it more difficult to fall asleep and make you more likely to have shallow sleep.
+
+The good news is that you don''t need to swear off coffee completely; a cup of coffee can still be part of your morning ritual. In fact, researchers at Johns Hopkins have found that consuming 200 mg of caffeine (roughly one cup of coffee) enhances long-term memory.  Caffeine has a half-life of 6 hours, so limiting your coffee habit to the morning means that you reap the benefits of caffeine while minimizing disruptions to your sleep.');
