@@ -31,6 +31,7 @@ import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.Drive;
 import com.hello.suripu.core.processors.insights.Eat;
+import com.hello.suripu.core.processors.insights.GoalCoffee;
 import com.hello.suripu.core.processors.insights.GoalGoOutside;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
@@ -449,6 +450,9 @@ public class InsightProcessor {
                 break;
             case EAT:
                 insightCardOptional = Eat.getMarketingInsights(accountId);
+                break;
+            case GOAL_COFFEE:
+                insightCardOptional = GoalCoffee.getInsights(accountId);
                 break;
             case GOAL_GO_OUTSIDE:
                 insightCardOptional = GoalGoOutside.getInsights(accountId);
