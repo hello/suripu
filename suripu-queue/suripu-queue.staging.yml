@@ -125,7 +125,7 @@ timeline_seed_model:
   key: normal4.base64
 
 taimurain_http_client:
-  endpoint: "http://internal-taimurain-230356525.us-east-1.elb.amazonaws.com:80"
+  endpoint: http://internal-taimurain-230356525.us-east-1.elb.amazonaws.com:80
   http_client_config:
     keepAlive: 0s
     timeout: 10000ms
