@@ -1,6 +1,7 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
@@ -61,6 +62,7 @@ public class SleepSoundsResourceTest {
     private FileManifestDAO fileManifestDAO;
     private SleepSoundsResource sleepSoundsResource;
     private FeatureStore featureStore;
+    private SleepSoundsProcessor sleepSoundsProcessor;
 
     @Before
     public void setUp() {
@@ -79,9 +81,10 @@ public class SleepSoundsResourceTest {
         messejiClient = Mockito.mock(MessejiClient.class);
         fileInfoDAO = Mockito.mock(FileInfoDAO.class);
         fileManifestDAO = Mockito.mock(FileManifestDAO.class);
+        sleepSoundsProcessor = SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO));
+                messejiClient, sleepSoundsProcessor);
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
@@ -197,7 +200,7 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetStatusInvalidDuration() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.<Duration>absent());
+        Mockito.when(durationDAO.getDurationBySeconds(Mockito.anyInt())).thenReturn(Optional.<Duration>absent());
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
                         .setSenseId(senseId)
@@ -217,7 +220,7 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetStatusInvalidPath() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(Duration.create(1L, "path", 30)));
+        Mockito.when(durationDAO.getDurationBySeconds(Mockito.anyInt())).thenReturn(Optional.of(Duration.create(1L, "path", 30)));
         Mockito.when(fileInfoDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.<FileInfo>absent());
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
@@ -253,7 +256,7 @@ public class SleepSoundsResourceTest {
     public void testGetStatusAllCorrect() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
         final Duration duration = Duration.create(1L, "path", 30);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(duration));
+        Mockito.when(durationDAO.getDurationBySeconds(Mockito.anyInt())).thenReturn(Optional.of(duration));
         final FileInfo fileInfo = makeFileInfo(1L, "preview", "name", "path", "url");
         Mockito.when(fileInfoDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.of(fileInfo));
         final SenseStateAtTime state = new SenseStateAtTime(
@@ -487,4 +490,59 @@ public class SleepSoundsResourceTest {
         SleepSoundsResource.convertVolumePercent(0);
     }
     // endregion convertVolumePercent
+
+    // region getCombinedState
+    @Test(expected = WebApplicationException.class)
+    public void testGetCombinedStateNoDevicePair() {
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(Optional.<DeviceAccountPair>absent());
+        sleepSoundsResource.getCombinedState(token);
+    }
+
+    @Test(expected = WebApplicationException.class)
+    public void testGetCombinedStateFeatureDisabled() {
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+        final SleepSoundsProcessor mockedSleepSoundsProcessor = Mockito.mock(SleepSoundsProcessor.class);
+        sleepSoundsResource = SleepSoundsResource.create(
+                durationDAO, senseStateDynamoDB, deviceDAO,
+                messejiClient, mockedSleepSoundsProcessor);
+        Mockito.when(mockedSleepSoundsProcessor.getSounds(accountId, senseId)).thenReturn(new SleepSoundsProcessor.SoundResult(Lists.<Sound>newArrayList(), SleepSoundsProcessor.SoundResult.State.FEATURE_DISABLED));
+        sleepSoundsResource.getCombinedState(token);
+    }
+
+    @Test
+    public void testGetCombinedState() {
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+
+        final SleepSoundsProcessor mockedSleepSoundsProcessor = Mockito.mock(SleepSoundsProcessor.class);
+        sleepSoundsResource = SleepSoundsResource.create(
+                durationDAO, senseStateDynamoDB, deviceDAO,
+                messejiClient, mockedSleepSoundsProcessor);
+
+        final List<Sound> sounds = ImmutableList.of(Sound.create(1L, "preview", "name", "filePath", "url"));
+        Mockito.when(mockedSleepSoundsProcessor.getSounds(accountId, senseId)).thenReturn(new SleepSoundsProcessor.SoundResult(sounds, SleepSoundsProcessor.SoundResult.State.OK));
+
+        final List<Duration> durations = ImmutableList.of(Duration.create(2L, "duration", 30));
+        Mockito.when(durationDAO.all()).thenReturn(durations);
+
+        final SenseStateAtTime state = new SenseStateAtTime(State.SenseState.newBuilder()
+                .setSenseId(senseId)
+                .setAudioState(State.AudioState.newBuilder()
+                        .setDurationSeconds(30)
+                        .setFilePath("filePath")
+                        .setPlayingAudio(true)
+                        .setVolumePercent(100)
+                        .build())
+                .build(), new DateTime());
+        Mockito.when(senseStateDynamoDB.getState(senseId)).thenReturn(Optional.of(state));
+
+        final SleepSoundsResource.CombinedState combinedState = sleepSoundsResource.getCombinedState(token);
+        assertThat(combinedState.durationResult.durations, is(durations));
+        assertThat(combinedState.soundResult.sounds, is(sounds));
+        assertThat(combinedState.soundResult.state, is(SleepSoundsProcessor.SoundResult.State.OK));
+        assertThat(combinedState.sleepSoundStatus.sound.get(), is(sounds.get(0)));
+        assertThat(combinedState.sleepSoundStatus.duration.get(), is(durations.get(0)));
+        assertThat(combinedState.sleepSoundStatus.isPlaying, is(true));
+        assertThat(combinedState.sleepSoundStatus.volumePercent.get(), is(100));
+    }
+    // endregion getCombinedState
 }
