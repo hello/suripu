@@ -251,17 +251,14 @@ public class InsightProcessor {
 
         //logic for generating old random insight
         final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime, featureFlipper);
-        if (!toGenerateRandomCategory.isPresent()) {
-            return Optional.absent();
+        if (toGenerateRandomCategory.isPresent()) {
+            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateRandomCategory.get(), accountId);
+            final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, toGenerateRandomCategory.get());
+            if (generatedRandomCategory.isPresent()) {
+                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomCategory.get(), accountId);
+                return generatedRandomCategory;
+            }
         }
-        LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateRandomCategory.get(), accountId);
-
-        final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, toGenerateRandomCategory.get());
-        if (generatedRandomCategory.isPresent()) {
-            LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomCategory.get(), accountId);
-            return generatedRandomCategory;
-        }
-
 
         //Generate random marketing insight here
         final Optional<InsightCard.Category> toGenerateOneTimeCategory;
@@ -270,6 +267,7 @@ public class InsightProcessor {
         } else {
             toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTime);
         }
+        
         if (toGenerateOneTimeCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateOneTimeCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedRandomOneTimeInsight = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, toGenerateOneTimeCategory.get());
