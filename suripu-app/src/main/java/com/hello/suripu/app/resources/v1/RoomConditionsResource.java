@@ -119,7 +119,7 @@ public class RoomConditionsResource extends BaseResource {
 
         LOGGER.debug("Last device data in db = {}", deviceData);
 
-        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit, calibrationOptional);
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit, calibrationOptional, NO_SOUND_FILL_VALUE_DB);
 
         return roomState.withDust(hasDust);
     }
