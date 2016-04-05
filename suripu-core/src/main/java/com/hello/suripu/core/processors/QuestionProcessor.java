@@ -180,7 +180,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 // get Question template
                 final Long accountQId = question.id;
                 if (!this.questionIdMap.containsKey(qid)) {
-                    LOGGER.error("action=get-questions error=question-id-not-found value={} account={}", qid, accountId);
+                    LOGGER.error("action=get-questions error=question-id-not-found value={} account_id={}", qid, accountId);
                     continue;
                 }
 
