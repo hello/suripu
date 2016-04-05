@@ -47,6 +47,7 @@ import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.queue.cli.PopulateTimelineQueueCommand;
+import com.hello.suripu.queue.cli.TimelineQueueWorkerCommand;
 import com.hello.suripu.queue.configuration.SQSConfiguration;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
 import com.hello.suripu.queue.models.QueueHealthCheck;
@@ -57,7 +58,6 @@ import com.hello.suripu.queue.resources.StatsResource;
 import com.hello.suripu.queue.timeline.TimelineQueueConsumerManager;
 import com.hello.suripu.queue.timeline.TimelineQueueProcessor;
 import com.hello.suripu.queue.timeline.TimelineQueueProducerManager;
-import com.hello.suripu.queue.cli.TimelineQueueWorkerCommand;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.client.HttpClientBuilder;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -113,7 +113,7 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
             LOGGER.warn("key=suripu-queue action=metrics-disabled.");
         }
 
-        final AWSCredentialsProvider provider= new DefaultAWSCredentialsProviderChain();
+        final AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
 
         // setup SQS
         final SQSConfiguration sqsConfig = configuration.getSqsConfiguration();
