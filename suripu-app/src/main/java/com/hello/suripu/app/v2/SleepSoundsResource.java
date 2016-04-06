@@ -287,7 +287,7 @@ public class SleepSoundsResource extends BaseResource {
         @Override
         public Optional<Duration> getDurationBySeconds(Integer durationSeconds) {
             for (final Duration duration: durations) {
-                if (duration.durationSeconds.isPresent() && duration.durationSeconds.get() == durationSeconds) {
+                if (duration.durationSeconds.isPresent() && duration.durationSeconds.get().equals(durationSeconds)) {
                     return Optional.of(duration);
                 }
             }
