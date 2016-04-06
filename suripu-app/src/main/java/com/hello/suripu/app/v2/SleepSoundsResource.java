@@ -247,11 +247,14 @@ public class SleepSoundsResource extends BaseResource {
 
     //region sounds
     private SleepSoundsProcessor.SoundResult getSounds(final Long accountId, final String senseId) {
-        final SleepSoundsProcessor.SoundResult result = sleepSoundsProcessor.getSounds(accountId, senseId);
-
-        if (result.state == SleepSoundsProcessor.SoundResult.State.FEATURE_DISABLED) {
+        if (!hasSleepSoundsEnabled(accountId)) {
+            LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=false account-id={}", accountId);
             throw new WebApplicationException(Response.Status.NO_CONTENT);
         }
+
+        LOGGER.info("endpoint=sleep-sounds sleep-sounds-enabled=true account-id={}", accountId);
+
+        final SleepSoundsProcessor.SoundResult result = sleepSoundsProcessor.getSounds(senseId);
 
         return result;
     }
