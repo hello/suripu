@@ -60,7 +60,7 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor implements Sou
         @Override
         public Optional<Sound> getSoundByFilePath(String filePath) {
             for (final Sound sound : sounds) {
-                if (sound.filePath == filePath) {
+                if (sound.filePath.equals(filePath)) {
                     return Optional.of(sound);
                 }
             }
@@ -123,7 +123,7 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor implements Sou
      */
     public Optional<Sound> getSoundByFilePath(final String filePath) {
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(filePath);
-        if (!fileInfoOptional.isPresent() || fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
+        if (!fileInfoOptional.isPresent() || !fileInfoOptional.get().fileType.equals(FileInfo.FileType.SLEEP_SOUND)) {
             LOGGER.warn("dao=fileInfoDAO error=path-not-found file-path={}", filePath);
             return Optional.absent();
         }
