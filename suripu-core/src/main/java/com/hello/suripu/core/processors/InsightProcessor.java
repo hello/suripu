@@ -219,7 +219,7 @@ public class InsightProcessor {
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                   final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
-        if (recentCategories.contains(InsightCard.Category.GOAL_GO_OUTSIDE)) {
+        if (recentCategories.contains(InsightCard.Category.GOAL_GO_OUTSIDE) || recentCategories.contains(InsightCard.Category.GOAL_COFFEE)) {
             return Optional.absent();
         }
         
