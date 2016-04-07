@@ -459,7 +459,20 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration marketingInsightsSeenConfiguration;
     public DynamoDBConfiguration getMarketingInsightsSeenConfiguration() { return this.marketingInsightsSeenConfiguration; }
 
+    @NotNull
     @JsonProperty("taimurain_http_client")
     private TaimurainHttpClientConfiguration taimurainHttpClientConfiguration;
     public TaimurainHttpClientConfiguration getTaimurainHttpClientConfiguration() { return taimurainHttpClientConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_sound_cache_seconds")
+    private Integer sleepSoundCacheSeconds;
+    public Integer getSleepSoundCacheSeconds() { return sleepSoundCacheSeconds; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_sound_duration_cache_seconds")
+    private Integer sleepSoundDurationCacheSeconds;
+    public Integer getSleepSoundDurationCacheSeconds() { return sleepSoundDurationCacheSeconds; }
 }

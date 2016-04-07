@@ -88,10 +88,12 @@ public class SleepSoundsResource extends BaseResource {
                                              final SenseStateDynamoDB senseStateDynamoDB,
                                              final DeviceDAO deviceDAO,
                                              final MessejiClient messejiClient,
-                                             final SleepSoundsProcessor sleepSoundsProcessor)
+                                             final SleepSoundsProcessor sleepSoundsProcessor,
+                                             final Integer soundCacheExpirationSeconds,
+                                             final Integer durationCacheExpirationSeconds)
     {
         final LoadingCache<String, Optional<Sound>> soundByFilePathCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.MINUTES)
+                .expireAfterWrite(soundCacheExpirationSeconds, TimeUnit.SECONDS)
                 .build(new CacheLoader<String, Optional<Sound>>() {
                     @Override
                     public Optional<Sound> load(final String filePath) throws Exception {
@@ -99,7 +101,7 @@ public class SleepSoundsResource extends BaseResource {
                     }
                 });
         final LoadingCache<Integer, Optional<Duration>> durationBySecondsCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.MINUTES)
+                .expireAfterWrite(durationCacheExpirationSeconds, TimeUnit.SECONDS)
                 .build(new CacheLoader<Integer, Optional<Duration>>() {
                     @Override
                     public Optional<Duration> load(final Integer durationSeconds) throws Exception {

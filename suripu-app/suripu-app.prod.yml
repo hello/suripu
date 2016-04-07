@@ -110,6 +110,9 @@ insights_db:
 # 12 * 3600s = 43200 sec -> 12h window
 allowed_query_range_seconds: 43200
 
+sleep_sound_cache_seconds: 30
+sleep_sound_duration_cache_seconds: 30
+
 http:
 
   # The port on which the HTTP server listens for service requests.

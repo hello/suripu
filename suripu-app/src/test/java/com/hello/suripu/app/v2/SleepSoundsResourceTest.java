@@ -84,7 +84,7 @@ public class SleepSoundsResourceTest {
         sleepSoundsProcessor = SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, sleepSoundsProcessor);
+                messejiClient, sleepSoundsProcessor, 1, 1);
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
@@ -466,7 +466,7 @@ public class SleepSoundsResourceTest {
         ObjectGraphRoot.getInstance().init(module);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, sleepSoundsProcessor);
+                messejiClient, sleepSoundsProcessor, 1, 1);
         sleepSoundsResource.getSounds(token);
     }
 
@@ -510,7 +510,7 @@ public class SleepSoundsResourceTest {
         ObjectGraphRoot.getInstance().init(module);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, sleepSoundsProcessor);
+                messejiClient, sleepSoundsProcessor, 1, 1);
         sleepSoundsResource.getCombinedState(token);
     }
 
@@ -521,7 +521,7 @@ public class SleepSoundsResourceTest {
         final SleepSoundsProcessor mockedSleepSoundsProcessor = Mockito.mock(SleepSoundsProcessor.class);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, mockedSleepSoundsProcessor);
+                messejiClient, mockedSleepSoundsProcessor, 1, 1);
 
         final List<Sound> sounds = ImmutableList.of(Sound.create(1L, "preview", "name", "filePath", "url"));
         Mockito.when(mockedSleepSoundsProcessor.getSounds(senseId)).thenReturn(new SleepSoundsProcessor.SoundResult(sounds, SleepSoundsProcessor.SoundResult.State.OK));
