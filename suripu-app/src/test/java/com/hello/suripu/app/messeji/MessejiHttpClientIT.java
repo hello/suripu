@@ -42,7 +42,7 @@ public class MessejiHttpClientIT {
     public void testPlayAudio() throws Exception {
         final Optional<Long> idOptional = client.playAudio(
                 "sense1", MessejiClient.Sender.fromAccountId(1L), System.nanoTime(), Duration.create(1L, "duration", 30),
-                Sound.create(1L, "preview", "sound", "path", "url"), 2, 2, 50);
+                Sound.create(1L, "preview", "sound", "path", "url"), 2, 2, 50, 2);
         assertThat(idOptional.isPresent(), is(true));
     }
 

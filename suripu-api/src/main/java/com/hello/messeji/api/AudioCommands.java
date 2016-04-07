@@ -494,6 +494,15 @@ public final class AudioCommands {
      * <code>required uint32 fade_out_duration_seconds = 5;</code>
      */
     int getFadeOutDurationSeconds();
+
+    /**
+     * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+     */
+    boolean hasTimeoutFadeOutDurationSeconds();
+    /**
+     * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+     */
+    int getTimeoutFadeOutDurationSeconds();
   }
   /**
    * Protobuf type {@code PlayAudio}
@@ -571,6 +580,11 @@ public final class AudioCommands {
             case 40: {
               bitField0_ |= 0x00000010;
               fadeOutDurationSeconds_ = input.readUInt32();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              timeoutFadeOutDurationSeconds_ = input.readUInt32();
               break;
             }
           }
@@ -743,12 +757,28 @@ public final class AudioCommands {
       return fadeOutDurationSeconds_;
     }
 
+    public static final int TIMEOUT_FADE_OUT_DURATION_SECONDS_FIELD_NUMBER = 6;
+    private int timeoutFadeOutDurationSeconds_;
+    /**
+     * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+     */
+    public boolean hasTimeoutFadeOutDurationSeconds() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+     */
+    public int getTimeoutFadeOutDurationSeconds() {
+      return timeoutFadeOutDurationSeconds_;
+    }
+
     private void initFields() {
       filePath_ = "";
       volumePercent_ = 0;
       durationSeconds_ = 0;
       fadeInDurationSeconds_ = 0;
       fadeOutDurationSeconds_ = 0;
+      timeoutFadeOutDurationSeconds_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -794,6 +824,9 @@ public final class AudioCommands {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeUInt32(5, fadeOutDurationSeconds_);
       }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeUInt32(6, timeoutFadeOutDurationSeconds_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -822,6 +855,10 @@ public final class AudioCommands {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(5, fadeOutDurationSeconds_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(6, timeoutFadeOutDurationSeconds_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -950,6 +987,8 @@ public final class AudioCommands {
         bitField0_ = (bitField0_ & ~0x00000008);
         fadeOutDurationSeconds_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
+        timeoutFadeOutDurationSeconds_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -998,6 +1037,10 @@ public final class AudioCommands {
           to_bitField0_ |= 0x00000010;
         }
         result.fadeOutDurationSeconds_ = fadeOutDurationSeconds_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.timeoutFadeOutDurationSeconds_ = timeoutFadeOutDurationSeconds_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1030,6 +1073,9 @@ public final class AudioCommands {
         }
         if (other.hasFadeOutDurationSeconds()) {
           setFadeOutDurationSeconds(other.getFadeOutDurationSeconds());
+        }
+        if (other.hasTimeoutFadeOutDurationSeconds()) {
+          setTimeoutFadeOutDurationSeconds(other.getTimeoutFadeOutDurationSeconds());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1334,6 +1380,38 @@ public final class AudioCommands {
         return this;
       }
 
+      private int timeoutFadeOutDurationSeconds_ ;
+      /**
+       * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+       */
+      public boolean hasTimeoutFadeOutDurationSeconds() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+       */
+      public int getTimeoutFadeOutDurationSeconds() {
+        return timeoutFadeOutDurationSeconds_;
+      }
+      /**
+       * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+       */
+      public Builder setTimeoutFadeOutDurationSeconds(int value) {
+        bitField0_ |= 0x00000020;
+        timeoutFadeOutDurationSeconds_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 timeout_fade_out_duration_seconds = 6;</code>
+       */
+      public Builder clearTimeoutFadeOutDurationSeconds() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        timeoutFadeOutDurationSeconds_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:PlayAudio)
     }
 
@@ -1365,12 +1443,13 @@ public final class AudioCommands {
   static {
     java.lang.String[] descriptorData = {
       "\n\024audio_commands.proto\".\n\tStopAudio\022!\n\031f" +
-      "ade_out_duration_seconds\030\001 \002(\r\"\225\001\n\tPlayA" +
+      "ade_out_duration_seconds\030\001 \002(\r\"\300\001\n\tPlayA" +
       "udio\022\021\n\tfile_path\030\001 \002(\t\022\026\n\016volume_percen" +
       "t\030\002 \002(\r\022\030\n\020duration_seconds\030\003 \001(\r\022 \n\030fad" +
       "e_in_duration_seconds\030\004 \002(\r\022!\n\031fade_out_" +
-      "duration_seconds\030\005 \002(\rB\027\n\025com.hello.mess" +
-      "eji.api"
+      "duration_seconds\030\005 \002(\r\022)\n!timeout_fade_o" +
+      "ut_duration_seconds\030\006 \001(\rB\027\n\025com.hello.m" +
+      "esseji.api"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1395,7 +1474,7 @@ public final class AudioCommands {
     internal_static_PlayAudio_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_PlayAudio_descriptor,
-        new java.lang.String[] { "FilePath", "VolumePercent", "DurationSeconds", "FadeInDurationSeconds", "FadeOutDurationSeconds", });
+        new java.lang.String[] { "FilePath", "VolumePercent", "DurationSeconds", "FadeInDurationSeconds", "FadeOutDurationSeconds", "TimeoutFadeOutDurationSeconds", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
