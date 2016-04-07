@@ -31,6 +31,7 @@ import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.Drive;
 import com.hello.suripu.core.processors.insights.Eat;
+import com.hello.suripu.core.processors.insights.GoalCoffee;
 import com.hello.suripu.core.processors.insights.GoalGoOutside;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
@@ -218,7 +219,7 @@ public class InsightProcessor {
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                   final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
-        if (recentCategories.contains(InsightCard.Category.GOAL_GO_OUTSIDE)) {
+        if (recentCategories.contains(InsightCard.Category.GOAL_GO_OUTSIDE) || recentCategories.contains(InsightCard.Category.GOAL_COFFEE)) {
             return Optional.absent();
         }
         
@@ -449,6 +450,9 @@ public class InsightProcessor {
                 break;
             case EAT:
                 insightCardOptional = Eat.getMarketingInsights(accountId);
+                break;
+            case GOAL_COFFEE:
+                insightCardOptional = GoalCoffee.getInsights(accountId);
                 break;
             case GOAL_GO_OUTSIDE:
                 insightCardOptional = GoalGoOutside.getInsights(accountId);
