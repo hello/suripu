@@ -487,7 +487,7 @@ public class SleepSoundsResourceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testConvertToSenseVolumePercentTooSmall() {
-        SleepSoundsResource.convertToSenseVolumePercent(0);
+        SleepSoundsResource.convertToSenseVolumePercent(-1);
     }
     // endregion convertToSenseVolumePercent
 
