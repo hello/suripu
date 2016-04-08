@@ -48,12 +48,13 @@ public abstract class MessejiClient {
     }
 
     public Optional<Long> playAudio(final String senseId, final Sender sender, final Long order, final Duration duration, final Sound sound,
-                                    final Integer fadeInSeconds, final Integer fadeOutSeconds, final Integer volumePercent)
+                                    final Integer fadeInSeconds, final Integer fadeOutSeconds, final Integer volumePercent, final Integer timeoutFadeOutSeconds)
     {
         final AudioCommands.PlayAudio.Builder playBuilder = AudioCommands.PlayAudio.newBuilder()
                 .setFadeInDurationSeconds(fadeInSeconds)
                 .setFadeOutDurationSeconds(fadeOutSeconds)
                 .setVolumePercent(volumePercent)
+                .setTimeoutFadeOutDurationSeconds(timeoutFadeOutSeconds)
                 .setFilePath(sound.filePath);
         if (duration.durationSeconds.isPresent()) {
             playBuilder.setDurationSeconds(duration.durationSeconds.get());
