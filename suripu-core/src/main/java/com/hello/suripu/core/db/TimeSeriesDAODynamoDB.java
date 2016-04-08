@@ -272,21 +272,25 @@ public abstract class TimeSeriesDAODynamoDB<T> {
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int numAttempts = 0;
         boolean keepTrying = true;
+        logger().info("method=query expressionAttributeValues={}", originalQueryRequest.getExpressionAttributeValues());
 
         do {
             numAttempts++;
             final QueryRequest queryRequest = originalQueryRequest
                     .clone()
                     .withExclusiveStartKey(lastEvaluatedKey);
+            logger().info("method=query tableName={} lastEvaluatedKey={} exclusiveStartKey={} resultSize={} numAttempts={} expressionAttributeValues={}",
+                    queryRequest.getTableName(), lastEvaluatedKey, queryRequest.getExclusiveStartKey(), results.size(), numAttempts, queryRequest.getExpressionAttributeValues());
 
             final QueryResult queryResult;
             try {
                 queryResult = this.dynamoDBClient.query(queryRequest);
             } catch (ProvisionedThroughputExceededException ptee) {
+                logger().warn("exception=ProvisionedThroughputExceededException method=query expressionAttributeValues={} table={} {}",
+                        queryRequest.getExpressionAttributeValues(),
+                        queryRequest.getTableName(),
+                        attributeValueMapToLogString(queryRequest.getExpressionAttributeValues()));
                 if (numAttempts >= maxQueryAttempts()) {
-                    logger().warn("exception=ProvisionedThroughputExceededException method=query table={} {}",
-                            queryRequest.getTableName(),
-                            attributeValueMapToLogString(queryRequest.getExpressionAttributeValues()));
                     return Response.partial(results, ptee);
                 }
                 backoff(numAttempts);
@@ -301,12 +305,19 @@ public abstract class TimeSeriesDAODynamoDB<T> {
             final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
             if (queryResult.getItems() != null) {
+                logger().info("method=query tableName={} lastEvaluatedKey={} exclusiveStartKey={} resultSize={} numAttempts={} expressionAttributeValues={} queryResultItemsSize={}",
+                        queryRequest.getTableName(), lastEvaluatedKey, queryRequest.getExclusiveStartKey(), results.size(), numAttempts, queryRequest.getExpressionAttributeValues(), queryResult.getItems().size());
                 for (final Map<String, AttributeValue> item : items) {
                     results.add(item);
                 }
+                logger().warn("method=query tableName={} lastEvaluatedKey={} exclusiveStartKey={} resultSize={} numAttempts={} expressionAttributeValues={} queryResultItems=null",
+                        queryRequest.getTableName(), lastEvaluatedKey, queryRequest.getExclusiveStartKey(), results.size(), numAttempts, queryRequest.getExpressionAttributeValues());
             }
 
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
+
+            logger().info("method=query tableName={} lastEvaluatedKey={} exclusiveStartKey={} resultSize={} numAttempts={} expressionAttributeValues={} queryResultItemsSize={} lastEvaluatedKey={}",
+                    queryRequest.getTableName(), lastEvaluatedKey, queryRequest.getExclusiveStartKey(), results.size(), numAttempts, queryRequest.getExpressionAttributeValues(), queryResult.getItems().size(), lastEvaluatedKey);
             keepTrying = (lastEvaluatedKey != null);
 
         } while (keepTrying && (numAttempts < maxQueryAttempts()));
