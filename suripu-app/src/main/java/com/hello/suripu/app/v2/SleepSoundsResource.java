@@ -47,7 +47,7 @@ public class SleepSoundsResource extends BaseResource {
     // Fade in/out sounds over this many seconds on Sense
     private static final Integer FADE_IN = 1;
     private static final Integer FADE_OUT = 1; // Used when explicitly stopped with a Stop message or wave
-    private static final Integer TIMEOUT_FADE_OUT = 5; // Used when sense's play duration times out
+    private static final Integer TIMEOUT_FADE_OUT = 10; // Used when sense's play duration times out
 
     private final DurationDAO durationDAO;
     private final SenseStateDynamoDB senseStateDynamoDB;
