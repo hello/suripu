@@ -472,37 +472,24 @@ public class SleepSoundsResourceTest {
 
     // endregion getSounds
 
-    // region convertToSenseVolumePercent
+    // region convertVolumePercent
     @Test
-    public void testConvertToSenseVolumePercent() throws Exception {
-        assertThat(SleepSoundsResource.convertToSenseVolumePercent(100), is(100));
-        assertThat(SleepSoundsResource.convertToSenseVolumePercent(50), is(83));
-        assertThat(SleepSoundsResource.convertToSenseVolumePercent(25), is(67));
+    public void testConvertVolumePercent() throws Exception {
+        assertThat(SleepSoundsResource.convertVolumePercent(100), is(100));
+        assertThat(SleepSoundsResource.convertVolumePercent(50), is(83));
+        assertThat(SleepSoundsResource.convertVolumePercent(25), is(67));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testConvertToSenseVolumePercentTooLarge() {
-        SleepSoundsResource.convertToSenseVolumePercent(200);
+    public void testConvertVolumePercentTooLarge() {
+        SleepSoundsResource.convertVolumePercent(200);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testConvertToSenseVolumePercentTooSmall() {
-        SleepSoundsResource.convertToSenseVolumePercent(0);
+    public void testConvertVolumePercentTooSmall() {
+        SleepSoundsResource.convertVolumePercent(0);
     }
-    // endregion convertToSenseVolumePercent
-
-    // region convertToDisplayVolumePercent
-    @Test
-    public void testConvertToDisplayVolumePercent() throws Exception {
-        assertThat(SleepSoundsResource.convertToDisplayVolumePercent(100), is(100));
-        assertThat(SleepSoundsResource.convertToDisplayVolumePercent(83), is(50));
-        assertThat(SleepSoundsResource.convertToDisplayVolumePercent(67), is(25));
-
-        for (int i = 5; i <= 100; i+=5) {
-            assertThat(SleepSoundsResource.convertToDisplayVolumePercent(SleepSoundsResource.convertToSenseVolumePercent(i)), is(i));
-        }
-    }
-    // endregion convertToDisplayVolumePercent
+    // endregion convertVolumePercent
 
     // region getCombinedState
     @Test(expected = WebApplicationException.class)
