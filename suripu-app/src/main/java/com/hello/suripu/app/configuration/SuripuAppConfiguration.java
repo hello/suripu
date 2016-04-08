@@ -467,12 +467,12 @@ public class SuripuAppConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("sleep_sound_cache_seconds")
-    private Integer sleepSoundCacheSeconds;
-    public Integer getSleepSoundCacheSeconds() { return sleepSoundCacheSeconds != null ? sleepSoundCacheSeconds : 5; }
+    private Integer sleepSoundCacheSeconds = 5;
+    public Integer getSleepSoundCacheSeconds() { return sleepSoundCacheSeconds; }
 
     @Valid
     @NotNull
     @JsonProperty("sleep_sound_duration_cache_seconds")
-    private Integer sleepSoundDurationCacheSeconds;
-    public Integer getSleepSoundDurationCacheSeconds() { return sleepSoundDurationCacheSeconds != null ? sleepSoundDurationCacheSeconds : 5; }
+    private Integer sleepSoundDurationCacheSeconds = 5;
+    public Integer getSleepSoundDurationCacheSeconds() { return sleepSoundDurationCacheSeconds; }
 }
