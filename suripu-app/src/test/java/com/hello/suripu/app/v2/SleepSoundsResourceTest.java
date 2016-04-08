@@ -84,7 +84,7 @@ public class SleepSoundsResourceTest {
         sleepSoundsProcessor = SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, sleepSoundsProcessor);
+                messejiClient, sleepSoundsProcessor, 1, 1);
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
@@ -466,7 +466,7 @@ public class SleepSoundsResourceTest {
         ObjectGraphRoot.getInstance().init(module);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO));
+                messejiClient, sleepSoundsProcessor, 1, 1);
         sleepSoundsResource.getSounds(token);
     }
 
@@ -501,11 +501,16 @@ public class SleepSoundsResourceTest {
     @Test(expected = WebApplicationException.class)
     public void testGetCombinedStateFeatureDisabled() {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
-        final SleepSoundsProcessor mockedSleepSoundsProcessor = Mockito.mock(SleepSoundsProcessor.class);
+        Mockito.when(featureStore.getData())
+                .thenReturn(
+                        ImmutableMap.of(
+                                FeatureFlipper.SLEEP_SOUNDS_ENABLED,
+                                new Feature("sleep_sounds_enabled", Collections.EMPTY_LIST, Collections.EMPTY_LIST, (float) 0.0)));
+        final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(module);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, mockedSleepSoundsProcessor);
-        Mockito.when(mockedSleepSoundsProcessor.getSounds(accountId, senseId)).thenReturn(new SleepSoundsProcessor.SoundResult(Lists.<Sound>newArrayList(), SleepSoundsProcessor.SoundResult.State.FEATURE_DISABLED));
+                messejiClient, sleepSoundsProcessor, 1, 1);
         sleepSoundsResource.getCombinedState(token);
     }
 
@@ -516,10 +521,10 @@ public class SleepSoundsResourceTest {
         final SleepSoundsProcessor mockedSleepSoundsProcessor = Mockito.mock(SleepSoundsProcessor.class);
         sleepSoundsResource = SleepSoundsResource.create(
                 durationDAO, senseStateDynamoDB, deviceDAO,
-                messejiClient, mockedSleepSoundsProcessor);
+                messejiClient, mockedSleepSoundsProcessor, 1, 1);
 
         final List<Sound> sounds = ImmutableList.of(Sound.create(1L, "preview", "name", "filePath", "url"));
-        Mockito.when(mockedSleepSoundsProcessor.getSounds(accountId, senseId)).thenReturn(new SleepSoundsProcessor.SoundResult(sounds, SleepSoundsProcessor.SoundResult.State.OK));
+        Mockito.when(mockedSleepSoundsProcessor.getSounds(senseId)).thenReturn(new SleepSoundsProcessor.SoundResult(sounds, SleepSoundsProcessor.SoundResult.State.OK));
 
         final List<Duration> durations = ImmutableList.of(Duration.create(2L, "duration", 30));
         Mockito.when(durationDAO.all()).thenReturn(durations);

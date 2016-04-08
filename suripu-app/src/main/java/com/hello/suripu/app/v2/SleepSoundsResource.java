@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -39,6 +42,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @Path("/v2/sleep_sounds")
 public class SleepSoundsResource extends BaseResource {
@@ -55,26 +60,57 @@ public class SleepSoundsResource extends BaseResource {
     private final MessejiClient messejiClient;
     private final SleepSoundsProcessor sleepSoundsProcessor;
 
+    /*
+    Why do we want to cache these two calls?
+    The app frequently polls to get Sense's status, and we need to fetch the sound and duration for that query.
+    They (almost) never change, and if they do they should be append-only, so we do this to avoid DDOSing our database.
+     */
+    private final LoadingCache<String, Optional<Sound>> soundByFilePathCache;
+    private final LoadingCache<Integer, Optional<Duration>> durationBySecondsCache;
+
     private SleepSoundsResource(final DurationDAO durationDAO,
                                 final SenseStateDynamoDB senseStateDynamoDB,
                                 final DeviceDAO deviceDAO,
                                 final MessejiClient messejiClient,
-                                final SleepSoundsProcessor sleepSoundsProcessor)
+                                final SleepSoundsProcessor sleepSoundsProcessor,
+                                final LoadingCache<String, Optional<Sound>> soundByFilePathCache,
+                                final LoadingCache<Integer, Optional<Duration>> durationBySecondsCache)
     {
         this.durationDAO = durationDAO;
         this.senseStateDynamoDB = senseStateDynamoDB;
         this.deviceDAO = deviceDAO;
         this.messejiClient = messejiClient;
         this.sleepSoundsProcessor = sleepSoundsProcessor;
+        this.soundByFilePathCache = soundByFilePathCache;
+        this.durationBySecondsCache = durationBySecondsCache;
     }
 
     public static SleepSoundsResource create(final DurationDAO durationDAO,
                                              final SenseStateDynamoDB senseStateDynamoDB,
                                              final DeviceDAO deviceDAO,
                                              final MessejiClient messejiClient,
-                                             final SleepSoundsProcessor sleepSoundsProcessor)
+                                             final SleepSoundsProcessor sleepSoundsProcessor,
+                                             final Integer soundCacheExpirationSeconds,
+                                             final Integer durationCacheExpirationSeconds)
     {
-        return new SleepSoundsResource(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, sleepSoundsProcessor);
+        final LoadingCache<String, Optional<Sound>> soundByFilePathCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(soundCacheExpirationSeconds, TimeUnit.SECONDS)
+                .build(new CacheLoader<String, Optional<Sound>>() {
+                    @Override
+                    public Optional<Sound> load(final String filePath) throws Exception {
+                        return sleepSoundsProcessor.getSoundByFilePath(filePath);
+                    }
+                });
+        final LoadingCache<Integer, Optional<Duration>> durationBySecondsCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(durationCacheExpirationSeconds, TimeUnit.SECONDS)
+                .build(new CacheLoader<Integer, Optional<Duration>>() {
+                    @Override
+                    public Optional<Duration> load(final Integer durationSeconds) throws Exception {
+                        return durationDAO.getDurationBySeconds(durationSeconds);
+                    }
+                });
+        return new SleepSoundsResource(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, sleepSoundsProcessor,
+                soundByFilePathCache, durationBySecondsCache);
     }
 
 
@@ -248,11 +284,14 @@ public class SleepSoundsResource extends BaseResource {
 
     //region sounds
     private SleepSoundsProcessor.SoundResult getSounds(final Long accountId, final String senseId) {
-        final SleepSoundsProcessor.SoundResult result = sleepSoundsProcessor.getSounds(accountId, senseId);
-
-        if (result.state == SleepSoundsProcessor.SoundResult.State.FEATURE_DISABLED) {
+        if (!hasSleepSoundsEnabled(accountId)) {
+            LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=false account-id={}", accountId);
             throw new WebApplicationException(Response.Status.NO_CONTENT);
         }
+
+        LOGGER.info("endpoint=sleep-sounds sleep-sounds-enabled=true account-id={}", accountId);
+
+        final SleepSoundsProcessor.SoundResult result = sleepSoundsProcessor.getSounds(senseId);
 
         return result;
     }
@@ -368,7 +407,30 @@ public class SleepSoundsResource extends BaseResource {
 
         final String deviceId = deviceIdPair.get().externalDeviceId;
 
-        return getStatus(accountId, deviceId, sleepSoundsProcessor, durationDAO);
+        return getStatus(accountId, deviceId,
+                new SoundMap() {
+                    @Override
+                    public Optional<Sound> getSoundByFilePath(final String filePath) {
+                        try {
+                            return soundByFilePathCache.get(filePath);
+                        } catch (ExecutionException e) {
+                            LOGGER.error("error=ExecutionException method=soundByFilePathCache.get(filePath) file-path={}", filePath);
+                            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+                        }
+                    }
+                },
+                new DurationMap() {
+                    @Override
+                    public Optional<Duration> getDurationBySeconds(Integer durationSeconds) {
+                        try {
+                            return durationBySecondsCache.get(durationSeconds);
+                        } catch (ExecutionException e) {
+                            LOGGER.error("error=ExecutionException method=durationBySecondsCache.get(durationSeconds) duration-seconds={}",
+                                    durationSeconds);
+                            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+                        }
+                    }
+                });
     }
     //endregion status
 

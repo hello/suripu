@@ -22,7 +22,7 @@ import java.util.List;
  *
  * Helper class for determining what sleep sounds are available on a Sense, and why.
  */
-public class SleepSoundsProcessor extends FeatureFlippedProcessor implements SoundMap {
+public class SleepSoundsProcessor implements SoundMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsProcessor.class);
 
     private static final Integer MIN_SOUNDS = 5; // Anything less than this and we return an empty list.
@@ -76,19 +76,11 @@ public class SleepSoundsProcessor extends FeatureFlippedProcessor implements Sou
     }
 
     /**
-     * @param accountId User's account ID
      * @param senseId Sense ID paired to this account
-     * @return SoundResult containing the list of Sounds for the account/Sense.
+     * @return SoundResult containing the list of Sounds for the Sense.
      */
-    public SoundResult getSounds(final Long accountId, final String senseId) {
+    public SoundResult getSounds(final String senseId) {
         final List<Sound> sounds = Lists.newArrayList();
-
-        if (!hasSleepSoundsEnabled(accountId)) {
-            LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=false account-id={}", accountId);
-            return new SoundResult(sounds, SoundResult.State.FEATURE_DISABLED);
-        }
-
-        LOGGER.info("endpoint=sleep-sounds sleep-sounds-enabled=true account-id={}", accountId);
 
         final Optional<FileSync.FileManifest> manifestOptional = fileManifestDAO.getManifest(senseId);
         if (!manifestOptional.isPresent()) {

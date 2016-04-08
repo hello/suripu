@@ -499,6 +499,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final MessejiClient messejiClient = MessejiHttpClient.create(
                 new HttpClientBuilder().using(messejiHttpClientConfiguration.getHttpClientConfiguration()).build(),
                 messejiHttpClientConfiguration.getEndpoint());
-        environment.addResource(SleepSoundsResource.create(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO)));
+        environment.addResource(SleepSoundsResource.create(
+                durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, SleepSoundsProcessor.create(fileInfoDAO, fileManifestDAO),
+                configuration.getSleepSoundCacheSeconds(), configuration.getSleepSoundDurationCacheSeconds()));
     }
 }
