@@ -306,6 +306,12 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 }
             }
 
+            if ((originalQueryRequest.getLimit() != null) &&
+                    (results.size() >= originalQueryRequest.getLimit()))
+            {
+                return Response.success(results);
+            }
+
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
             keepTrying = (lastEvaluatedKey != null);
 
