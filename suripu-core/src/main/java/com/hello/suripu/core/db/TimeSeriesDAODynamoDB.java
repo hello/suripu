@@ -316,8 +316,8 @@ public abstract class TimeSeriesDAODynamoDB<T> {
 
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
 
-            logger().info("method=query tableName={} lastEvaluatedKey={} exclusiveStartKey={} resultSize={} numAttempts={} expressionAttributeValues={} queryResultItemsSize={} lastEvaluatedKey={}",
-                    queryRequest.getTableName(), lastEvaluatedKey, queryRequest.getExclusiveStartKey(), results.size(), numAttempts, queryRequest.getExpressionAttributeValues(), queryResult.getItems().size(), lastEvaluatedKey);
+            logger().info("method=query tableName={} lastEvaluatedKey={} exclusiveStartKey={} resultSize={} numAttempts={} expressionAttributeValues={} lastEvaluatedKey={}",
+                    queryRequest.getTableName(), lastEvaluatedKey, queryRequest.getExclusiveStartKey(), results.size(), numAttempts, queryRequest.getExpressionAttributeValues(), lastEvaluatedKey);
             keepTrying = (lastEvaluatedKey != null);
 
         } while (keepTrying && (numAttempts < maxQueryAttempts()));
