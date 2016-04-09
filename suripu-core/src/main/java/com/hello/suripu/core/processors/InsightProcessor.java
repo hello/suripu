@@ -220,6 +220,7 @@ public class InsightProcessor {
                                                                   final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         if (recentCategories.contains(InsightCard.Category.GOAL_GO_OUTSIDE) || recentCategories.contains(InsightCard.Category.GOAL_COFFEE)) {
+            LOGGER.info("Goal insight generated recently for accountId {}, suppressing all other insights", accountId);
             return Optional.absent();
         }
         

@@ -11,6 +11,6 @@ import org.joda.time.DateTimeZone;
  */
 public class GoalCoffee {
     public static Optional<InsightCard> getInsights(final Long accountId) {
-        return Optional.of(new InsightCard(accountId, GoalMsgEN.GOAL_COFFEE_TITLE, GoalMsgEN.GOAL_COFFEE_MSG, InsightCard.Category.GOAL_GO_OUTSIDE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), GoalMsgEN.GOAL_WEEKLONG_CATEGORY_NAME, InsightCard.InsightType.BASIC));
+        return Optional.of(new InsightCard(accountId, GoalMsgEN.GOAL_COFFEE_TITLE, GoalMsgEN.GOAL_COFFEE_MSG, InsightCard.Category.GOAL_COFFEE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), GoalMsgEN.GOAL_WEEKLONG_CATEGORY_NAME, InsightCard.InsightType.BASIC));
     }
 }
