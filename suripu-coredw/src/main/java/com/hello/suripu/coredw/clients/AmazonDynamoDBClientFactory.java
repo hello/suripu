@@ -41,7 +41,6 @@ public class AmazonDynamoDBClientFactory {
     }
 
 
-    @Deprecated
     public synchronized AmazonDynamoDB getForEndpoint(final String endpoint) {
         if(clients.containsKey(endpoint)) {
             return clients.get(endpoint);
