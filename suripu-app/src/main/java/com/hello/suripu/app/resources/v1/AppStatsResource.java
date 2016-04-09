@@ -17,13 +17,10 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.QuestionProcessor;
-import com.hello.suripu.core.util.PATCH;
+import com.hello.suripu.coredw.util.PATCH;
 import com.yammer.metrics.annotation.Timed;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import java.util.List;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -32,6 +29,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/v1/app/stats")
 public class AppStatsResource {

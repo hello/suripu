@@ -1,8 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.base.Optional;
-
-import javax.validation.constraints.NotNull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by jakepiccolo on 11/9/15.

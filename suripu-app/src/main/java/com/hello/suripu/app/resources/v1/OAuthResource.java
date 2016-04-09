@@ -11,12 +11,13 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.GrantType;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.util.PasswordUtil;
+import com.hello.suripu.coredw.oauth.GrantTypeParam;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class OAuthResource {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
-        if(!grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
+        if(!grantType.getType().equals(GrantType.PASSWORD)) {
             // We only support password grant at the moment
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }

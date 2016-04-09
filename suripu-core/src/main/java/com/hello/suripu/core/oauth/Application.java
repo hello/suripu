@@ -37,7 +37,7 @@ public class Application {
     public final DateTime created;
 
     @JsonIgnore
-    public final GrantTypeParam.GrantType grantType;
+    public final GrantType grantType;
 
     public Application(
             final Long id,
@@ -50,7 +50,7 @@ public class Application {
             final String description,
             final Boolean published,
             final DateTime created,
-            final GrantTypeParam.GrantType grantType
+            final GrantType grantType
     ) {
         this.id = id;
         this.name = name;
@@ -80,7 +80,7 @@ public class Application {
                 registration.description,
                 Boolean.FALSE, // Application aren't published by default.
                 DateTime.now(),
-                GrantTypeParam.GrantType.AUTH_CODE
+                GrantType.AUTH_CODE
         );
     }
 

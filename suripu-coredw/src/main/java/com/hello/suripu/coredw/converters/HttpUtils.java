@@ -1,4 +1,4 @@
-package com.hello.suripu.core.converters;
+package com.hello.suripu.coredw.converters;
 
 
 import com.google.common.base.Joiner;

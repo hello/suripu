@@ -26,7 +26,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.UpgradeNodeRequest;
 import com.hello.suripu.core.util.FeatureUtils;
-import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -59,7 +58,6 @@ public class FirmwareUpgradePathDAO {
         this.tableName = tableName;
     }
 
-    @Timed
     public void insertFWUpgradeNode(final UpgradeNodeRequest upgradeNode) {
 
         final Map<String, AttributeValue> item = new HashMap<>();
@@ -79,7 +77,6 @@ public class FirmwareUpgradePathDAO {
         }
     }
 
-    @Timed
     public List<UpgradeNodeRequest> getFWUpgradeNodesForGroup(final String groupName) {
         final Condition byGroupName = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -160,7 +157,6 @@ public class FirmwareUpgradePathDAO {
         return Optional.absent();
     }
 
-    @Timed
     public Optional<Pair<Integer, Float>> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
 
         final Condition byGroupName = new Condition()

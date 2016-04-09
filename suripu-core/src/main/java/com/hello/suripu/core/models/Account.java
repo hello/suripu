@@ -10,8 +10,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 
-import javax.validation.constraints.NotNull;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @JsonDeserialize(builder = Account.Builder.class)
@@ -23,7 +21,6 @@ public class Account {
         }
     }
 
-    @NotNull
     @JsonIgnore
     public final Optional<Long> id;
 
@@ -247,7 +244,6 @@ public class Account {
             return this;
         }
 
-        @NotNull
         @JsonProperty("id")
         public Builder withId(final Long id) {
             this.id = Optional.fromNullable(id);

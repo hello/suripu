@@ -6,27 +6,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import javax.validation.constraints.NotNull;
-
 public class Calibration {
     private final static Integer DEFAULT_DUST_OFFSET = 0;
     private final static Integer DEFAULT_DUST_CALIBRATION_DELTA = 0;
     private final static Float DUST_CALIBRATION_BASE = 300f;
     private final static Float DUST_CALIBRATION_K_FACTOR = 1.3f;
 
-    @NotNull
     @JsonProperty("sense_id")
     public final String senseId;
 
-    @NotNull
     @JsonProperty("dust_offset")
     public final Integer dustOffset;
 
-    @NotNull
     @JsonProperty("dust_calibration_delta")
     public final Integer dustCalibrationDelta;
 
-    @NotNull
     @JsonProperty("tested_at")
     public final Long testedAt;
 

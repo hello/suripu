@@ -1,12 +1,8 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
-import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.util.TimelineUtils;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -29,7 +25,6 @@ public class PartnerMotion {
     final private static int ACCOUNT_DEPTH_THRESHOLD = 90; // small movement
     final private static int CHECK_PRECEDING_MINS = 2; // make sure user has no movement in the previous 2 mins
 
-    @Timed
     public static List<PartnerMotionEvent> getPartnerData(final List<MotionEvent> partnerMotionEvents,final List<MotionEvent> myMotionEvents, int threshold) {
 
 

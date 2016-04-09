@@ -1,11 +1,11 @@
 package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
+import com.hello.suripu.coredw.configuration.KinesisConfiguration;
+import com.hello.suripu.coredw.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;

@@ -17,7 +17,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.TimelineProcessor;
-import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.coredw.resources.BaseResource;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;

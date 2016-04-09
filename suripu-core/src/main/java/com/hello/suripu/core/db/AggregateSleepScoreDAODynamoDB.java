@@ -30,7 +30,6 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.AggregateScore;
-import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +68,6 @@ public class AggregateSleepScoreDAODynamoDB {
         Collections.addAll(targetAttributes, ACCOUNT_ID_ATTRIBUTE_NAME, DATE_ATTRIBUTE_NAME, SCORE_ATTRIBUTE_NAME, TYPE_ATTRIBUTE_NAME, VERSION_ATTRIBUTE_NAME);
     }
 
-    @Timed
     public void writeSingleScore(final AggregateScore score) {
         LOGGER.debug("Write single score: {}, {}, {}", score.accountId, score.date, score.score);
         final HashMap<String, AttributeValue> item = this.createItem(score);
@@ -78,7 +76,7 @@ public class AggregateSleepScoreDAODynamoDB {
 
     }
 
-    @Timed public Boolean updateInsertSingleScore(final Long accountId, final Integer score, final String date) {
+    public Boolean updateInsertSingleScore(final Long accountId, final Integer score, final String date) {
         LOGGER.debug("Write single score: {}, {}, {}", accountId, date, score);
 
 
@@ -115,7 +113,6 @@ public class AggregateSleepScoreDAODynamoDB {
 
     }
 
-    @Timed
     public void writeBatchScores(final List<AggregateScore> scores) {
 
         final List<WriteRequest> scoreList = new ArrayList<>();
@@ -143,7 +140,6 @@ public class AggregateSleepScoreDAODynamoDB {
 
     }
 
-    @Timed
     public AggregateScore getSingleScore(final Long accountId, final String date) {
 
         final Map<String, AttributeValue> key = new HashMap<>();
@@ -172,7 +168,6 @@ public class AggregateSleepScoreDAODynamoDB {
 
     }
 
-    @Timed
     public ImmutableList<AggregateScore> getBatchScores(final Long accountId, final String startDate, final String endDate, final int numDays){
 
         final Condition selectByAccountId  = new Condition()

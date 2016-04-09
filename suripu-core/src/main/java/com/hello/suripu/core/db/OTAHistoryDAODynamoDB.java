@@ -23,18 +23,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.OTAHistory;
-import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by jnorgan on 4/21/15.
@@ -57,7 +55,6 @@ public class OTAHistoryDAODynamoDB {
         this.tableName = tableName;
     }
 
-    @Timed
     public Optional<OTAHistory> insertOTAEvent(final OTAHistory historyEntry) {
         final Map<String, AttributeValue> item = new HashMap<>();
         item.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.deviceId));
@@ -113,7 +110,7 @@ public class OTAHistoryDAODynamoDB {
             queryResult = this.dynamoDBClient.query(queryRequest);
         } catch (AmazonServiceException ase){
             LOGGER.error("OTA history query failed. Check parameters used.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            throw new RuntimeException(ase);
         }
 
         if(queryResult.getItems() == null){

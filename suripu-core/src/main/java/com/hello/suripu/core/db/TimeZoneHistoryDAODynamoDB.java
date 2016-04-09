@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.TimeZoneHistory;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -59,7 +58,6 @@ public class TimeZoneHistoryDAODynamoDB {
     }
 
 
-    @Timed
     public Optional<TimeZoneHistory> updateTimeZone(final long accountId, final DateTime updatedTime, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
 
         final long updatedAt = updatedTime.getMillis();
@@ -166,7 +164,6 @@ public class TimeZoneHistoryDAODynamoDB {
         return Optional.of(timeZoneHistory);
     }
 
-    @Timed
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
         final DateTime now = DateTime.now();
         final List<TimeZoneHistory> lastTimeZones = getTimeZoneHistory(accountId, now);
@@ -178,7 +175,6 @@ public class TimeZoneHistoryDAODynamoDB {
 
     }
 
-    @Timed
     public Map<DateTime, TimeZoneHistory> getAllTimeZones(final long accountId){
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final Condition selectAccountIdCondition = new Condition()

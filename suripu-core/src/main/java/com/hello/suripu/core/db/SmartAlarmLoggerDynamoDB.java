@@ -21,7 +21,6 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.RateLimiter;
 import com.hello.suripu.core.models.SmartAlarmHistory;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -90,7 +89,6 @@ public class SmartAlarmLoggerDynamoDB {
         }
     }
 
-    @Timed
     public List<SmartAlarmHistory> getSmartAlarmHistoryByScheduleTime(final long accountId,
                                                                       final DateTime start, final DateTime end){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();

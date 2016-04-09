@@ -1,4 +1,4 @@
-package com.hello.suripu.core.metrics;
+package com.hello.suripu.coredw.metrics;
 
 import com.google.common.collect.ImmutableList;
 import com.yammer.metrics.core.Metric;
