@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.exceptions.TooManyAlarmsException;
 import com.hello.suripu.core.models.Alarm;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -60,7 +59,6 @@ public class AlarmDAODynamoDB {
     }
 
 
-    @Timed
     public void setAlarms(long accountId, final List<Alarm> alarms){
         if(alarms.size() > MAX_ALARM_COUNT){
             LOGGER.error("Account {} tries to set {} alarms to db, data too large.", accountId, alarms.size());
@@ -96,7 +94,6 @@ public class AlarmDAODynamoDB {
 
     }
 
-    @Timed
     @Deprecated
     public ImmutableList<Alarm> getAlarms(long accountId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();

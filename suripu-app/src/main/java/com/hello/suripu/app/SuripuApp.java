@@ -21,9 +21,7 @@ import com.hello.suripu.app.cli.MigratePillHeartbeatCommand;
 import com.hello.suripu.app.cli.MovePillDataToDynamoDBCommand;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
-import com.hello.suripu.coredw.clients.TaimurainHttpClient;
 import com.hello.suripu.app.configuration.MessejiHttpClientConfiguration;
-import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.app.messeji.MessejiHttpClient;
@@ -55,7 +53,6 @@ import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.AccountLocationDAO;
-import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.AppStatsDAO;
 import com.hello.suripu.core.db.AppStatsDAODynamoDB;
@@ -80,18 +77,14 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
-import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TeamStore;
-import com.hello.suripu.core.db.TeamStoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
-import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAOImpl;
 import com.hello.suripu.core.db.WifiInfoDAO;
@@ -101,10 +94,8 @@ import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
-import com.hello.suripu.core.filters.CacheFilterFactory;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
-import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.models.device.v2.DeviceProcessor;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
@@ -122,16 +113,20 @@ import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.store.StoreFeedbackDAO;
 import com.hello.suripu.core.support.SupportDAO;
 import com.hello.suripu.core.trends.v2.TrendsProcessor;
-import com.hello.suripu.core.util.CustomJSONExceptionMapper;
-import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.KeyStoreUtils;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.clients.TaimurainHttpClient;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
+import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
+import com.hello.suripu.coredw.filters.CacheFilterFactory;
+import com.hello.suripu.coredw.metrics.RegexMetricPredicate;
 import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
 import com.hello.suripu.coredw.oauth.OAuthProvider;
+import com.hello.suripu.coredw.util.CustomJSONExceptionMapper;
+import com.hello.suripu.coredw.util.DropwizardServiceUtil;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.client.HttpClientBuilder;
@@ -198,9 +193,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PillProvisionDAO pillProvisionDAO = commonDB.onDemand(PillProvisionDAO.class);
         final UserTimelineTestGroupDAO userTimelineTestGroupDAO = commonDB.onDemand(UserTimelineTestGroupDAOImpl.class);
 
-        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
         final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
-        final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final SupportDAO supportDAO = commonDB.onDemand(SupportDAO.class);
 
         final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
@@ -253,14 +246,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(
                 insightsDynamoDBClient, configuration.getInsightsDynamoDBConfiguration().getTableName());
 
-        final AmazonDynamoDB dynamoDBScoreClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
-
-        final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
-                dynamoDBScoreClient,
-                configuration.getSleepScoreDBConfiguration().getTableName(),
-                configuration.getSleepScoreVersion()
-        );
-
         final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBStatsClient,
                 configuration.getSleepStatsDynamoConfiguration().getTableName(),
@@ -312,9 +297,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final S3BucketConfiguration seedModelConfig = configuration.getTimelineSeedModelConfiguration();
 
         final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3,timelineModelEnsemblesConfig.getBucket(),timelineModelEnsemblesConfig.getKey(),seedModelConfig.getBucket(),seedModelConfig.getKey());
-
-        final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
-        final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);

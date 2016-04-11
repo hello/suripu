@@ -9,7 +9,6 @@ import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
 import com.hello.suripu.core.db.mappers.TrackerMotionOffsetMillisMapper;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -130,7 +129,6 @@ public abstract class TrackerMotionDAO implements PillDataIngestDAO {
             @Bind("start_date") DateTime startDate,
             @Bind("end_date") DateTime endDate);
 
-    @Timed
     public int batchInsertTrackerMotionData(final List<TrackerMotion> trackerMotionData, final int batchSize) {
 
         final List<Long> accountIDs = new ArrayList<>();

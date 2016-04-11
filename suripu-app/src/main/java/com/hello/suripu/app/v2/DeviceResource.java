@@ -9,7 +9,7 @@ import com.hello.suripu.core.models.device.v2.Devices;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.coredw.resources.BaseResource;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;

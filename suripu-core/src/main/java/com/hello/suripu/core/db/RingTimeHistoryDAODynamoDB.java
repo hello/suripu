@@ -27,7 +27,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.RateLimiter;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +77,6 @@ public class RingTimeHistoryDAODynamoDB implements RingTimeHistoryReadDAO {
         return owners;
     }
 
-    @Timed
     public void setNextRingTime(final String deviceId, final List<UserInfo> userInfo, final RingTime ringTime){
         final List<UserInfo> owners = retrieveRingTimeOwner(userInfo, ringTime);
         final DateTime now = DateTime.now();
@@ -96,12 +94,10 @@ public class RingTimeHistoryDAODynamoDB implements RingTimeHistoryReadDAO {
         }
     }
 
-    @Timed
     protected void setNextRingTime(final String deviceId, final Long accountId, final RingTime ringTime){
         setNextRingTime(deviceId, accountId, ringTime, DateTime.now());
     }
 
-    @Timed
     protected void setNextRingTime(final String deviceId, final Long accountId, final RingTime ringTime, final DateTime currentTime){
 
 
@@ -210,7 +206,6 @@ public class RingTimeHistoryDAODynamoDB implements RingTimeHistoryReadDAO {
         return ringTimes;
     }
 
-    @Timed
     public RingTime ringTimeFromItemSet(final String deviceId, final Collection<String> targetAttributeSet, final Map<String, AttributeValue> item){
 
         if(!item.keySet().containsAll(targetAttributeSet)){

@@ -19,7 +19,6 @@ import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -363,7 +362,6 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
         return inserted;
     }
 
-    @Timed
     public List<Sample> generateTimeSeriesByUTCTime(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
@@ -428,7 +426,6 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
 
     // used by timeline, query by local_utc_ts
     @Deprecated
-    @Timed
     public AllSensorSampleList generateTimeSeriesByLocalTimeAllSensors(
             final Long queryStartTimestampInLocalUTC,
             final Long queryEndTimestampInLocalUTC,
@@ -523,7 +520,6 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
     }
 
     // used by room conditions, query by utc_ts
-    @Timed
     public  AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,

@@ -1,4 +1,4 @@
-package com.hello.suripu.core.util;
+package com.hello.suripu.coredw.util;
 
 import com.sun.jersey.api.core.ResourceConfig;
 

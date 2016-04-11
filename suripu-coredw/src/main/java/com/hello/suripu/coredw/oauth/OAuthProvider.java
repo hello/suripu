@@ -2,7 +2,7 @@ package com.hello.suripu.coredw.oauth;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.api.logging.LoggingProtos;
-import com.hello.suripu.core.converters.HttpUtils;
+import com.hello.suripu.coredw.converters.HttpUtils;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;

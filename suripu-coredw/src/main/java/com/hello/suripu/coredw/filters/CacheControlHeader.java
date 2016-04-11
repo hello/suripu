@@ -1,4 +1,4 @@
-package com.hello.suripu.core.filters;
+package com.hello.suripu.coredw.filters;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

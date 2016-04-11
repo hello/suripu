@@ -1,4 +1,4 @@
-package com.hello.suripu.core.filters;
+package com.hello.suripu.coredw.filters;
 
 
 import com.sun.jersey.api.model.AbstractMethod;

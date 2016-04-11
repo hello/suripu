@@ -1,8 +1,8 @@
 package com.hello.suripu.queue.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
+import com.hello.suripu.coredw.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
 import com.yammer.dropwizard.config.Configuration;

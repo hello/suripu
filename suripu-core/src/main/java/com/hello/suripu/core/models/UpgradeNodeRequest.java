@@ -2,7 +2,6 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.constraints.NotNull;
 
 
 /**
@@ -10,13 +9,10 @@ import javax.validation.constraints.NotNull;
  */
 public class UpgradeNodeRequest {
 
-    @NotNull
     public final String groupName;
 
-    @NotNull
     public final Integer fromFWVersion;
 
-    @NotNull
     public final Integer toFWVersion;
 
     public final Float rolloutPercent;

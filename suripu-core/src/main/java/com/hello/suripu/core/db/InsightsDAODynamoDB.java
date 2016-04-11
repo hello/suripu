@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -78,7 +77,6 @@ public class InsightsDAODynamoDB {
                                                  IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, INSIGHT_TYPE_ATTRIBUTE_NAME);
     }
 
-    @Timed
     public void insertInsight(final InsightCard insightCard) {
         LOGGER.debug("write single insight {}, {}, {}", insightCard.accountId, insightCard.category, insightCard.timestamp);
         final HashMap<String, AttributeValue> item = this.createItem(insightCard);
@@ -88,7 +86,6 @@ public class InsightsDAODynamoDB {
 
     }
 
-    @Timed
     public void insertListOfInsights(final List<InsightCard> insightCards) {
         final List<WriteRequest> insights = new ArrayList<>();
         for (InsightCard insightCard : insightCards) {
@@ -115,7 +112,6 @@ public class InsightsDAODynamoDB {
         }
     }
 
-    @Timed
     public ImmutableList<InsightCard> getInsightsByDate(final Long accountId, final DateTime date, final Boolean chronological, final int limit) {
 
         final Condition selectByAccountId = new Condition()
@@ -142,7 +138,6 @@ public class InsightsDAODynamoDB {
         return this.getData(queryConditions, limit, chronological);
     }
 
-    @Timed
     public ImmutableList<InsightCard> getInsightsByCategory(final Long accountId, final InsightCard.Category category, final int limit) {
 
         final Condition selectByAccountId = new Condition()

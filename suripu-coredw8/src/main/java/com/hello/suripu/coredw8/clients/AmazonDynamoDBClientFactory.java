@@ -5,10 +5,10 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.collect.Maps;
-
 import com.hello.suripu.core.configuration.DynamoDBTableName;
-import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
+import com.hello.suripu.coredw8.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw8.metrics.InstrumentedDynamoDBClient;
+
 import java.util.Map;
 
 public class AmazonDynamoDBClientFactory {

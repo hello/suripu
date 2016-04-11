@@ -11,7 +11,6 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -32,8 +31,6 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 
@@ -167,8 +164,8 @@ public class DeviceProcessor {
                 }
             });
         }catch (UnableToExecuteStatementException sqlExp){
-            LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            LOGGER.error("error=factory-reset-failed sense_id=%s message={}", senseId, sqlExp.getMessage());
+            throw new RuntimeException(sqlExp);
         }
     }
 

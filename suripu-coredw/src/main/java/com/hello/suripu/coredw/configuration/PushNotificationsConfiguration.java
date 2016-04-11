@@ -1,4 +1,4 @@
-package com.hello.suripu.core.configuration;
+package com.hello.suripu.coredw.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

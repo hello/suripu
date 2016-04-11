@@ -3,10 +3,7 @@ package com.hello.suripu.algorithm.hmm;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.sun.org.apache.xpath.internal.operations.Mult;
 import junit.framework.TestCase;
-import org.eclipse.jetty.util.MultiMap;
 import org.junit.Test;
 
 import java.util.Map;

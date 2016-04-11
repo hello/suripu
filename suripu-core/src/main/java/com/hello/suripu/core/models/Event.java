@@ -1,6 +1,5 @@
 package com.hello.suripu.core.models;
 
-import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -223,22 +222,22 @@ public abstract class Event {
         switch (type){
             case MOTION:
                 if(!sleepDepth.isPresent()){
-                    throw new InvalidArgumentException("sleepDepth required.");
+                    throw new IllegalArgumentException("sleepDepth required.");
                 }
                 return new MotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SLEEPING:
                 if(!sleepDepth.isPresent()) {
-                    throw new InvalidArgumentException("sleepDepth required");
+                    throw new IllegalArgumentException("sleepDepth required");
                 }
                 return new SleepingEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SLEEP_MOTION:
                 if(!sleepDepth.isPresent()){
-                    throw new InvalidArgumentException("sleepDepth required.");
+                    throw new IllegalArgumentException("sleepDepth required.");
                 }
                 return new SleepMotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SLEEP:
                 if(!messageOptional.isPresent()){
-                    throw new InvalidArgumentException("message required.");
+                    throw new IllegalArgumentException("message required.");
                 }
                 return new FallingAsleepEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case WAKE_UP:
@@ -251,49 +250,49 @@ public abstract class Event {
 
             case IN_BED:
                 if(!messageOptional.isPresent()){
-                    throw new InvalidArgumentException("message required.");
+                    throw new IllegalArgumentException("message required.");
                 }
                 return new InBedEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case OUT_OF_BED:
                 return new OutOfBedEvent(startTimestamp, endTimestamp, offsetMillis);
             case NONE:
                 if(!sleepDepth.isPresent()){
-                    throw new InvalidArgumentException("sleepDepth required.");
+                    throw new IllegalArgumentException("sleepDepth required.");
                 }
                 return new NullEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SUNRISE:
                 if(!sleepDepth.isPresent()){
-                    throw new InvalidArgumentException("sleepDepth required.");
+                    throw new IllegalArgumentException("sleepDepth required.");
                 }
                 return new SunRiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get(),
                         soundInfoOptional.isPresent() ? soundInfoOptional.get(): null);
             case SUNSET:
                 if(!sleepDepth.isPresent()){
-                    throw new InvalidArgumentException("sleepDepth required.");
+                    throw new IllegalArgumentException("sleepDepth required.");
                 }
                 return new SunSetEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case PARTNER_MOTION:
                 if(!sleepDepth.isPresent()){
-                    throw new InvalidArgumentException("sleepDepth required.");
+                    throw new IllegalArgumentException("sleepDepth required.");
                 }
                 return new PartnerMotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case LIGHT:
                 if(!messageOptional.isPresent()){
-                    throw new InvalidArgumentException("message required.");
+                    throw new IllegalArgumentException("message required.");
                 }
                 return new LightEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case LIGHTS_OUT:
                 return new LightsOutEvent(startTimestamp, endTimestamp, offsetMillis);
             case ALARM:
                 if (!messageOptional.isPresent()) {
-                    throw new InvalidArgumentException("message required.");
+                    throw new IllegalArgumentException("message required.");
                 }
                 return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case NOISE:
                 return new NoiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             default:
                 if(!sleepDepth.isPresent()){
-                    throw new InvalidArgumentException("sleepDepth required.");
+                    throw new IllegalArgumentException("sleepDepth required.");
                 }
                 return new NullEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
 

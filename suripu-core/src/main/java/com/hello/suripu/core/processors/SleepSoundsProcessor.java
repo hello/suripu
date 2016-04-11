@@ -13,7 +13,6 @@ import org.apache.commons.codec.DecoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,11 +44,9 @@ public class SleepSoundsProcessor implements SoundMap {
      */
     public static class SoundResult implements SoundMap {
         @JsonProperty("sounds")
-        @NotNull
         public final List<Sound> sounds;
 
         @JsonProperty("state")
-        @NotNull
         public final State state;
 
         public SoundResult(final List<Sound> sounds, final State state) {

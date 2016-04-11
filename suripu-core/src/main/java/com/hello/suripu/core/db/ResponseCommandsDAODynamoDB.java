@@ -18,16 +18,16 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.google.common.base.Joiner;
-import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by jnorgan on 4/23/15.
@@ -70,7 +70,6 @@ public class ResponseCommandsDAODynamoDB {
         this.tableName = tableName;
     }
 
-    @Timed
     public void insertResponseCommands(final String deviceId, final Integer fwVersion, final Map<ResponseCommand, String> respCommands) {
 
         Map<String, AttributeValue> commands = new HashMap<>();
