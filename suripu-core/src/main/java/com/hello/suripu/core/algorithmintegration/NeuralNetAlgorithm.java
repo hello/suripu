@@ -118,9 +118,11 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
         //zero out light during natural light times
         for (final Sample s : light) {
-            //get local time, enforce artificial light constraint (light before 8pm and after 5am is considered "natural" and thus should be ignored)
+            //get local time, enforce artificial light constraint
             final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
-            if (time.getHourOfDay() <= 4 || time.getHourOfDay() >= 20) {
+
+            //if between 5am and 8pm, light is "natural", so we don't care about it, and want to zero it out
+            if (time.getHourOfDay() >= 5 && time.getHourOfDay() <= 19) {
 
                 final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
