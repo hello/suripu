@@ -50,8 +50,8 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         try {
             final double[][] neuralNetInput = getSensorData(oneDaysSensorData);
 
-            TestCase.assertTrue(neuralNetInput.length == SensorIndices.MAX_NUM_INDICES);
-            TestCase.assertTrue(neuralNetInput[0].length == 960);
+            TestCase.assertEquals(SensorIndices.MAX_NUM_INDICES,neuralNetInput.length);
+            TestCase.assertEquals(961,neuralNetInput[0].length);
 
         }
         catch (Exception e) {

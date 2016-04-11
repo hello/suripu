@@ -85,12 +85,10 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             throw new Exception("no data!");
         }
 
-        long t0 = light.get(0).dateTime;
+        final long durationMillis =  oneDaysSensorData.endTimeLocalUTC.getMillis() - oneDaysSensorData.startTimeLocalUTC.getMillis();
 
-
-        final long tf = light.get(light.size()-1).dateTime;
-
-        final int T = (int) ((tf - t0) / (long) DateTimeConstants.MILLIS_PER_MINUTE) + 1;
+        final long t0 = oneDaysSensorData.startTimeLocalUTC.getMillis() - light.get(0).offsetMillis; //LOCAL ---> UTC
+        final int T = (int)durationMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1;
         final int N = SensorIndices.MAX_NUM_INDICES;
 
         final double [][] x = new double[N][T];
