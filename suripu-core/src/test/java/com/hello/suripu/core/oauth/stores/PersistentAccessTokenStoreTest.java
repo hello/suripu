@@ -5,7 +5,7 @@ import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ClientCredentials;
-import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.GrantType;
 import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.OAuthScope;
 import org.joda.time.DateTime;
@@ -57,7 +57,7 @@ public class PersistentAccessTokenStoreTest {
                 "description",
                 false,
                 DateTime.now(),
-                GrantTypeParam.GrantType.PASSWORD
+                GrantType.PASSWORD
         );
     }
 

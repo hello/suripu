@@ -18,7 +18,6 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.librato.rollout.RolloutClient;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -76,7 +75,6 @@ public class RingProcessor {
         }
     }
 
-    @Timed
     public static RingTime updateAndReturnNextRingTimeForSense(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                                                final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                                                final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
@@ -483,8 +481,6 @@ public class RingProcessor {
                 nextRegularRingTime.fromSmartAlarm);
     }
 
-
-    @Timed
     public static RingTime getNextRingTimeForSense(final String deviceId,
                                                    final List<UserInfo> userInfoFromThatDevice,
                                                    final DateTime nowUnalignedByMinute){
@@ -599,7 +595,6 @@ public class RingProcessor {
         return nextRingTime;
     }
 
-    @Timed
     public static RingTime getNextRingTimeFromAlarmTemplateForSense(final List<UserInfo> userInfoList,
                                                                     final String senseId,
                                                                     final DateTime currentTime){

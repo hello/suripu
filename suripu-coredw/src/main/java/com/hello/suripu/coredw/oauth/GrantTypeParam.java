@@ -1,4 +1,6 @@
-package com.hello.suripu.core.oauth;
+package com.hello.suripu.coredw.oauth;
+
+import com.hello.suripu.core.oauth.GrantType;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -6,35 +8,6 @@ import javax.ws.rs.core.Response;
 public class GrantTypeParam {
     private final String originalValue;
     private final GrantType type;
-
-    public enum GrantType {
-        AUTH_CODE("code", 0),
-        IMPLICIT("implicit", 1),
-        PASSWORD("password", 2);
-
-//        Support application refresh details?
-//        CLIENT_CREDENTIALS("credentials")
-
-        private String name;
-        private int value;
-
-        GrantType(String name, int value) {
-
-        }
-
-        public static GrantType fromString(String text) {
-            if (text != null) {
-                for (GrantType t : GrantType.values()) {
-                    if (text.equalsIgnoreCase(t.name())) {
-                        return t;
-                    }
-                }
-            }
-            throw new IllegalArgumentException("No constant with text " + text + " found");
-        }
-
-
-    }
 
     public GrantTypeParam(String grantType) throws WebApplicationException {
         this.originalValue = grantType;

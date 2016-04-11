@@ -9,7 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ClientDetails{
 
-    public final GrantTypeParam.GrantType responseType;
+    public final GrantType responseType;
     public final String clientId;
     public final String redirectUri;
     public final OAuthScope[] scopes;
@@ -20,7 +20,7 @@ public class ClientDetails{
     public Optional<Application> application = Optional.absent();
 
     public ClientDetails(
-            final GrantTypeParam.GrantType responseType,
+            final GrantType responseType,
             final String clientId,
             final String redirectUri,
             final OAuthScope[] scopes,
@@ -82,7 +82,7 @@ public class ClientDetails{
 
     public static ClientDetails createWithImplicitGrantType(final Application application, final Long accountId) {
         return new ClientDetails(
-                GrantTypeParam.GrantType.IMPLICIT,
+                GrantType.IMPLICIT,
                 application.clientId,
                 application.redirectURI,
                 application.scopes,

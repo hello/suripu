@@ -1,6 +1,7 @@
-package com.hello.suripu.core.util;
+package com.hello.suripu.coredw.util;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.util.JsonError;
 import com.sun.jersey.api.NotFoundException;
 import com.yammer.dropwizard.validation.InvalidEntityException;
 import org.slf4j.Logger;

@@ -4,7 +4,6 @@ import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.binders.BindOnBoardingLog;
 import com.hello.suripu.core.db.mappers.OnBoardingLogMapper;
 import com.hello.suripu.core.models.OnBoardingLog;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -63,7 +62,6 @@ public abstract class OnBoardingLogDAO {
                                                     @Bind("end_ts") final DateTime endTime);
 
 
-    @Timed
     public int batchInsertOnBoardingLog(final List<LoggingProtos.RegistrationLog> onBoardingLogs) {
 
         final List<Long> accountIds = new ArrayList<>();

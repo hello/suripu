@@ -1,4 +1,4 @@
-package com.hello.suripu.core.util;
+package com.hello.suripu.coredw.util;
 
 import javax.ws.rs.HttpMethod;
 import java.lang.annotation.ElementType;

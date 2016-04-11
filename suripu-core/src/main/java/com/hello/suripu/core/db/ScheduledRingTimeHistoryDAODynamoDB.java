@@ -25,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.RingTime;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,6 @@ public class ScheduledRingTimeHistoryDAODynamoDB {
     }
 
 
-    @Timed
     public RingTime getNextRingTime(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectDateCondition = new Condition()
@@ -105,7 +103,6 @@ public class ScheduledRingTimeHistoryDAODynamoDB {
         return RingTime.createEmpty();
     }
 
-    @Timed
     public static RingTime ringTimeFromItemSet(final String deviceId, final Collection<String> targetAttributeSet, final Map<String, AttributeValue> item){
 
         if(!item.keySet().containsAll(targetAttributeSet)){
@@ -127,12 +124,10 @@ public class ScheduledRingTimeHistoryDAODynamoDB {
 
     }
 
-    @Timed
     public void setNextRingTime(final String deviceId, final RingTime ringTime){
         this.setNextRingTime(deviceId, ringTime, DateTime.now());
     }
 
-    @Timed
     public void setNextRingTime(final String deviceId, final RingTime ringTime, final DateTime currentTime){
 
 

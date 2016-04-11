@@ -10,11 +10,11 @@ import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.util.DataUtils;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -143,7 +143,7 @@ public class Bucketing {
 
 
 
-    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor,
+    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList, final Optional<Device.Color> optionalColor,
                                                     final Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();

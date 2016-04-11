@@ -1,7 +1,8 @@
-package com.hello.suripu.core.configuration;
+package com.hello.suripu.coredw.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.QueueName;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;

@@ -18,7 +18,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
-import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.coredw.resources.BaseResource;
 import com.hello.suripu.core.util.PillColorUtil;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;

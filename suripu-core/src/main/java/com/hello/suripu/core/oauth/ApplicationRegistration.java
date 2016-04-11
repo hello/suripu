@@ -35,7 +35,7 @@ public class ApplicationRegistration {
     public final DateTime created;
 
     @JsonProperty("grant_type")
-    public final GrantTypeParam.GrantType grantType;
+    public final GrantType grantType;
 
     @JsonCreator
     public ApplicationRegistration(
@@ -45,7 +45,7 @@ public class ApplicationRegistration {
             @JsonProperty("redirect_uri") final String redirectURI,
             @JsonProperty("scopes") final OAuthScope[] scopes,
             @JsonProperty("description") final String description,
-            @JsonProperty("grant_type") final GrantTypeParam.GrantType grantType
+            @JsonProperty("grant_type") final GrantType grantType
     ) {
         this(name, clientId, clientSecret, redirectURI, scopes, null, description, DateTime.now(DateTimeZone.UTC), grantType);
     }
@@ -73,7 +73,7 @@ public class ApplicationRegistration {
         final Long developerAccountId,
         final String description,
         final DateTime created,
-        final GrantTypeParam.GrantType grantType
+        final GrantType grantType
     ) {
         this.name = name;
         this.clientId = clientId;
@@ -83,7 +83,7 @@ public class ApplicationRegistration {
         this.developerAccountId = Optional.fromNullable(developerAccountId);
         this.description = description;
         this.created = created;
-        this.grantType = grantType == null ? GrantTypeParam.GrantType.PASSWORD : grantType;
+        this.grantType = grantType == null ? GrantType.PASSWORD : grantType;
     }
     public static ApplicationRegistration addDevAccountId(final ApplicationRegistration applicationRegistration, final Long devAccountId) {
         return new ApplicationRegistration(

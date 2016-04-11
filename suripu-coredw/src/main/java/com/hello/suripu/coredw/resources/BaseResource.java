@@ -1,4 +1,4 @@
-package com.hello.suripu.core.resources;
+package com.hello.suripu.coredw.resources;
 
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.flipper.FeatureFlipper;

@@ -1,11 +1,11 @@
 package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
+import com.hello.suripu.coredw.configuration.KinesisConfiguration;
+import com.hello.suripu.coredw.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.configuration.TaimurainHttpClientConfiguration;
@@ -465,14 +465,12 @@ public class SuripuAppConfiguration extends Configuration {
     public TaimurainHttpClientConfiguration getTaimurainHttpClientConfiguration() { return taimurainHttpClientConfiguration; }
 
     @Valid
-    @NotNull
     @JsonProperty("sleep_sound_cache_seconds")
-    private Integer sleepSoundCacheSeconds;
+    private Integer sleepSoundCacheSeconds = 5;
     public Integer getSleepSoundCacheSeconds() { return sleepSoundCacheSeconds; }
 
     @Valid
-    @NotNull
     @JsonProperty("sleep_sound_duration_cache_seconds")
-    private Integer sleepSoundDurationCacheSeconds;
+    private Integer sleepSoundDurationCacheSeconds = 5;
     public Integer getSleepSoundDurationCacheSeconds() { return sleepSoundDurationCacheSeconds; }
 }
