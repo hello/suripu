@@ -465,14 +465,12 @@ public class SuripuAppConfiguration extends Configuration {
     public TaimurainHttpClientConfiguration getTaimurainHttpClientConfiguration() { return taimurainHttpClientConfiguration; }
 
     @Valid
-    @NotNull
     @JsonProperty("sleep_sound_cache_seconds")
-    private Integer sleepSoundCacheSeconds;
+    private Integer sleepSoundCacheSeconds = 5;
     public Integer getSleepSoundCacheSeconds() { return sleepSoundCacheSeconds; }
 
     @Valid
-    @NotNull
     @JsonProperty("sleep_sound_duration_cache_seconds")
-    private Integer sleepSoundDurationCacheSeconds;
+    private Integer sleepSoundDurationCacheSeconds = 5;
     public Integer getSleepSoundDurationCacheSeconds() { return sleepSoundDurationCacheSeconds; }
 }
