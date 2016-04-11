@@ -4,14 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
-import com.hello.suripu.algorithm.hmm.BetaPdf;
-import com.hello.suripu.algorithm.hmm.GaussianPdf;
-import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
-import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
-import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
-import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
-import com.hello.suripu.algorithm.hmm.PdfComposite;
-import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreter;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
@@ -26,8 +18,6 @@ import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -39,12 +29,6 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
 
-    final static double POISSON_MEAN_FOR_MOTION = 3.0;
-    final static double POISSON_MEAN_FOR_NO_MOTION = 0.1;
-    final static double MIN_HMM_PDF_EVAL = 1e-320;
-
-    final static int MAX_ON_BED_SEARCH_WINDOW = 30; //minutes
-    final static int MAX_OFF_BED_SEARCH_WINDOW = 30; //minutes
 
     //DO NOT CHANGE THE INDICES
     //as long as index is right, the order shouldn't matter
@@ -57,11 +41,12 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         SOUND_VOLUME(4),
         MY_MOTION_DURATION(5),
         PARTNER_MOTION_DURATION(6),
-        MY_MOTION_MAX_NORM(7);
+        MY_MOTION_MAX_AMPLITUDE(7);
 
         private final int index;
         SensorIndices(int index) { this.index = index; }
         public int index() { return index; }
+        final static int MAX_NUM_INDICES = 8;
     }
 
     private final NeuralNetEndpoint endpoint;
@@ -74,8 +59,18 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
 
 
-    private static int getIndex(final long t0, final long t) {
-        return (int) ((t - t0) / (DateTimeConstants.MILLIS_PER_MINUTE));
+    private static Optional<Integer> getIndex(final long t0, final long t, final int maxIdx) {
+        int idx =  (int) ((t - t0) / (DateTimeConstants.MILLIS_PER_MINUTE));
+
+        if (idx < 0) {
+            return Optional.absent();
+        }
+
+        if (idx >= maxIdx) {
+            return Optional.absent();
+        }
+
+        return Optional.of(idx);
     }
 
 
@@ -89,29 +84,31 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         if (light.isEmpty()) {
             throw new Exception("no data!");
         }
-        final long t0 = light.get(0).dateTime;
+
+        long t0 = light.get(0).dateTime;
+
 
         final long tf = light.get(light.size()-1).dateTime;
 
         final int T = (int) ((tf - t0) / (long) DateTimeConstants.MILLIS_PER_MINUTE) + 1;
-        final int N = 7;
+        final int N = SensorIndices.MAX_NUM_INDICES;
 
         final double [][] x = new double[N][T];
 
+
+        /*********** LOG  LIGHT AND DIFF LOG LIGHT *************/
         for (final Sample s : light) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
-
-            //get local time, enforce artificial light constraint (light before 8pm and after 5am is considered "natural" and thus should be ignored)
-            final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
-            if (time.getHourOfDay() >= 5 && time.getHourOfDay() < 20) {
-                continue;
-            }
 
             if (Double.isNaN(value) || value < 0.0) {
                 value = 0.0;
             }
 
-            x[SensorIndices.LIGHT.index()][getIndex(t0,s.dateTime)] = value;
+            final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
+
+            if (idx.isPresent()) {
+                x[SensorIndices.LIGHT.index()][idx.get()] = value;
+            }
         }
 
         //diff light
@@ -119,12 +116,30 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.DIFFLIGHT.index()][t] = x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1];
         }
 
-        //waves
-        for (final Sample s : waves) {
-            x[SensorIndices.WAVES.index()][getIndex(t0,s.dateTime)] = s.value;
+        //zero out light during natural light times
+        for (final Sample s : light) {
+            //get local time, enforce artificial light constraint (light before 8pm and after 5am is considered "natural" and thus should be ignored)
+            final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
+            if (time.getHourOfDay() <= 4 || time.getHourOfDay() >= 20) {
+
+                final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
+
+                if (idx.isPresent()) {
+                    x[SensorIndices.LIGHT.index()][idx.get()] = 0.0;
+                }
+            }
         }
 
-        //sound disturbance counts
+        /*  WAVES */
+        for (final Sample s : waves) {
+            final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
+
+            if (idx.isPresent()) {
+                x[SensorIndices.WAVES.index()][idx.get()]=s.value;
+            }
+        }
+
+        /* SOUND DISTURBANCES */
         for (final Sample s : soundcount) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
 
@@ -132,25 +147,60 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
                 value = 0.0;
             }
 
-            x[SensorIndices.SOUND_DISTURBANCE.index()][getIndex(t0,s.dateTime)] = value;
+            final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
+
+            if (idx.isPresent()) {
+                x[SensorIndices.SOUND_DISTURBANCE.index()][idx.get()] = value;
+            }
         }
 
-        //sould volume
+        /* SOUND VOLUME */
         for (final Sample s : soundvol) {
             double value = 0.1 * s.value - 4.0;
 
             if (value < 0.0) {
                 value = 0.0;
             }
-            x[SensorIndices.SOUND_VOLUME.index()][getIndex(t0,s.dateTime)] = value;
+
+            final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
+
+            x[SensorIndices.SOUND_VOLUME.index()][idx.get()] = value;
         }
 
+        /*  MY MOTION  */
         for (final TrackerMotion m : oneDaysSensorData.originalTrackerMotions) {
-            x[SensorIndices.MY_MOTION_DURATION.index()][getIndex(t0,m.timestamp)] = m.onDurationInSeconds;
+            if (m.value == -1) {
+                continue;
+            }
+
+            final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
+
+            if (idx.isPresent()) {
+                x[SensorIndices.MY_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
+
+
+                //normalize to between 0 - 20 or so by dividing by 10000.0
+                final double value = ((double)m.value) / 10000.;
+                final double existingValue = x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()];
+
+                //put in max... why? pill timestamps, when truncated, can show up in the same minute.
+                x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()] = value > existingValue ? value : existingValue;
+            }
+
+
         }
 
+        /*  PARTNER MOTION  */
         for (final TrackerMotion m : oneDaysSensorData.originalPartnerTrackerMotions) {
-            x[SensorIndices.PARTNER_MOTION_DURATION.index()][getIndex(t0,m.timestamp)] = m.onDurationInSeconds;
+            if (m.value == -1) {
+                continue;
+            }
+
+            final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
+
+            if (idx.isPresent()) {
+                x[SensorIndices.PARTNER_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
+            }
         }
 
 
