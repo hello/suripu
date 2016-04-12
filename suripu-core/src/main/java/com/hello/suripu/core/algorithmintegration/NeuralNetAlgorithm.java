@@ -4,7 +4,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
-import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreter;
+import com.hello.suripu.algorithm.interpretation.EventIndices;
+import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreterWithSearch;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -18,6 +19,7 @@ import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -93,15 +95,13 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
         final double [][] x = new double[N][T];
 
-
-        /*********** LOG  LIGHT AND DIFF LOG LIGHT *************/
         for (final Sample s : light) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
 
             if (Double.isNaN(value) || value < 0.0) {
                 value = 0.0;
             }
-
+            //get local time, enforce artificial light constraint (light before 8pm and after 5am is considered "natural" and thus should be ignored)
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
             if (!idx.isPresent()) {
@@ -118,7 +118,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.DIFFLIGHT.index()][t] = x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1];
         }
 
-        //zero out light during natural light times
+        //waves
         for (final Sample s : light) {
             //get local time, enforce artificial light constraint
             final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
@@ -136,8 +136,6 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             }
         }
-
-        /*  WAVES */
         for (final Sample s : waves) {
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
@@ -147,10 +145,9 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             }
 
             x[SensorIndices.WAVES.index()][idx.get()]=s.value;
-
         }
 
-        /* SOUND DISTURBANCES */
+        //sound disturbance counts
         for (final Sample s : soundcount) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
 
@@ -166,32 +163,28 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             }
 
             x[SensorIndices.SOUND_DISTURBANCE.index()][idx.get()] = value;
-
         }
 
-        /* SOUND VOLUME */
+        //sould volume
         for (final Sample s : soundvol) {
             double value = 0.1 * s.value - 4.0;
 
             if (value < 0.0) {
                 value = 0.0;
             }
-
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
             if (!idx.isPresent()) {
                 LOGGER.warn("action=skipping_sensor_value sensor=SOUND_VOLUME t0={} t={}",t0,s.dateTime);
                 continue;
-            }
+        }
 
             x[SensorIndices.SOUND_VOLUME.index()][idx.get()] = value;
         }
-
-        /*  MY MOTION  */
         for (final TrackerMotion m : oneDaysSensorData.originalTrackerMotions) {
             if (m.value == -1) {
                 continue;
-            }
+        }
 
             final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
 
@@ -211,8 +204,6 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()] = value > existingValue ? value : existingValue;
 
         }
-
-        /*  PARTNER MOTION  */
         for (final TrackerMotion m : oneDaysSensorData.originalPartnerTrackerMotions) {
             if (m.value == -1) {
                 continue;
@@ -226,7 +217,6 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             }
 
             x[SensorIndices.PARTNER_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
-
         }
 
 
@@ -285,7 +275,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             final long t0 = light.get(0).dateTime; //utc local
 
 
-            final Optional<SleepProbabilityInterpreter.EventIndices> indicesOptional = SleepProbabilityInterpreter.getEventIndices(algorithmOutput.output[1],x[SensorIndices.MY_MOTION_DURATION.index()]);
+            final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(algorithmOutput.output[1],x[SensorIndices.MY_MOTION_DURATION.index()],x[SensorIndices.MY_MOTION_MAX_NORM.index()]);
 
             if (!indicesOptional.isPresent()) {
                 LOGGER.warn("action=return_no_indices reason=no_event_indices_from_sleep_probability_interpreter");
@@ -302,7 +292,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         return Optional.absent();
     }
 
-    static protected List<Event> getAllEvents(final TreeMap<Long,Integer> offsetMap, final long t0, final SleepProbabilityInterpreter.EventIndices indices) {
+    static protected List<Event> getAllEvents(final TreeMap<Long,Integer> offsetMap, final long t0, final EventIndices indices) {
 
         final long inBedTime = getTime(t0,indices.iInBed);
         final long sleepTime = getTime(t0,indices.iSleep);
