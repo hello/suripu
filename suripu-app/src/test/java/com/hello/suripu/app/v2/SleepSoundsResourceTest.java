@@ -502,6 +502,16 @@ public class SleepSoundsResourceTest {
             assertThat(SleepSoundsResource.convertToDisplayVolumePercent(SleepSoundsResource.convertToSenseVolumePercent(i)), is(i));
         }
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConvertToDisplayVolumePercentTooLarge() {
+        SleepSoundsResource.convertToDisplayVolumePercent(200);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConvertToDisplayVolumePercentTooSmall() {
+        SleepSoundsResource.convertToDisplayVolumePercent(-1);
+    }
     // endregion convertToDisplayVolumePercent
 
     // region getCombinedState
