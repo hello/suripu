@@ -12,7 +12,8 @@ import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
-import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreter;
+import com.hello.suripu.algorithm.interpretation.EventIndices;
+import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreterWithSearch;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -209,7 +210,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             final long t0 = light.get(0).dateTime; //utc local
 
 
-            final Optional<SleepProbabilityInterpreter.EventIndices> indicesOptional = SleepProbabilityInterpreter.getEventIndices(algorithmOutput.output[1],x[SensorIndices.MY_MOTION_DURATION.index()]);
+            final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(algorithmOutput.output[1],x[SensorIndices.MY_MOTION_DURATION.index()],x[SensorIndices.MY_MOTION_MAX_NORM.index()]);
 
             if (!indicesOptional.isPresent()) {
                 LOGGER.warn("action=return_no_indices reason=no_event_indices_from_sleep_probability_interpreter");
@@ -226,7 +227,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         return Optional.absent();
     }
 
-    static protected List<Event> getAllEvents(final TreeMap<Long,Integer> offsetMap, final long t0, final SleepProbabilityInterpreter.EventIndices indices) {
+    static protected List<Event> getAllEvents(final TreeMap<Long,Integer> offsetMap, final long t0, final EventIndices indices) {
 
         final long inBedTime = getTime(t0,indices.iInBed);
         final long sleepTime = getTime(t0,indices.iSleep);
