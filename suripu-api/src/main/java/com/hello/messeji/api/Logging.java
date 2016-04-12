@@ -55,6 +55,20 @@ public final class Logging {
      * <code>optional .ReceiveMessageRequest receive_message_request = 4;</code>
      */
     com.hello.messeji.api.Messeji.ReceiveMessageRequestOrBuilder getReceiveMessageRequestOrBuilder();
+
+    /**
+     * <code>optional string sense_id = 5;</code>
+     */
+    boolean hasSenseId();
+    /**
+     * <code>optional string sense_id = 5;</code>
+     */
+    java.lang.String getSenseId();
+    /**
+     * <code>optional string sense_id = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getSenseIdBytes();
   }
   /**
    * Protobuf type {@code RequestLog}
@@ -148,6 +162,12 @@ public final class Logging {
                 receiveMessageRequest_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000008;
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000010;
+              senseId_ = bs;
               break;
             }
           }
@@ -344,11 +364,54 @@ public final class Logging {
       return receiveMessageRequest_;
     }
 
+    public static final int SENSE_ID_FIELD_NUMBER = 5;
+    private java.lang.Object senseId_;
+    /**
+     * <code>optional string sense_id = 5;</code>
+     */
+    public boolean hasSenseId() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string sense_id = 5;</code>
+     */
+    public java.lang.String getSenseId() {
+      java.lang.Object ref = senseId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          senseId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string sense_id = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSenseIdBytes() {
+      java.lang.Object ref = senseId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        senseId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       type_ = com.hello.messeji.api.Logging.RequestLog.Type.MESSAGE;
       timestamp_ = 0L;
       messageRequest_ = com.hello.messeji.api.Messeji.Message.getDefaultInstance();
       receiveMessageRequest_ = com.hello.messeji.api.Messeji.ReceiveMessageRequest.getDefaultInstance();
+      senseId_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -391,6 +454,9 @@ public final class Logging {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeMessage(4, receiveMessageRequest_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getSenseIdBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -415,6 +481,10 @@ public final class Logging {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, receiveMessageRequest_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getSenseIdBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -551,6 +621,8 @@ public final class Logging {
           receiveMessageRequestBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
+        senseId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -603,6 +675,10 @@ public final class Logging {
         } else {
           result.receiveMessageRequest_ = receiveMessageRequestBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.senseId_ = senseId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -630,6 +706,11 @@ public final class Logging {
         }
         if (other.hasReceiveMessageRequest()) {
           mergeReceiveMessageRequest(other.getReceiveMessageRequest());
+        }
+        if (other.hasSenseId()) {
+          bitField0_ |= 0x00000010;
+          senseId_ = other.senseId_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -973,6 +1054,82 @@ public final class Logging {
         return receiveMessageRequestBuilder_;
       }
 
+      private java.lang.Object senseId_ = "";
+      /**
+       * <code>optional string sense_id = 5;</code>
+       */
+      public boolean hasSenseId() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string sense_id = 5;</code>
+       */
+      public java.lang.String getSenseId() {
+        java.lang.Object ref = senseId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            senseId_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string sense_id = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSenseIdBytes() {
+        java.lang.Object ref = senseId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          senseId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string sense_id = 5;</code>
+       */
+      public Builder setSenseId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        senseId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string sense_id = 5;</code>
+       */
+      public Builder clearSenseId() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        senseId_ = getDefaultInstance().getSenseId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string sense_id = 5;</code>
+       */
+      public Builder setSenseIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        senseId_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:RequestLog)
     }
 
@@ -998,13 +1155,14 @@ public final class Logging {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rlogging.proto\032\rmesseji.proto\"\315\001\n\nReque" +
+      "\n\rlogging.proto\032\rmesseji.proto\"\337\001\n\nReque" +
       "stLog\022\036\n\004type\030\001 \002(\0162\020.RequestLog.Type\022\021\n" +
       "\ttimestamp\030\002 \001(\004\022!\n\017message_request\030\003 \001(" +
       "\0132\010.Message\0227\n\027receive_message_request\030\004" +
-      " \001(\0132\026.ReceiveMessageRequest\"0\n\004Type\022\013\n\007" +
-      "MESSAGE\020\000\022\033\n\027RECEIVE_MESSAGE_REQUEST\020\001B\027" +
-      "\n\025com.hello.messeji.api"
+      " \001(\0132\026.ReceiveMessageRequest\022\020\n\010sense_id" +
+      "\030\005 \001(\t\"0\n\004Type\022\013\n\007MESSAGE\020\000\022\033\n\027RECEIVE_M" +
+      "ESSAGE_REQUEST\020\001B\027\n\025com.hello.messeji.ap" +
+      "i"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1024,7 +1182,7 @@ public final class Logging {
     internal_static_RequestLog_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_RequestLog_descriptor,
-        new java.lang.String[] { "Type", "Timestamp", "MessageRequest", "ReceiveMessageRequest", });
+        new java.lang.String[] { "Type", "Timestamp", "MessageRequest", "ReceiveMessageRequest", "SenseId", });
     com.hello.messeji.api.Messeji.getDescriptor();
   }
 
