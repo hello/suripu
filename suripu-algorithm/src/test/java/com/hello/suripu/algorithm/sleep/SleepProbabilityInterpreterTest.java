@@ -229,4 +229,63 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         TestCase.assertEquals(indices.iOutOfBed,610,1);
     }
 
+    @Test
+    public void testNaturalTypicalDayWithTwoSegmentsWithSecondSegmentTooFarOut() {
+        final double [] p = new double [961];
+        final double [] m = new double [961];
+        final double [] m2 = new double [961];
+
+        m[165] = 1;
+        m[169] = 20;
+        m[175] = 5;
+        m[180] = 5.0;
+        m[185] = 8.0;
+        m[190] = 6.0;
+
+        m[510] = 3.0;
+        m[511] = 3.0;
+        m[512] = 3.0;
+        m[520] = 20.0;
+
+        for (int t = 200; t < 220; t++) {
+            p[t] = 0.95 * (t-200) / 20.;
+        }
+
+        for (int t=220; t < 500; t++) {
+            p[t] = 0.95;
+        }
+
+        for (int t = 500; t < 520; t++) {
+            p[t] = 0.95 * (520 - t) / 20.;
+        }
+
+        m2[510] = 10.;
+        m2[512] = 12.;
+
+        for (int t = 660; t < 680; t++) {
+            p[t] = 0.95 * (t-660) / 20.;
+        }
+
+        for (int t= 680; t < 700; t++) {
+            p[t] = 0.95;
+        }
+
+        for (int t = 700; t < 720; t++) {
+            p[t] = 0.95 * (720 - t) / 20.;
+        }
+        m2[705] = 5;
+        m[710] = 5;
+
+        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2);
+
+        TestCase.assertTrue(indicesOptional.isPresent());
+
+        final EventIndices indices = indicesOptional.get();
+
+        TestCase.assertEquals(indices.iInBed,169,1);
+        TestCase.assertEquals(indices.iSleep,210,1);
+        TestCase.assertEquals(indices.iWake,512,1);
+        TestCase.assertEquals(indices.iOutOfBed,517,10);
+    }
+
 }
