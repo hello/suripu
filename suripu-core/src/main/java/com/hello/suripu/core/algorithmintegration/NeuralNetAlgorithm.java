@@ -104,9 +104,13 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
-            if (idx.isPresent()) {
-                x[SensorIndices.LIGHT.index()][idx.get()] = value;
+            if (!idx.isPresent()) {
+                LOGGER.warn("action=skipping_sensor_value sensor=LIGHT t0={} t={}",t0,s.dateTime);
+                continue;
             }
+
+            x[SensorIndices.LIGHT.index()][idx.get()] = value;
+
         }
 
         //diff light
@@ -124,9 +128,12 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
                 final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
-                if (idx.isPresent()) {
-                    x[SensorIndices.LIGHT.index()][idx.get()] = 0.0;
+                if (!idx.isPresent()) {
+                    continue;
                 }
+
+                x[SensorIndices.LIGHT.index()][idx.get()] = 0.0;
+
             }
         }
 
@@ -134,9 +141,13 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         for (final Sample s : waves) {
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
-            if (idx.isPresent()) {
-                x[SensorIndices.WAVES.index()][idx.get()]=s.value;
+            if (!idx.isPresent()) {
+                LOGGER.warn("action=skipping_sensor_value sensor=WAVES t0={} t={}",t0,s.dateTime);
+                continue;
             }
+
+            x[SensorIndices.WAVES.index()][idx.get()]=s.value;
+
         }
 
         /* SOUND DISTURBANCES */
@@ -149,9 +160,13 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
-            if (idx.isPresent()) {
-                x[SensorIndices.SOUND_DISTURBANCE.index()][idx.get()] = value;
+            if (!idx.isPresent()) {
+                LOGGER.warn("action=skipping_sensor_value sensor=SOUND_DISTURBANCE t0={} t={}",t0,s.dateTime);
+                continue;
             }
+
+            x[SensorIndices.SOUND_DISTURBANCE.index()][idx.get()] = value;
+
         }
 
         /* SOUND VOLUME */
@@ -164,6 +179,11 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
+            if (!idx.isPresent()) {
+                LOGGER.warn("action=skipping_sensor_value sensor=SOUND_VOLUME t0={} t={}",t0,s.dateTime);
+                continue;
+            }
+
             x[SensorIndices.SOUND_VOLUME.index()][idx.get()] = value;
         }
 
@@ -175,18 +195,20 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
 
-            if (idx.isPresent()) {
-                x[SensorIndices.MY_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
-
-
-                //normalize to between 0 - 20 or so by dividing by 10000.0
-                final double value = ((double)m.value) / 10000.;
-                final double existingValue = x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()];
-
-                //put in max... why? pill timestamps, when truncated, can show up in the same minute.
-                x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()] = value > existingValue ? value : existingValue;
+            if (!idx.isPresent()) {
+                LOGGER.warn("action=skipping_sensor_value sensor=MY_MOTION t0={} t={}",t0,m.timestamp);
+                continue;
             }
 
+            x[SensorIndices.MY_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
+
+
+            //normalize to between 0 - 20 or so by dividing by 10000.0
+            final double value = ((double)m.value) / 10000.;
+            final double existingValue = x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()];
+
+            //put in max... why? pill timestamps, when truncated, can show up in the same minute.
+            x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()] = value > existingValue ? value : existingValue;
 
         }
 
@@ -198,9 +220,13 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
 
-            if (idx.isPresent()) {
-                x[SensorIndices.PARTNER_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
+            if (!idx.isPresent()) {
+                LOGGER.warn("action=skipping_sensor_value sensor=PARTNER_MOTION t0={} t={}",t0,m.timestamp);
+                continue;
             }
+
+            x[SensorIndices.PARTNER_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
+
         }
 
 
