@@ -12,7 +12,7 @@ public enum QueueName {
     ENCODE_AUDIO("encode_audio"),
     BATCH_PILL_DATA ("batch_pill_data"),
     SENSE_SENSORS_DATA("sense_sensors_data"),
-    SENSE_SENSORS_DATA_FANOUT_ONE("sense_sensor_data_fanout_one"),
+    SENSE_SENSORS_DATA_FANOUT_ONE("sense_sensors_data_fanout_one"),
     LOGS("logs");
 
     private String value;
