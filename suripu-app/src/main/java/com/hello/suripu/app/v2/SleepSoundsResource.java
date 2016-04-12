@@ -54,6 +54,8 @@ public class SleepSoundsResource extends BaseResource {
     private static final Integer FADE_OUT = 1; // Used when explicitly stopped with a Stop message or wave
     private static final Integer TIMEOUT_FADE_OUT = 10; // Used when sense's play duration times out
 
+    private static final Double SENSE_MAX_DECIBELS = 60.0;
+
     private final DurationDAO durationDAO;
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
@@ -181,7 +183,7 @@ public class SleepSoundsResource extends BaseResource {
         }
 
         // Send to Messeji
-        final Integer volumeScalingFactor = convertVolumePercent(playRequest.volumePercent);
+        final Integer volumeScalingFactor = convertToSenseVolumePercent(playRequest.volumePercent);
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
                 durationOptional.get(), soundOptional.get(), FADE_IN, FADE_OUT, volumeScalingFactor, TIMEOUT_FADE_OUT);
@@ -385,7 +387,8 @@ public class SleepSoundsResource extends BaseResource {
         final Sound sound = soundOptional.get();
 
         if (audioState.hasVolumePercent()) {
-            return SleepSoundStatus.create(sound, durationOptional.get(), audioState.getVolumePercent());
+            final Integer convertedVolumePercent = convertToDisplayVolumePercent(audioState.getVolumePercent());
+            return SleepSoundStatus.create(sound, durationOptional.get(), convertedVolumePercent);
         } else {
             return SleepSoundStatus.create(sound, durationOptional.get());
         }
@@ -450,20 +453,22 @@ public class SleepSoundsResource extends BaseResource {
      * 10 Db gain would seem to be about twice as loud.
      *
      * Example: If maxDecibels is 60, then for different volumePercents this method returns:
-     * convertVolumePercent(60, 100) => 100 // 1.0 * 60 = 60Db
-     * convertVolumePercent(60,  50) =>  83 // .83 * 60 = 50Db
-     * convertVolumePercent(60,  25) =>  67 // .67 * 60 = 40Db
+     * convertToSenseVolumePercent(60, 100) => 100 // 1.0 * 60 = 60Db
+     * convertToSenseVolumePercent(60,  50) =>  83 // .83 * 60 = 50Db
+     * convertToSenseVolumePercent(60,  25) =>  67 // .67 * 60 = 40Db
      *
      * @param maxDecibels Maximum desired decibels for Sense to play (at 100%)
      * @param volumePercent "Perceived" volume percentage (100% is loudest, 50% is half of that, etc).
-     *                      Must be in (0, 100].
+     *                      Must be in [0, 100].
      * @return Linear scaling factor for Sense to convert to decibels.
      */
     @VisibleForTesting
-    protected static Integer convertVolumePercent(final Double maxDecibels,
-                                                  final Integer volumePercent) {
-        if (volumePercent > 100 || volumePercent <= 0) {
-            throw new IllegalArgumentException(String.format("volumePercent must be in the range (0, 100], not %s", volumePercent));
+    protected static Integer convertToSenseVolumePercent(final Double maxDecibels,
+                                                         final Integer volumePercent) {
+        if (volumePercent > 100 || volumePercent < 0) {
+            throw new IllegalArgumentException(String.format("volumePercent must be in the range [0, 100], not %s", volumePercent));
+        } else if (volumePercent <= 1) {
+            return 0;
         }
         // Formula/constants obtained from http://www.sengpielaudio.com/calculator-loudness.htm
         final double decibelOffsetFromMaximum = 33.22 * Math.log10(volumePercent / 100.0);
@@ -472,13 +477,39 @@ public class SleepSoundsResource extends BaseResource {
     }
 
     /**
-     * Uses 60 decibels for the max decibels, otherwise identical to {@link SleepSoundsResource#convertVolumePercent(Double, Integer)}
+     * Uses SENSE_MAX_DECIBELS decibels for the max decibels, otherwise identical to {@link SleepSoundsResource#convertToSenseVolumePercent(Double, Integer)}
      * @param volumePercent "Perceived" volume percentage (100% is loudest, 50% is half of that, etc).
      * @return Linear scaling factor for sense to convert to decibels.
      */
     @VisibleForTesting
-    protected static Integer convertVolumePercent(final Integer volumePercent) {
-        return convertVolumePercent(60.0, volumePercent);
+    protected static Integer convertToSenseVolumePercent(final Integer volumePercent) {
+        return convertToSenseVolumePercent(SENSE_MAX_DECIBELS, volumePercent);
+    }
+
+    /**
+     * Given a linear scaling factor "volume percent" on sense, convert back to a "perceived" volume percent for the app.
+     * This is the inverse of {@link SleepSoundsResource#convertToSenseVolumePercent(Double, Integer)}.
+     * Thus convertToDisplayVolumePercent(MAX, convertToSenseVolumePercent(MAX, x)) == x.
+     * Due to floating point/rounding issues, we always round to the nearest multiple of 5 for display purposes.
+     */
+    @VisibleForTesting
+    protected static Integer convertToDisplayVolumePercent(final Double maxDecibels, final Integer senseVolumePercent) {
+        if (senseVolumePercent > 100 || senseVolumePercent <= 0) {
+            throw new IllegalArgumentException(String.format("senseVolumePercent must be in the range (0, 100], not %s", senseVolumePercent));
+        }
+        // Formula/constants obtained from http://www.sengpielaudio.com/calculator-loudness.htm
+        final double decibels = (senseVolumePercent / 100.0) * maxDecibels;
+        final double decibelOffsetFromMaximum = maxDecibels - decibels;
+        final double volumePercent =  100 / Math.pow(2, decibelOffsetFromMaximum / 10);
+        return 5 * (int) Math.round(volumePercent / 5);
+    }
+
+    /**
+     * Uses SENSE_MAX_DECIBELS decibels for the max decibels, otherwise identical to {@link SleepSoundsResource#convertToDisplayVolumePercent(Double, Integer)}
+     */
+    @VisibleForTesting
+    protected static Integer convertToDisplayVolumePercent(final Integer senseVolumePercent) {
+        return convertToDisplayVolumePercent(SENSE_MAX_DECIBELS, senseVolumePercent);
     }
 
 }
