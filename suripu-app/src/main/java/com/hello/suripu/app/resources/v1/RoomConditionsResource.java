@@ -47,7 +47,7 @@ public class RoomConditionsResource extends BaseResource {
     private final static ImmutableSet<String> hiddenSensors = ImmutableSet.copyOf(Sets.newHashSet("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
 
     private static final Float NO_SOUND_CAPTURED_DB = (float) 0;    // The Sound value when Sense didn't capture audio
-    private static final Float NO_SOUND_FILL_VALUE_DB = (float) 25; // Replace with 25 decibels when Sense isn't capturing audio
+    private static final Float NO_SOUND_FILL_VALUE_DB = (float) 35; // Replace with this value when Sense isn't capturing audio
 
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceDAO deviceDAO;
