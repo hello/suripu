@@ -202,7 +202,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.MY_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
 
 
-            //normalize to between 0 - 20 or so by dividing by 10000.0
+            //normalize to between 0 - 20 or so by dividing by 1000.0
             final double value = ((double)m.value) / 10000.;
             final double existingValue = x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()];
 
@@ -268,6 +268,11 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final NeuralNetAlgorithmOutput algorithmOutput = outputOptional.get();
 
+            if (algorithmOutput.output.length == 0) {
+                LOGGER.info("action=return_no_prediction reason=zero_length_neural_net_output");
+                return Optional.absent();
+            }
+
             final List<Sample> light = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT);
 
             if (light.isEmpty()) {
@@ -297,7 +302,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
                     (sleepProbs,myDuration,myPillMagnitude);
 
             if (!indicesOptional.isPresent()) {
-                LOGGER.warn("action=return_no_indices reason=no_event_indices_from_sleep_probability_interpreter");
+                LOGGER.warn("action=return_no_prediction reason=no_event_indices_from_sleep_probability_interpreter");
                 return Optional.absent();
             }
 
