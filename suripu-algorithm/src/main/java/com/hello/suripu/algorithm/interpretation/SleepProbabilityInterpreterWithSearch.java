@@ -118,6 +118,8 @@ public class SleepProbabilityInterpreterWithSearch {
         int iWake = -1;
         int iInBed = -1;
         int iOutOfBed = -1;
+
+        int endIdx = sleepProbabilities.length;
         final List<IdxPair> skippedOverWakePeriods = Lists.newArrayList();
 
         if (sleepProbabilities.length <= 1 || myMotionDurations.length <= 1 || myPillMagintude.length <= 1) {
@@ -382,20 +384,25 @@ public class SleepProbabilityInterpreterWithSearch {
             }
         }
 
-        //sanity checks, make sure event times are not the same
-        final int outOfBedBounds = iWake + DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE;
-
-        if (iOutOfBed < outOfBedBounds) {
-            LOGGER.info("action=moving_out_of_bed reason=default_bounds_violation change={}",outOfBedBounds - iOutOfBed );
-            iOutOfBed = outOfBedBounds;
+        //index validation
+        if (iInBed < 0) {
+            iInBed = 0;
         }
 
-        final int inBedBounds = iSleep - DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP;
-
-        if (iInBed > inBedBounds) {
-            LOGGER.info("action=moving_in_bed reason=default_bounds_violation change={}",inBedBounds - iInBed );
-            iInBed = inBedBounds;
+        if (iOutOfBed >= sleep.length) {
+            iOutOfBed = sleep.length - 1;
         }
+
+        if (iSleep < iInBed + DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP) {
+            LOGGER.info("action=moving_sleep reason=default_bounds_violation change");
+            iSleep = iInBed + DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP;
+        }
+
+        if (iWake > iOutOfBed - DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE) {
+            LOGGER.info("action=moving_wake reason=default_bounds_violation change");
+            iWake = iOutOfBed - DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE;
+        }
+
 
         LOGGER.info("timeline_event=IN_BED idx={} psleep={}",iInBed,sleep[iInBed]);
         LOGGER.info("timeline_event=SLEEP  idx={} psleep={}",iSleep,sleep[iSleep]);

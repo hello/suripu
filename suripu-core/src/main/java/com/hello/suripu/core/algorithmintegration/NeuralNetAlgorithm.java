@@ -20,6 +20,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -272,10 +273,21 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
                 offsetMap.put(s.dateTime,s.offsetMillis);
             }
 
-            final long t0 = light.get(0).dateTime; //utc local
+            //all times in UTC
+            final long t0 = oneDaysSensorData.startTimeLocalUTC.minusMillis(light.get(0).offsetMillis).getMillis();
+            final long duration = oneDaysSensorData.endTimeLocalUTC.getMillis() - oneDaysSensorData.startTimeLocalUTC.getMillis();
+            final long tEnd = t0 + duration;
 
+            //get the earlier of the current time or the end of day time
+            final long tf = tEnd < oneDaysSensorData.currentTimeUTC.getMillis() ? tEnd : oneDaysSensorData.currentTimeUTC.getMillis();
+            final int iEnd = (int)(tf - t0) / DateTimeConstants.MILLIS_PER_MINUTE + 1;
 
-            final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(algorithmOutput.output[1],x[SensorIndices.MY_MOTION_DURATION.index()],x[SensorIndices.MY_MOTION_MAX_NORM.index()]);
+            final double [] myDuration = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_DURATION.index()],0,iEnd);
+            final double [] myPillMagnitude = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()],0,iEnd);
+            final double [] sleepProbs = Arrays.copyOfRange(algorithmOutput.output[1],0,iEnd);
+
+            final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices
+                    (sleepProbs,myDuration,myPillMagnitude);
 
             if (!indicesOptional.isPresent()) {
                 LOGGER.warn("action=return_no_indices reason=no_event_indices_from_sleep_probability_interpreter");
