@@ -96,13 +96,14 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
         final double [][] x = new double[N][T];
 
+        /*********** LOG  LIGHT AND DIFF LOG LIGHT *************/
         for (final Sample s : light) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
 
             if (Double.isNaN(value) || value < 0.0) {
                 value = 0.0;
             }
-            //get local time, enforce artificial light constraint (light before 8pm and after 5am is considered "natural" and thus should be ignored)
+
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
             if (!idx.isPresent()) {
@@ -119,7 +120,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.DIFFLIGHT.index()][t] = x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1];
         }
 
-        //waves
+        //zero out light during natural light times
         for (final Sample s : light) {
             //get local time, enforce artificial light constraint
             final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
@@ -137,6 +138,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             }
         }
+
+        /*  WAVES */
         for (final Sample s : waves) {
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
@@ -148,7 +151,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.WAVES.index()][idx.get()]=s.value;
         }
 
-        //sound disturbance counts
+        /* SOUND DISTURBANCES */
         for (final Sample s : soundcount) {
             double value = Math.log(s.value + 1.0) / Math.log(2);
 
@@ -166,7 +169,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.SOUND_DISTURBANCE.index()][idx.get()] = value;
         }
 
-        //sould volume
+        /* SOUND VOLUME */
         for (final Sample s : soundvol) {
             double value = 0.1 * s.value - 4.0;
 
@@ -178,14 +181,16 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             if (!idx.isPresent()) {
                 LOGGER.warn("action=skipping_sensor_value sensor=SOUND_VOLUME t0={} t={}",t0,s.dateTime);
                 continue;
-        }
+            }
 
             x[SensorIndices.SOUND_VOLUME.index()][idx.get()] = value;
         }
+
+        /*  MY MOTION  */
         for (final TrackerMotion m : oneDaysSensorData.originalTrackerMotions) {
             if (m.value == -1) {
                 continue;
-        }
+            }
 
             final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
 
@@ -205,6 +210,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()] = value > existingValue ? value : existingValue;
 
         }
+
+        /*  PARTNER MOTION  */
         for (final TrackerMotion m : oneDaysSensorData.originalPartnerTrackerMotions) {
             if (m.value == -1) {
                 continue;
