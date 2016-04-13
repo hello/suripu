@@ -122,7 +122,8 @@ public class SleepProbabilityInterpreterWithSearch {
         int endIdx = sleepProbabilities.length;
         final List<IdxPair> skippedOverWakePeriods = Lists.newArrayList();
 
-        if (sleepProbabilities.length <= 1 || myMotionDurations.length <= 1 || myPillMagintude.length <= 1) {
+        //four events need at least four time periods
+        if (sleepProbabilities.length <= 3 || myMotionDurations.length <= 3 || myPillMagintude.length <= 3) {
             return Optional.absent();
         }
 

@@ -118,10 +118,10 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
 
         final EventIndices indices = indicesOptional.get();
 
-        TestCase.assertEquals(indices.iInBed,indices.iSleep - SleepProbabilityInterpreterWithSearch.DEFAULT_SPACING_OF_IN_BED_BEFORE_SLEEP,2);
-        TestCase.assertEquals(indices.iSleep,170,2);
-        TestCase.assertEquals(indices.iWake,521,0);
-        TestCase.assertEquals(indices.iWake + SleepProbabilityInterpreterWithSearch.DEFAULT_SPACING_OF_OUT_OF_BED_AFTER_WAKE,indices.iOutOfBed,1);
+        TestCase.assertEquals(169,indices.iInBed,1);
+        TestCase.assertEquals(indices.iInBed + 5,indices.iSleep,1);
+        TestCase.assertEquals(520,indices.iWake,0);
+        TestCase.assertEquals(521,indices.iOutOfBed,0);
 
     }
 
