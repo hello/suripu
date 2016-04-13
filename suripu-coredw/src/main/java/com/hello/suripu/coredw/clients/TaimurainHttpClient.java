@@ -55,14 +55,14 @@ public class TaimurainHttpClient implements NeuralNetEndpoint {
             builder.addMat(vecBuilder);
         }
 
+        final NeuralNetMessages.NeuralNetInput input = builder.build();
+        final byte [] payload = input.toByteArray();
 
         try  {
             final HttpPost httppost = new HttpPost(endpoint + EVALUATION_ENDPOINT);
 
-            final InputStreamEntity reqEntity = new InputStreamEntity(new ByteArrayInputStream(builder.build().toByteArray()), -1, ContentType.APPLICATION_OCTET_STREAM);
-            reqEntity.setChunked(true);
+            httppost.setEntity(new InputStreamEntity(new ByteArrayInputStream(payload), payload.length, ContentType.APPLICATION_OCTET_STREAM));
 
-            httppost.setEntity(reqEntity);
             final long startTime = DateTime.now().getMillis();
             final HttpResponse response = httpClient.execute(httppost);
             final long endTime = DateTime.now().getMillis();
