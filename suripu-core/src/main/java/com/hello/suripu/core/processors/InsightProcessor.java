@@ -509,7 +509,7 @@ public class InsightProcessor {
             }
 
             // save to dynamo
-            LOGGER.info("Successfully generated {} category insight card for accountId {}, now inserting into DynamoDB", insightCardOptional.get(), accountId);
+            LOGGER.info("action=generated_insight_card category={} accountId={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
             return Optional.of(category);
         }
