@@ -8,11 +8,11 @@ import java.util.List;
 public class KinesisBatchPutResult {
     public final int success;
     public final int batchSize;
-    public final List<DataLoggerBatchPayload> failedRecords;
+    public final List<Boolean> successPuts;
 
-    public KinesisBatchPutResult(final int success, final int batchSize, final List<DataLoggerBatchPayload> failedRecords) {
+    public KinesisBatchPutResult(final int success, final int batchSize, final List<Boolean> successPuts) {
         this.success = success;
         this.batchSize = batchSize;
-        this.failedRecords = failedRecords;
+        this.successPuts = successPuts;
     }
 }

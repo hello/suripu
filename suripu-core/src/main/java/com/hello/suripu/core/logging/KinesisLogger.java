@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class KinesisLogger implements DataLogger {
@@ -84,7 +86,7 @@ public class KinesisLogger implements DataLogger {
         final List<List<DataLoggerBatchPayload>> batches = Lists.partition(payloadBatch, MAX_BATCH_RECORDS);
 
         int success = 0;
-        List<DataLoggerBatchPayload> failedPutRecords = Lists.newArrayList();
+        final List<Boolean> putSuccesses = Lists.newArrayList();
 
         for (List<DataLoggerBatchPayload> batch : batches) {
 
@@ -106,6 +108,7 @@ public class KinesisLogger implements DataLogger {
 
             if (putRecordsResult.getFailedRecordCount() == 0) {
                 success += batch.size();
+                putSuccesses.addAll(new ArrayList<>(Collections.nCopies(batch.size(), true)));
                 continue;
             }
 
@@ -123,6 +126,7 @@ public class KinesisLogger implements DataLogger {
                     // successful
                     lastSequenceNumber = resultEntry.getSequenceNumber();
                     success++;
+                    putSuccesses.add(true);
                     continue;
                 }
 
@@ -137,16 +141,14 @@ public class KinesisLogger implements DataLogger {
                     // successful retry
                     success++;
                     lastSequenceNumber = optionalSequenceNumber.get();
+                    putSuccesses.add(true);
                 } else {
-                    //fail again, return to caller
-                    byte[] failedPayload = new byte[data.remaining()];
-                    data.get(failedPayload);
-                    failedPutRecords.add(new DataLoggerBatchPayload(partitionKey, failedPayload));
+                    putSuccesses.add(false);
                 }
             }
         }
 
-        return new KinesisBatchPutResult(success, payloadBatch.size(), failedPutRecords);
+        return new KinesisBatchPutResult(success, payloadBatch.size(), putSuccesses);
     }
 
     private Optional<String> putSingleRecord(final String partitionKey, final ByteBuffer data, final String sequenceNumber) {
