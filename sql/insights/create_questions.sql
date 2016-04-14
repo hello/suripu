@@ -497,7 +497,7 @@ INSERT INTO questions (question_text, lang, frequency, response_type, responses,
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
   VALUES (
-      'How often did you keep this week''s goal?', -- text
+      'How often did you meet this week''s goal?', -- text
       'EN', -- lang
       'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
       'choice', --response_type,
