@@ -473,7 +473,60 @@ UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
   (select id from questions order by id DESC LIMIT 3) GROUP BY question_id) AS S
 WHERE questions.id = S.question_id;
 
+---- New questions for goals 2016-03-22
 
+UPDATE questions SET responses='{"Good", "Okay", "Poor"}' WHERE question_text='How was your sleep last week?' AND lang='EN';
+UPDATE response_choices SET response_text='Good' WHERE response_text='Good, as usual' AND question_id=(SELECT id FROM questions WHERE question_text='How was your sleep last week?');
+UPDATE response_choices SET response_text='Okay' WHERE response_text='Better' AND question_id=(SELECT id FROM questions WHERE question_text='How was your sleep last week?');
+UPDATE response_choices SET response_text='Poor' WHERE response_text='The same' AND question_id=(SELECT id FROM questions WHERE question_text='How was your sleep last week?');
+
+ALTER TYPE question_category ADD VALUE 'goal';
+UPDATE questions SET category='goal' WHERE category='goal_go_outside';
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'Did you change your behavior based on last week''s goal?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'goal' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How often did you keep this week''s goal?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"4 days or more", "1 day or more", "I didn''t"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'goal' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How did last week''s goal affect your sleep?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"It got better", "No improvement", "Not relevant"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'goal' --category
+);
+
+INSERT INTO response_choices (question_id, response_text)
+    (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 3));
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 3) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
 
 
 
