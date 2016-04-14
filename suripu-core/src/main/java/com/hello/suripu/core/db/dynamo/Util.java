@@ -47,7 +47,7 @@ public class Util {
         do {
             numAttempts++;
             try {
-                result = dynamoDB.getItem(tableName, key);
+                result = dynamoDB.getItem(tableName, key, true);
             } catch (ResourceNotFoundException rnfe) {
                 return Response.failure(Optional.<Map<String,AttributeValue>>absent(), rnfe);
             } catch (ProvisionedThroughputExceededException ptee) {
