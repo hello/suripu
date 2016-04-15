@@ -492,3 +492,31 @@ INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
 'Consuming caffeinated beverages late in the day can disrupt your sleep. It can make it more difficult to fall asleep and make you more likely to have shallow sleep.
 
 The good news is that you don''t need to swear off coffee completely; a cup of coffee can still be part of your morning ritual. In fact, researchers at Johns Hopkins have found that consuming 200 mg of caffeine (roughly one cup of coffee) enhances long-term memory.  Caffeine has a half-life of 6 hours, so limiting your coffee habit to the morning means that you reap the benefits of caffeine while minimizing disruptions to your sleep.');
+
+--- jyfan goal schedule thoughts 2016-04-14
+ALTER TYPE insight_category ADD VALUE 'goal_schedule_thoughts';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('goal_schedule_thoughts', 'Schedule Your Thoughts', 'Weeklong Goal',
+'Some thoughts, while necessary, can make you anxious and keep you up at night. Just as you manage your time for tasks, you can schedule thoughts for a time that doesn''t interfere with your sleep.
+
+Identify the specific thoughts you have before bed. Perhaps you are in the habit of making a list of tomorrow''s tasks, or maybe you just worry a lot.
+
+Set aside time at least a few hours before you plan to sleep to address these thoughts. During this time, write down an actual list of the next day''s tasks. You can also write out your thoughts and worries in a journal. Once you get in bed, remember that you have already spent time planning and allow yourself to relax.');
+
+--- jyfan goal screens 2016-04-14
+ALTER TYPE insight_category ADD VALUE 'goal_screens';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('goal_screens', 'No Screens Before Bed', 'Weeklong Goal',
+'Blue light suppresses your body''s production of melatonin, a hormone that helps control your sleep cycle. Looking at digital displays like a computer or your phone (which emit more blue light than most light bulbs) at night disrupts your circadian rhythm, and your ability to get restful sleep. Beyond the effect of blue light, spending time with your phone or other device at night can impact your sleep in other ways, too. Technology is a psychological stimulant for many people, and can excite you during the time when you should be winding down. Using these devices at bedtime can create a psychological association between your bedroom and being alert, which is the opposite of what you want for sleep.
+
+Keep these screens out of your bed, and out of your wind-down time at least an hour before sleep. Use a blue light filter for your screens after sunset, and expose yourself to lots of bright light during the day.');
+
+--- jyfan goal wake variance 2016-04-14
+ALTER TYPE insight_category ADD VALUE 'goal_wake_variance';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('goal_wake_variance', 'Wake Up to Sleep Better', 'Weeklong Goal',
+'The circadian clock is a sequence of timed chemical cues that tell your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics - you might just naturally be a “night owl” or a “morning lark” that wakes up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent - particularly your wake time - will keep these signals strong, and the quality of your sleep high.');
+

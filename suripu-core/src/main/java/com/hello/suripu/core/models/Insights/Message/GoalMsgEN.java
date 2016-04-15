@@ -13,4 +13,12 @@ public class GoalMsgEN {
     public final static String GOAL_COFFEE_TITLE = "Morning Coffee";
     public final static String GOAL_COFFEE_MSG = "This week, try to limit your caffeine consumption to before 2 PM every day.";
 
+    public final static String GOAL_SCHEDULE_THOUGHTS_TITLE = "Scheduling";
+    public final static String GOAL_SCHEDULE_THOUGHTS_MSG = "This week, schedule time for brainstorming or other potentially stressful thoughts earlier in the day. In the evenings, leave time for rest and relaxation.";
+
+    public final static String GOAL_SCREENS_TITLE = "No Screens";
+    public final static String GOAL_SCREENS_MSG = "This week, ban screens (computers, tablets, phones) an hour before you go to bed.";
+
+    public final static String GOAL_WAKE_VARIANCE_TITLE = "Wake Variance";
+    public final static String GOAL_WAKE_VARIANCE_MSG = "This week, try to get out of bed within 30 minutes of the same time each morning.";
 }
