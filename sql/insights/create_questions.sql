@@ -473,8 +473,9 @@ UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
   (select id from questions order by id DESC LIMIT 3) GROUP BY question_id) AS S
 WHERE questions.id = S.question_id;
 
----- New questions for goals 2016-03-22
+---- New questions for goals 2016-04-15
 
+--Changing responses for previously created question
 UPDATE questions SET responses='{"Good", "Okay", "Poor"}' WHERE question_text='How was your sleep last week?' AND lang='EN';
 UPDATE response_choices SET response_text='Good' WHERE response_text='Good, as usual' AND question_id=(SELECT id FROM questions WHERE question_text='How was your sleep last week?');
 UPDATE response_choices SET response_text='Okay' WHERE response_text='Better' AND question_id=(SELECT id FROM questions WHERE question_text='How was your sleep last week?');
