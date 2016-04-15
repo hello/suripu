@@ -203,7 +203,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
 
             //normalize to between 0 - 20 or so by dividing by 1000.0
-            final double value = ((double)m.value) / 10000.;
+            final double value = ((double)m.value) / 1000.0;
             final double existingValue = x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()];
 
             //put in max... why? pill timestamps, when truncated, can show up in the same minute.

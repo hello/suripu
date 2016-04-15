@@ -41,9 +41,14 @@ public class SleepProbabilityInterpreterWithSearch {
 
     final static int MIN_SLEEP_DURATION = 60; //insanity check
 
+    final static int MIN_DURATION_OF_SLEEP_TO_CONSIDER_SEGMENT_ERRONEOUS = 60 * 6; //minutes;
+    final static int SUSPICIOUSLY_LONG_AMOUNT_OF_SLEEP = 60 * 9; //minutes;
+    final static int MIN_DURATION_OF_SEGMENT_TO_BE_CONSIDERED_ERRONEOUS = 60;
 
+    final static double ENERGY_FRACTION_TO_EXCEED_TO_SLEEP = 0.90;
+    final static int NUM_MINUTES_AFTER_ENERGY_FRACTION_IS_SLEEP = 10;
 
-    private static class MergeResult {
+    protected static class MergeResult {
         final public List<IdxPair> mergedSegments;
         final public List<IdxPair> skippedOverWakePeriods;
 
@@ -53,7 +58,7 @@ public class SleepProbabilityInterpreterWithSearch {
         }
     }
 
-    private static MergeResult mergeCloseSegments(final List<IdxPair> segments, int maxDistanceToMerge) {
+    protected static MergeResult mergeCloseSegments(final List<IdxPair> segments, int maxDistanceToMerge) {
         final List<IdxPair> mergedSegments = Lists.newArrayList();
         final List<IdxPair> skippedOverWakePeriods = Lists.newArrayList();
 
@@ -80,6 +85,45 @@ public class SleepProbabilityInterpreterWithSearch {
 
 
         return new MergeResult(mergedSegments,skippedOverWakePeriods);
+    }
+
+    protected static List<IdxPair> filterValidSegments(final List<IdxPair> segments) {
+        /* the basic idea is that we probably know our wake time
+           but we will be less sure about sleep because the user tends to move A LOT less right
+           after they fall asleep.  So we can get sleep segments where nobody is actually in the room!
+
+           so we work backwards from last segments, and if a sleep segment puts the total duration well over
+           your average sleep time (say 8 hours), we drop it
+
+        */
+
+        final List<IdxPair> filteredSegments = Lists.newArrayList();
+
+        int duration = 0;
+
+        for (int i = segments.size() - 1; i >= 0; i--) {
+
+            final int currentDuration = segments.get(i).duration();
+            final int proposedDuration = duration +currentDuration;
+
+            if (duration > MIN_DURATION_OF_SLEEP_TO_CONSIDER_SEGMENT_ERRONEOUS &&
+                    proposedDuration > SUSPICIOUSLY_LONG_AMOUNT_OF_SLEEP &&
+                    segments.get(i).duration() > MIN_DURATION_OF_SEGMENT_TO_BE_CONSIDERED_ERRONEOUS) {
+                break;
+            }
+
+            filteredSegments.add(segments.get(i));
+            duration += currentDuration;
+        }
+
+        final int numDroppedSegments = segments.size() - filteredSegments.size();
+
+        for (int i = 0; i < numDroppedSegments; i++) {
+            final IdxPair droppedSegment = segments.get(i);
+            LOGGER.info("action=dropped_segment i1={} i2={} duration={}",droppedSegment.i1,droppedSegment.i2,droppedSegment.duration());
+        }
+
+        return filteredSegments;
     }
 
     /*
@@ -199,7 +243,7 @@ public class SleepProbabilityInterpreterWithSearch {
                 final Integer state = res.bestPath.get(i);
 
                 if (!state.equals(prevState)) {
-                    LOGGER.info("action=hmm_decode from_state={} to_state={} index={}", prevState, state, i);
+                    LOGGER.info("action=hmm_decode from_state={} to_state={} index={} psleep={}", prevState, state, i,(float)sleepProbabilities[i]);
                 }
 
                 if (state.equals(SLEEP_TRANSITION_STATE) && !prevState.equals(SLEEP_TRANSITION_STATE)) {
@@ -253,7 +297,7 @@ public class SleepProbabilityInterpreterWithSearch {
             final List<IdxPair> segments = Lists.newArrayList();
             for (int i = 0; i < wakeTransitionIndices.size() / 2; i++) {
                 final int idx = 2*i;
-                final int is = getSleepInInterval(sleepProbsWithDeltaProb[0],sleepProbsWithDeltaProb[1],sleepTransitionIndices.get(idx),sleepTransitionIndices.get(idx+1));
+                final int is = getSleepInInterval(sleepProbsWithDeltaProb[0],sleepProbsWithDeltaProb[1],myPillMagintude,sleepTransitionIndices.get(idx),sleepTransitionIndices.get(idx+1));
                 final int iw = getWakeInInterval(myPillMagintude,sleepProbsWithDeltaProb[1],wakeTransitionIndices.get(idx),wakeTransitionIndices.get(idx + 1));
                 LOGGER.info("action=deterine_wake_sleep_pair sleep={} wake={}",is,iw);
                 segments.add(new IdxPair(is,iw));
@@ -265,7 +309,15 @@ public class SleepProbabilityInterpreterWithSearch {
                 return Optional.absent();
             }
 
-            final MergeResult mergeResult = mergeCloseSegments(segments,MAX_TIME_AWAKE_TO_SPLIT_SEGMENTS);
+            /*  MAYBE USE THIS LATER, OR FEATURE FLIP, OR SOMETHING.
+                shouldn't need this with a good model and/or good features
+
+            final List<IdxPair> validSegments = filterValidSegments(segments);
+            */
+
+            final List<IdxPair> validSegments = segments;
+
+            final MergeResult mergeResult = mergeCloseSegments(validSegments,MAX_TIME_AWAKE_TO_SPLIT_SEGMENTS);
 
             skippedOverWakePeriods.addAll(mergeResult.skippedOverWakePeriods);
 
@@ -324,7 +376,7 @@ public class SleepProbabilityInterpreterWithSearch {
             final double[][] A = {
                     {0.999, 1e-3, 0.0},
                     {1e-5, 0.90, 0.10},
-                    {0.0, 0.10, 0.90}
+                    {0.0, 0.30, 0.70}
             };
             final double[] pi = {1.0,0.0,0.0};
             final HmmPdfInterface[] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION, 0), new PoissonPdf(POISSON_MEAN_FOR_MOTION, 0),new PoissonPdf(POISSON_MEAN_FOR_A_LITTLE_MOTION, 0)};
@@ -405,21 +457,21 @@ public class SleepProbabilityInterpreterWithSearch {
         }
 
 
-        LOGGER.info("timeline_event=IN_BED idx={} psleep={}",iInBed,sleep[iInBed]);
-        LOGGER.info("timeline_event=SLEEP  idx={} psleep={}",iSleep,sleep[iSleep]);
-        LOGGER.info("timeline_event=WAKE_UP idx={} psleep={}",iWake,sleep[iWake]);
-        LOGGER.info("timeline_event=OUT_OF_BED idx={} psleep={}",iOutOfBed,sleep[iOutOfBed]);
+        LOGGER.info("timeline_event=IN_BED idx={} psleep={}",iInBed,(float)sleep[iInBed]);
+        LOGGER.info("timeline_event=SLEEP  idx={} psleep={}",iSleep,(float)sleep[iSleep]);
+        LOGGER.info("timeline_event=WAKE_UP idx={} psleep={}",iWake,(float)sleep[iWake]);
+        LOGGER.info("timeline_event=OUT_OF_BED idx={} psleep={}",iOutOfBed,(float)sleep[iOutOfBed]);
 
         return Optional.of(new EventIndices(iInBed,iSleep,iWake,iOutOfBed,skippedOverWakePeriods));
 
     }
 
 
+    protected static int getWakeInInterval(final double [] pillMagnitude,final double [] deltasleepprobs, final int begin, final int end) {
 
-    static int getWakeInInterval(final double [] pillMagnitude,final double [] deltasleepprobs, final int begin, final int end) {
         double minScore = Double.POSITIVE_INFINITY;
         int minIdx = end;
-        for (int i = begin; i <= end; i++ ) {
+        for (int i = begin; i <= end; i++) {
             final double score = deltasleepprobs[i] * pillMagnitude[i];
             if (score < minScore) {
                 minScore = score;
@@ -430,22 +482,55 @@ public class SleepProbabilityInterpreterWithSearch {
         return minIdx;
     }
 
-    static int getSleepInInterval(final double [] sleepprobs, final double [] deltasleepprobs, final int begin, final int end) {
-        double maxScore = Double.NEGATIVE_INFINITY;
-        int maxIdx = begin;
+    protected static int getSleepInInterval(final double [] sleepprobs, final double [] deltasleepprobs, final double [] pillMagnitude,final int begin, final int end) {
 
+        double totalEnergy = 0.0;
+        //find subinterval of search that is beyond 90% of the energy
         for (int i = begin; i <= end; i++) {
-            final double weight = sleepprobs[i] * (1.0 - sleepprobs[i]); // weight towards 0.5
-            final double score = deltasleepprobs[i] * weight;
-
-            if (score > maxScore) {
-                maxScore = score;
-                maxIdx = i;
-            }
-
+            totalEnergy += pillMagnitude[i];
         }
 
-        return maxIdx;
+        if (totalEnergy > 0.0) {
+            double energy = 0.0;
+            int afterEnergy = begin;
+
+            for (int i = begin; i <= end; i++) {
+                energy += pillMagnitude[i];
+
+                if (energy / totalEnergy > ENERGY_FRACTION_TO_EXCEED_TO_SLEEP) {
+                    afterEnergy = i + NUM_MINUTES_AFTER_ENERGY_FRACTION_IS_SLEEP;
+
+                    if (afterEnergy > end) {
+                        afterEnergy = end;
+                    }
+
+                    break;
+                }
+            }
+
+
+
+            return afterEnergy;
+        }
+        else {
+            double maxScore = Double.NEGATIVE_INFINITY;
+
+            //alternate scoring -- look for highest rate of change near p=0.5
+            int maxIdx = begin;
+
+            for (int i = begin; i <= end; i++) {
+                final double weight = sleepprobs[i] * (1.0 - sleepprobs[i]); // weight towards 0.5
+                final double score = deltasleepprobs[i] * weight;
+
+                if (score > maxScore) {
+                    maxScore = score;
+                    maxIdx = i;
+                }
+
+            }
+
+            return maxIdx;
+        }
     }
 
 }
