@@ -484,53 +484,25 @@ public class SleepProbabilityInterpreterWithSearch {
 
     protected static int getSleepInInterval(final double [] sleepprobs, final double [] deltasleepprobs, final double [] pillMagnitude,final int begin, final int end) {
 
-        double totalEnergy = 0.0;
-        //find subinterval of search that is beyond 90% of the energy
+
+        double maxScore = Double.NEGATIVE_INFINITY;
+
+        //alternate scoring -- look for highest rate of change near p=0.5
+        int maxIdx = begin;
+
         for (int i = begin; i <= end; i++) {
-            totalEnergy += pillMagnitude[i];
-        }
+            final double weight = sleepprobs[i] * (1.0 - sleepprobs[i]); // weight towards 0.5
+            final double score = deltasleepprobs[i] * weight;
 
-        if (totalEnergy > 0.0) {
-            double energy = 0.0;
-            int afterEnergy = begin;
-
-            for (int i = begin; i <= end; i++) {
-                energy += pillMagnitude[i];
-
-                if (energy / totalEnergy > ENERGY_FRACTION_TO_EXCEED_TO_SLEEP) {
-                    afterEnergy = i + NUM_MINUTES_AFTER_ENERGY_FRACTION_IS_SLEEP;
-
-                    if (afterEnergy > end) {
-                        afterEnergy = end;
-                    }
-
-                    break;
-                }
+            if (score > maxScore) {
+                maxScore = score;
+                maxIdx = i;
             }
 
-
-
-            return afterEnergy;
         }
-        else {
-            double maxScore = Double.NEGATIVE_INFINITY;
 
-            //alternate scoring -- look for highest rate of change near p=0.5
-            int maxIdx = begin;
-
-            for (int i = begin; i <= end; i++) {
-                final double weight = sleepprobs[i] * (1.0 - sleepprobs[i]); // weight towards 0.5
-                final double score = deltasleepprobs[i] * weight;
-
-                if (score > maxScore) {
-                    maxScore = score;
-                    maxIdx = i;
-                }
-
-            }
-
-            return maxIdx;
-        }
+        return maxIdx;
     }
+
 
 }
