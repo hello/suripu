@@ -27,6 +27,17 @@ public class KinesisLogger implements DataLogger {
     private final AmazonKinesisAsyncClient kinesisClient;
     private final String streamName;
 
+    private class ProcessFailuresResult {
+        int numSuccess;
+        List<Boolean> putSuccesses;
+
+        ProcessFailuresResult(final int numSuccess, final List<Boolean> putSuccesses) {
+            this.numSuccess = numSuccess;
+            this.putSuccesses = putSuccesses;
+        }
+
+    }
+
     public KinesisLogger(final AmazonKinesisAsyncClient kinesisClient, final String streamName) {
         this.kinesisClient = kinesisClient;
         this.streamName = streamName;
@@ -85,10 +96,10 @@ public class KinesisLogger implements DataLogger {
 
         final List<List<DataLoggerBatchPayload>> batches = Lists.partition(payloadBatch, MAX_BATCH_RECORDS);
 
-        int success = 0;
+        int numSuccesses = 0;
         final List<Boolean> putSuccesses = Lists.newArrayList();
 
-        for (List<DataLoggerBatchPayload> batch : batches) {
+        for (final List<DataLoggerBatchPayload> batch : batches) {
 
             // insert a batch of up to 500 records
             final List<PutRecordsRequestEntry> putRecordsRequestEntries = Lists.newArrayList();
@@ -100,55 +111,26 @@ public class KinesisLogger implements DataLogger {
                 putRecordsRequestEntries.add(putRecordsRequestEntry);
             }
 
-            PutRecordsRequest putRecordsRequest = new PutRecordsRequest();
+            final PutRecordsRequest putRecordsRequest = new PutRecordsRequest();
             putRecordsRequest.setStreamName(streamName);
             putRecordsRequest.setRecords(putRecordsRequestEntries);
 
-            PutRecordsResult putRecordsResult = kinesisClient.putRecords(putRecordsRequest);
+            // put all the records
+            final PutRecordsResult putRecordsResult = kinesisClient.putRecords(putRecordsRequest);
 
             if (putRecordsResult.getFailedRecordCount() == 0) {
-                success += batch.size();
+                // success :)
+                numSuccesses += batch.size();
                 putSuccesses.addAll(new ArrayList<>(Collections.nCopies(batch.size(), true)));
-                continue;
-            }
-
-            // process failures
-            final List<PutRecordsResultEntry> putRecordsResultEntryList = putRecordsResult.getRecords();
-
-            // retry with put, set sequence number to be after the previous successful put
-            String lastSequenceNumber = "";
-            for (int i = 0; i < putRecordsResultEntryList.size(); i++) {
-
-                // get put result for this record
-                final PutRecordsResultEntry resultEntry = putRecordsResultEntryList.get(i);
-
-                if (resultEntry.getErrorCode() == null) {
-                    // successful
-                    lastSequenceNumber = resultEntry.getSequenceNumber();
-                    success++;
-                    putSuccesses.add(true);
-                    continue;
-                }
-
-                // failed put, try again
-                final PutRecordsRequestEntry requestEntry = putRecordsRequest.getRecords().get(i);
-                final ByteBuffer data = requestEntry.getData();
-                final String partitionKey = requestEntry.getPartitionKey();
-
-                final Optional<String> optionalSequenceNumber = putSingleRecord(partitionKey, data, lastSequenceNumber);
-
-                if (optionalSequenceNumber.isPresent()) {
-                    // successful retry
-                    success++;
-                    lastSequenceNumber = optionalSequenceNumber.get();
-                    putSuccesses.add(true);
-                } else {
-                    putSuccesses.add(false);
-                }
+            } else {
+                // fails :(
+                final ProcessFailuresResult failuresResult = processFailedPuts(putRecordsResult, putRecordsRequest);
+                numSuccesses += failuresResult.numSuccess;
+                putSuccesses.addAll(failuresResult.putSuccesses);
             }
         }
 
-        return new KinesisBatchPutResult(success, payloadBatch.size(), putSuccesses);
+        return new KinesisBatchPutResult(numSuccesses, payloadBatch.size(), putSuccesses);
     }
 
     private Optional<String> putSingleRecord(final String partitionKey, final ByteBuffer data, final String sequenceNumber) {
@@ -161,8 +143,8 @@ public class KinesisLogger implements DataLogger {
             putRecordRequest.setSequenceNumberForOrdering(sequenceNumber);
         }
 
-        final PutRecordResult  recordResult = kinesisClient.putRecord(putRecordRequest);
-        if(recordResult.getSequenceNumber() == null || recordResult.getShardId() == null) {
+        final PutRecordResult recordResult = kinesisClient.putRecord(putRecordRequest);
+        if (recordResult.getSequenceNumber() == null || recordResult.getShardId() == null) {
             LOGGER.error("error=fail-to-put-into-Kinesis stream={}, partition_key={}, seq_number={}",
                     streamName, partitionKey, sequenceNumber);
             return Optional.absent();
@@ -177,4 +159,42 @@ public class KinesisLogger implements DataLogger {
         return Optional.of(recordResult.getSequenceNumber());
     }
 
+    private ProcessFailuresResult processFailedPuts(final PutRecordsResult putRecordsResult, final PutRecordsRequest putRecordsRequest) {
+        int numSuccesses = 0;
+        String lastSequenceNumber = "";
+        final List<Boolean> putSuccesses = Lists.newArrayList();
+
+        final List<PutRecordsResultEntry> putRecordsResultEntryList = putRecordsResult.getRecords();
+
+        // retry with put, set sequence number to be after the previous successful put
+        for (int i = 0; i < putRecordsResultEntryList.size(); i++) {
+
+            // get put result for this record
+            final PutRecordsResultEntry resultEntry = putRecordsResultEntryList.get(i);
+
+            if (resultEntry.getErrorCode() == null) { // successful
+                lastSequenceNumber = resultEntry.getSequenceNumber();
+                numSuccesses++;
+                putSuccesses.add(true);
+                continue;
+            }
+
+            // failure, try again
+            final PutRecordsRequestEntry requestEntry = putRecordsRequest.getRecords().get(i);
+            final ByteBuffer data = requestEntry.getData();
+            final String partitionKey = requestEntry.getPartitionKey();
+
+            final Optional<String> optionalSequenceNumber = putSingleRecord(partitionKey, data, lastSequenceNumber);
+
+            if (optionalSequenceNumber.isPresent()) {
+                // successful retry
+                numSuccesses++;
+                lastSequenceNumber = optionalSequenceNumber.get();
+                putSuccesses.add(true);
+            } else {
+                putSuccesses.add(false);
+            }
+        }
+        return new ProcessFailuresResult(numSuccesses, putSuccesses);
+    }
 }
