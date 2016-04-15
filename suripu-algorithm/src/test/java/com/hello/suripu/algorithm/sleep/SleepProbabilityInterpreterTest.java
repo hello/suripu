@@ -215,6 +215,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
             p[t] = 0.95 * (620 - t) / 20.;
         }
         m2[605] = 5;
+        m[605] = 5;
         m[610] = 5;
 
         final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2);
