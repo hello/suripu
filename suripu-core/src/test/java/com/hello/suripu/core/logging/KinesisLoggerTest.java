@@ -72,7 +72,7 @@ public class KinesisLoggerTest {
 
         final KinesisBatchPutResult result = dataLogger.putRecords(batch);
         assertThat(result.batchSize, is(batch.size()));
-        assertThat(result.success, is(0));
+        assertThat(result.numSuccesses, is(0));
         assertThat(result.successPuts.size(), is(batch.size()));
         assertThat(result.successPuts.get(0), is(false));
         assertThat(result.successPuts.get(1), is(false));
@@ -126,7 +126,7 @@ public class KinesisLoggerTest {
 
         final KinesisBatchPutResult result = dataLogger.putRecords(batch);
         assertThat(result.batchSize, is(batch.size()));
-        assertThat(result.success, is(1));
+        assertThat(result.numSuccesses, is(1));
         assertThat(result.successPuts.size(), is(batch.size()));
         assertThat(result.successPuts.get(0), is(false));
         assertThat(result.successPuts.get(1), is(true));
