@@ -179,6 +179,9 @@ public class KinesisLogger implements DataLogger {
                 continue;
             }
 
+            LOGGER.error("error=failed-batch-puts error_code={} msg={}",
+                    resultEntry.getErrorCode(), resultEntry.getErrorMessage());
+
             // failure, try again
             final PutRecordsRequestEntry requestEntry = putRecordsRequest.getRecords().get(i);
             final ByteBuffer data = requestEntry.getData();
