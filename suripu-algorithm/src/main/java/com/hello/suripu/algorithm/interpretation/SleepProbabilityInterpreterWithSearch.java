@@ -44,10 +44,7 @@ public class SleepProbabilityInterpreterWithSearch {
     final static int MIN_DURATION_OF_SLEEP_TO_CONSIDER_SEGMENT_ERRONEOUS = 60 * 6; //minutes;
     final static int SUSPICIOUSLY_LONG_AMOUNT_OF_SLEEP = 60 * 9; //minutes;
     final static int MIN_DURATION_OF_SEGMENT_TO_BE_CONSIDERED_ERRONEOUS = 60;
-
-    final static double ENERGY_FRACTION_TO_EXCEED_TO_SLEEP = 0.90;
-    final static int NUM_MINUTES_AFTER_ENERGY_FRACTION_IS_SLEEP = 10;
-
+    
     protected static class MergeResult {
         final public List<IdxPair> mergedSegments;
         final public List<IdxPair> skippedOverWakePeriods;
