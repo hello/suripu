@@ -34,7 +34,8 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
                 "    uri VARCHAR(255),\n" +
                 "    preview_uri VARCHAR(255),\n" +
                 "    name VARCHAR(255),\n" +
-                "    is_public BOOLEAN DEFAULT FALSE\n" +
+                "    is_public BOOLEAN DEFAULT FALSE,\n" +
+                "    size_bytes INTEGER\n" +
                 ");\n" +
                 "\n" +
                 "CREATE TABLE sense_file_info (\n" +
@@ -46,8 +47,8 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
 
     private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic)
     {
-        final String insertStatement = "Insert INTO file_info (id, sort_key, firmware_version, is_public, type, path, sha, uri, preview_uri, name)\n" +
-                "VALUES (:id, :sort_key, :firmware_version, :is_public, 'SLEEP_SOUND', '', '', '', '', '');";
+        final String insertStatement = "Insert INTO file_info (id, sort_key, firmware_version, is_public, type, path, sha, uri, preview_uri, name, size_bytes)\n" +
+                "VALUES (:id, :sort_key, :firmware_version, :is_public, 'SLEEP_SOUND', '', '', '', '', '', 0);";
         handle.createStatement(insertStatement)
                 .bind("id", id)
                 .bind("sort_key", sortKey)

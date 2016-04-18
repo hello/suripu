@@ -36,6 +36,8 @@ public class FileInfo {
 
     final Boolean isPublic;
 
+    public final Integer sizeBytes;
+
     private FileInfo(Builder builder) {
         id = builder.id;
         path = builder.path;
@@ -46,6 +48,7 @@ public class FileInfo {
         name = builder.name;
         firmwareVersion = builder.firmwareVersion;
         isPublic = builder.isPublic;
+        sizeBytes = builder.sizeBytes;
 
         checkNotNull(id, "id must not be null");
         checkNotNull(path, "path must not be null");
@@ -76,6 +79,7 @@ public class FileInfo {
         private String name;
         private Integer firmwareVersion;
         private Boolean isPublic = false;
+        private Integer sizeBytes;
 
         private Builder() {
         }
@@ -122,6 +126,11 @@ public class FileInfo {
 
         public Builder withIsPublic(Boolean val) {
             isPublic = val;
+            return this;
+        }
+
+        public Builder withSizeBytes(final Integer val) {
+            sizeBytes = val;
             return this;
         }
 

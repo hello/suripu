@@ -24,6 +24,7 @@ public class FileInfoMapper implements ResultSetMapper<FileInfo> {
                 .withName(resultSet.getString("name"))
                 .withFirmwareVersion(resultSet.getInt("firmware_version"))
                 .withIsPublic(resultSet.getBoolean("is_public"))
+                .withSizeBytes(resultSet.getInt("size_bytes"))
                 .build();
     }
 }
