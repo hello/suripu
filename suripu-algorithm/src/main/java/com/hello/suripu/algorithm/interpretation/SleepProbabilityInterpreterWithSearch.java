@@ -44,9 +44,8 @@ public class SleepProbabilityInterpreterWithSearch {
     final static int MIN_DURATION_OF_SLEEP_TO_CONSIDER_SEGMENT_ERRONEOUS = 60 * 6; //minutes;
     final static int SUSPICIOUSLY_LONG_AMOUNT_OF_SLEEP = 60 * 9; //minutes;
     final static int MIN_DURATION_OF_SEGMENT_TO_BE_CONSIDERED_ERRONEOUS = 60;
-
-    final static double ENERGY_FRACTION_TO_EXCEED_TO_SLEEP = 0.90;
-    final static int NUM_MINUTES_AFTER_ENERGY_FRACTION_IS_SLEEP = 10;
+    private static final int NUM_LPF_TAPS = 5;
+    private static final double MIN_SLEEP_PROB_FOR_SLEEP = 0.50;
 
     protected static class MergeResult {
         final public List<IdxPair> mergedSegments;
@@ -189,7 +188,10 @@ public class SleepProbabilityInterpreterWithSearch {
             dsleep[i] = sleep[i] - sleep[i-1];
         }
 
-        final double [][] sleepProbsWithDeltaProb = {sleep,dsleep};
+        final double [] dsleepLpf = lowpassFilterSignal(dsleep,NUM_LPF_TAPS);
+
+
+        final double [][] sleepProbsWithDeltaProb = {sleep};
 
         {
             final HmmPdfInterface s0 = PdfCompositeBuilder.newBuilder().withPdf(obsModelsMain[0]).build();
@@ -297,8 +299,8 @@ public class SleepProbabilityInterpreterWithSearch {
             final List<IdxPair> segments = Lists.newArrayList();
             for (int i = 0; i < wakeTransitionIndices.size() / 2; i++) {
                 final int idx = 2*i;
-                final int is = getSleepInInterval(sleepProbsWithDeltaProb[0],sleepProbsWithDeltaProb[1],myPillMagintude,sleepTransitionIndices.get(idx),sleepTransitionIndices.get(idx+1));
-                final int iw = getWakeInInterval(myPillMagintude,sleepProbsWithDeltaProb[1],wakeTransitionIndices.get(idx),wakeTransitionIndices.get(idx + 1));
+                final int is = getSleepInInterval(sleep,dsleepLpf,sleepTransitionIndices.get(idx),sleepTransitionIndices.get(idx+1));
+                final int iw = getWakeInInterval(myPillMagintude,dsleepLpf,wakeTransitionIndices.get(idx),wakeTransitionIndices.get(idx + 1));
                 LOGGER.info("action=deterine_wake_sleep_pair sleep={} wake={}",is,iw);
                 segments.add(new IdxPair(is,iw));
             }
@@ -482,55 +484,58 @@ public class SleepProbabilityInterpreterWithSearch {
         return minIdx;
     }
 
-    protected static int getSleepInInterval(final double [] sleepprobs, final double [] deltasleepprobs, final double [] pillMagnitude,final int begin, final int end) {
+    protected static double [] lowpassFilterSignal(final double [] x,final int ntaps) {
+        final double [] y = new double[x.length];
 
-        double totalEnergy = 0.0;
-        //find subinterval of search that is beyond 90% of the energy
-        for (int i = begin; i <= end; i++) {
-            totalEnergy += pillMagnitude[i];
-        }
-
-        if (totalEnergy > 0.0) {
-            double energy = 0.0;
-            int afterEnergy = begin;
-
-            for (int i = begin; i <= end; i++) {
-                energy += pillMagnitude[i];
-
-                if (energy / totalEnergy > ENERGY_FRACTION_TO_EXCEED_TO_SLEEP) {
-                    afterEnergy = i + NUM_MINUTES_AFTER_ENERGY_FRACTION_IS_SLEEP;
-
-                    if (afterEnergy > end) {
-                        afterEnergy = end;
-                    }
-
-                    break;
-                }
+        for (int t = ntaps/2; t < y.length - ntaps/2; t++) {
+            for (int i = -ntaps/2; i <= ntaps/2; i++) {
+                y[t] += x[t+i];
             }
 
-
-
-            return afterEnergy;
+            y[t] /= (double)ntaps;
         }
-        else {
-            double maxScore = Double.NEGATIVE_INFINITY;
 
-            //alternate scoring -- look for highest rate of change near p=0.5
-            int maxIdx = begin;
-
-            for (int i = begin; i <= end; i++) {
-                final double weight = sleepprobs[i] * (1.0 - sleepprobs[i]); // weight towards 0.5
-                final double score = deltasleepprobs[i] * weight;
-
-                if (score > maxScore) {
-                    maxScore = score;
-                    maxIdx = i;
-                }
-
-            }
-
-            return maxIdx;
+        //pad
+        final double frontPadValue = y[ntaps/2];
+        for (int t = 0; t < ntaps/2; t++) {
+            y[t] = frontPadValue;
         }
+
+        //pad
+        final double endPadValue = y[y.length - ntaps/2 - 1];
+
+        for (int t = y.length - ntaps/2; t < y.length; t++) {
+            y[t] = endPadValue;
+        }
+
+        return y;
     }
+
+    protected static int getSleepInInterval(final double [] sleepprobs, final double [] deltasleepprobs,final int begin, final int end) {
+
+        //moving average filter deltasleepprobs to remove noise
+        double maxScore = Double.NEGATIVE_INFINITY;
+
+        //alternate scoring -- look for highest rate of change near p=0.5
+        int maxIdx = begin;
+
+        for (int i = begin; i <= end; i++) {
+            if (sleepprobs[i] < MIN_SLEEP_PROB_FOR_SLEEP) {
+                continue;
+            }
+
+            final double weight = sleepprobs[i] * (1.0 - sleepprobs[i]); // weight towards 0.5
+            final double score = deltasleepprobs[i] * weight;
+
+            if (score > maxScore) {
+                maxScore = score;
+                maxIdx = i;
+            }
+
+        }
+
+        return maxIdx;
+    }
+
 
 }
