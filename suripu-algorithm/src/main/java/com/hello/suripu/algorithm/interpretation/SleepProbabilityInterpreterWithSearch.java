@@ -191,7 +191,7 @@ public class SleepProbabilityInterpreterWithSearch {
         final double [] dsleepLpf = lowpassFilterSignal(dsleep,NUM_LPF_TAPS);
 
 
-        final double [][] sleepProbsWithDeltaProb = {sleep,dsleep};
+        final double [][] sleepProbsWithDeltaProb = {sleep};
 
         {
             final HmmPdfInterface s0 = PdfCompositeBuilder.newBuilder().withPdf(obsModelsMain[0]).build();
@@ -484,7 +484,7 @@ public class SleepProbabilityInterpreterWithSearch {
         return minIdx;
     }
 
-    protected static double [] lowpassFilterSignal(final double [] x, int ntaps) {
+    protected static double [] lowpassFilterSignal(final double [] x,final int ntaps) {
         final double [] y = new double[x.length];
 
         for (int t = ntaps/2; t < y.length - ntaps/2; t++) {
