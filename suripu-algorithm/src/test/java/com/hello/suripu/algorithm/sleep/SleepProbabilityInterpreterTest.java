@@ -289,4 +289,78 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         TestCase.assertEquals(indices.iOutOfBed,517,10);
     }
 
+    @Test
+    public void testSleepSearch() {
+        //final double [] sleepprobs, final double [] deltasleepprobs, final double [] pillMagnitude,final int begin, final int end) {
+
+        //expect to ignore the sudden increase below p = 0.5
+        final double [] sleepProbs = {0.0,0.0,0.0,0.1,0.4,0.5,0.5,0.7,0.8,0.9,1.0,1.0,1.0};
+        final double [] dsleep = new double[sleepProbs.length];
+
+        for (int i = 1; i < sleepProbs.length; i++) {
+            dsleep[i] = sleepProbs[i] - sleepProbs[i-1];
+        }
+
+        final int idx = getSleepInInterval(sleepProbs,dsleep,0,sleepProbs.length-1);
+
+        TestCase.assertEquals(7,idx,1);
+    }
+
+    @Test
+    public void testWakeSearch() {
+        //final double [] sleepprobs, final double [] deltasleepprobs, final double [] pillMagnitude,final int begin, final int end) {
+
+        final double [] sleepProbs = {1.0,1.0,1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1,0.0,0.0,0.0};
+        final double [] dsleep = new double[sleepProbs.length];
+        final double [] mag = new double[sleepProbs.length];
+        final double [] mag2 = new double[sleepProbs.length];
+
+        mag2[8] = 1.0;
+        mag2[7] = 0.5;
+
+
+        for (int i = 1; i < sleepProbs.length; i++) {
+            dsleep[i] = sleepProbs[i] - sleepProbs[i-1];
+        }
+
+        //no pill motion, should default to first index
+        final int idx = getWakeInInterval(mag,dsleep,2,sleepProbs.length-1);
+
+        TestCase.assertEquals(2,idx);
+
+        //should give index of maximum pill motion
+        final int idx2 = getWakeInInterval(mag2,dsleep,0,sleepProbs.length-1);
+
+        TestCase.assertEquals(8,idx2);
+
+
+    }
+
+    @Test
+    public void testLowpassFilter() {
+        final double [] x1 = {0.0,1.0,0.0};
+        final double [] y1 = lowpassFilterSignal(x1,3);
+
+        for (int i = 0; i < 3; i++) {
+            TestCase.assertEquals(0.3333333333, y1[i], 1e-4);
+        }
+
+
+        final double [] x2 = new double[50];
+        x2[10] = 1.0;
+        x2[1] = 1.0;
+        final double [] y2 = lowpassFilterSignal(x2,5);
+
+        TestCase.assertTrue(y2[0] > 0.0);
+
+        TestCase.assertEquals(y2[7],0.0,1e-6);
+        TestCase.assertEquals(y2[8],0.2,1e-6);
+        TestCase.assertEquals(y2[9],0.2,1e-6);
+        TestCase.assertEquals(y2[10],0.2,1e-6);
+        TestCase.assertEquals(y2[11],0.2,1e-6);
+        TestCase.assertEquals(y2[12],0.2,1e-6);
+        TestCase.assertEquals(y2[13],0.0,1e-6);
+
+    }
+
 }
