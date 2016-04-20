@@ -365,11 +365,12 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetSounds() throws Exception {
         final Long soundId = 1L;
+        final int numSounds = 11;
 
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
 
         final List<FileInfo> fileInfoList = Lists.newArrayList();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < numSounds; i++) {
             fileInfoList.add(FileInfo.newBuilder()
                     .withId(soundId + i)
                     .withPreviewUri("preview")
@@ -386,15 +387,15 @@ public class SleepSoundsResourceTest {
                 .withId(soundId + fileInfoList.size())
                 .withPreviewUri("preview")
                 .withName("name")
-                .withPath("/wrong/path/to/file")
+                .withPath("/path/to/file")
                 .withUri("url")
                 .withFirmwareVersion(1)
                 .withIsPublic(true)
                 .withSha("11")
-                .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                .withFileType(FileInfo.FileType.ALARM)
                 .build());
 
-        Mockito.when(fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND)).thenReturn(fileInfoList);
+        Mockito.when(fileInfoDAO.getAll(Mockito.anyInt(), Mockito.anyString())).thenReturn(fileInfoList);
 
         final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
                 .addFileInfo(FileSync.FileManifest.File.newBuilder()
@@ -408,8 +409,8 @@ public class SleepSoundsResourceTest {
         Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
 
         final SleepSoundsProcessor.SoundResult soundResult = sleepSoundsResource.getSounds(token);
-        assertThat(soundResult.sounds.size(), is(5));
         assertThat(soundResult.state, is(SleepSoundsProcessor.SoundResult.State.OK));
+        assertThat(soundResult.sounds.size(), is(numSounds));
         for (int i = 0; i < soundResult.sounds.size(); i++) {
             assertThat(soundResult.sounds.get(i).id, is(soundId + i));
         }
@@ -435,8 +436,19 @@ public class SleepSoundsResourceTest {
                     .withFileType(FileInfo.FileType.SLEEP_SOUND)
                     .build());
         }
+        fileInfoList.add(FileInfo.newBuilder()
+                .withId(soundId + fileInfoList.size())
+                .withPreviewUri("preview")
+                .withName("name")
+                .withPath("/wrong/path/to/file")
+                .withUri("url")
+                .withFirmwareVersion(1)
+                .withIsPublic(true)
+                .withSha("11")
+                .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                .build());
 
-        Mockito.when(fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND)).thenReturn(fileInfoList);
+        Mockito.when(fileInfoDAO.getAll(Mockito.anyInt(), Mockito.anyString())).thenReturn(fileInfoList);
 
         final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
                 .addFileInfo(FileSync.FileManifest.File.newBuilder()
