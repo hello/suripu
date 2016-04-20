@@ -33,6 +33,9 @@ import com.hello.suripu.core.processors.insights.Drive;
 import com.hello.suripu.core.processors.insights.Eat;
 import com.hello.suripu.core.processors.insights.GoalCoffee;
 import com.hello.suripu.core.processors.insights.GoalGoOutside;
+import com.hello.suripu.core.processors.insights.GoalScheduleThoughts;
+import com.hello.suripu.core.processors.insights.GoalScreens;
+import com.hello.suripu.core.processors.insights.GoalWakeVariance;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import com.hello.suripu.core.processors.insights.Learn;
@@ -456,6 +459,15 @@ public class InsightProcessor {
                 break;
             case GOAL_GO_OUTSIDE:
                 insightCardOptional = GoalGoOutside.getInsights(accountId);
+                break;
+            case GOAL_SCHEDULE_THOUGHTS:
+                insightCardOptional = GoalScheduleThoughts.getInsights(accountId);
+                break;
+            case GOAL_SCREENS:
+                insightCardOptional = GoalScreens.getInsights(accountId);
+                break;
+            case GOAL_WAKE_VARIANCE:
+                insightCardOptional = GoalWakeVariance.getInsights(accountId);
                 break;
             case HUMIDITY:
                 insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
