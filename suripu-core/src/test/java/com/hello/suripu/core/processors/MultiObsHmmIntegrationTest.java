@@ -23,6 +23,8 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,13 @@ import java.util.UUID;
  */
 public class MultiObsHmmIntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultiObsHmmIntegrationTest.class);
+
+
+    @Before
+    public void setUp() {
+        DateTimeZone.setDefault(DateTimeZone.UTC);
+    }
+
 
     final static class LocalDefaultModelEnsembleDAO implements com.hello.suripu.core.db.DefaultModelEnsembleDAO {
 
