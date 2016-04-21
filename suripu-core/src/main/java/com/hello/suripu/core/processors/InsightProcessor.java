@@ -9,7 +9,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
@@ -86,7 +85,6 @@ public class InsightProcessor {
 
     private static final Random RANDOM = new Random();
 
-    private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceReadDAO deviceReadDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
@@ -110,8 +108,7 @@ public class InsightProcessor {
             InsightCard.Category.SWIM,
             InsightCard.Category.WORK));
 
-    public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
-                            @NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
+    public InsightProcessor(@NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                             @NotNull final DeviceReadDAO deviceReadDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final TrackerMotionDAO trackerMotionDAO,
@@ -125,7 +122,6 @@ public class InsightProcessor {
                             @NotNull final CalibrationDAO calibrationDAO,
                             @NotNull final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB
                             ) {
-        this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceReadDAO = deviceReadDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
@@ -157,20 +153,9 @@ public class InsightProcessor {
             return;
         }
 
-        final Long internalDeviceId = deviceAccountPairOptional.get().internalDeviceId;
-
-        if (featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_INSIGHTS, accountId, Collections.EMPTY_LIST)) {
-            LOGGER.info("Generating insights with DynamoDB for account {}", accountId);
-            try {
-                final String externalDeviceId = deviceAccountPairOptional.get().externalDeviceId;
-                this.generateGeneralInsights(accountId, DeviceId.create(externalDeviceId), deviceDataDAODynamoDB, featureFlipper);
-                return;
-            } catch (Exception ex) {
-                LOGGER.error("Caught exception generating insight for account using DynamoDB {}. {}", accountId, ex);
-            }
-        }
-
-        this.generateGeneralInsights(accountId, DeviceId.create(internalDeviceId), deviceDataDAO, featureFlipper);
+        final String externalDeviceId = deviceAccountPairOptional.get().externalDeviceId;
+        this.generateGeneralInsights(accountId, DeviceId.create(externalDeviceId), deviceDataDAODynamoDB, featureFlipper);
+        return;
     }
 
     /**
@@ -497,7 +482,7 @@ public class InsightProcessor {
                 insightCardOptional = SleepScore.getMarketingInsights(accountId);
                 break;
             case SOUND:
-                insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
+                insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
                 break;
             case SWIM:
                 insightCardOptional = Swim.getMarketingInsights(accountId);
@@ -594,7 +579,6 @@ public class InsightProcessor {
      * Builder class, too many variables to initialize in the constructor
      */
     public static class Builder {
-        private @Nullable DeviceDataDAO deviceDataDAO;
         private @Nullable DeviceDataDAODynamoDB deviceDataDAODynamoDB;
         private @Nullable DeviceReadDAO deviceReadDAO;
         private @Nullable TrendsInsightsDAO trendsInsightsDAO;
@@ -614,9 +598,8 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
+        public Builder withSenseDAOs(final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
             this.deviceReadDAO = deviceReadDAO;
-            this.deviceDataDAO = deviceDataDAO;
             this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
             return this;
         }
@@ -664,7 +647,6 @@ public class InsightProcessor {
         }
 
         public InsightProcessor build() {
-            checkNotNull(deviceDataDAO, "deviceDataDAO can not be null");
             checkNotNull(deviceReadDAO, "deviceReadDAO can not be null");
             checkNotNull(trendsInsightsDAO, "trendsInsightsDAO can not be null");
             checkNotNull(trackerMotionDAO, "trackerMotionDAO can not be null");
@@ -678,7 +660,7 @@ public class InsightProcessor {
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
             checkNotNull(marketingInsightsSeenDAODynamoDB, "marketInsightsSeenDAO cannot be null");
 
-            return new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceReadDAO,
+            return new InsightProcessor(deviceDataDAODynamoDB, deviceReadDAO,
                     trendsInsightsDAO,
                     trackerMotionDAO,
                     scoreDAODynamoDB, insightsDAODynamoDB,
