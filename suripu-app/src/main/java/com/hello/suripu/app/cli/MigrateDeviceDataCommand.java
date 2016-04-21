@@ -3,38 +3,20 @@ package com.hello.suripu.app.cli;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
-import com.hello.suripu.core.db.util.JodaArgumentFactory;
-import com.hello.suripu.core.models.AllSensorSampleList;
-import com.hello.suripu.core.models.Calibration;
-import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.opencsv.CSVReader;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.db.ManagedDataSource;
-import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
-import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import net.sourceforge.argparse4j.inf.Namespace;
 import net.sourceforge.argparse4j.inf.Subparser;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,115 +163,11 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
         } else if (task.equals("test")) {
 
             final Map<String, String> accountToInternalMapping = readIdMapping(mappingFile, DeviceMapColumns.ID);
-            testResults(namespace, suripuAppConfiguration, deviceDataDAODynamoDB, accountToExternalMapping, accountToInternalMapping);
         } else {
             LOGGER.error("WRONG task");
         }
 
         this.executor.shutdown();
-    }
-
-    /**
-     * Compare DDB vs Postgres results
-     * @param namespace
-     * @param configuration
-     * @param deviceDataDAODynamoDB
-     */
-    private void testResults(final Namespace namespace,
-                             final SuripuAppConfiguration configuration,
-                             final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
-                             final Map<String, String> accountToExternalMapping,
-                             final Map<String, String> accountToInternalMapping) throws Exception
-    {
-        // set up postgres DAO
-
-        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
-
-        final DBI jdbi = new DBI(dataSource);
-        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorsDB().getDriverClass()));
-        jdbi.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbi.registerContainerFactory(new OptionalContainerFactory());
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
-
-        final DeviceDataDAO deviceDataDAO = jdbi.onDemand(DeviceDataDAO.class);
-
-        final String accountIdString = namespace.getString("account");
-        if (!accountToExternalMapping.containsKey(accountIdString)) {
-            LOGGER.error("No sense mapping found for account id {}", accountIdString);
-            return;
-        }
-
-        final String externalSenseId = accountToExternalMapping.get(accountIdString);
-        final Long internalSenseId = Long.valueOf(accountToInternalMapping.get(accountIdString));
-        final Long accountId = Long.valueOf(accountIdString);
-
-        final Long startTimestamp = DateTimeUtil.datetimeStringToDateTime(namespace.getString("start")).getMillis();
-        final Long endTimestamp = DateTimeUtil.datetimeStringToDateTime(namespace.getString("end")).withMillisOfSecond(0).getMillis();
-
-        final Optional<Calibration> optionalCalibration = Optional.absent();
-        final Optional<Device.Color> optionalColor = Optional.absent();
-
-        final int slotMinutes = 1;
-        final int defaultMissingValue = 0;
-
-        LOGGER.debug("Getting data from DynamoDB");
-        final AllSensorSampleList samplesDDB = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
-                startTimestamp, endTimestamp,
-                accountId, externalSenseId,
-                slotMinutes, defaultMissingValue,
-                optionalColor, optionalCalibration, false);
-
-        LOGGER.debug("Getting data from Postgres");
-        final AllSensorSampleList samplesRDS = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                startTimestamp, endTimestamp,
-                accountId, internalSenseId,
-                slotMinutes, defaultMissingValue,
-                optionalColor, optionalCalibration, false);
-
-        // make sure that what's in RDS is also present in DDB
-        final List<Sensor> sensors = samplesRDS.getAvailableSensors();
-        int sensorErrors = 0;
-        int sizeErrors = 0;
-        int valueErrors = 0;
-        int totalSamples = 0;
-
-        for (final Sensor sensor : sensors) {
-            if (samplesDDB.get(sensor).isEmpty()) {
-                LOGGER.error("sensor {} is not in DDB sample list", sensor.toString());
-                sensorErrors++;
-                continue;
-            }
-
-            // let's check the values
-            final List<Sample> valuesDDB = samplesDDB.get(sensor);
-            final List<Sample> valuesRDS = samplesRDS.get(sensor);
-            if (valuesDDB.size() != valuesRDS.size()) {
-                LOGGER.error("List size for sensor {} are not equal, DDB {}, RDS {}",
-                        sensor.toString(), valuesDDB.size(), valuesRDS.size());
-                sizeErrors++;
-                continue;
-            }
-
-            LOGGER.debug("Checking sensor values for {}", sensor.toString());
-            for (int i=0; i< valuesRDS.size(); i++) {
-                totalSamples++;
-                if (!valuesDDB.get(i).equals(valuesRDS.get(i))){
-                    LOGGER.error("Wrong values for timestamp {}:DDB {}, RDS {}",
-                            new DateTime(valuesDDB.get(i).dateTime, DateTimeZone.UTC).toString(),
-                            valuesDDB.get(i).toString(),
-                            valuesRDS.get(i).toString());
-                    valueErrors++;
-                }
-            }
-        }
-
-        System.out.println("Check Results");
-        System.out.println(String.format("Total Samples: %d", totalSamples));
-        System.out.println(String.format("Sensor Errors: %d", sensorErrors));
-        System.out.println(String.format("Size Errors: %d", sizeErrors));
-        System.out.println(String.format("Value Errors: %d", valueErrors));
     }
 
     /**
