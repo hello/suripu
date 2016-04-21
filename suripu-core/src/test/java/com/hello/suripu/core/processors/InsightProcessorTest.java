@@ -12,7 +12,6 @@ import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.flipper.FeatureFlipper;
@@ -119,7 +118,6 @@ public class InsightProcessorTest {
         final DeviceDAO deviceDAO = Mockito.mock(DeviceDAO.class);
         Mockito.when(deviceDAO.getMostRecentSenseByAccountId(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_DEVICE_ID));
         final TrendsInsightsDAO trendsInsightsDAO = Mockito.mock(TrendsInsightsDAO.class);
-        final TrackerMotionDAO trackerMotionDAO = Mockito.mock(TrackerMotionDAO.class);
         final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB = Mockito.mock(AggregateSleepScoreDAODynamoDB.class);
         final InsightsDAODynamoDB insightsDAODynamoDB = Mockito.mock(InsightsDAODynamoDB.class);
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
@@ -159,7 +157,6 @@ public class InsightProcessorTest {
         Mockito.when(deviceDataDAODynamoDB.toString()).thenReturn("someString");
         Mockito.when(deviceDAO.getMostRecentSenseByAccountId(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_DEVICE_ID));
         Mockito.when(trendsInsightsDAO.getAllGenericInsightCards()).thenReturn(ImmutableList.copyOf(mockInfoInsightCardsList));
-        Mockito.when(trackerMotionDAO.pillStatus(FAKE_PILL_ID, FAKE_ACCOUNT_ID)).thenReturn(Optional.of(mockDeviceStatus));
         Mockito.when(scoreDAODynamoDB.getSingleScore(FAKE_ACCOUNT_ID, "2015-09-14")).thenReturn(mockAggregateScore);
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.LIGHT, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(Mockito.any(Long.class), Mockito.any(String.class), Mockito.any(String.class))).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList));
@@ -191,7 +188,6 @@ public class InsightProcessorTest {
         //Initialize InsightProcessor
         final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAODynamoDB, deviceDAO,
                 trendsInsightsDAO,
-                trackerMotionDAO,
                 scoreDAODynamoDB,
                 insightsDAODynamoDB,
                 sleepStatsDAODynamoDB,
