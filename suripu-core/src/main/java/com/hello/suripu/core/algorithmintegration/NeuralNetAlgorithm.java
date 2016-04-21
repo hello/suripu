@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
+import com.hello.suripu.core.util.TimelineError;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -270,6 +271,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             if (algorithmOutput.output.length == 0) {
                 LOGGER.info("action=return_no_prediction reason=zero_length_neural_net_output");
+                log.addMessage(AlgorithmType.NEURAL_NET, TimelineError.UNEXEPECTED);
                 return Optional.absent();
             }
 
@@ -303,12 +305,18 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             if (!indicesOptional.isPresent()) {
                 LOGGER.warn("action=return_no_prediction reason=no_event_indices_from_sleep_probability_interpreter");
+                log.addMessage(AlgorithmType.NEURAL_NET, TimelineError.MISSING_KEY_EVENTS);
                 return Optional.absent();
             }
 
-            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,getAllEvents(offsetMap,t0,indicesOptional.get())));
+            final List<Event> events = getAllEvents(offsetMap,t0,indicesOptional.get());
+
+            log.addMessage(AlgorithmType.NEURAL_NET,events);
+
+            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events));
 
         } catch (Exception e) {
+            log.addMessage(AlgorithmType.NEURAL_NET, TimelineError.UNEXEPECTED);
             LOGGER.error("action=caught_exception exception=Exception error=invalid_index_calculation");
             LOGGER.debug(e.getMessage());
         }
