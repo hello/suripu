@@ -213,7 +213,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         if (!preGeneratedQuestions.isEmpty() && hasCBTIGoals) {
             for (final Question question : preGeneratedQuestions.values()) {
                 LOGGER.info("action=goal-users-questions question_id={} account={} aqid={} created={}",
-                        accountId, question.id, question.accountQuestionId, question.accountCreationDate);
+                        question.id, accountId, question.accountQuestionId, question.accountCreationDate);
             }
         }
 
