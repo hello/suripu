@@ -183,6 +183,13 @@ public class InsightsDAODynamoDB {
                         continue;
                     }
                     final InsightCard card = this.createInsightCard(item);
+                    final long accountId;
+                    if (card.accountId.isPresent()) {
+                        accountId = card.accountId.get();
+                    } else {
+                        accountId = 0;
+                    }
+                    LOGGER.debug("action=create_card account_id={} card_category={} card_date={}", accountId, card.category, card.timestamp);
                     insightCards.add(card);
                 }
             }
