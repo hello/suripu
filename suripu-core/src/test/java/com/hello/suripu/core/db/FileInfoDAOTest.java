@@ -57,14 +57,16 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
                 .execute();
     }
 
-    private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic, final String senseId)
+    private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic, final String... senseIds)
     {
         insert(id, sortKey, firmwareVersion, isPublic);
-        handle.createStatement("INSERT INTO sense_file_info (file_info_id, sense_id)\n" +
-                "VALUES (:id, :sense_id);")
-                .bind("id", id)
-                .bind("sense_id", senseId)
-                .execute();
+        for (final String senseId: senseIds) {
+            handle.createStatement("INSERT INTO sense_file_info (file_info_id, sense_id)\n" +
+                    "VALUES (:id, :sense_id);")
+                    .bind("id", id)
+                    .bind("sense_id", senseId)
+                    .execute();
+        }
     }
 
     @Test
@@ -80,35 +82,40 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
         insert(5L, 5, 1, false, "sense1");
         insert(6L, 6, 1, false, "sense2");
         insert(7L, 7, 1000, false, "sense1");
+        insert(8L, 8, 1, true, "sense1", "sense2");
 
         final List<FileInfo> after0 = dao.getAll(0, "nosense");
         assertThat(after0.size(), is(0));
 
         final List<FileInfo> after1 = dao.getAll(1, "nosense");
-        assertThat(after1.size(), is(1));
+        assertThat(after1.size(), is(2));
         assertThat(after1.get(0).id, is(4L));
+        assertThat(after1.get(1).id, is(8L));
 
         final List<FileInfo> after5 = dao.getAll(5, "nosense");
-        assertThat(after5.size(), is(3));
+        assertThat(after5.size(), is(4));
         assertThat(after5.get(0).id, is(1L));
         assertThat(after5.get(1).id, is(4L));
-        assertThat(after5.get(2).id, is(2L));
+        assertThat(after5.get(2).id, is(8L));
+        assertThat(after5.get(3).id, is(2L));
 
         assertThat(dao.getAll(FileInfoDAO.OLD_FW_VERSION_CUTOFF, "nosense").size(), is(0));
 
         // test specific sense ids
         final List<FileInfo> forSense1 = dao.getAll(3, "sense1");
-        assertThat(forSense1.size(), is(3));
+        assertThat(forSense1.size(), is(4));
         assertThat(forSense1.get(0).id, is(4L));
         assertThat(forSense1.get(1).id, is(5L));
         assertThat(forSense1.get(2).id, is(7L));
+        assertThat(forSense1.get(3).id, is(8L));
 
         final List<FileInfo> forSense2 = dao.getAll(5, "sense2");
-        assertThat(forSense2.size(), is(4));
+        assertThat(forSense2.size(), is(5));
         assertThat(forSense2.get(0).id, is(1L));
         assertThat(forSense2.get(1).id, is(4L));
         assertThat(forSense2.get(2).id, is(6L));
-        assertThat(forSense2.get(3).id, is(2L));
+        assertThat(forSense2.get(3).id, is(8L));
+        assertThat(forSense2.get(4).id, is(2L));
     }
 
     @Test
