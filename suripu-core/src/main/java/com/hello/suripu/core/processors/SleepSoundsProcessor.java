@@ -23,9 +23,7 @@ import java.util.List;
  */
 public class SleepSoundsProcessor implements SoundMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsProcessor.class);
-
-    private static final Integer MIN_SOUNDS = 5; // Anything less than this and we return an empty list.
-
+    
     private final FileInfoDAO fileInfoDAO;
     private final FileManifestDAO fileManifestDAO;
 
@@ -86,7 +84,19 @@ public class SleepSoundsProcessor implements SoundMap {
             return new SoundResult(sounds, SoundResult.State.SENSE_UPDATE_REQUIRED);
         }
 
-        final List<FileInfo> sleepSoundFileInfoList = fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND);
+        final int firmwareVersion = manifestOptional.get().hasFirmwareVersion()
+                ? manifestOptional.get().getFirmwareVersion()
+                : 0;
+
+        final List<FileInfo> fileInfoList = fileInfoDAO.getAll(firmwareVersion, senseId);
+
+        final List<FileInfo> sleepSoundFileInfoList = Lists.newArrayList();
+        for (final FileInfo fileInfo: fileInfoList) {
+            if (fileInfo.fileType == FileInfo.FileType.SLEEP_SOUND) {
+                sleepSoundFileInfoList.add(fileInfo);
+            }
+        }
+
         LOGGER.debug("sense-id={} sleep-sound-file-info-list-size={} file-manifest-file-count={}",
                 senseId, sleepSoundFileInfoList.size(), manifestOptional.get().getFileInfoCount());
 
@@ -97,7 +107,7 @@ public class SleepSoundsProcessor implements SoundMap {
             }
         }
 
-        if (sounds.size() < MIN_SOUNDS) {
+        if (sounds.size() < sleepSoundFileInfoList.size()) {
             LOGGER.warn("endpoint=sounds error=not-enough-sounds sense-id={} num-sounds={}",
                     senseId, sounds.size());
             return new SoundResult(Lists.<Sound>newArrayList(), SoundResult.State.SOUNDS_NOT_DOWNLOADED);
