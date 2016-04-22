@@ -32,12 +32,12 @@ def get_year_months(start_date, end_date):
         yield prev_date, current_date
 
 if len(sys.argv) < 3:
-    print "\nUsage: python device_sensor_sharding.py YYYY MM\n"
+    print "\nUsage: python sensor_sharding.py YYYY MM\n"
     sys.exit()
 
 year = sys.argv[1]
 if len(year) != 4:
-    print "\nUsage: python device_sensor_sharding.py YYYY MM\n"
+    print "\nUsage: python sensor_sharding.py YYYY MM\n"
     sys.exit()
 
 month = sys.argv[2]
@@ -193,10 +193,7 @@ for current_date in date_range(start_trigger_date, end_sharding_date):
     n += 1
     
 
-remaining_str = """ ELSIF NEW.local_utc_ts >= '2015-08-01 00:00:00' AND NEW.local_utc_ts < '2015-09-01 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_08 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-07-01 00:00:00' AND NEW.local_utc_ts < '2015-08-01 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_07 VALUES (NEW.*);
+remaining_str = """ 
     ELSE
         INSERT INTO tracker_motion_par_default VALUES (NEW.*);
     END IF;
