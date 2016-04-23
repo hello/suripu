@@ -1,7 +1,8 @@
-package com.hello.suripu.app.configuration;
+package com.hello.suripu.coredw8.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yammer.dropwizard.client.HttpClientConfiguration;
+import io.dropwizard.Configuration;
+import io.dropwizard.client.HttpClientConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -9,7 +10,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by jakepiccolo on 2/23/16.
  */
-public class MessejiHttpClientConfiguration {
+public class TaimurainHttpClientConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("http_client_config")
