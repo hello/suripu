@@ -90,7 +90,13 @@ public class FeatureFlipper {
     public final static String SLEEP_SCORE_DURATION_WEIGHTING_V2 = "sleep_score_duration_weighting_V2";
     public final static String SLEEP_SCORE_DURATION_V2 = "sleep_score_duration_v2";
     public final static String SLEEP_SCORE_TIMES_AWAKE_PENALTY = "sleep_score_times_awake_penalty";
+
+    // Return enum to the app that Sleep Sounds cannot be played because Sense requires a firmware update
+    public final static String SLEEP_SOUNDS_DISPLAY_FW_UPDATE = "sleep_sounds_display_fw_update";
+
+    // Show the Sleep Sounds UI in the app
     public final static String SLEEP_SOUNDS_ENABLED = "sleep_sounds_enabled";
+
     public final static String SLEEP_SOUNDS_OVERRIDE_OTA = "sleep_sounds_override_ota";
     public final static String SLEEP_SEGMENT_OFFSET_REMAPPING = "sleep_segment_offset_remapping";
     public final static String SLEEP_STATS_MEDIUM_SLEEP = "sleep_stats_medium_sleep";
