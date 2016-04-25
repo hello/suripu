@@ -41,6 +41,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -289,6 +290,11 @@ public class SleepSoundsResource extends BaseResource {
         if (!hasSleepSoundsEnabled(accountId)) {
             LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=false account-id={}", accountId);
             throw new WebApplicationException(Response.Status.NO_CONTENT);
+        }
+
+        if (hasSleepSoundsDisplayFirmwareUpdate(accountId)) {
+            LOGGER.debug("endpoint=sleep-sounds sleep-sounds-enabled=true sleep-sounds-display-fw-update=true account-id={}", accountId);
+            return new SleepSoundsProcessor.SoundResult(Collections.<Sound>emptyList(), SleepSoundsProcessor.SoundResult.State.SENSE_UPDATE_REQUIRED);
         }
 
         LOGGER.info("endpoint=sleep-sounds sleep-sounds-enabled=true account-id={}", accountId);
