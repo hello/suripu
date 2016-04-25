@@ -76,6 +76,8 @@ public class InsightsResource {
             final InsightCard.Category category = InsightCard.Category.fromString(value);
 
             final List<InfoInsightCards> cards = trendsInsightsDAO.getGenericInsightCardsByCategory(category.toString().toLowerCase());
+            final DateTime readDate = DateTime.now(DateTimeZone.UTC);
+            LOGGER.debug("action=insight_detail account_id={} category={} readdate={}", accessToken.accountId, category, readDate);
             return cards;
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
