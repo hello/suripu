@@ -118,6 +118,14 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
     private Response handleWebApplicationException(Throwable exception, Response defaultResponse) {
         WebApplicationException webAppException = (WebApplicationException) exception;
 
+        if (webAppException.getResponse().getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
+            return Response
+                    .status(Response.Status.NO_CONTENT)
+                    .entity("")
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+
         Optional<JsonError> error = getJsonError(webAppException.getResponse().getStatus());
 
         if (error.isPresent()) {

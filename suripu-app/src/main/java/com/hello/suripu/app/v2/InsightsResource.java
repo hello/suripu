@@ -12,14 +12,10 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import com.yammer.metrics.annotation.Timed;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -28,6 +24,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
 
 @Path("/v2/insights")
 public class InsightsResource {
@@ -48,12 +46,12 @@ public class InsightsResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
-
-        LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
         final Boolean chronological = false; // reverse chronological
         final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(1);
+        LOGGER.debug("action=get_insight account_id={} querydate={}", accessToken.accountId, queryDate);
         final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
                 queryDate, chronological, MAX_INSIGHTS_NUM);
+        LOGGER.debug("action=insight_results account_id={} size={}", accessToken.accountId, cards.size());
 
         if (cards.isEmpty()) {
             // no insights generated yet, probably a new user, send introduction cards
@@ -76,6 +74,8 @@ public class InsightsResource {
             final InsightCard.Category category = InsightCard.Category.fromString(value);
 
             final List<InfoInsightCards> cards = trendsInsightsDAO.getGenericInsightCardsByCategory(category.toString().toLowerCase());
+            final DateTime readDate = DateTime.now(DateTimeZone.UTC);
+            LOGGER.debug("action=insight_detail account_id={} category={} readdate={}", accessToken.accountId, category, readDate);
             return cards;
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());

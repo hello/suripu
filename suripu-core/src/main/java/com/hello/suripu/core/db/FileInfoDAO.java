@@ -28,7 +28,7 @@ public abstract class FileInfoDAO {
     public abstract Optional<FileInfo> getById(@Bind("id") final Long id);
 
 
-    @SqlQuery("SELECT fi.* " +
+    @SqlQuery("SELECT DISTINCT(fi.*) " +
             "FROM file_info AS fi " +
             "LEFT JOIN sense_file_info AS sfi " +
             "ON fi.id=sfi.file_info_id " +
