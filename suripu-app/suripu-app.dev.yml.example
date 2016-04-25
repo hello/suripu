@@ -9,23 +9,6 @@ graphite:
     - xx-responses
     - com.hello
 
-sensors_db:
-  # the name of your JDBC driver
-  driverClass: org.postgresql.Driver
-
-  # the username
-  user: your postgresql username
-
-  # the password
-  password: your postgresql password
-
-  # the JDBC URL
-  url: jdbc:postgresql://localhost:5432/[your postgresql username]
-
-  # any properties specific to your JDBC driver:
-  properties:
-    charSet: UTF-8
-
 common_db:
   # the name of your JDBC driver
   driverClass: org.postgresql.Driver

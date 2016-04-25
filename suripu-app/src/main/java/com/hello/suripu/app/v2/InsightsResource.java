@@ -12,14 +12,10 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import com.yammer.metrics.annotation.Timed;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -28,6 +24,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
 
 @Path("/v2/insights")
 public class InsightsResource {
