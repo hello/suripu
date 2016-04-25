@@ -391,7 +391,7 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.GOAL_GO_OUTSIDE);
+        recentCategories.add(InsightCard.Category.GOAL_WAKE_VARIANCE);
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
