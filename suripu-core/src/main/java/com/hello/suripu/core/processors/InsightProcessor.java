@@ -448,7 +448,6 @@ public class InsightProcessor {
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case DRIVE:
-                marketingInsightsSeenDAODynamoDB.updateSeenCategories(accountId, category);
                 insightCardOptional = Drive.getMarketingInsights(accountId);
                 break;
             case EAT:
