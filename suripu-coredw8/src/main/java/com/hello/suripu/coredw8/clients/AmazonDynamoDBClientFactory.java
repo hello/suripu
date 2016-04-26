@@ -58,7 +58,7 @@ public class AmazonDynamoDBClientFactory {
 
     public synchronized AmazonDynamoDB getForTable(final DynamoDBTableName tableName) {
         if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
-            throw new IllegalArgumentException("Check configuration. Invalid tableName: " + tableName.toString());
+            throw new IllegalArgumentException("Check configuration. Invalid table name or endpoint name for: " + tableName.toString());
         }
 
         // This is an exception to the way clients are created

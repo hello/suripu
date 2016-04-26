@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DynamoDBTableName {
 
-
     ALARM("alarm"),
     ALARM_INFO("alarm_info"),
     ALARM_LOG("alarm_log"),
@@ -20,6 +19,7 @@ public enum DynamoDBTableName {
     FIRMWARE_VERSIONS("firmware_versions"),
     INSIGHTS("insights"),
     MARKETING_INSIGHTS_SEEN("marketing_insights_seen"),
+    NOTIFICATIONS("notifications"),
     ONLINE_HMM_MODELS("online_hmm_models"),
     OTA_HISTORY("ota_history"),
     PASSWORD_RESET("password_reset"),
