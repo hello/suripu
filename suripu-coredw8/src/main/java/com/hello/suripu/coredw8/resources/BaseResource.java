@@ -143,4 +143,8 @@ public class BaseResource {
     protected Boolean hasSleepSoundsEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SOUNDS_ENABLED, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasSleepSoundsDisplayFirmwareUpdate(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SOUNDS_DISPLAY_FW_UPDATE, accountId, Collections.EMPTY_LIST);
+    }
 }
