@@ -529,6 +529,9 @@ UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
   (select id from questions order by id DESC LIMIT 3) GROUP BY question_id) AS S
 WHERE questions.id = S.question_id;
 
+--- Update question text grammar consistency
+UPDATE questions SET question_text='How often did you meet last week''s goal?' WHERE question_text='How often did you meet this week''s goal?' AND lang='EN';
+
 
 
 
