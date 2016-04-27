@@ -3,7 +3,6 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Question;

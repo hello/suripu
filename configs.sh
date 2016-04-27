@@ -12,10 +12,8 @@ VERSION=$1
 
 # prod
 
-s3cmd put suripu-app/suripu-app.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-app/$VERSION/suripu-app.prod.yml
 s3cmd put suripu-queue/suripu-queue.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-queue/$VERSION/suripu-queue.prod.yml
 
 
 # staging
-s3cmd put suripu-app/suripu-app.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-app/$VERSION/suripu-app.staging.yml
 s3cmd put suripu-queue/suripu-queue.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-queue/$VERSION/suripu-queue.staging.yml

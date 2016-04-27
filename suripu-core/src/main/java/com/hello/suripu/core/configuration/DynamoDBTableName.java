@@ -5,9 +5,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DynamoDBTableName {
 
-
+    ALARM("alarm"),
     ALARM_INFO("alarm_info"),
     ALARM_LOG("alarm_log"),
+    ALGORITHM_TEST("algorithm_test"),
+    APP_STATS("app_stats"),
     CALIBRATION("calibration"),
     DEVICE_DATA("device_data"),
     FEATURE_EXTRACTION_MODELS("feature_extraction_models"),
@@ -17,6 +19,7 @@ public enum DynamoDBTableName {
     FIRMWARE_VERSIONS("firmware_versions"),
     INSIGHTS("insights"),
     MARKETING_INSIGHTS_SEEN("marketing_insights_seen"),
+    NOTIFICATIONS("notifications"),
     ONLINE_HMM_MODELS("online_hmm_models"),
     OTA_HISTORY("ota_history"),
     PASSWORD_RESET("password_reset"),
