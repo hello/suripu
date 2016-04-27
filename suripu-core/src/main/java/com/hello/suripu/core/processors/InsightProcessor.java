@@ -9,14 +9,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -86,11 +84,9 @@ public class InsightProcessor {
 
     private static final Random RANDOM = new Random();
 
-    private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceReadDAO deviceReadDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
-    private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -110,11 +106,16 @@ public class InsightProcessor {
             InsightCard.Category.SWIM,
             InsightCard.Category.WORK));
 
-    public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
-                            @NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
+    private static final ImmutableSet<InsightCard.Category> goalInsightPool = ImmutableSet.copyOf(Sets.newHashSet(
+            InsightCard.Category.GOAL_COFFEE,
+            InsightCard.Category.GOAL_GO_OUTSIDE,
+            InsightCard.Category.GOAL_SCHEDULE_THOUGHTS,
+            InsightCard.Category.GOAL_SCREENS,
+            InsightCard.Category.GOAL_WAKE_VARIANCE));
+
+    public InsightProcessor(@NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                             @NotNull final DeviceReadDAO deviceReadDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
-                            @NotNull final TrackerMotionDAO trackerMotionDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             @NotNull final InsightsDAODynamoDB insightsDAODynamoDB,
                             @NotNull final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
@@ -125,11 +126,9 @@ public class InsightProcessor {
                             @NotNull final CalibrationDAO calibrationDAO,
                             @NotNull final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB
                             ) {
-        this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceReadDAO = deviceReadDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
-        this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.preferencesDAO = preferencesDAO;
@@ -157,20 +156,9 @@ public class InsightProcessor {
             return;
         }
 
-        final Long internalDeviceId = deviceAccountPairOptional.get().internalDeviceId;
-
-        if (featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_INSIGHTS, accountId, Collections.EMPTY_LIST)) {
-            LOGGER.info("Generating insights with DynamoDB for account {}", accountId);
-            try {
-                final String externalDeviceId = deviceAccountPairOptional.get().externalDeviceId;
-                this.generateGeneralInsights(accountId, DeviceId.create(externalDeviceId), deviceDataDAODynamoDB, featureFlipper);
-                return;
-            } catch (Exception ex) {
-                LOGGER.error("Caught exception generating insight for account using DynamoDB {}. {}", accountId, ex);
-            }
-        }
-
-        this.generateGeneralInsights(accountId, DeviceId.create(internalDeviceId), deviceDataDAO, featureFlipper);
+        final String externalDeviceId = deviceAccountPairOptional.get().externalDeviceId;
+        this.generateGeneralInsights(accountId, DeviceId.create(externalDeviceId), deviceDataDAODynamoDB, featureFlipper);
+        return;
     }
 
     /**
@@ -222,7 +210,7 @@ public class InsightProcessor {
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                   final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
-        if (recentCategories.contains(InsightCard.Category.GOAL_GO_OUTSIDE) || recentCategories.contains(InsightCard.Category.GOAL_COFFEE)) {
+        if (!Collections.disjoint(recentCategories, goalInsightPool)) {
             LOGGER.info("Goal insight generated recently for accountId {}, suppressing all other insights", accountId);
             return Optional.absent();
         }
@@ -448,7 +436,6 @@ public class InsightProcessor {
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case DRIVE:
-                marketingInsightsSeenDAODynamoDB.updateSeenCategories(accountId, category);
                 insightCardOptional = Drive.getMarketingInsights(accountId);
                 break;
             case EAT:
@@ -497,7 +484,7 @@ public class InsightProcessor {
                 insightCardOptional = SleepScore.getMarketingInsights(accountId);
                 break;
             case SOUND:
-                insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
+                insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
                 break;
             case SWIM:
                 insightCardOptional = Swim.getMarketingInsights(accountId);
@@ -594,11 +581,9 @@ public class InsightProcessor {
      * Builder class, too many variables to initialize in the constructor
      */
     public static class Builder {
-        private @Nullable DeviceDataDAO deviceDataDAO;
         private @Nullable DeviceDataDAODynamoDB deviceDataDAODynamoDB;
         private @Nullable DeviceReadDAO deviceReadDAO;
         private @Nullable TrendsInsightsDAO trendsInsightsDAO;
-        private @Nullable TrackerMotionDAO trackerMotionDAO;
         private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
         private @Nullable InsightsDAODynamoDB insightsDAODynamoDB;
         private @Nullable SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -614,15 +599,9 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
+        public Builder withSenseDAOs(final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
             this.deviceReadDAO = deviceReadDAO;
-            this.deviceDataDAO = deviceDataDAO;
             this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
-            return this;
-        }
-
-        public Builder withTrackerMotionDAO(final TrackerMotionDAO trackerMotionDAO) {
-            this.trackerMotionDAO = trackerMotionDAO;
             return this;
         }
 
@@ -664,10 +643,8 @@ public class InsightProcessor {
         }
 
         public InsightProcessor build() {
-            checkNotNull(deviceDataDAO, "deviceDataDAO can not be null");
             checkNotNull(deviceReadDAO, "deviceReadDAO can not be null");
             checkNotNull(trendsInsightsDAO, "trendsInsightsDAO can not be null");
-            checkNotNull(trackerMotionDAO, "trackerMotionDAO can not be null");
             checkNotNull(scoreDAODynamoDB, "scoreDAODynamoDB can not be null");
             checkNotNull(insightsDAODynamoDB, "insightsDAODynamoDB can not be null");
             checkNotNull(sleepStatsDAODynamoDB, "sleepStatsDAODynamoDB can not be null");
@@ -678,9 +655,8 @@ public class InsightProcessor {
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
             checkNotNull(marketingInsightsSeenDAODynamoDB, "marketInsightsSeenDAO cannot be null");
 
-            return new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceReadDAO,
+            return new InsightProcessor(deviceDataDAODynamoDB, deviceReadDAO,
                     trendsInsightsDAO,
-                    trackerMotionDAO,
                     scoreDAODynamoDB, insightsDAODynamoDB,
                     sleepStatsDAODynamoDB,
                     preferencesDAO,
