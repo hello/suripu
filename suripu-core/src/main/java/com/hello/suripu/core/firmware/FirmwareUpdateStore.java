@@ -66,7 +66,7 @@ public class FirmwareUpdateStore {
     private final static Integer S3_CACHE_CLEAR_VERSION_NUMBER = 666666;
 
     final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
-    final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache;
+    final Cache<Pair<String, Integer>, Pair<String, Pair<Float, Float>>> s3ObjectKeyCache;
 
     public FirmwareUpdateStore(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                final AmazonS3 s3, 
@@ -75,7 +75,7 @@ public class FirmwareUpdateStore {
                                final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache,
                                final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                final FirmwareUpgradePathDAO firmwareUpgradePathDAO,
-                               final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache) {
+                               final Cache<Pair<String, Integer>, Pair<String, Pair<Float, Float>>> s3ObjectKeyCache) {
         this.otaHistoryDAO = otaHistoryDAO;
         this.s3 = s3;
         this.bucketName = bucketName;
@@ -93,7 +93,7 @@ public class FirmwareUpdateStore {
                                              final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3Cache,
                                              final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                              final FirmwareUpgradePathDAO firmwareUpgradePathDAO,
-                                             final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache) {
+                                             final Cache<Pair<String, Integer>, Pair<String, Pair<Float, Float>>> s3ObjectKeyCache) {
         return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache, firmwareVersionMappingDAO, firmwareUpgradePathDAO, s3ObjectKeyCache);
     }
 
@@ -108,7 +108,7 @@ public class FirmwareUpdateStore {
                 .expireAfterWrite(s3CacheExpireMinutes, TimeUnit.MINUTES)
                 .build();
 
-        final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache = CacheBuilder.newBuilder()
+        final Cache<Pair<String, Integer>, Pair<String, Pair<Float, Float>>> s3ObjectKeyCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(1, TimeUnit.MINUTES)
                 .build();
 
@@ -375,12 +375,12 @@ public class FirmwareUpdateStore {
         }
 
         final Pair<String, Integer> groupFWPair = new Pair<>(group, currentFWVersion);
-        final Pair<String, Float> objectKey;
+        final Pair<String, Pair<Float, Float>> objectKeyWithRolloutValues;
 
         try {
-            objectKey = s3ObjectKeyCache.get(groupFWPair, new Callable<Pair<String, Float>>() {
+            objectKeyWithRolloutValues = s3ObjectKeyCache.get(groupFWPair, new Callable<Pair<String, Pair<Float, Float>>>() {
                 @Override
-                public Pair<String, Float> call() throws Exception {
+                public Pair<String, Pair<Float, Float>> call() throws Exception {
                     LOGGER.info("Nothing in S3 Object cache for group: [{}] @ FW: [{}]. Fetching new value.", groupFWPair.getKey(), groupFWPair.getValue());
                     return getS3ObjectAndRolloutPercentForGroup(groupFWPair);
                 }
@@ -391,24 +391,25 @@ public class FirmwareUpdateStore {
             return Optional.absent();
         }
 
-        final String s3Object = objectKey.getKey();
-        final Float rolloutPercent = objectKey.getValue();
+        final String s3Object = objectKeyWithRolloutValues.getKey();
+        final Float startRolloutPercent = objectKeyWithRolloutValues.getValue().getFirst();
+        final Float rolloutPercent = objectKeyWithRolloutValues.getValue().getSecond();
 
-        if (!FeatureUtils.entityIdHashInPercentRange(deviceId, 0.0f, rolloutPercent)) {
-            LOGGER.debug("Upgrade Node exists, but device outside rollout percentage ({}%).", rolloutPercent);
+        if (!FeatureUtils.entityIdHashInPercentRange(deviceId, startRolloutPercent, rolloutPercent)) {
+            LOGGER.debug("Upgrade Node exists, but device outside rollout percentage range ({}-{}%).", startRolloutPercent, rolloutPercent);
             return Optional.absent();
         }
 
         return Optional.of(s3Object);
     }
 
-    private Pair<String, Float> getS3ObjectAndRolloutPercentForGroup(Pair<String, Integer> groupFw) {
+    private Pair<String, Pair<Float, Float>> getS3ObjectAndRolloutPercentForGroup(Pair<String, Integer> groupFw) {
 
         final String group = groupFw.getKey();
         final Integer currentFWVersion = groupFw.getValue();
-        final Pair<String, Float> defaultInfo = new Pair<>(group, FeatureUtils.MAX_ROLLOUT_VALUE);
+        final Pair<String, Pair<Float, Float>> defaultInfo = new Pair<>(group, new Pair<>(0.0f, FeatureUtils.MAX_ROLLOUT_VALUE));
         //Retrieve destination fw version
-        final Optional<Pair<Integer, Float>> nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(group, currentFWVersion);
+        final Optional<Pair<Integer, Pair<Float, Float>>> nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(group, currentFWVersion);
         final List<String> humanNames = new ArrayList<>();
 
         if (nextFirmwareVersion.isPresent()) {
@@ -421,9 +422,10 @@ public class FirmwareUpdateStore {
             return defaultInfo;
         }
 
-        final Float rolloutPercent = nextFirmwareVersion.get().getValue();
+        final Float startRolloutPercent = nextFirmwareVersion.get().getValue().getFirst();
+        final Float rolloutPercent = nextFirmwareVersion.get().getValue().getSecond();
 
-        final Pair<String, Float> s3Info = new Pair<>(humanNames.get(0), rolloutPercent);
+        final Pair<String, Pair<Float, Float>> s3Info = new Pair<>(humanNames.get(0), new Pair<>(startRolloutPercent, rolloutPercent));
 
         LOGGER.info("Found upgrade path {} => {}({}) for group: {}", currentFWVersion, nextFirmwareVersion.get().getKey(), s3Info.getKey(), group);
         return s3Info;
