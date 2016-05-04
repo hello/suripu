@@ -14,14 +14,16 @@ import java.util.Set;
 import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
-import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Priorities;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
 import org.slf4j.Logger;
@@ -109,23 +111,25 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
             final Optional<Application> applicationOptional = this.applicationStore.getApplicationById(accessToken.appId);
 
             if(!applicationOptional.isPresent()) {
-                LOGGER.warn("No application with id = {} as specified by token {}", accessToken.appId, accessToken);
+                LOGGER.warn("warning=no_app_with_id application_id={} token={}", accessToken.appId, accessToken);
             }
 
             boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, scopesAllowed);
             if(!validScopes) {
-                LOGGER.warn("Token ({}) not authorized for any of the allowed scopes {}. Account ID: {}, App ID: {}",
+                LOGGER.warn("warning=token_not_authorized account_id={} application_id={} token={} allowed_scopes={}",
+                    accessToken.accountId,
+                    accessToken.appId,
                     accessToken.token,
                     scopesAllowed,
                     accessToken.accountId,
                     accessToken.appId);
-                throw new ForbiddenException();
+                throw new WebApplicationException(Response.Status.FORBIDDEN);
             }
         }
 
         public boolean hasRequiredScopes(OAuthScope[] granted, OAuthScope[] required) {
             if(granted.length == 0 || required.length == 0) {
-                LOGGER.warn("Empty scopes is definitely not valid");
+                LOGGER.warn("warning=empty_scopes_check");
                 return false;
             }
 
@@ -135,7 +139,7 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
             // Make sure we have all the permissions
             boolean valid = grantedScopes.containsAll(requiredScopes);
             if(!valid) {
-                LOGGER.warn("Required: {}, granted: {}", requiredScopes, grantedScopes);
+                LOGGER.warn("warning=scopes_not_valid required_scopes={} granted_scopes={}", requiredScopes, grantedScopes);
             }
 
             return valid;
