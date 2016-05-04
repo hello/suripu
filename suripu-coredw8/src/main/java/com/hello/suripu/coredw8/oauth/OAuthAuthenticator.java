@@ -4,6 +4,8 @@ import com.google.common.base.Optional;
 import com.hello.suripu.coredw8.oauth.stores.PersistentAccessTokenStore;
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
+
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +21,7 @@ public class OAuthAuthenticator implements Authenticator<String, AccessToken> {
     @Override
     public Optional<AccessToken> authenticate(String submittedToken) throws AuthenticationException {
 
-        final Optional<AccessToken> token = tokenStore.getAccessTokenByToken(submittedToken);
+        final Optional<AccessToken> token = tokenStore.getAccessTokenByToken(submittedToken, DateTime.now());
 
         if(!token.isPresent()) {
             LOGGER.warn("Token {} was not present in OAuthAuthenticator", submittedToken);

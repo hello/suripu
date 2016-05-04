@@ -1,7 +1,16 @@
 package com.hello.suripu.coredw8.oauth;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+
+import com.hello.suripu.core.oauth.Application;
+import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.stores.ApplicationStore;
+
 import java.io.IOException;
+import java.util.Set;
+
 import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -25,6 +34,11 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScopesAllowedDynamicFeature.class);
 
+    private final ApplicationStore<Application, ApplicationRegistration> applicationStore;
+
+    public ScopesAllowedDynamicFeature(final ApplicationStore<Application, ApplicationRegistration> applicationStore) {
+        this.applicationStore = applicationStore;
+    }
     @Override
     public void configure(final ResourceInfo resourceInfo, final FeatureContext configuration) {
         final AnnotatedMethod am = new AnnotatedMethod(resourceInfo.getResourceMethod());
@@ -38,7 +52,7 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
         // RolesAllowed on the method takes precedence over PermitAll
         ScopesAllowed ra = am.getAnnotation(ScopesAllowed.class);
         if (ra != null) {
-            configuration.register(new RolesAllowedRequestFilter(ra.value()));
+            configuration.register(new RolesAllowedRequestFilter(ra.value(), applicationStore));
             return;
         }
 
@@ -53,7 +67,7 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
         // RolesAllowed on the class takes precedence over PermitAll
         ra = resourceInfo.getResourceClass().getAnnotation(ScopesAllowed.class);
         if (ra != null) {
-            configuration.register(new RolesAllowedRequestFilter(ra.value()));
+            configuration.register(new RolesAllowedRequestFilter(ra.value(), applicationStore));
         }
     }
 
@@ -62,15 +76,18 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
 
         private final boolean denyAll;
         private final OAuthScope[] scopesAllowed;
+        private final ApplicationStore<Application, ApplicationRegistration> applicationStore;
 
         RolesAllowedRequestFilter() {
             this.denyAll = true;
             this.scopesAllowed = null;
+            this.applicationStore = null;
         }
 
-        RolesAllowedRequestFilter(final OAuthScope[] scopesAllowed) {
+        RolesAllowedRequestFilter(final OAuthScope[] scopesAllowed, final ApplicationStore<Application, ApplicationRegistration> appStore) {
             this.denyAll = false;
             this.scopesAllowed = (scopesAllowed != null) ? scopesAllowed : new OAuthScope[] {};
+            this.applicationStore = appStore;
         }
 
         @Override
@@ -89,12 +106,39 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
             }
 
             final AccessToken accessToken = (AccessToken) requestContext.getSecurityContext().getUserPrincipal();
-            LOGGER.warn("Token ({}) not authorized for any of the allowed scopes {}. Account ID: {}, App ID: {}",
-                accessToken.token,
-                scopesAllowed,
-                accessToken.accountId,
-                accessToken.appId);
-            throw new ForbiddenException();
+            final Optional<Application> applicationOptional = this.applicationStore.getApplicationById(accessToken.appId);
+
+            if(!applicationOptional.isPresent()) {
+                LOGGER.warn("No application with id = {} as specified by token {}", accessToken.appId, accessToken);
+            }
+
+            boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, scopesAllowed);
+            if(!validScopes) {
+                LOGGER.warn("Token ({}) not authorized for any of the allowed scopes {}. Account ID: {}, App ID: {}",
+                    accessToken.token,
+                    scopesAllowed,
+                    accessToken.accountId,
+                    accessToken.appId);
+                throw new ForbiddenException();
+            }
+        }
+
+        public boolean hasRequiredScopes(OAuthScope[] granted, OAuthScope[] required) {
+            if(granted.length == 0 || required.length == 0) {
+                LOGGER.warn("Empty scopes is definitely not valid");
+                return false;
+            }
+
+            final Set<OAuthScope> requiredScopes = Sets.newHashSet(required);
+            final Set<OAuthScope> grantedScopes = Sets.newHashSet(granted);
+
+            // Make sure we have all the permissions
+            boolean valid = grantedScopes.containsAll(requiredScopes);
+            if(!valid) {
+                LOGGER.warn("Required: {}, granted: {}", requiredScopes, grantedScopes);
+            }
+
+            return valid;
         }
     }
 }

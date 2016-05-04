@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Sets;
 
 import com.hello.suripu.core.oauth.AccessTokenUtils;
 import com.hello.suripu.core.oauth.Application;
@@ -12,12 +11,11 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.coredw8.db.AccessTokenDAO;
 import com.hello.suripu.coredw8.oauth.AccessToken;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.joda.time.DateTime;
@@ -37,13 +35,13 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     private static final Long DEFAULT_EXPIRATION_TIME_IN_SECONDS = 86400L * 365; // 365 days
     private static final Logger LOGGER = LoggerFactory.getLogger(com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore.class);
 
-    final LoadingCache<ClientCredentials, Optional<AccessToken>> cache;
+    final LoadingCache<String, Optional<AccessToken>> cache;
 
     // This is called by the cache when it doesn't contain the key
-    final CacheLoader loader = new CacheLoader<ClientCredentials, Optional<AccessToken>>() {
-        public Optional<AccessToken> load(final ClientCredentials clientCredentials) {
-            LOGGER.debug("{} not in cache, fetching from DB", clientCredentials.tokenOrCode);
-            return fromDB(clientCredentials);
+    final CacheLoader loader = new CacheLoader<String, Optional<AccessToken>>() {
+        public Optional<AccessToken> load(final String dirtyToken) throws MissingRequiredScopeException {
+            LOGGER.debug("{} not in cache, fetching from DB", dirtyToken);
+            return fromDB(dirtyToken);
         }
     };
 
@@ -104,8 +102,12 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @return
      */
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
-        final Optional<AccessToken> token = cache.getUnchecked(credentials);
+    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
+        return getAccessTokenByToken(credentials.tokenOrCode, now);
+    }
+
+    public Optional<AccessToken> getAccessTokenByToken(final String dirtyToken, final DateTime now) {
+        final Optional<AccessToken> token = cache.getUnchecked(dirtyToken);
         if(!token.isPresent()) {
             return Optional.absent();
         }
@@ -114,18 +116,6 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         }
 
         return token;
-    }
-
-    public Optional<AccessToken> getAccessTokenByToken(final String token) {
-        final Optional<UUID> optionalTokenUUID = AccessTokenUtils.cleanUUID(token);
-        if(!optionalTokenUUID.isPresent()) {
-            LOGGER.warn("Invalid format for token {}", token);
-            return Optional.absent();
-        }
-
-        final UUID tokenUUID = optionalTokenUUID.get();
-        final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUID);
-        return accessTokenOptional;
     }
 
 
@@ -173,28 +163,10 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return accessToken;
     }
 
-    public boolean hasRequiredScopes(OAuthScope[] granted, OAuthScope[] required) {
-        if(granted.length == 0 || required.length == 0) {
-            LOGGER.warn("Empty scopes is definitely not valid");
-            return false;
-        }
-
-        final Set<OAuthScope> requiredScopes = Sets.newHashSet(required);
-        final Set<OAuthScope> grantedScopes = Sets.newHashSet(granted);
-
-        // Make sure we have all the permissions
-        boolean valid = grantedScopes.containsAll(requiredScopes);
-        if(!valid) {
-            LOGGER.warn("Required: {}, granted: {}", requiredScopes, grantedScopes);
-        }
-
-        return valid;
-    }
-
-    private Optional<AccessToken> fromDB(final ClientCredentials credentials) {
-        final Optional<UUID> optionalTokenUUID = AccessTokenUtils.cleanUUID(credentials.tokenOrCode);
+    private Optional<AccessToken> fromDB(final String dirtyToken) throws MissingRequiredScopeException {
+        final Optional<UUID> optionalTokenUUID = AccessTokenUtils.cleanUUID(dirtyToken);
         if(!optionalTokenUUID.isPresent()) {
-            LOGGER.warn("Invalid format for token {}", credentials.tokenOrCode);
+            LOGGER.warn("Invalid format for token {}", dirtyToken);
             return Optional.absent();
         }
 
@@ -207,9 +179,9 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         }
 
         final AccessToken accessToken = accessTokenOptional.get();
-        final Optional<Long> optionalAppIdFromToken = AccessTokenUtils.extractAppIdFromToken(credentials.tokenOrCode);
+        final Optional<Long> optionalAppIdFromToken = AccessTokenUtils.extractAppIdFromToken(dirtyToken);
         if(!optionalAppIdFromToken.isPresent()) {
-            LOGGER.warn("Invalid appId format for token {}", credentials.tokenOrCode);
+            LOGGER.warn("Invalid appId format for token {}", dirtyToken);
             return Optional.absent();
         }
 
@@ -217,19 +189,6 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
         if(!appIdFromToken.equals(accessToken.appId)) {
             LOGGER.warn("AppId from token is different from appId retrieved from DB ({} vs {})", appIdFromToken, accessToken.appId);
-            return Optional.absent();
-        }
-
-        final Optional<Application> applicationOptional = applicationStore.getApplicationById(accessToken.appId);
-
-        if(!applicationOptional.isPresent()) {
-            LOGGER.warn("No application with id = {} as specified by token {}", accessToken.appId, credentials.tokenOrCode);
-            return Optional.absent();
-        }
-
-        boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, credentials.scopes);
-        if(!validScopes) {
-            LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
             return Optional.absent();
         }
 
