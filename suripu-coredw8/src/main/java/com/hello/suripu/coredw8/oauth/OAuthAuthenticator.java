@@ -23,9 +23,8 @@ public class OAuthAuthenticator implements Authenticator<String, AccessToken> {
     @Override
     public Optional<AccessToken> authenticate(String submittedToken) throws AuthenticationException {
 
-        Optional<AccessToken> token;
         try {
-            token = tokenStore.getAccessTokenByToken(submittedToken, DateTime.now());
+            final Optional<AccessToken> token = tokenStore.getAccessTokenByToken(submittedToken, DateTime.now());
             if(!token.isPresent()) {
                 LOGGER.warn("warning=token_not_present token={}", submittedToken);
             }
