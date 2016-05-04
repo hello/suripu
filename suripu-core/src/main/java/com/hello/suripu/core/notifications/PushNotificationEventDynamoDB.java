@@ -22,15 +22,25 @@ import java.util.Map;
 
 /**
  * Created by jakepiccolo on 5/3/16.
+ *
+ * Hash key: Account ID
+ * Range Key: UTC timestamp
+ *
+ * This class is for storing push notification events that we send to users.
+ * We want this for a couple of reasons:
+ *  1. Auditing purposes (what did we send)
+ *  2. (Most importantly) Avoiding spamming, so we can have logic like "If user hasn't received Insight notification in 3 days..."
+ *
+ * Because there's no guarantee on the amount of notifications we will send, we avoid an ever-growing table by using yearly shards.
  */
 public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNotificationEvent> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PushNotificationEventDynamoDB.class);
 
     public enum Attribute implements com.hello.suripu.core.db.dynamo.Attribute {
-        ACCOUNT_ID("account", "N"),
+        ACCOUNT_ID("account", "N"), // Hash key
         TYPE("type", "S"),
-        TIMESTAMP("timestamp", "N"),
+        TIMESTAMP("timestamp", "N"), // Range key
         BODY("body", "S"),
         TARGET("target", "S"),
         DETAILS("details", "S"),
@@ -159,6 +169,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
                 .put(Attribute.TARGET.shortName(), toAttributeValue(model.helloPushMessage.target))
                 .put(Attribute.DETAILS.shortName(), toAttributeValue(model.helloPushMessage.details));
         if (model.senseId.isPresent()) {
+            // Optional fields are optional lol
             builder.put(Attribute.SENSE_ID.shortName(), toAttributeValue(model.senseId.get()));
         }
         return builder.build();
@@ -172,11 +183,14 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
 
     @Override
     public List<String> getTableNames(final DateTime start, final DateTime end) {
+        // Yearly tables
         final List<DateTime> dateTimes = DateTimeUtil.dateTimesForStartOfYearBetweenDates(start, end);
         final List<String> names = new ArrayList<>(dateTimes.size());
         for (final DateTime dateTime: dateTimes) {
             final String tableName = getTableName(dateTime);
-            names.add(tableName);
+            if (!names.contains(tableName)) { // O(n) but if you're worried about that you don't understand this class.
+                names.add(tableName);
+            }
         }
         return names;
     }
