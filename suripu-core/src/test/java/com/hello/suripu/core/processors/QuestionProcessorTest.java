@@ -239,7 +239,6 @@ public class QuestionProcessorTest {
                 dependency, parentId, now, choices2, AccountInfo.Type.NONE, now,
                 QuestionCategory.ONBOARDING, dependencyResponse));
 
-
         List<Choice> choices3 = new ArrayList<>();
         qid = 3;
         choices.add(new Choice(7, "Yes", qid));
@@ -267,7 +266,6 @@ public class QuestionProcessorTest {
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices4, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE, dependencyResponse));
-
 
         List<Choice> choices5 = new ArrayList<>();
         qid =6;
