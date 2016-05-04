@@ -106,7 +106,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return getAccessTokenByToken(credentials.tokenOrCode, now);
     }
 
-    public Optional<AccessToken> getAccessTokenByToken(final String dirtyToken, final DateTime now) {
+    public Optional<AccessToken> getAccessTokenByToken(final String dirtyToken, final DateTime now) throws MissingRequiredScopeException {
         final Optional<AccessToken> token = cache.getUnchecked(dirtyToken);
         if(!token.isPresent()) {
             return Optional.absent();
@@ -166,7 +166,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     private Optional<AccessToken> fromDB(final String dirtyToken) throws MissingRequiredScopeException {
         final Optional<UUID> optionalTokenUUID = AccessTokenUtils.cleanUUID(dirtyToken);
         if(!optionalTokenUUID.isPresent()) {
-            LOGGER.warn("Invalid format for token {}", dirtyToken);
+            LOGGER.warn("warning=invalid_token_format token={}", dirtyToken);
             return Optional.absent();
         }
 
@@ -174,21 +174,21 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUID);
 
         if(!accessTokenOptional.isPresent()) {
-            LOGGER.warn("{} was not found in accessTokenDAO.getByAccessToken() (UUID)", tokenUUID);
+            LOGGER.warn("warning=token_not_found token={}", tokenUUID);
             return Optional.absent();
         }
 
         final AccessToken accessToken = accessTokenOptional.get();
         final Optional<Long> optionalAppIdFromToken = AccessTokenUtils.extractAppIdFromToken(dirtyToken);
         if(!optionalAppIdFromToken.isPresent()) {
-            LOGGER.warn("Invalid appId format for token {}", dirtyToken);
+            LOGGER.warn("warning=invalid_format_app_id token={}", dirtyToken);
             return Optional.absent();
         }
 
         final Long appIdFromToken = optionalAppIdFromToken.get();
 
         if(!appIdFromToken.equals(accessToken.appId)) {
-            LOGGER.warn("AppId from token is different from appId retrieved from DB ({} vs {})", appIdFromToken, accessToken.appId);
+            LOGGER.warn("warning=app_id_mismatch token_app_id={} db_app_id={}", appIdFromToken, accessToken.appId);
             return Optional.absent();
         }
 
@@ -201,7 +201,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         LOGGER.trace("Token created at = {}", accessToken.createdAt);
         LOGGER.trace("DiffInSeconds = {}", diffInSeconds);
         if(diffInSeconds > accessToken.expiresIn) {
-            LOGGER.warn("Token {} has expired {} seconds ago (accountId = {})", accessToken.serializeAccessToken(), diffInSeconds, accessToken.accountId);
+            LOGGER.warn("warning=expired_token token={} account_id={} secs_since_expiration={}", accessToken.serializeAccessToken(), accessToken.accountId, diffInSeconds);
             return true;
         }
 

@@ -1,6 +1,8 @@
 package com.hello.suripu.coredw8.oauth;
 
 import com.google.common.base.Optional;
+
+import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.coredw8.oauth.stores.PersistentAccessTokenStore;
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
@@ -21,11 +23,15 @@ public class OAuthAuthenticator implements Authenticator<String, AccessToken> {
     @Override
     public Optional<AccessToken> authenticate(String submittedToken) throws AuthenticationException {
 
-        final Optional<AccessToken> token = tokenStore.getAccessTokenByToken(submittedToken, DateTime.now());
-
-        if(!token.isPresent()) {
-            LOGGER.warn("Token {} was not present in OAuthAuthenticator", submittedToken);
+        Optional<AccessToken> token;
+        try {
+            token = tokenStore.getAccessTokenByToken(submittedToken, DateTime.now());
+            if(!token.isPresent()) {
+                LOGGER.warn("warning=token_not_present token={}", submittedToken);
+            }
+            return token;
+        } catch (MissingRequiredScopeException e) {
+            throw new MissingRequiredScopeAuthenticationException(e);
         }
-        return token;
     }
 }

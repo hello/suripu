@@ -39,51 +39,56 @@ public class OAuthCredentialAuthFilter<P extends Principal> extends AuthFilter<S
                     if (prefix.equalsIgnoreCase(method)) {
                         final String credentials = header.substring(space + 1);
                         final Optional<P> principal = authenticator.authenticate(credentials);
-                        if (principal.isPresent()) {
-                            requestContext.setSecurityContext(new SecurityContext() {
-                                @Override
-                                public Principal getUserPrincipal() {
-                                    return principal.get();
-                                }
 
-                                @Override
-                                public boolean isUserInRole(String role) {
-
-                                  final OAuthScope roleScope = OAuthScope.valueOf(role);
-                                  final AccessToken accessToken = (AccessToken)principal.get();
-
-                                  httpRequestBuilder.setAccessToken(accessToken.serializeAccessToken());
-                                  httpRequestBuilder.setApplicationId(accessToken.appId);
-                                  httpRequestBuilder.setAccessTokenCreatedAt(accessToken.createdAt.getMillis());
-
-                                  for(final OAuthScope scope : accessToken.scopes) {
-                                    httpRequestBuilder.addProvidedScopes(scope.name());
-                                  }
-
-                                  httpRequestBuilder.addRequiredScopes(roleScope.name());
-
-                                  logger.putAsync(accessToken.token.toString(), httpRequestBuilder.build().toByteArray());
-
-                                  return authorizer.authorize(principal.get(), roleScope);
-                                }
-
-                                @Override
-                                public boolean isSecure() {
-                                    return requestContext.getSecurityContext().isSecure();
-                                }
-
-                                @Override
-                                public String getAuthenticationScheme() {
-                                    return SecurityContext.BASIC_AUTH;
-                                }
-                            });
-                          return;
+                        if (!principal.isPresent()) {
+                          throw new WebApplicationException(Response.Status.UNAUTHORIZED);
                         }
+
+                        requestContext.setSecurityContext(new SecurityContext() {
+                            @Override
+                            public Principal getUserPrincipal() {
+                                return principal.get();
+                            }
+
+                            @Override
+                            public boolean isUserInRole(String role) {
+
+                              final OAuthScope roleScope = OAuthScope.valueOf(role);
+                              final AccessToken accessToken = (AccessToken)principal.get();
+
+                              httpRequestBuilder.setAccessToken(accessToken.serializeAccessToken());
+                              httpRequestBuilder.setApplicationId(accessToken.appId);
+                              httpRequestBuilder.setAccessTokenCreatedAt(accessToken.createdAt.getMillis());
+
+                              for(final OAuthScope scope : accessToken.scopes) {
+                                httpRequestBuilder.addProvidedScopes(scope.name());
+                              }
+
+                              httpRequestBuilder.addRequiredScopes(roleScope.name());
+
+                              logger.putAsync(accessToken.token.toString(), httpRequestBuilder.build().toByteArray());
+
+                              return authorizer.authorize(principal.get(), roleScope);
+                            }
+
+                            @Override
+                            public boolean isSecure() {
+                                return requestContext.getSecurityContext().isSecure();
+                            }
+
+                            @Override
+                            public String getAuthenticationScheme() {
+                                return SecurityContext.BASIC_AUTH;
+                            }
+                        });
+                      return;
                     }
                 }
+            } catch (MissingRequiredScopeAuthenticationException e) {
+              throw new WebApplicationException(Response.Status.FORBIDDEN);
             } catch (AuthenticationException e) {
-                LOGGER.warn("Error authenticating credentials", e);
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+              LOGGER.error("error=credential_authentication message={}", e);
+              throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         }
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
