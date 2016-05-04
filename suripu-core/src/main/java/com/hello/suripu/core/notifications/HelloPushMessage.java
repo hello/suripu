@@ -32,4 +32,16 @@ public class HelloPushMessage {
                 .add("details", details)
                 .toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof HelloPushMessage)) {
+            return false;
+        }
+
+        final HelloPushMessage other = (HelloPushMessage) obj;
+        return this.body.equals(other.body) &&
+                this.target.equals(other.target) &&
+                this.details.equals(other.details);
+    }
 }
