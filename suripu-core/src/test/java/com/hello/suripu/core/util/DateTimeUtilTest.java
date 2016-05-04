@@ -133,4 +133,34 @@ public class DateTimeUtilTest {
         assertThat(results.get(1), is(new DateTime(2015, 11, 1, 0, 0)));
         assertThat(results.get(2), is(new DateTime(2015, 12, 1, 0, 0)));
     }
+
+    @Test
+    public void testDateTimesForStartOfYearBetweenDatesSameYear() {
+        final DateTime start  = new DateTime(2015, 10, 24, 1, 1);
+        final DateTime end = new DateTime(2015, 11, 24, 1, 1);
+        final List<DateTime> results = DateTimeUtil.dateTimesForStartOfYearBetweenDates(start, end);
+        assertThat(results.size(), is(1));
+        assertThat(results.get(0), is(new DateTime(2015, 1, 1, 0, 0)));
+    }
+
+    @Test
+    public void testDateTimesForStartOfYearBetweenDatesTwoYears() {
+        final DateTime start  = new DateTime(2015, 10, 24, 1, 1);
+        final DateTime end = new DateTime(2016, 4, 24, 1, 1);
+        final List<DateTime> results = DateTimeUtil.dateTimesForStartOfYearBetweenDates(start, end);
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0), is(new DateTime(2015, 1, 1, 0, 0)));
+        assertThat(results.get(1), is(new DateTime(2016, 1, 1, 0, 0)));
+    }
+
+    @Test
+    public void testDateTimesForStartOfYearBetweenDatesThreeYears() {
+        final DateTime start  = new DateTime(2015, 10, 24, 1, 1);
+        final DateTime end = new DateTime(2017, 4, 24, 1, 1);
+        final List<DateTime> results = DateTimeUtil.dateTimesForStartOfYearBetweenDates(start, end);
+        assertThat(results.size(), is(3));
+        assertThat(results.get(0), is(new DateTime(2015, 1, 1, 0, 0)));
+        assertThat(results.get(1), is(new DateTime(2016, 1, 1, 0, 0)));
+        assertThat(results.get(2), is(new DateTime(2017, 1, 1, 0, 0)));
+    }
 }
