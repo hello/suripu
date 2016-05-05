@@ -2,8 +2,10 @@ package com.hello.suripu.core.notifications;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.hello.suripu.core.models.Sensor;
+
+import java.util.Objects;
 
 public class HelloPushMessage {
     public final String body;
@@ -26,7 +28,7 @@ public class HelloPushMessage {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(HelloPushMessage.class)
+        return MoreObjects.toStringHelper(HelloPushMessage.class)
                 .add("body", body)
                 .add("target", target)
                 .add("details", details)
@@ -40,8 +42,8 @@ public class HelloPushMessage {
         }
 
         final HelloPushMessage other = (HelloPushMessage) obj;
-        return this.body.equals(other.body) &&
-                this.target.equals(other.target) &&
-                this.details.equals(other.details);
+        return Objects.equals(body, other.body) &&
+                Objects.equals(target, other.target) &&
+                Objects.equals(details, other.details);
     }
 }

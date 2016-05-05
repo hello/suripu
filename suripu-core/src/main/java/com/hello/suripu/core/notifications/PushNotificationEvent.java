@@ -4,6 +4,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 
+import java.util.Objects;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -46,11 +48,11 @@ public class PushNotificationEvent {
         }
 
         final PushNotificationEvent event = (PushNotificationEvent) obj;
-        return this.accountId.equals(event.accountId) &&
-                this.type.equals(event.type) &&
-                this.timestamp.equals(event.timestamp) &&
-                this.helloPushMessage.equals(event.helloPushMessage) &&
-                this.senseId.equals(event.senseId);
+        return Objects.equals(accountId, event.accountId) &&
+                Objects.equals(type, event.type) &&
+                Objects.equals(timestamp, event.timestamp) &&
+                Objects.equals(helloPushMessage, event.helloPushMessage) &&
+                Objects.equals(senseId, event.senseId);
     }
 
     @Override
