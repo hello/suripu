@@ -125,7 +125,7 @@ public class Question {
                     }
                 }
             }
-            return QuestionCategory.NONE;
+            throw new IllegalArgumentException();
         }
     }
 
