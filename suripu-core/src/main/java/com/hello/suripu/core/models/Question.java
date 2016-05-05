@@ -3,7 +3,6 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.hello.suripu.core.models.Questions.QuestionCategory;
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -101,6 +100,33 @@ public class Question {
             throw new IllegalArgumentException();
         }
 
+    }
+
+    public enum QuestionCategory {
+        NONE("none"),
+        ONBOARDING("onboarding"),
+        BASE("base"),
+        DAILY("daily"),
+        ANOMALY_LIGHT("anomaly_light"),
+        GOAL_GO_OUTSIDE("goal_go_outside"),
+        GOAL("goal");
+
+        private String value;
+
+        private QuestionCategory(String value) { this.value = value; }
+
+        public String toString() { return value; }
+
+        public static QuestionCategory fromString(final String text) {
+            if (text != null) {
+                for (final QuestionCategory category : QuestionCategory.values()) {
+                    if (text.equalsIgnoreCase(category.toString())) {
+                        return category;
+                    }
+                }
+            }
+            return QuestionCategory.NONE;
+        }
     }
 
     @JsonProperty("id")

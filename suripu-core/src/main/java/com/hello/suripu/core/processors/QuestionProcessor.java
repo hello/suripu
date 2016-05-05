@@ -13,7 +13,6 @@ import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
-import com.hello.suripu.core.models.Questions.QuestionCategory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
@@ -56,7 +55,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds = ArrayListMultimap.create();
     private final Map<Integer, Question> questionIdMap = new HashMap<>();
     private final Set<Integer> baseQuestionIds = new HashSet<>();
-    private final Map<QuestionCategory, List<Integer>> questionCategoryMap = new HashMap<>();
+    private final Map<Question.QuestionCategory, List<Integer>> questionCategoryMap = new HashMap<>();
 
     public static class Builder {
         private QuestionResponseDAO questionResponseDAO;
@@ -64,7 +63,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
         private Map<Integer, Question> questionIdMap;
         private Set<Integer> baseQuestionIds;
-        private Map<QuestionCategory, List<Integer>> questionCategoryMap;
+        private Map<Question.QuestionCategory, List<Integer>> questionCategoryMap;
 
         public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
             this.questionResponseDAO = questionResponseDAO;
@@ -121,7 +120,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                              final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
                              final Map<Integer, Question> questionIdMap,
                              final Set<Integer> baseQuestionIds,
-                             final Map<QuestionCategory, List<Integer>> questionCategoryMap) {
+                             final Map<Question.QuestionCategory, List<Integer>> questionCategoryMap) {
         this.questionResponseDAO = questionResponseDAO;
         this.checkSkipsNum = checkSkipsNum;
         this.availableQuestionIds.putAll(availableQuestionIds);
@@ -187,7 +186,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 final Question questionTemplate = this.questionIdMap.get(qid);
 
                 // if anomaly NOT enabled, SKIP
-                if (questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                if (questionTemplate.category.equals(Question.QuestionCategory.ANOMALY_LIGHT)) {
                     if (!hasAnomalyLightQuestionEnabled(accountId)) {
                         LOGGER.debug("key=anomaly-question value=not-enabled-for-{}", accountId);
                         continue;
@@ -338,7 +337,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         // check how often we send this question to the user.
         // For now, no more than 1 in 2 weeks
-        final Integer lightAnomalyId = this.questionCategoryMap.get(QuestionCategory.ANOMALY_LIGHT).get(0);
+        final Integer lightAnomalyId = this.questionCategoryMap.get(Question.QuestionCategory.ANOMALY_LIGHT).get(0);
         final ImmutableList<AccountQuestion> askedQuestions = questionResponseDAO.getRecentAskedQuestionByQuestionId(
                 accountId, lightAnomalyId, 1);
 
@@ -367,7 +366,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         final Set<Integer> answeredIds = new HashSet<>(this.questionResponseDAO.getAnsweredOnboardingQuestions(accountId));
 
         final List<Question> onboardingQs = new ArrayList<>();
-        for (final Integer qid : this.questionCategoryMap.get(QuestionCategory.ONBOARDING)) {
+        for (final Integer qid : this.questionCategoryMap.get(Question.QuestionCategory.ONBOARDING)) {
             if (!answeredIds.contains(qid)) {
                 onboardingQs.add(questionIdMap.get(qid));
             }

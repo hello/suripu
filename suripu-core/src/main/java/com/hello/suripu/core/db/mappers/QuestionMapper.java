@@ -4,7 +4,6 @@ import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 
-import com.hello.suripu.core.models.Questions.QuestionCategory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
@@ -56,7 +55,7 @@ public class QuestionMapper implements ResultSetMapper<Question> {
                 choices,
                 AccountInfo.Type.fromString(r.getString("account_info")),
                 createdLocal,
-                QuestionCategory.fromString(r.getString("category"))
+                Question.QuestionCategory.fromString(r.getString("category"))
         );
 
         return question;
