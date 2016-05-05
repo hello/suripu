@@ -42,7 +42,7 @@ public class PushNotificationEvent {
     //region Object overrides
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == null || !(obj instanceof PushNotificationEvent)) {
             return false;
         }
