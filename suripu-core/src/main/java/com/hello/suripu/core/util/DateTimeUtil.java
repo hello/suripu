@@ -84,4 +84,14 @@ public class DateTimeUtil {
         }
         return results;
     }
+
+    public static List<DateTime> dateTimesForStartOfYearBetweenDates(final DateTime start, final DateTime end) {
+        final List<DateTime> results = Lists.newArrayList();
+        DateTime currDateTime = start.withDayOfYear(1).withTimeAtStartOfDay();
+        while (!currDateTime.isAfter(end)) {
+            results.add(currDateTime);
+            currDateTime = currDateTime.plusYears(1);
+        }
+        return results;
+    }
 }
