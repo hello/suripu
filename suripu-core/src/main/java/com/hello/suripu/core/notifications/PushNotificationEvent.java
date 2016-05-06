@@ -12,23 +12,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by jakepiccolo on 5/3/16.
  */
 public class PushNotificationEvent {
-
-    enum Type {
-        SLEEP_SCORE,
-        ROOM_CONDITIONS,
-        INSIGHT,
-        SLEEP_PILL_BATTERY_LOW,
-        SENSE_OFFLINE,
-        PILL_OFFLINE
-    }
-
     public final Long accountId;
-    public final Type type;
+    public final String type;
     public final DateTime timestamp;
     public final HelloPushMessage helloPushMessage;
     public final Optional<String> senseId;
 
-    protected PushNotificationEvent(final Long accountId, final Type type, final DateTime timestamp,
+    protected PushNotificationEvent(final Long accountId, final String type, final DateTime timestamp,
                                     final HelloPushMessage helloPushMessage, final Optional<String> senseId)
     {
         this.accountId = accountId;
@@ -77,7 +67,7 @@ public class PushNotificationEvent {
 
     public static class Builder {
         private Long accountId;
-        private Type type;
+        private String type;
         private DateTime timestamp;
         private HelloPushMessage helloPushMessage;
         private Optional<String> senseId = Optional.absent();
@@ -95,7 +85,7 @@ public class PushNotificationEvent {
             return this;
         }
 
-        public Builder withType(final Type type) {
+        public Builder withType(final String type) {
             this.type = type;
             return this;
         }
