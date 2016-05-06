@@ -97,10 +97,6 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
             }
             return new DateTime(l, DateTimeZone.UTC);
         }
-
-        PushNotificationEvent.Type getEventType(final Map<String, AttributeValue> item) {
-            return PushNotificationEvent.Type.valueOf(getString(item));
-        }
     }
 
 
@@ -236,7 +232,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     public Response<List<PushNotificationEvent>> query(final Long accountId,
                                                        final DateTime start,
                                                        final DateTime end,
-                                                       final PushNotificationEvent.Type type)
+                                                       final String type)
     {
         final Expression filterExpression = Expressions.equals(Attribute.TYPE, toAttributeValue(type));
         final Expression keyConditionExpression = getKeyConditionExpression(accountId, start, end);
@@ -265,10 +261,6 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
         return toAttributeValue(dt.getMillis());
     }
 
-    private static AttributeValue toAttributeValue(final PushNotificationEvent.Type type) {
-        return toAttributeValue(type.toString());
-    }
-
     private static PushNotificationEvent toPushNotificationEvent(final Map<String, AttributeValue> item) {
         final HelloPushMessage helloPushMessage = new HelloPushMessage(
                 Attribute.BODY.getString(item),
@@ -276,7 +268,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
                 Attribute.DETAILS.getString(item));
         return PushNotificationEvent.newBuilder()
                 .withAccountId(Attribute.ACCOUNT_ID.getLong(item))
-                .withType(Attribute.TYPE.getEventType(item))
+                .withType(Attribute.TYPE.getString(item))
                 .withTimestamp(Attribute.TIMESTAMP.getDateTime(item))
                 .withHelloPushMessage(helloPushMessage)
                 .withSenseId(Attribute.SENSE_ID.getString(item))
