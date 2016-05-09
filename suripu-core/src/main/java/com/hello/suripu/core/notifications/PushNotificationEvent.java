@@ -3,6 +3,7 @@ package com.hello.suripu.core.notifications;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.Objects;
 
@@ -75,9 +76,10 @@ public class PushNotificationEvent {
         public PushNotificationEvent build() {
             checkNotNull(accountId);
             checkNotNull(type);
-            checkNotNull(timestamp);
             checkNotNull(helloPushMessage);
-            return new PushNotificationEvent(accountId, type, timestamp, helloPushMessage, senseId);
+
+            final DateTime eventTimestamp = timestamp == null ? DateTime.now(DateTimeZone.UTC) : timestamp;
+            return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId);
         }
 
         public Builder withAccountId(final Long accountId) {
@@ -90,6 +92,9 @@ public class PushNotificationEvent {
             return this;
         }
 
+        /**
+         * Set the timestamp for the event. Defaults to DateTime.now(UTC)
+         */
         public Builder withTimestamp(final DateTime timestamp) {
             this.timestamp = timestamp;
             return this;
