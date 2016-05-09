@@ -19,13 +19,30 @@ public class MobilePushNotificationProcessor {
 
     private final AmazonSNS sns;
     private final NotificationSubscriptionsReadDAO dao;
+    private final PushNotificationEventDynamoDB pushNotificationEventDynamoDB;
 
-    public MobilePushNotificationProcessor(final AmazonSNS sns, final NotificationSubscriptionsReadDAO dao) {
+    public MobilePushNotificationProcessor(final AmazonSNS sns, final NotificationSubscriptionsReadDAO dao,
+                                           final PushNotificationEventDynamoDB pushNotificationEventDynamoDB) {
         this.sns = sns;
         this.dao = dao;
+        this.pushNotificationEventDynamoDB = pushNotificationEventDynamoDB;
     }
 
-    public void push(final Long accountId, final HelloPushMessage pushMessage) {
+    public PushNotificationEventDynamoDB getPushNotificationEventDynamoDB() {
+        return pushNotificationEventDynamoDB;
+    }
+
+    public void push(final PushNotificationEvent event) {
+
+        // We often want at-most-once delivery of push notifications, so we insert the record to DDB first.
+        // That way if something later in this method fails, we won't accidentally send the same notification twice.
+        final boolean successfullyInserted = pushNotificationEventDynamoDB.insert(event);
+        if (!successfullyInserted) {
+            return;
+        }
+
+        final Long accountId = event.accountId;
+        final HelloPushMessage pushMessage = event.helloPushMessage;
 
         final List<MobilePushRegistration> registrations = dao.getSubscriptions(accountId);
         for (final MobilePushRegistration reg : registrations) {
