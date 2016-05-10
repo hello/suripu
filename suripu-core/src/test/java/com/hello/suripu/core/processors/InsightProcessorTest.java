@@ -390,13 +390,14 @@ public class InsightProcessorTest {
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
-        //TEST - Correct date for weekly insight, but Goal inserted, so do nothing
-        Mockito.verify(spyInsightProcessor, Mockito.never()).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
+        //TEST - Correct date for weekly insight, but Goal inserted does nothing, so generate wake variance, get Optional.absent() b/c no data
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
+        Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
 
-        //Don't look for random old insight because Goal inserted. No other insights generated
-        Mockito.verify(spyInsightProcessor, Mockito.never()).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
+        //Look for random old insight, but get nothing because wrong date
+        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAODynamoDB, InsightCard.Category.HUMIDITY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAODynamoDB, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAODynamoDB, InsightCard.Category.SLEEP_QUALITY);
