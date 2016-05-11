@@ -59,7 +59,6 @@ import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
-import com.sun.demo.jvmti.hprof.Tracker;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -407,33 +406,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-    //the testable version
-    protected ImmutableList<TrackerMotion> filterPillPairingMotionsWithTimes(final ImmutableList<TrackerMotion> motions, final List<DateTime> pairTimes) {
-
-        final long timeAfterCreationToFilter = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
-        final long timeBeforeCreationToFilter = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
-        final List<TrackerMotion> filteredMotions = Lists.newArrayList();
-
-        MOTION_LOOP:
-        for (final TrackerMotion m : motions) {
-
-            for (final DateTime t : pairTimes) {
-                final long tp = t.withZone(DateTimeZone.UTC).getMillis();
-
-                if (m.timestamp > tp - timeBeforeCreationToFilter && m.timestamp < tp + timeAfterCreationToFilter) {
-                    continue MOTION_LOOP;
-                }
-            }
-
-
-            filteredMotions.add(m);
-
-        }
-
-        return ImmutableList.copyOf(filteredMotions);
-    }
-
-
     protected ImmutableList<TrackerMotion> filterPillPairingMotions(final ImmutableList<TrackerMotion> motions, final long accountId) {
         final List<DateTime> pairTimes =  ImmutableList.copyOf(Collections.EMPTY_LIST);
         final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId); //get pills
@@ -442,7 +414,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             pairTimes.add(pill.created);
         }
 
-        return filterPillPairingMotionsWithTimes(motions,pairTimes);
+        return timelineUtils.filterPillPairingMotionsWithTimes(motions,pairTimes);
     }
 
 
@@ -451,15 +423,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     protected Optional<OneDaysSensorData> getSensorData(final long accountId,final DateTime date, final DateTime starteTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,final Optional<TimelineFeedback> newFeedback) {
 
 
-
-
-
-
         ImmutableList<TrackerMotion> originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, starteTimeLocalUTC, endTimeLocalUTC);
-
-        if (this.hasRemovePairingMotions(accountId)) {
-            originalTrackerMotions = filterPillPairingMotions(originalTrackerMotions,accountId);
-        }
 
         if (originalTrackerMotions.isEmpty()) {
             LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, starteTimeLocalUTC);
@@ -471,8 +435,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         // get partner tracker motion, if available
         ImmutableList<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
 
+        //filter pairing motions for a good first night's experience
         if (this.hasRemovePairingMotions(accountId)) {
-            originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions,accountId);
+            //my motions
+            originalTrackerMotions = filterPillPairingMotions(originalTrackerMotions,accountId);
+
+            //my partner's motions
+            if (!originalPartnerMotions.isEmpty()) {
+                final long partnerAccountId = originalPartnerMotions.get(0).accountId;
+                originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions, accountId);
+            }
         }
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
