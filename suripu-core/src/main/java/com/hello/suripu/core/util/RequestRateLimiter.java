@@ -47,7 +47,7 @@ public class RequestRateLimiter<K> {
         }
 
         if (tokenBucket == null) {
-            return false;
+            return true;
         }
 
         return tokenBucket.tryConsume(tokens);
