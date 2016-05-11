@@ -1475,4 +1475,32 @@ public class TimelineUtils {
 
         return events;
     }
+
+    //basic idea is to drop motions that occur near the pairing times of the pills
+    public ImmutableList<TrackerMotion> filterPillPairingMotionsWithTimes(final ImmutableList<TrackerMotion> motions, final List<DateTime> pairTimes) {
+
+        final long timeAfterCreationToFilter = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final long timeBeforeCreationToFilter = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final List<TrackerMotion> filteredMotions = Lists.newArrayList();
+
+        MOTION_LOOP:
+        for (final TrackerMotion m : motions) {
+
+            for (final DateTime t : pairTimes) {
+                final long tp = t.withZone(DateTimeZone.UTC).getMillis();
+
+                if (m.timestamp >= tp - timeBeforeCreationToFilter && m.timestamp <= tp + timeAfterCreationToFilter) {
+                    continue MOTION_LOOP;
+                }
+            }
+
+
+            filteredMotions.add(m);
+
+        }
+
+        LOGGER.info("action=filtering_tracker_motion num_points_dropped={}",motions.size() - filteredMotions.size());
+
+        return ImmutableList.copyOf(filteredMotions);
+    }
 }
