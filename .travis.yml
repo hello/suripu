@@ -14,9 +14,15 @@ script:
 - mvn versions:set -DnewVersion=$BUILD_NUMBER
 - mvn versions:commit
 - mvn --settings settings.xml -DskipITs deploy
-#branches:
-#  only:
-#  - master
+after_script:
+- git config --global user.email "builds@travis-ci.com"
+- git config --global user.name "Travis CI"
+- export GIT_TAG=$APP_NAME-$BUILD_NUMBER
+- git tag $GIT_TAG -a -m "Generated tag from TravisCI build $TRAVIS_BUILD_NUMBER"
+- git push --quiet git@github.com:hello/suripu.git --tags
+branches:
+  only:
+  - travis_updates
 notifications:
   email:
   - infra@sayhello.com
