@@ -407,7 +407,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
     protected ImmutableList<TrackerMotion> filterPillPairingMotions(final ImmutableList<TrackerMotion> motions, final long accountId) {
-        final List<DateTime> pairTimes =  ImmutableList.copyOf(Collections.EMPTY_LIST);
+        final List<DateTime> pairTimes =  Lists.newArrayList();
         final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId); //get pills
 
 
