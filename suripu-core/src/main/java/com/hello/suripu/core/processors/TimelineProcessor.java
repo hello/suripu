@@ -59,6 +59,7 @@ import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.sun.demo.jvmti.hprof.Tracker;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -406,13 +407,59 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
+    //the testable version
+    protected ImmutableList<TrackerMotion> filterPillPairingMotionsWithTimes(final ImmutableList<TrackerMotion> motions, final List<DateTime> pairTimes) {
 
+        final long timeAfterCreationToFilter = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final long timeBeforeCreationToFilter = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final List<TrackerMotion> filteredMotions = Lists.newArrayList();
+
+        MOTION_LOOP:
+        for (final TrackerMotion m : motions) {
+
+            for (final DateTime t : pairTimes) {
+                final long tp = t.withZone(DateTimeZone.UTC).getMillis();
+
+                if (m.timestamp > tp - timeBeforeCreationToFilter && m.timestamp < tp + timeAfterCreationToFilter) {
+                    continue MOTION_LOOP;
+                }
+            }
+
+
+            filteredMotions.add(m);
+
+        }
+
+        return ImmutableList.copyOf(filteredMotions);
+    }
+
+
+    protected ImmutableList<TrackerMotion> filterPillPairingMotions(final ImmutableList<TrackerMotion> motions, final long accountId) {
+        final List<DateTime> pairTimes =  ImmutableList.copyOf(Collections.EMPTY_LIST);
+        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId); //get pills
+
+        for (final DeviceAccountPair pill : pills) {
+            pairTimes.add(pill.created);
+        }
+
+        return filterPillPairingMotionsWithTimes(motions,pairTimes);
+    }
 
 
 
 
     protected Optional<OneDaysSensorData> getSensorData(final long accountId,final DateTime date, final DateTime starteTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,final Optional<TimelineFeedback> newFeedback) {
-        final List<TrackerMotion> originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+
+
+
+
+
+
+        ImmutableList<TrackerMotion> originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+
+        if (this.hasRemovePairingMotions(accountId)) {
+            originalTrackerMotions = filterPillPairingMotions(originalTrackerMotions,accountId);
+        }
 
         if (originalTrackerMotions.isEmpty()) {
             LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, starteTimeLocalUTC);
@@ -422,8 +469,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         LOGGER.debug("Length of originalTrackerMotion is {} for {} on {}", originalTrackerMotions.size(), accountId, starteTimeLocalUTC);
 
         // get partner tracker motion, if available
-        final List<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+        ImmutableList<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
 
+        if (this.hasRemovePairingMotions(accountId)) {
+            originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions,accountId);
+        }
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
@@ -795,13 +845,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
+    private ImmutableList<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
         if (optionalPartnerAccountId.isPresent()) {
             final Long partnerAccountId = optionalPartnerAccountId.get();
             return pillDataDAODynamoDB.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
         }
-        return Collections.EMPTY_LIST;
+        return ImmutableList.copyOf(Collections.EMPTY_LIST);
     }
     /**
      * Fetch partner motion events

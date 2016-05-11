@@ -166,4 +166,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.CBTI_GOAL_GO_OUTSIDE, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasRemovePairingMotions(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.PILL_PAIR_MOTION_FILTER, accountId, Collections.EMPTY_LIST);
+    }
+
 }
