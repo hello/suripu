@@ -30,6 +30,7 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.Feature;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
@@ -56,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -352,12 +354,12 @@ public class TimelineProcessorTest {
 
         @Override
         public ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId) {
-            return null;
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 
         @Override
         public ImmutableList<DeviceAccountPair> getLinkedAccountFromPillId(@Bind("pill_id") String deviceId) {
-            return null;
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 
         @Override
@@ -491,6 +493,7 @@ public class TimelineProcessorTest {
         }
 
         features.put(FeatureFlipper.ONLINE_HMM_ALGORITHM,true);
+        features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
 
         {
             final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline();
