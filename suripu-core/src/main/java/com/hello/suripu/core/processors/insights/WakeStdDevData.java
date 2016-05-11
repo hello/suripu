@@ -16,7 +16,8 @@ import java.util.Map;
  */
 public class WakeStdDevData {
     // see https://s3.amazonaws.com/hello-data/insights-raw-data/wakeStdDev_distribution_2015_07_25.csv
-    private static String DISTRIBUTION_DATA = "0,0.002\n"+
+    private static String DISTRIBUTION_DATA =
+                "0,0.002\n"+
                 "1,0.4\n"+
                 "2,0.6\n"+
                 "3,0.9\n"+
@@ -193,7 +194,7 @@ public class WakeStdDevData {
     private ImmutableMap<Integer, Integer> distributionLookup;
 
 
-    public  WakeStdDevData() {
+    public WakeStdDevData() {
         final Map<Integer, Integer> temp = new HashMap<>();
         final String[] rows = DISTRIBUTION_DATA.split("\n");
         for(final String row : rows) {
@@ -207,7 +208,7 @@ public class WakeStdDevData {
 
 
         public int getWakeStdDevPercentile(final int wakeStdDevValue) {
-        if (wakeStdDevValue > MAX_WAKE_STDDEV) {
+        if (wakeStdDevValue >= MAX_WAKE_STDDEV) {
             return MAX_WAKE_STDDEV_PERCENTILE;
         }
         return this.distributionLookup.get(wakeStdDevValue);
