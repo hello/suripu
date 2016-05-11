@@ -1,7 +1,25 @@
 language: java
+jdk:
+- oraclejdk7
 sudo: false
 install: mvn --version
-script: mvn --settings settings.xml clean -DskipITs deploy -q
+env:
+  global:
+  - APP_NAME=suripu
+  - BUILD_NUMBER=0.8.$TRAVIS_BUILD_NUMBER
+  - secure: ZtcabJIbdoPJSX8tHU6Hocj1dknD/UxATnqvvVo3RK9CwWYlzEbO/3AyAqul78ythMOnvouU9dIFoxjxb4lek1nsd3dvSix7zNa4YVDvcj0+uV/IBl12OqTO2RnxlP5MPIeRzkrhs0vg1OfvxquMizBcBdF7MbwmdUtL1g1IA3A=
+  - secure: Ed/gOoioqi7oacM+HpYsBF8nfXE6sd3Y99ZtNKg4mTrNUB9adF9jijv2B669TP+L/QXNoMvZizF7Cq+JFxjgH39pEMuMJfMsci2upxEtymZRbWKv3Kr6wM8AF7Jdyinf71RkIZC3VffKOluQ6vSFx1O51oVuSyrjyGxOYraPKWI=
+script:
+- mvn clean
+- mvn versions:set -DnewVersion=$BUILD_NUMBER
+- mvn versions:commit
+- mvn --settings settings.xml -DskipITs deploy
+after_script:
+- git config --global user.email "builds@travis-ci.com"
+- git config --global user.name "Travis CI"
+- export GIT_TAG=$APP_NAME-$BUILD_NUMBER
+- git tag $GIT_TAG -a -m "Generated tag from TravisCI build $TRAVIS_BUILD_NUMBER"
+- git push --quiet git@github.com:hello/suripu.git --tags
 branches:
   only:
   - master
@@ -10,9 +28,3 @@ notifications:
   - infra@sayhello.com
   slack:
     secure: aRgIgBV/1ZenkdCkXQ0xniTvgV6SWyLCb9dxoAPr3uUe+Tsy3B3Bso2ZJRPnef6kPtfZQX8JSAoVBaGosBVRMKJ2IDgb8KxfTKqQT4NKF+UJjOkGYY6C81A+Y5nl5Wt7xFjR8o0pn/C1kn0KS4gittVZcxB6BsFy2HYK1SPNd3w=
-jdk:
-- oraclejdk7
-env:
-  global:
-  - secure: ZtcabJIbdoPJSX8tHU6Hocj1dknD/UxATnqvvVo3RK9CwWYlzEbO/3AyAqul78ythMOnvouU9dIFoxjxb4lek1nsd3dvSix7zNa4YVDvcj0+uV/IBl12OqTO2RnxlP5MPIeRzkrhs0vg1OfvxquMizBcBdF7MbwmdUtL1g1IA3A=
-  - secure: Ed/gOoioqi7oacM+HpYsBF8nfXE6sd3Y99ZtNKg4mTrNUB9adF9jijv2B669TP+L/QXNoMvZizF7Cq+JFxjgH39pEMuMJfMsci2upxEtymZRbWKv3Kr6wM8AF7Jdyinf71RkIZC3VffKOluQ6vSFx1O51oVuSyrjyGxOYraPKWI=
