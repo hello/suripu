@@ -28,4 +28,3 @@ notifications:
   - infra@sayhello.com
   slack:
     secure: aRgIgBV/1ZenkdCkXQ0xniTvgV6SWyLCb9dxoAPr3uUe+Tsy3B3Bso2ZJRPnef6kPtfZQX8JSAoVBaGosBVRMKJ2IDgb8KxfTKqQT4NKF+UJjOkGYY6C81A+Y5nl5Wt7xFjR8o0pn/C1kn0KS4gittVZcxB6BsFy2HYK1SPNd3w=
-
