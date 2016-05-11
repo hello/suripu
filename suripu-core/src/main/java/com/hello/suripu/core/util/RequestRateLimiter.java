@@ -25,7 +25,7 @@ public class RequestRateLimiter<K> {
     public static <K> RequestRateLimiter<K> create(final int maxSize, final long tokensPerSecond) {
         final LoadingCache<K, TokenBucket> cache = CacheBuilder.newBuilder()
                 .maximumSize(maxSize)
-                .expireAfterAccess(2L, TimeUnit.SECONDS)
+                .expireAfterAccess(5L, TimeUnit.MINUTES)
                 .build(new CacheLoader<K, TokenBucket>() {
                     @Override
                     public TokenBucket load(K key) throws Exception {
