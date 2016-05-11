@@ -8,30 +8,11 @@ branches:
 notifications:
   email:
   - infra@sayhello.com
-  hipchat:
-    rooms:
-    - mDwGqxGUPFlLf8CBEWGs9JPzZBmhJiQahoaHmlns@ops
-    template:
-    - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+  slack:
+    secure: aRgIgBV/1ZenkdCkXQ0xniTvgV6SWyLCb9dxoAPr3uUe+Tsy3B3Bso2ZJRPnef6kPtfZQX8JSAoVBaGosBVRMKJ2IDgb8KxfTKqQT4NKF+UJjOkGYY6C81A+Y5nl5Wt7xFjR8o0pn/C1kn0KS4gittVZcxB6BsFy2HYK1SPNd3w=
 jdk:
 - oraclejdk7
 env:
   global:
   - secure: ZtcabJIbdoPJSX8tHU6Hocj1dknD/UxATnqvvVo3RK9CwWYlzEbO/3AyAqul78ythMOnvouU9dIFoxjxb4lek1nsd3dvSix7zNa4YVDvcj0+uV/IBl12OqTO2RnxlP5MPIeRzkrhs0vg1OfvxquMizBcBdF7MbwmdUtL1g1IA3A=
   - secure: Ed/gOoioqi7oacM+HpYsBF8nfXE6sd3Y99ZtNKg4mTrNUB9adF9jijv2B669TP+L/QXNoMvZizF7Cq+JFxjgH39pEMuMJfMsci2upxEtymZRbWKv3Kr6wM8AF7Jdyinf71RkIZC3VffKOluQ6vSFx1O51oVuSyrjyGxOYraPKWI=
-
-#before_deploy: "./build.sh"
-#deploy:
-#  provider: s3
-#  access_key_id: AKIAISH6DVH456763TWA
-#  secret_access_key:
-#    secure: e8AaJVEs2Xj31P2jMKXLQhqFFdiqmUhRe10FptP69C6SLhDxIrUiy+ZRtim2x9cQyFGVeOGOjBz/6qARqo2rsArndW2zOUi7q9tYYfm0GK8wG4XccpvDko+8+CaPJn/ZVnVW8tm0Voxn0HUXvyilmrTNKCcHDq/kZZqAhP/5o0o=
-#  bucket: hello-deploy
-#  local-dir: build
-#  on:
-#    repo: hello/suripu
-
-#cache:
-#  bundler : true
-#  directories:
-#  - $HOME/.m2
