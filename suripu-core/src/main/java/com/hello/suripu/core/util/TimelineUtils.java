@@ -1499,6 +1499,8 @@ public class TimelineUtils {
 
         }
 
+        LOGGER.info("action=filtering_tracker_motion num_points_dropped={}",motions.size() - filteredMotions.size());
+
         return ImmutableList.copyOf(filteredMotions);
     }
 }

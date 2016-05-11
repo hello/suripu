@@ -410,9 +410,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<DateTime> pairTimes =  ImmutableList.copyOf(Collections.EMPTY_LIST);
         final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId); //get pills
 
+
         for (final DeviceAccountPair pill : pills) {
             pairTimes.add(pill.created);
         }
+
+        LOGGER.info("action=try_filter_pairing_motion account_id={} num_pairing_times={}",accountId,pairTimes.size());
 
         return timelineUtils.filterPillPairingMotionsWithTimes(motions,pairTimes);
     }
