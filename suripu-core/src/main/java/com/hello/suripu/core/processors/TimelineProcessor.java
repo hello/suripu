@@ -443,7 +443,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             //my partner's motions
             if (!originalPartnerMotions.isEmpty()) {
                 final long partnerAccountId = originalPartnerMotions.get(0).accountId;
-                originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions, accountId);
+                originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions, partnerAccountId);
             }
         }
 
