@@ -1,6 +1,7 @@
 package com.hello.suripu.coredw.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
@@ -24,6 +25,7 @@ import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.VotingSleepEvents;
 import com.hello.suripu.coredw.FixtureTest;
+import junit.framework.TestCase;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -1345,6 +1347,34 @@ public class TimelineUtilsTest extends FixtureTest {
         final List<Event> filteredEvents = timelineUtils.removeEventBeforeSignificant(events);
         assertThat(filteredEvents.size(), is(1));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.IN_BED));
+    }
+
+    @Test
+    public void testFilterPillPairingMotionsWithTimes() {
+        final List<TrackerMotion> motions = Lists.newArrayList();
+        final long t0 = new DateTime(2016,1,5,0,0,42).withZone(DateTimeZone.UTC).getMillis();
+        motions.add(new TrackerMotion(0L,0L,0L,t0,42,DateTimeConstants.MILLIS_PER_HOUR*2,1L,2L,3L));
+        motions.add(new TrackerMotion(1L,0L,0L,t0 + DateTimeConstants.MILLIS_PER_MINUTE * 5,42,DateTimeConstants.MILLIS_PER_HOUR*2,1L,2L,3L));
+        motions.add(new TrackerMotion(2L,0L,0L,t0 - DateTimeConstants.MILLIS_PER_MINUTE * 5,42,DateTimeConstants.MILLIS_PER_HOUR*2,1L,2L,3L));
+        motions.add(new TrackerMotion(3L,0L,0L,t0 + DateTimeConstants.MILLIS_PER_MINUTE * 16,42,DateTimeConstants.MILLIS_PER_HOUR*2,1L,2L,3L));
+
+        motions.add(new TrackerMotion(4L,0L,0L,t0 - DateTimeConstants.MILLIS_PER_MINUTE * 10,42,DateTimeConstants.MILLIS_PER_HOUR*2,1L,2L,3L));
+        motions.add(new TrackerMotion(5L,0L,0L,t0 + DateTimeConstants.MILLIS_PER_MINUTE * 17,42,DateTimeConstants.MILLIS_PER_HOUR*2,1L,2L,3L));
+
+        final List<DateTime> times = Lists.newArrayList();
+
+        times.add(new DateTime(t0).withZone(DateTimeZone.UTC));
+        times.add(new DateTime(t0 + DateTimeConstants.MILLIS_PER_MINUTE).withZone(DateTimeZone.UTC));
+
+        final ImmutableList<TrackerMotion> filteredMotions = timelineUtils.filterPillPairingMotionsWithTimes(ImmutableList.copyOf(motions),times);
+
+
+        TestCase.assertTrue(filteredMotions.size() == 2);
+
+        for (final TrackerMotion m : filteredMotions) {
+            TestCase.assertTrue(m.id == 4 || m.id == 5);
+        }
+
     }
 
 }

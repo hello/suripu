@@ -406,13 +406,27 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
+    protected ImmutableList<TrackerMotion> filterPillPairingMotions(final ImmutableList<TrackerMotion> motions, final long accountId) {
+        final List<DateTime> pairTimes =  Lists.newArrayList();
+        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId); //get pills
 
+
+        for (final DeviceAccountPair pill : pills) {
+            pairTimes.add(pill.created);
+        }
+
+        LOGGER.info("action=try_filter_pairing_motion account_id={} num_pairing_times={}",accountId,pairTimes.size());
+
+        return timelineUtils.filterPillPairingMotionsWithTimes(motions,pairTimes);
+    }
 
 
 
 
     protected Optional<OneDaysSensorData> getSensorData(final long accountId,final DateTime date, final DateTime starteTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,final Optional<TimelineFeedback> newFeedback) {
-        final List<TrackerMotion> originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+
+
+        ImmutableList<TrackerMotion> originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, starteTimeLocalUTC, endTimeLocalUTC);
 
         if (originalTrackerMotions.isEmpty()) {
             LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, starteTimeLocalUTC);
@@ -422,8 +436,19 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         LOGGER.debug("Length of originalTrackerMotion is {} for {} on {}", originalTrackerMotions.size(), accountId, starteTimeLocalUTC);
 
         // get partner tracker motion, if available
-        final List<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+        ImmutableList<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
 
+        //filter pairing motions for a good first night's experience
+        if (this.hasRemovePairingMotions(accountId)) {
+            //my motions
+            originalTrackerMotions = filterPillPairingMotions(originalTrackerMotions,accountId);
+
+            //my partner's motions
+            if (!originalPartnerMotions.isEmpty()) {
+                final long partnerAccountId = originalPartnerMotions.get(0).accountId;
+                originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions, partnerAccountId);
+            }
+        }
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
@@ -795,13 +820,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
+    private ImmutableList<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
         if (optionalPartnerAccountId.isPresent()) {
             final Long partnerAccountId = optionalPartnerAccountId.get();
             return pillDataDAODynamoDB.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
         }
-        return Collections.EMPTY_LIST;
+        return ImmutableList.copyOf(Collections.EMPTY_LIST);
     }
     /**
      * Fetch partner motion events

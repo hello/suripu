@@ -106,13 +106,6 @@ public class InsightProcessor {
             InsightCard.Category.SWIM,
             InsightCard.Category.WORK));
 
-    private static final ImmutableSet<InsightCard.Category> goalInsightPool = ImmutableSet.copyOf(Sets.newHashSet(
-            InsightCard.Category.GOAL_COFFEE,
-            InsightCard.Category.GOAL_GO_OUTSIDE,
-            InsightCard.Category.GOAL_SCHEDULE_THOUGHTS,
-            InsightCard.Category.GOAL_SCREENS,
-            InsightCard.Category.GOAL_WAKE_VARIANCE));
-
     public InsightProcessor(@NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                             @NotNull final DeviceReadDAO deviceReadDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
@@ -210,11 +203,6 @@ public class InsightProcessor {
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                   final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
-        if (!Collections.disjoint(recentCategories, goalInsightPool)) {
-            LOGGER.info("Goal insight generated recently for accountId {}, suppressing all other insights", accountId);
-            return Optional.absent();
-        }
-        
         final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTime);
 
         if (toGenerateWeeklyCategory.isPresent()) {
