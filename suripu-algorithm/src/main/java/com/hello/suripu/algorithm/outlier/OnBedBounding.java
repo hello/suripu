@@ -15,7 +15,7 @@ import java.util.Iterator;
  * Created by benjo on 5/12/16.
  */
 public class OnBedBounding {
-    final static HmmPdfInterface[] motionModels = {new PoissonPdf(0.01,0),new PoissonPdf(0.1,0),new PoissonPdf(1.0,0),new PoissonPdf(5.0,0)};
+    final static HmmPdfInterface[] motionModels = {new PoissonPdf(0.01,0),new PoissonPdf(0.1,0),new PoissonPdf(1.0,0),new PoissonPdf(8.0,0)};
     final static double MIN_HMM_PDF_EVAL = 1e-320;
 
     private static boolean isOnBed(final Integer current) {
@@ -29,9 +29,6 @@ public class OnBedBounding {
 
         //general idea is to ignore "blips" separated by ~2 - 3 hours
         //and then flip to "on bed" mode when there is sufficient motion
-        final HmmPdfInterface s0 = motionModels[0];
-        final HmmPdfInterface s1 = PdfCompositeBuilder.newBuilder().withPdf(motionModels[1]).build();
-
 
         //progression is "no motion" (long duration) ---> "a lot of motion" (short duration) --> "very little motion (medium duration) ---> "a lot of motion" ---> no motion (long duration)
         //with some backtracking
@@ -66,10 +63,12 @@ public class OnBedBounding {
 
             if (isOnBed(current) && !onBed) {
                 iOnBed = i;
+                onBed = true;
             }
 
             if (!isOnBed(current) && onBed) {
                 iOffBed = i-1;
+                onBed = false;
             }
         }
 

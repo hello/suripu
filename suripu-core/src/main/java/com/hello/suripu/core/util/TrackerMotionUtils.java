@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -180,6 +181,7 @@ public class TrackerMotionUtils {
         final int maxIdx = (int)((tf - t0) / period) + 1;
 
         final Double [] binsTemp = new Double[maxIdx];
+        Arrays.fill(binsTemp,0.0);
         fillBinsWithTrackerDurations(binsTemp,t0,period,motions,1,false);
 
         final double [] durations = new double[maxIdx];
@@ -196,19 +198,23 @@ public class TrackerMotionUtils {
 
         final IdxPair bedIndices = bedIndicesOptional.get();
 
+        LOGGER.info("action=found_on_bed_indices idx1={} idx2={}",bedIndices.i1,bedIndices.i2);
 
         final List<TrackerMotion> filteredMotions = Lists.newArrayList();
 
         for (final TrackerMotion m : motions) {
             final int idx = getIndex(m.timestamp,t0,period,maxIdx);
 
-            if (idx < bedIndices.i1 || idx > bedIndices.i2) {
+            //only filter beginning
+            if (idx < bedIndices.i1) {
                 continue;
             }
 
             filteredMotions.add(m);
         }
 
+
+        LOGGER.info("action=filtering_tracker_motion num_points_dropped={}",motions.size() - filteredMotions.size());
         return ImmutableList.copyOf(filteredMotions);
 
 
