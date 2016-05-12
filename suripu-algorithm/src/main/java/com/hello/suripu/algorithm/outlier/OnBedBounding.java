@@ -15,7 +15,7 @@ import java.util.Iterator;
  * Created by benjo on 5/12/16.
  */
 public class OnBedBounding {
-    final static HmmPdfInterface[] motionModels = {new PoissonPdf(0.01,0),new PoissonPdf(0.1,0),new PoissonPdf(1.0,0),new PoissonPdf(8.0,0)};
+    final static HmmPdfInterface[] motionModels = {new PoissonPdf(0.01,0),new PoissonPdf(0.1,0),new PoissonPdf(1.0,0),new PoissonPdf(5.0,0)};
     final static double MIN_HMM_PDF_EVAL = 1e-320;
 
     private static boolean isOnBed(final Integer current) {
