@@ -59,6 +59,7 @@ import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.hello.suripu.core.util.TrackerMotionUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -417,7 +418,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.info("action=try_filter_pairing_motion account_id={} num_pairing_times={}",accountId,pairTimes.size());
 
-        return timelineUtils.filterPillPairingMotionsWithTimes(motions,pairTimes);
+        return TrackerMotionUtils.filterPillPairingMotionsWithTimes(motions,pairTimes);
     }
 
 
@@ -448,6 +449,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 final long partnerAccountId = originalPartnerMotions.get(0).accountId;
                 originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions, partnerAccountId);
             }
+        }
+
+        if (this.hasOffBedFilterEnabled(accountId)) {
+            originalTrackerMotions = TrackerMotionUtils.filterOffBedMotions(originalTrackerMotions);
+            originalPartnerMotions = TrackerMotionUtils.filterOffBedMotions(originalPartnerMotions);
         }
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;

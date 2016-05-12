@@ -1,11 +1,20 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.interpretation.IdxPair;
+import com.hello.suripu.algorithm.outlier.OnBedBounding;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +26,7 @@ import java.util.TreeSet;
  */
 public class TrackerMotionUtils {
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrackerMotionUtils.class);
 
     public static List<AmplitudeData> trackerMotionToAmplitudeData(final List<TrackerMotion> trackerMotions){
         final List<AmplitudeData> converted = new ArrayList<>();
@@ -129,5 +139,78 @@ public class TrackerMotionUtils {
                 }
             }
         }
+    }
+
+    //basic idea is to drop motions that occur near the pairing times of the pills
+    public static ImmutableList<TrackerMotion> filterPillPairingMotionsWithTimes(final ImmutableList<TrackerMotion> motions, final List<DateTime> pairTimes) {
+
+        final long timeAfterCreationToFilter = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final long timeBeforeCreationToFilter = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final List<TrackerMotion> filteredMotions = Lists.newArrayList();
+
+        MOTION_LOOP:
+        for (final TrackerMotion m : motions) {
+
+            for (final DateTime t : pairTimes) {
+                final long tp = t.withZone(DateTimeZone.UTC).getMillis();
+
+                if (m.timestamp >= tp - timeBeforeCreationToFilter && m.timestamp <= tp + timeAfterCreationToFilter) {
+                    continue MOTION_LOOP;
+                }
+            }
+
+
+            filteredMotions.add(m);
+
+        }
+
+        LOGGER.info("action=filtering_tracker_motion num_points_dropped={}",motions.size() - filteredMotions.size());
+
+        return ImmutableList.copyOf(filteredMotions);
+    }
+
+    public static ImmutableList<TrackerMotion> filterOffBedMotions(final ImmutableList<TrackerMotion> motions) {
+        if (motions.isEmpty()) {
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        }
+
+        final long t0 = motions.get(0).timestamp;
+        final long tf = motions.get(motions.size()-1).timestamp;
+        final long period = NUMBER_OF_MILLIS_IN_A_MINUTE;
+        final int maxIdx = (int)((tf - t0) / period) + 1;
+
+        final Double [] binsTemp = new Double[maxIdx];
+        fillBinsWithTrackerDurations(binsTemp,t0,period,motions,1,false);
+
+        final double [] durations = new double[maxIdx];
+
+        for (int i = 0; i < binsTemp.length; i++) {
+            durations[i] = binsTemp[i].doubleValue();
+        }
+
+        final Optional<IdxPair> bedIndicesOptional = OnBedBounding.getIndicesOnBedBounds(durations);
+
+        if (!bedIndicesOptional.isPresent()) {
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        }
+
+        final IdxPair bedIndices = bedIndicesOptional.get();
+
+
+        final List<TrackerMotion> filteredMotions = Lists.newArrayList();
+
+        for (final TrackerMotion m : motions) {
+            final int idx = getIndex(m.timestamp,t0,period,maxIdx);
+
+            if (idx < bedIndices.i1 || idx > bedIndices.i2) {
+                continue;
+            }
+
+            filteredMotions.add(m);
+        }
+
+        return ImmutableList.copyOf(filteredMotions);
+
+
     }
 }

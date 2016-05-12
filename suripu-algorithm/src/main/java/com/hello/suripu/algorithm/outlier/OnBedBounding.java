@@ -22,23 +22,10 @@ public class OnBedBounding {
         return current.intValue() >= 2 && current.intValue() <= 4;
     }
 
-    public static double [] filterOffBedMotion(final double [] motionSignal, final IdxPair onBedPair) {
-        for (int i = 0; i < onBedPair.i1; i++) {
 
-            if (i >= motionSignal.length) {
-                break;
-            }
-
-            motionSignal[i] = 0.0;
-        }
-
-        for (int i = onBedPair.i2 ; i < motionSignal.length; i++) {
-            motionSignal[i] = 0.0;
-        }
-    }
 
     //assumes each bin is a minute
-    protected static Optional<IdxPair> getIndicesOnBedBounds(final double [] onDurationSeconds) {
+    public static Optional<IdxPair> getIndicesOnBedBounds(final double [] onDurationSeconds) {
 
         //general idea is to ignore "blips" separated by ~2 - 3 hours
         //and then flip to "on bed" mode when there is sufficient motion
