@@ -69,7 +69,7 @@ public class FirmwareVersionMappingDAO {
         try {
             getItemResult = amazonDynamoDB.getItem(getItemRequest);
         } catch (AmazonServiceException ase){
-            LOGGER.error("Firmware Version map query failed.");
+            LOGGER.error("error=fw_ver_map_failed hash={}", fwHash);
             return Collections.EMPTY_LIST;
         }
 
@@ -113,7 +113,7 @@ public class FirmwareVersionMappingDAO {
             }
             return results;
         } catch (AmazonServiceException ase){
-            LOGGER.error("Firmware Version map query failed.");
+            LOGGER.error("error=fw_ver_map_failed");
 
         }
         return Collections.EMPTY_MAP;
