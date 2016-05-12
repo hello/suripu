@@ -25,6 +25,11 @@ public class CaffeineAlarm {
 
     public static final Integer COFFEE_SPACE_MINUTES = 6 * 60; //As per National Sleep Foundation https://sleep.org/articles/how-much-caffiene-should-i-have/
     public static final Integer DAY_MINUTES = 24 * 60;
+    public static final Integer SIX_AM_MINUTES = 6 * 60;
+
+    public static final Integer MAX_ALLOWED_RANGE = 3 * 60; //3 hrs
+    public static final Integer LATEST_ALLOWED_SLEEP_TIME = (4 + 24) * 60; //4AM
+    public static final Integer EARLIEST_ALLOWED_SLEEP_TIME = 20 * 60; //8PM
 
     public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId,final DateTime queryEndDate, final int numDays) {
 
@@ -58,11 +63,20 @@ public class CaffeineAlarm {
             return Optional.absent(); //not big enough to calculate mean meaningfully har har
         }
 
-        // compute mean
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final int sleepTime : sleepTimeList) {
-            stats.addValue(sleepTime);
+            if (sleepTime < SIX_AM_MINUTES) { //If sleep time is after midnight, add 24 hrs to avoid messing up stats
+                stats.addValue(sleepTime + DAY_MINUTES);
+            } else {
+                stats.addValue(sleepTime);
+            }
         }
+
+        final Boolean passSafeGuards = checkSafeGuards(stats);
+        if (!passSafeGuards) {
+            return Optional.absent();
+        }
+
         final Double sleepAvgDouble = stats.getMean();
         final int sleepAvg = (int) Math.round(sleepAvgDouble);
 
@@ -76,6 +90,28 @@ public class CaffeineAlarm {
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
+    }
+
+    public static Boolean checkSafeGuards(final DescriptiveStatistics stats) {
+
+        //Safeguard for anomalous sleeptime encountered last week
+        final Double sleepMax = stats.getMax();
+        final Double sleepMin = stats.getMin();
+        final Double sleepRange = sleepMax - sleepMin;
+        if (sleepRange > MAX_ALLOWED_RANGE) { //If Range in sleep times is too big, average sleep time is less meaningful
+            return Boolean.FALSE;
+        }
+
+        //Sleep time sanity check, should be between 8PM and 4AM
+        final Double sleepAvg = stats.getMean();
+        if (sleepAvg > LATEST_ALLOWED_SLEEP_TIME) {
+            return Boolean.FALSE;
+        }
+        if (sleepAvg < EARLIEST_ALLOWED_SLEEP_TIME) {
+            return Boolean.FALSE;
+        }
+
+        return Boolean.TRUE;
     }
 
     public static Integer getRecommendedCoffeeMinutesTime(final int sleepTimeMinutes) {
