@@ -20,7 +20,7 @@ import java.util.List;
 public class SleepProbabilityInterpreterWithSearch {
 
     final static Logger LOGGER = LoggerFactory.getLogger(SleepProbabilityInterpreterWithSearch.class);
-    final static HmmPdfInterface[] obsModelsMain = {new BetaPdf(1.0,10.0,0),new BetaPdf(2.0,2.0,0),new BetaPdf(10.0,1.0,0)};
+    final static HmmPdfInterface[] obsModelsMain = {new BetaPdf(1.0,20.0,0),new BetaPdf(2.0,2.0,0),new BetaPdf(20.0,1.0,0)};
 
     final static int SLEEP_TRANSITION_STATE = 2;
     final static int WAKE_TRANSITION_STATE = 5;
@@ -155,7 +155,7 @@ public class SleepProbabilityInterpreterWithSearch {
      *
 
      */
-    public static Optional<EventIndices> getEventIndices(final double [] sleepProbabilities, final double [] myMotionDurations, final double [] myPillMagintude) {
+    public static Optional<EventIndices> getEventIndices(final double [] sleepProbabilities, final double [] myMotionDurations, final double [] myPillMagintude,final double [] myDiffLight) {
 
         int iSleep = -1;
         int iWake = -1;
@@ -166,7 +166,7 @@ public class SleepProbabilityInterpreterWithSearch {
         final List<IdxPair> skippedOverWakePeriods = Lists.newArrayList();
 
         //four events need at least four time periods
-        if (sleepProbabilities.length <= 3 || myMotionDurations.length <= 3 || myPillMagintude.length <= 3) {
+        if (sleepProbabilities.length <= 3 || myMotionDurations.length <= 3 || myPillMagintude.length <= 3 || myDiffLight.length <= 3) {
             return Optional.absent();
         }
 
@@ -300,7 +300,7 @@ public class SleepProbabilityInterpreterWithSearch {
             for (int i = 0; i < wakeTransitionIndices.size() / 2; i++) {
                 final int idx = 2*i;
                 final int is = getSleepInInterval(sleep,dsleepLpf,sleepTransitionIndices.get(idx),sleepTransitionIndices.get(idx+1));
-                final int iw = getWakeInInterval(myPillMagintude,dsleepLpf,wakeTransitionIndices.get(idx),wakeTransitionIndices.get(idx + 1));
+                final int iw = getWakeInInterval(myPillMagintude,myDiffLight,dsleepLpf,wakeTransitionIndices.get(idx),wakeTransitionIndices.get(idx + 1));
                 LOGGER.info("action=deterine_wake_sleep_pair sleep={} wake={}",is,iw);
                 segments.add(new IdxPair(is,iw));
             }
@@ -469,11 +469,21 @@ public class SleepProbabilityInterpreterWithSearch {
     }
 
 
-    protected static int getWakeInInterval(final double [] pillMagnitude,final double [] deltasleepprobs, final int begin, final int end) {
+    protected static int getWakeInInterval(final double [] pillMagnitude,final double [] myDiffLight,final double [] deltasleepprobs, final int begin, final int end) {
+
+        int lightsOn = end;
+        //find the time the lights turned on, if at all
+
+        for (int i = begin; i <= end; i++) {
+            if (myDiffLight[i] >= 1.2) { //log light change
+                lightsOn = i;
+                break;
+            }
+        }
 
         double minScore = Double.POSITIVE_INFINITY;
         int minIdx = end;
-        for (int i = begin; i <= end; i++) {
+        for (int i = begin; i <= lightsOn; i++) {
             final double score = deltasleepprobs[i] * pillMagnitude[i];
             if (score < minScore) {
                 minScore = score;

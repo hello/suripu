@@ -20,14 +20,14 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         final double [] p = new double [961];
         Arrays.fill(p,0.001);
 
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,pnone,pnone).isPresent());
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,pnone,p).isPresent());
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,p,pnone).isPresent());
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,p,p).isPresent());
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,pnone,pnone).isPresent());
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,pnone,p).isPresent());
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,p,pnone).isPresent());
-        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,p,p).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,pnone,pnone,pnone).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,pnone,p,pnone).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,p,pnone,pnone).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(pnone,p,p,pnone).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,pnone,pnone,pnone).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,pnone,p,pnone).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,p,pnone,pnone).isPresent());
+        TestCase.assertFalse(SleepProbabilityInterpreterWithSearch.getEventIndices(p,p,p,pnone).isPresent());
 
     }
 
@@ -36,6 +36,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         final double [] p = new double [961];
         final double [] m = new double [961];
         final double [] m2 = new double [961];
+        final double [] l = new double [961];
 
 
         for (int t=200; t < 500; t++) {
@@ -44,7 +45,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
             m2[t] = 2.0;
         }
 
-        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2);
+        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2,l);
 
         TestCase.assertTrue(indicesOptional.isPresent());
 
@@ -61,6 +62,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
     public void testCaseWithMotionClustering() {
         final double [] p = new double [961];
         final double [] m = new double [961];
+        final double [] l = new double [961];
 
         m[165] = 1;
         m[169] = 20;
@@ -78,7 +80,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
             p[t] = 0.95;
         }
 
-        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m);
+        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m,l);
 
         TestCase.assertTrue(indicesOptional.isPresent());
 
@@ -95,6 +97,8 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
     public void testBoundsGuards() {
         final double [] p = new double [961];
         final double [] m = new double [961];
+        final double [] l = new double [961];
+
 
         m[165] = 1;
         m[169] = 20;
@@ -112,7 +116,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
             p[t] = 0.95;
         }
 
-        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m);
+        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m,l);
 
         TestCase.assertTrue(indicesOptional.isPresent());
 
@@ -130,6 +134,8 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         final double [] p = new double [961];
         final double [] m = new double [961];
         final double [] m2 = new double [961];
+        final double [] l = new double [961];
+
 
         m[165] = 1;
         m[169] = 20;
@@ -158,7 +164,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         m2[510] = 10.;
         m2[512] = 12.;
 
-        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2);
+        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2,l);
 
         TestCase.assertTrue(indicesOptional.isPresent());
 
@@ -175,6 +181,8 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         final double [] p = new double [961];
         final double [] m = new double [961];
         final double [] m2 = new double [961];
+        final double [] l = new double [961];
+
 
         m[165] = 1;
         m[169] = 20;
@@ -218,7 +226,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         m[605] = 5;
         m[610] = 5;
 
-        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2);
+        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2,l);
 
         TestCase.assertTrue(indicesOptional.isPresent());
 
@@ -235,6 +243,8 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         final double [] p = new double [961];
         final double [] m = new double [961];
         final double [] m2 = new double [961];
+        final double [] l = new double [961];
+
 
         m[165] = 1;
         m[169] = 20;
@@ -277,7 +287,7 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         m2[705] = 5;
         m[710] = 5;
 
-        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2);
+        final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices(p,m,m2,l);
 
         TestCase.assertTrue(indicesOptional.isPresent());
 
@@ -314,6 +324,8 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         final double [] dsleep = new double[sleepProbs.length];
         final double [] mag = new double[sleepProbs.length];
         final double [] mag2 = new double[sleepProbs.length];
+        final double [] l = new double [961];
+
 
         mag2[8] = 1.0;
         mag2[7] = 0.5;
@@ -324,14 +336,47 @@ public class SleepProbabilityInterpreterTest extends SleepProbabilityInterpreter
         }
 
         //no pill motion, should default to first index
-        final int idx = getWakeInInterval(mag,dsleep,2,sleepProbs.length-1);
+        final int idx = getWakeInInterval(mag,l,dsleep,2,sleepProbs.length-1);
 
         TestCase.assertEquals(2,idx);
 
         //should give index of maximum pill motion
-        final int idx2 = getWakeInInterval(mag2,dsleep,0,sleepProbs.length-1);
+        final int idx2 = getWakeInInterval(mag2,l,dsleep,0,sleepProbs.length-1);
 
         TestCase.assertEquals(8,idx2);
+
+
+    }
+
+    @Test
+    public void testWakeSearchWithLightIncrease() {
+        //final double [] sleepprobs, final double [] deltasleepprobs, final double [] pillMagnitude,final int begin, final int end) {
+
+        final double [] sleepProbs = {1.0,1.0,1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1,0.0,0.0,0.0};
+        final double [] dsleep = new double[sleepProbs.length];
+        final double [] mag = new double[sleepProbs.length];
+        final double [] mag2 = new double[sleepProbs.length];
+        final double [] l = new double [961];
+
+
+        mag2[8] = 1.0;
+        mag2[7] = 0.5;
+        l[7] = 1.5;
+
+
+        for (int i = 1; i < sleepProbs.length; i++) {
+            dsleep[i] = sleepProbs[i] - sleepProbs[i-1];
+        }
+
+        //should give index of maximum pill motion bounded by light
+        final int idx2 = getWakeInInterval(mag2,l,dsleep,0,sleepProbs.length-1);
+
+        TestCase.assertEquals(7,idx2);
+
+        //no pill motion after lights on, should default to first index
+        l[5] = 1.5;
+        final int idx3 = getWakeInInterval(mag2,l,dsleep,1,sleepProbs.length-1);
+        TestCase.assertEquals(1,idx3);
 
 
     }

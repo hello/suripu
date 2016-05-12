@@ -298,10 +298,11 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final double [] myDuration = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_DURATION.index()],0,iEnd);
             final double [] myPillMagnitude = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()],0,iEnd);
+            final double [] myDiffLight = Arrays.copyOfRange(x[SensorIndices.DIFFLIGHT.index()],0,iEnd);
             final double [] sleepProbs = Arrays.copyOfRange(algorithmOutput.output[1],0,iEnd);
 
             final Optional<EventIndices> indicesOptional = SleepProbabilityInterpreterWithSearch.getEventIndices
-                    (sleepProbs,myDuration,myPillMagnitude);
+                    (sleepProbs,myDuration,myPillMagnitude,myDiffLight);
 
             if (!indicesOptional.isPresent()) {
                 LOGGER.warn("action=return_no_prediction reason=no_event_indices_from_sleep_probability_interpreter");
