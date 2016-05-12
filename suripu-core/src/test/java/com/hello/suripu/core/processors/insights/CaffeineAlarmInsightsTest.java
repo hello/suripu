@@ -96,4 +96,19 @@ public class CaffeineAlarmInsightsTest {
         assertThat(generatedCard.isPresent(), is(Boolean.FALSE));
     }
 
+    @Test
+    public void testCheckSafeGuard() {
+
+    }
+
+    @Test
+    public void testCheckSafeGuard2() {
+
+    }
+
+    @Test
+    public void testCheckSafeGuard3() {
+
+    }
+
 }
