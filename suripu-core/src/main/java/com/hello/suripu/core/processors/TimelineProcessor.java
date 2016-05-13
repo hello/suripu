@@ -269,7 +269,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             algorithmChain.addFirst(AlgorithmType.ONLINE_HMM);
         }
 
-        if (this.hasNeuralNetAlgorithmEnabled(accountId) || true) {
+        if (this.hasNeuralNetAlgorithmEnabled(accountId)) {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET);
         }
 
@@ -440,7 +440,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         ImmutableList<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
 
         //filter pairing motions for a good first night's experience
-        if (this.hasRemovePairingMotions(accountId)  || true) {
+        if (this.hasRemovePairingMotions(accountId)) {
             //my motions
             originalTrackerMotions = filterPillPairingMotions(originalTrackerMotions,accountId);
 
@@ -451,10 +451,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        if (this.hasOffBedFilterEnabled(accountId) || true) {
-            originalTrackerMotions = TrackerMotionUtils.filterOffBedMotions(originalTrackerMotions);
-            originalPartnerMotions = TrackerMotionUtils.filterOffBedMotions(originalPartnerMotions);
-        }
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
