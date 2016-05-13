@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.interpretation.EventIndices;
 import com.hello.suripu.algorithm.interpretation.IdxPair;
 import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreterWithSearch;
 import com.hello.suripu.algorithm.outlier.OnBedBounding;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -26,13 +27,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
 /**
  * Created by benjo on 2/23/16.
  */
-public class NeuralNetAlgorithm extends FeatureFlippedProcessor implements TimelineAlgorithm {
+public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
 
@@ -258,12 +261,12 @@ public class NeuralNetAlgorithm extends FeatureFlippedProcessor implements Timel
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData);
-            
-            if (this.hasOffBedFilterEnabled(accountId)){
+
+            if (features.contains(FeatureFlipper.OFF_BED_HMM_MOTION_FILTER)){
                 //a little bit of input filtering
                 final double[] diffLight = x[SensorIndices.DIFFLIGHT.index()];
                 final double[] light = x[SensorIndices.LIGHT.index()];

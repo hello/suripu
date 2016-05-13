@@ -56,7 +56,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
     }
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
 
         LOGGER.info("algorithm=HMM account_id={}",accountId);
 

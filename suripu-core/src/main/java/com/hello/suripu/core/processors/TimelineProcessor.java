@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
@@ -23,6 +24,7 @@ import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -72,6 +74,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class TimelineProcessor extends FeatureFlippedProcessor {
@@ -332,6 +335,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         /*  GET THE TIMELINE! */
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
+        final Set<String> featureFlips = getTimelineFeatureFlips(accountId);
+
 
         for (final AlgorithmType alg : algorithmChain) {
             LOGGER.info("action=try_algorithm algorithm_type={}",alg);
@@ -342,7 +347,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 continue;
             }
 
-            resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged);
+            resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged,featureFlips);
 
             //got a valid result? poof, we're out.
             if (resultOptional.isPresent()) {
@@ -382,9 +387,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     }
 
-
-
-
+    private Set<String> getTimelineFeatureFlips(final long accountId) {
+        final Set<String> featureFlips = Sets.newHashSet();
+        if (hasOffBedFilterEnabled(accountId)) {
+            featureFlips.add(FeatureFlipper.OFF_BED_HMM_MOTION_FILTER);
+        }
+        return featureFlips;
+    }
 
 
     private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {

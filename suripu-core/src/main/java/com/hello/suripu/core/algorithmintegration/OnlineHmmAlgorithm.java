@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -49,7 +50,7 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final TimelineLog log, final long accountId, final boolean feedbackChanged) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final TimelineLog log, final long accountId, final boolean feedbackChanged,final Set<String> features) {
 
         LOGGER.info("alg=ONLINE-HMM account_id={}",accountId);
 
