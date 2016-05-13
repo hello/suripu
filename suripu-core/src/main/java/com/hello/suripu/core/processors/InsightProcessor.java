@@ -288,15 +288,23 @@ public class InsightProcessor {
     private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTime) {
         //Get all historical insight categories
         final Optional<MarketingInsightsSeen> marketingInsightsSeenOptional = marketingInsightsSeenDAODynamoDB.getSeenCategories(accountId);
-        if (marketingInsightsSeenOptional.isPresent()) {
-            return selectMarketingInsightToGenerate(currentTime, marketingInsightsSeenOptional.get().seenCategories, RANDOM);
+        if (!marketingInsightsSeenOptional.isPresent()) {
+            return selectMarketingInsightToGenerate(currentTime, new HashSet<InsightCard.Category>(), RANDOM, currentTime.minusDays(1));
         }
 
-        return selectMarketingInsightToGenerate(currentTime, new HashSet<InsightCard.Category>(), RANDOM);
+        return selectMarketingInsightToGenerate(currentTime, marketingInsightsSeenOptional.get().seenCategories, RANDOM, marketingInsightsSeenOptional.get().updated);
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTime, final Set<InsightCard.Category> marketingSeenCategories, final Random random) {
+    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTime, final Set<InsightCard.Category> marketingSeenCategories, final Random random, final DateTime lastUpdate) {
+        final DateTime today = currentTime.withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0); //currentTime is DateTime.now() - UTC
+        final DateTime lastMarketingUpdate = lastUpdate.withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0); //parameter is updated_utc
+
+        //Already generated marketing insight today. skip
+        if (today == lastMarketingUpdate) {
+            return Optional.absent();
+        }
+
         final Integer dayOfMonth = currentTime.getDayOfMonth();
         LOGGER.debug("The day of the month is {}", dayOfMonth);
 
