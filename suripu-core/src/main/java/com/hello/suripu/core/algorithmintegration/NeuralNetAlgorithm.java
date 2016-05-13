@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
+import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.TimelineError;
@@ -31,7 +32,7 @@ import java.util.UUID;
 /**
  * Created by benjo on 2/23/16.
  */
-public class NeuralNetAlgorithm implements TimelineAlgorithm {
+public class NeuralNetAlgorithm extends FeatureFlippedProcessor implements TimelineAlgorithm {
 
     public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
 
@@ -261,8 +262,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData);
-
-            {
+            
+            if (this.hasOffBedFilterEnabled(accountId)){
                 //a little bit of input filtering
                 final double[] diffLight = x[SensorIndices.DIFFLIGHT.index()];
                 final double[] light = x[SensorIndices.LIGHT.index()];

@@ -171,7 +171,7 @@ public class FeatureFlippedProcessor {
     }
 
     protected Boolean hasOffBedFilterEnabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.OFF_BED_MOTION_FILTER, accountId, Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.OFF_BED_HMM_MOTION_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
 
