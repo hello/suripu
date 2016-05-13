@@ -23,6 +23,35 @@ public class OnBedBounding {
     }
 
 
+    public static void brightenRoomIfHmmModelWorkedOkay(final double [] light,final double [] diffLight,final double [] motionDuration, final double maxLightValue,final double diffLightThreshold) {
+        //a little bit of input filtering
+        final Optional<IdxPair> bedIndicesOptional = OnBedBounding.getIndicesOnBedBounds(motionDuration);
+
+        //IF NO LIGHTS OUT HAPPENED, RELY ON SIMPLE HMM MOTION MODEL TO DETERMINE WHEN THE USER GOT INTO BED/ FELL ASLEEP
+        FILTER_PRE_BED:
+        if (bedIndicesOptional.isPresent()) {
+            final int i1 = bedIndicesOptional.get().i1;
+            final int i2 = bedIndicesOptional.get().i2;
+
+            if (i2 - i1 < 300) {
+                break FILTER_PRE_BED; //do nothing because on-bed duration is waay to short and probably wrong
+            }
+
+            int iBegin = i1 - 120 < 0 ? 0 : i1 - 120;
+            for (int t = iBegin; t < i1; t++) {
+                //search for lights out
+                if (diffLight[t] < -Math.abs(diffLightThreshold)) {
+                    break FILTER_PRE_BED; //do nothing if we found a lights out
+                }
+            }
+
+            //make it bright, this is how we haxor the neural net
+            for (int t = 0; t < i1; t++) {
+                light[t] = maxLightValue;
+            }
+        }
+
+    }
 
     //assumes each bin is a minute
     public static Optional<IdxPair> getIndicesOnBedBounds(final double [] onDurationSeconds) {

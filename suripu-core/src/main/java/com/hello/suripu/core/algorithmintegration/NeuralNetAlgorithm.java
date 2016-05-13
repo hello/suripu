@@ -5,7 +5,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.interpretation.EventIndices;
+import com.hello.suripu.algorithm.interpretation.IdxPair;
 import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreterWithSearch;
+import com.hello.suripu.algorithm.outlier.OnBedBounding;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -260,6 +262,15 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         try {
             final double [][] x = getSensorData(oneDaysSensorData);
 
+            {
+                //a little bit of input filtering
+                final double[] diffLight = x[SensorIndices.DIFFLIGHT.index()];
+                final double[] light = x[SensorIndices.LIGHT.index()];
+                final double[] onDurationMotion = x[SensorIndices.MY_MOTION_DURATION.index()];
+
+                //may alter light values
+                OnBedBounding.brightenRoomIfHmmModelWorkedOkay(light, diffLight, onDurationMotion, 6.0, 1.0);
+            }
 
             final Optional<NeuralNetAlgorithmOutput> outputOptional = endpoint.getNetOutput(DEFAULT_SLEEP_NET_ID,x);
 
