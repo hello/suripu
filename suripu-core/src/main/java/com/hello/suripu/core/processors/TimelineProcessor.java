@@ -427,7 +427,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.info("action=try_filter_pairing_motion account_id={} num_pairing_times={}",accountId,pairTimes.size());
 
-        return TrackerMotionUtils.filterPillPairingMotionsWithTimes(motions,pairTimes);
+        return timelineUtils.filterPillPairingMotionsWithTimes(motions,pairTimes);
     }
 
 

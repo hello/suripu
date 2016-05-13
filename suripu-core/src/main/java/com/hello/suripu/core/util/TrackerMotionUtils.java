@@ -1,21 +1,11 @@
 package com.hello.suripu.core.util;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.AmplitudeData;
-import com.hello.suripu.algorithm.interpretation.IdxPair;
-import com.hello.suripu.algorithm.outlier.OnBedBounding;
 import com.hello.suripu.core.models.TrackerMotion;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.DateTimeZone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +17,6 @@ import java.util.TreeSet;
  */
 public class TrackerMotionUtils {
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrackerMotionUtils.class);
 
     public static List<AmplitudeData> trackerMotionToAmplitudeData(final List<TrackerMotion> trackerMotions){
         final List<AmplitudeData> converted = new ArrayList<>();
@@ -141,33 +130,4 @@ public class TrackerMotionUtils {
             }
         }
     }
-
-    //basic idea is to drop motions that occur near the pairing times of the pills
-    public static ImmutableList<TrackerMotion> filterPillPairingMotionsWithTimes(final ImmutableList<TrackerMotion> motions, final List<DateTime> pairTimes) {
-
-        final long timeAfterCreationToFilter = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
-        final long timeBeforeCreationToFilter = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
-        final List<TrackerMotion> filteredMotions = Lists.newArrayList();
-
-        MOTION_LOOP:
-        for (final TrackerMotion m : motions) {
-
-            for (final DateTime t : pairTimes) {
-                final long tp = t.withZone(DateTimeZone.UTC).getMillis();
-
-                if (m.timestamp >= tp - timeBeforeCreationToFilter && m.timestamp <= tp + timeAfterCreationToFilter) {
-                    continue MOTION_LOOP;
-                }
-            }
-
-
-            filteredMotions.add(m);
-
-        }
-
-        LOGGER.info("action=filtering_tracker_motion num_points_dropped={}",motions.size() - filteredMotions.size());
-
-        return ImmutableList.copyOf(filteredMotions);
-    }
-
 }
