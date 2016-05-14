@@ -297,8 +297,8 @@ public class InsightProcessor {
 
     @VisibleForTesting
     public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTime, final Set<InsightCard.Category> marketingSeenCategories, final Random random, final DateTime lastUpdate) {
-        final DateTime today = currentTime.withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0); //currentTime is DateTime.now() - UTC
-        final DateTime lastMarketingUpdate = lastUpdate.withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0); //parameter is updated_utc
+        final DateTime today = currentTime.withTime(0,0,0,0); //currentTime is DateTime.now() - UTC
+        final DateTime lastMarketingUpdate = lastUpdate.withTime(0,0,0,0); //parameter is updated_utc
 
         //Already generated marketing insight today. skip
         if (today == lastMarketingUpdate) {
