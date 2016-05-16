@@ -2,8 +2,11 @@ package com.hello.suripu.core.notifications;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -197,14 +200,24 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     //region write
     public Boolean insert(final PushNotificationEvent event) {
         int numTries = 0;
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(getTableName(event.timestamp))
+                .withItem(toAttributeMap(event))
+                // Ensure that the item does not exist. If it exists, this throws a ConditionalCheckFailedException.
+                .withExpected(ImmutableMap.of(Attribute.ACCOUNT_ID.shortName(), new ExpectedAttributeValue(false)));
         do {
             try {
-                dynamoDBClient.putItem(getTableName(event.timestamp), toAttributeMap(event));
+                dynamoDBClient.putItem(putItemRequest);
                 return true;
             } catch (ProvisionedThroughputExceededException ptee) {
                 LOGGER.error("error=ProvisionedThroughputExceededException account_id={}", event.accountId);
             } catch (InternalServerErrorException isee) {
                 LOGGER.error("error=InternalServerErrorException account_id={}", event.accountId);
+            } catch (ConditionalCheckFailedException ccfe) {
+                // The item already exists or we already have an item with this timestamp / account ID!
+                LOGGER.error("error=ConditionalCheckFailedException reason=item_already_exists account_id={} timestamp={}",
+                        event.accountId, event.timestamp);
+                return false;
             }
             backoff(numTries);
             numTries++;

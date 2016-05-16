@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
@@ -167,7 +168,7 @@ public class PushNotificationEventDynamoDBIT {
 
         final AmazonDynamoDB throttlingClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration) {
             @Override
-            public PutItemResult putItem(String tableName, Map<String, AttributeValue> item) {
+            public PutItemResult putItem(final PutItemRequest putItemRequest) {
                 // Always throttle
                 throw new ProvisionedThroughputExceededException("exceeded throughput lolol");
             }
@@ -191,7 +192,7 @@ public class PushNotificationEventDynamoDBIT {
 
         final AmazonDynamoDB stupidClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration) {
             @Override
-            public PutItemResult putItem(String tableName, Map<String, AttributeValue> item) {
+            public PutItemResult putItem(final PutItemRequest putItemRequest) {
                 // Always throttle
                 throw new InternalServerErrorException("ruh roh");
             }
@@ -200,6 +201,25 @@ public class PushNotificationEventDynamoDBIT {
 
         final boolean result = dao.insert(event);
         assertThat(result, is(false));
+    }
+
+    @Test
+    public void testInsertAlreadyExists() throws Exception {
+        final DateTime dateTime = new DateTime(2016, 10, 24, 0, 0, DateTimeZone.UTC);
+        final PushNotificationEvent event = PushNotificationEvent.newBuilder()
+                .withAccountId(1L)
+                .withSenseId("senseId")
+                .withTimestamp(dateTime)
+                .withType("insight")
+                .withHelloPushMessage(new HelloPushMessage("body", "target", "details"))
+                .build();
+
+        final boolean firstResult = dao.insert(event);
+        assertThat(firstResult, is(true));
+
+        // It should fail to insert the second time.
+        final boolean secondResult = dao.insert(event);
+        assertThat(secondResult, is(false));
     }
 
     //endregion insert
