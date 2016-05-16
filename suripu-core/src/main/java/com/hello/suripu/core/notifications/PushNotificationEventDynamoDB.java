@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
+import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.hello.suripu.core.db.TimeSeriesDAODynamoDB;
@@ -227,6 +228,15 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
 
         final List<PushNotificationEvent> events = toPushNotificationEventList(response.data);
         return Response.into(events, response);
+    }
+
+    /**
+     * Overridden to ensure consistent reads.
+     */
+    @Override
+    protected Response<List<Map<String, AttributeValue>>> query(final QueryRequest originalQueryRequest) {
+        final QueryRequest consistentQueryRequest = originalQueryRequest.clone().withConsistentRead(true);
+        return super.query(consistentQueryRequest);
     }
 
     public Response<List<PushNotificationEvent>> query(final Long accountId,

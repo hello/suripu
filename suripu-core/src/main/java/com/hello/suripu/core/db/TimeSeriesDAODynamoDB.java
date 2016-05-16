@@ -266,7 +266,7 @@ public abstract class TimeSeriesDAODynamoDB<T> {
     }
 
     //region Query
-    private Response<List<Map<String, AttributeValue>>> query(final QueryRequest originalQueryRequest) {
+    protected Response<List<Map<String, AttributeValue>>> query(final QueryRequest originalQueryRequest) {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
