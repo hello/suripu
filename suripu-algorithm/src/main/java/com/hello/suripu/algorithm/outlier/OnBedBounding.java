@@ -8,6 +8,8 @@ import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfCompositeBuilder;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import com.hello.suripu.algorithm.interpretation.IdxPair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 
@@ -15,6 +17,9 @@ import java.util.Iterator;
  * Created by benjo on 5/12/16.
  */
 public class OnBedBounding {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OnBedBounding.class);
+
     final static HmmPdfInterface[] motionModels = {new PoissonPdf(0.01,0),new PoissonPdf(0.1,0),new PoissonPdf(1.0,0),new PoissonPdf(5.0,0)};
     final static double MIN_HMM_PDF_EVAL = 1e-320;
     final static int SEARCH_TIME_FOR_LIGHTS_OUT = 120; //minutes
@@ -29,30 +34,38 @@ public class OnBedBounding {
         final Optional<IdxPair> bedIndicesOptional = OnBedBounding.getIndicesOnBedBounds(motionDuration);
 
         //IF NO LIGHTS OUT HAPPENED, RELY ON SIMPLE HMM MOTION MODEL TO DETERMINE WHEN THE USER GOT INTO BED/ FELL ASLEEP
-        if (bedIndicesOptional.isPresent()) {
-            final int i1 = bedIndicesOptional.get().i1;
-            final int i2 = bedIndicesOptional.get().i2;
+        if (!bedIndicesOptional.isPresent()) {
+            LOGGER.info("action=off_bed_filter_heuristic_returned reason=hmm_returned_no_indices");
+            return;
+        }
 
-            //if on-bed duration is too short, probably on-bed model sucks, so just get out of here
-            if (i2 - i1 < MIN_DURATION_FOR_SUCCESFUL_MOTION_MODEL) {
+        final int i1 = bedIndicesOptional.get().i1;
+        final int i2 = bedIndicesOptional.get().i2;
+        final int duration = i2 - i1;
+        LOGGER.info("action=off_bed_filter_heuristic_status i1={} i2={} duration={}",i1,i2,duration);
+        //if on-bed duration is too short, probably on-bed model sucks, so just get out of here
+        if (duration < MIN_DURATION_FOR_SUCCESFUL_MOTION_MODEL) {
+            LOGGER.info("action=off_bed_filter_heuristic_returned reason=hmm_duration_too_short");
+            return;
+        }
+
+        int iBegin = i1 - SEARCH_TIME_FOR_LIGHTS_OUT < 0 ? 0 : i1 - SEARCH_TIME_FOR_LIGHTS_OUT;
+        for (int t = iBegin; t < i1; t++) {
+            //search for lights out
+            if (diffLight[t] < -Math.abs(diffLightThreshold)) {
+                //found it, we're done
+                LOGGER.info("action=off_bed_filter_heuristic_returned reason=found_lights_out");
                 return;
             }
-
-            int iBegin = i1 - SEARCH_TIME_FOR_LIGHTS_OUT < 0 ? 0 : i1 - SEARCH_TIME_FOR_LIGHTS_OUT;
-            for (int t = iBegin; t < i1; t++) {
-                //search for lights out
-                if (diffLight[t] < -Math.abs(diffLightThreshold)) {
-                    //found it, we're done
-                    return;
-                }
-            }
-
-            //AT THIS POINT, NO LIGHTS OUT FOUND, SO MAKE THE ROOM BRIGHT
-            //by making the room "bright", we haxor the neural net into thinking we're not sleeping
-            for (int t = 0; t < i1; t++) {
-                light[t] = maxLightValue;
-            }
         }
+
+        //AT THIS POINT, NO LIGHTS OUT FOUND, SO MAKE THE ROOM BRIGHT
+        //by making the room "bright", we haxor the neural net into thinking we're not sleeping
+        for (int t = 0; t < i1; t++) {
+            light[t] = maxLightValue;
+        }
+
+        LOGGER.info("action=off_bed_filter_heuristic_returned reason=success num_minutes_brightened={}",i1);
 
     }
 
@@ -73,7 +86,7 @@ public class OnBedBounding {
         A[1][0] = 0.99; A[1][1] = 0.01;
                                         A[2][2] = 0.59;  A[2][3] = 0.20;  A[2][4] = 0.20; A[2][5] = 0.01;
                                                          A[3][3] = 0.80;  A[3][4] = 0.20;
-                                        A[4][2] = 0.05;  A[4][3] = 0.05;  A[4][4] = 0.90;
+                                        A[4][2] = 0.01;  A[4][3] = 0.01;  A[4][4] = 0.98;
                                                                                           A[5][5] = 1.0;
 
 
