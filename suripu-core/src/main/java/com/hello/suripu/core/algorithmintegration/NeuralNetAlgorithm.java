@@ -127,7 +127,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
 
             //if between 5am and 8pm, light is "natural", so we don't care about it, and want to zero it out
-            if (time.getHourOfDay() >= 5 && time.getHourOfDay() <= 19) {
+            if (time.getHourOfDay() >= 5 && time.getHourOfDay() <= 21) {
 
                 final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
