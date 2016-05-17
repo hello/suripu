@@ -15,7 +15,6 @@ import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
@@ -110,9 +109,9 @@ public interface QuestionResponseReadDAO {
     @RegisterMapper(ResponseMapper.class)
     @SqlQuery("SELECT R.*, C.response_text FROM responses R " +
             "INNER JOIN response_choices C ON R.response_id = C.id " +
-            "WHERE account_id = :account_id AND R.question_id IN (SELECT id FROM questions WHERE category = :category) ORDER BY id DESC")
-    ImmutableList<Response> getAccountResponseByQuestionIds(@Bind("account_id") long account_id,
-                                                           @Bind("question_category") String question_category);
+            "WHERE account_id = :account_id AND R.question_id IN (SELECT id FROM questions WHERE category = CAST(:question_category AS question_category)) ORDER BY id DESC")
+    ImmutableList<Response> getAccountResponseByQuestionCategoryStr(@Bind("account_id") long account_id,
+                                                                    @Bind("question_category") String question_category);
 
 
     @RegisterMapper(AccountQuestionMapper.class)
@@ -125,4 +124,9 @@ public interface QuestionResponseReadDAO {
     @SqlQuery("SELECT account_id, DATE_TRUNC('day', created_local_utc_ts) - INTERVAL '1 days' as night FROM account_questions where id IN (select account_question_id from responses where response_id = :response_id) ORDER BY account_id, night DESC")
     ImmutableList<AccountDate> getAccountDatebyResponse (@Bind("response_id") final int response_id);
 
+    @RegisterMapper(AccountQuestionMapper.class)
+    @SqlQuery("SELECT * FROM account_questions WHERE account_id = :account_id and question_id = :question_id AND created_local_utc_ts = :created_local_utc_ts")
+    ImmutableList<AccountQuestion> getAskedQuestionByQuestionIdCreatedDate (@Bind("account_id") final long account_id,
+                                                                            @Bind("question_id") final int question_id,
+                                                                            @Bind("created_local_utc_ts") final DateTime created_date);
 }

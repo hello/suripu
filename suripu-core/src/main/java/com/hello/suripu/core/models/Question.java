@@ -143,7 +143,7 @@ public class Question {
     @JsonIgnore
     final public DateTime accountCreationDate; // UTC
 
-    @JsonProperty("category")
+    @JsonIgnore
     final public QuestionCategory category;
 
     @JsonIgnore
