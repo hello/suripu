@@ -13,7 +13,8 @@ public enum QueueName {
     BATCH_PILL_DATA ("batch_pill_data"),
     SENSE_SENSORS_DATA("sense_sensors_data"),
     SENSE_SENSORS_DATA_FANOUT_ONE("sense_sensors_data_fanout_one"),
-    LOGS("logs");
+    LOGS("logs"),
+    PUSH_NOTIFICATIONS("push_notifications");
 
     private String value;
 
