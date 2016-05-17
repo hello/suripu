@@ -397,3 +397,7 @@ GRANT ALL PRIVILEGES ON file_info TO ingress_user;
 GRANT ALL PRIVILEGES ON sense_file_info TO ingress_user;
 
 ALTER TABLE file_info ADD COLUMN size_bytes INTEGER;
+
+-- Added May 16h 2016
+ALTER TABLE accounts ADD COLUMN firstname VARCHAR(255);
+ALTER TABLE accounts ADD COLUMN lastname VARCHAR(255);

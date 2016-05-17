@@ -50,7 +50,9 @@ public class AccountDAOTest {
                 "ALTER TABLE accounts ADD COLUMN tz_offset INTEGER;\n" +
                 "ALTER TABLE accounts ADD COLUMN last_modified BIGINT;\n" +
                 "ALTER TABLE accounts ADD COLUMN dob TIMESTAMP; " +
-                "ALTER TABLE accounts ADD COLUMN gender VARCHAR(50);";
+                "ALTER TABLE accounts ADD COLUMN gender VARCHAR(50); " +
+                "ALTER TABLE accounts ADD COLUMN firstname VARCHAR(255); " +
+                "ALTER TABLE accounts ADD COLUMN lastname VARCHAR(255); ";
 
         final JdbcDataSource ds = new JdbcDataSource();
         ds.setURL("jdbc:h2:mem:" + UUID.randomUUID());

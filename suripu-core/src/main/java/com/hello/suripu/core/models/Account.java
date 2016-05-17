@@ -3,7 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -44,6 +44,12 @@ public class Account {
 
     @JsonProperty("name")
     public final String name;
+
+    @JsonProperty("firstname")
+    public final String firstname;
+
+    @JsonProperty("lastname")
+    public final Optional<String> lastname;
 
     @JsonProperty("gender")
     public final Gender gender;
@@ -100,6 +106,8 @@ public class Account {
                     final String password,
                     final Integer tzOffsetMillis,
                     final String name,
+                    final String firstname,
+                    final Optional<String> lastname,
                     final Gender gender,
                     final Integer height,
                     final Integer weight,
@@ -117,6 +125,8 @@ public class Account {
         this.tzOffsetMillis = tzOffsetMillis;
 
         this.name = name;
+        this.firstname = firstname;
+        this.lastname = lastname;
         this.gender = gender;
         this.height = height;
         this.weight = weight;
@@ -139,7 +149,7 @@ public class Account {
      */
     public static Account fromRegistration(final Registration registration, final Long id) {
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
-                registration.name, registration.gender, registration.height, registration.weight, registration.created,
+                registration.name, "", Optional.<String>absent(), registration.gender, registration.height, registration.weight, registration.created,
                 registration.created.getMillis(), registration.DOB, Boolean.FALSE,
                 registration.latitude, registration.longitude);
     }
@@ -154,6 +164,8 @@ public class Account {
     public static class Builder {
         private Optional<Long> id;
         private String name;
+        private String firstname;
+        private Optional<String> lastname;
         private Gender gender;
         private Integer height;
         private Integer weight;
@@ -170,6 +182,8 @@ public class Account {
         public Builder() {
             this.id = Optional.absent();
             this.name = "";
+            this.firstname = "";
+            this.lastname = Optional.absent();
             this.gender = Gender.OTHER;
             this.height = 0;
             this.weight = 0;
@@ -189,6 +203,8 @@ public class Account {
             this.password = account.password;
             this.tzOffsetMillis = account.tzOffsetMillis;
             this.name = account.name;
+            this.firstname = account.firstname;
+            this.lastname = account.lastname;
             this.gender = account.gender;
             this.height = account.height;
             this.weight = account.weight;
@@ -203,6 +219,18 @@ public class Account {
         @JsonProperty("name")
         public Builder withName(final String name) {
             this.name = name;
+            return this;
+        }
+
+        @JsonProperty("firstname")
+        public Builder withFirstname(final String firstname) {
+            this.firstname = firstname;
+            return this;
+        }
+
+        @JsonProperty("lastname")
+        public Builder withLastname(final String lastname) {
+            this.lastname = Optional.fromNullable(lastname);
             return this;
         }
 
@@ -313,19 +341,21 @@ public class Account {
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB, emailVerified, latitude, longitude);
+            return new Account(id, email, password, tzOffsetMillis, name, firstname, lastname, gender, height, weight, created, lastModified, DOB, emailVerified, latitude, longitude);
         }
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(Account.class)
+        return MoreObjects.toStringHelper(Account.class)
                 .add("id", (id.isPresent()) ? id.get() : "N/A")
                 .add("external_id", generateExternalId())
                 .add("email", email)
                 .add("password", obscurePassword(password))
                 .add("tz", tzOffsetMillis)
                 .add("name", name)
+                .add("firstname", firstname)
+                .add("lastname", lastname)
                 .add("email", email)
                 .add("height", height)
                 .add("weight", weight)
@@ -359,6 +389,8 @@ public class Account {
                 account.password,
                 account.tzOffsetMillis,
                 account.name,
+                account.firstname,
+                account.lastname,
                 account.gender,
                 account.height,
                 account.weight,
