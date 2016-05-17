@@ -7,30 +7,29 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by benjo on 5/16/16.
  */
 public class TimelineAlgorithmConfiguration extends Configuration implements AlgorithmConfiguration {
 
-    private int artificalLightStartMinute;
-    private int artificalLightStopMinute;
+    private final static  DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm");
 
-    public TimelineAlgorithmConfiguration(@JsonProperty("artificial_light_start_time") final String startTimeStr, @JsonProperty("artificial_light_stop_time") final String stopTimeStr) {
-        final DateTimeFormatter formatter = DateTimeFormat.forPattern("HH:mm");
-        final DateTime startTime = formatter.parseDateTime(startTimeStr);
-        final DateTime stopTime = formatter.parseDateTime(stopTimeStr);
+    @JsonProperty("artificial_light_start_time")
+    private String startTime = "21:30";
 
-        artificalLightStartMinute = startTime.getMinuteOfDay();
-        artificalLightStopMinute = stopTime.getMinuteOfDay();
-    }
+    @JsonProperty("artificial_light_stop_time")
+    private String stopTime = "05:00";
 
     @Override
     public int getArtificalLightStartMinuteOfDay() {
-        return artificalLightStartMinute;
+        return DATE_TIME_FORMATTER.parseDateTime(startTime).getMinuteOfDay();
     }
 
     @Override
     public int getArtificalLightStopMinuteOfDay() {
-        return artificalLightStopMinute;
+        return DATE_TIME_FORMATTER.parseDateTime(stopTime).getMinuteOfDay();
     }
 }
