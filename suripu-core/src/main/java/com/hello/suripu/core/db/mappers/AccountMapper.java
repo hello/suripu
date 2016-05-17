@@ -26,7 +26,9 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withPassword(r.getString("password_hash"));
         builder.withGender(r.getString("gender"));
 
-        builder.withFirstname(r.getString("firstname"));
+        final String firstnameOrNull = r.getString("firstname");
+        final String firstname = (firstnameOrNull == null) ? r.getString("name") : firstnameOrNull;
+        builder.withFirstname(firstname);
         builder.withLastname(r.getString("lastname"));
 
         builder.withDOB(new DateTime(r.getTimestamp("dob"), DateTimeZone.UTC));
