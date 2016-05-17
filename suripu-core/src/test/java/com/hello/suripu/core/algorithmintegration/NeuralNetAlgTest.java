@@ -3,6 +3,7 @@ package com.hello.suripu.core.algorithmintegration;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -79,7 +80,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, pillData, emptyFeedback, pillData, pillData, date, startTime, endTime, currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData, new TimelineLog(0L, 0L), 0L, false);
+        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData, new TimelineLog(0L, 0L), 0L, false,Sets.<String>newHashSet());
 
         TestCase.assertTrue(resultOptional.isPresent());
 
@@ -103,7 +104,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false);
+        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false,Sets.<String>newHashSet());
 
         TestCase.assertTrue(resultOptional.isPresent());
 
@@ -127,7 +128,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false);
+        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false, Sets.<String>newHashSet());
 
         TestCase.assertTrue(resultOptional.isPresent());
 
