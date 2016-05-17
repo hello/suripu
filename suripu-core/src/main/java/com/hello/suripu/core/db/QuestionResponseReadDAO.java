@@ -109,7 +109,7 @@ public interface QuestionResponseReadDAO {
     @RegisterMapper(ResponseMapper.class)
     @SqlQuery("SELECT R.*, C.response_text FROM responses R " +
             "INNER JOIN response_choices C ON R.response_id = C.id " +
-            "WHERE account_id = :account_id AND R.question_id IN (SELECT id FROM questions WHERE category = CAST(:question_category AS question_category)) ORDER BY id DESC")
+            "WHERE account_id = :account_id AND R.question_id IN (SELECT id FROM questions WHERE category = CAST(:question_category AS question_category)) ORDER BY created DESC")
     ImmutableList<Response> getAccountResponseByQuestionCategoryStr(@Bind("account_id") long account_id,
                                                                     @Bind("question_category") String question_category);
 

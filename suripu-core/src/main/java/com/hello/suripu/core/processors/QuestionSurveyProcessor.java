@@ -87,6 +87,11 @@ public class QuestionSurveyProcessor {
             return availableQuestions;
         }
 
+        //If user already responded to a survey question today, do not serve another
+        if (!surveyOneResponses.isEmpty() && surveyOneResponses.get(0).created.withTimeAtStartOfDay().isEqual(today)) {
+            return Lists.newArrayList();
+        }
+
         //Returns and saves 1st available question.
         final DateTime expiration = today.plusDays(1);
 
