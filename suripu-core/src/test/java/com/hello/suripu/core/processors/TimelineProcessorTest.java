@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.NeuralNetAlgorithmOutput;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.db.AccountReadDAO;
@@ -373,6 +374,19 @@ public class TimelineProcessorTest {
         }
     };
 
+    final AlgorithmConfiguration algorithmConfiguration = new AlgorithmConfiguration() {
+        @Override
+        public int getArtificalLightStartMinuteOfDay() {
+            return 21*60 + 30;
+        }
+
+        @Override
+        public int getArtificalLightStopMinuteOfDay() {
+            return 5*60;
+        }
+    };
+
+
     public final Map<String,Boolean> features = Maps.newHashMap();
 
     public void setFeature(final String feat,boolean on) {
@@ -455,7 +469,7 @@ public class TimelineProcessorTest {
                 pillDataReadDAO,deviceReadDAO,deviceDataReadAllSensorsDAO,
                 ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAO,
                 senseColorDAO,priorsDAO,featureExtractionModelsDAO,calibrationDAO,
-                defaultModelEnsembleDAO,userTimelineTestGroupDAO, neuralNetEndpoint);
+                defaultModelEnsembleDAO,userTimelineTestGroupDAO, neuralNetEndpoint,algorithmConfiguration);
 
 
         final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());

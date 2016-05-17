@@ -33,6 +33,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
 
+    private final int startMinuteOfArtificalLight;
+    private final int stopMinuteOfArtificalLight;
 
     //DO NOT CHANGE THE INDICES
     //as long as index is right, the order shouldn't matter
@@ -57,8 +59,16 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NeuralNetAlgorithm.class);
 
+    public NeuralNetAlgorithm(final NeuralNetEndpoint endpoint, final AlgorithmConfiguration algorithmConfiguration) {
+        this.endpoint = endpoint;
+        this.startMinuteOfArtificalLight = algorithmConfiguration.getArtificalLightStartMinuteOfDay();
+        this.stopMinuteOfArtificalLight = algorithmConfiguration.getArtificalLightStopMinuteOfDay();
+    }
+
     public NeuralNetAlgorithm(final NeuralNetEndpoint endpoint) {
         this.endpoint = endpoint;
+        startMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 21 + 30; //21:30
+        stopMinuteOfArtificalLight = 5*60;
     }
 
 
@@ -77,8 +87,31 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         return Optional.of(idx);
     }
 
+    protected boolean isArtificalLight(final DateTime localUtcTime) {
+        final int minuteOfDay = localUtcTime.getMinuteOfDay();
 
-    protected static double [][] getSensorData(final OneDaysSensorData oneDaysSensorData) throws  Exception {
+        // |---0xxxxxxxxxxx1------------|
+        //
+        // OR
+        //
+        // |xxxx1--------------------0xx|
+
+        //spans midnight?
+        if (stopMinuteOfArtificalLight < startMinuteOfArtificalLight) {
+            if (minuteOfDay >= startMinuteOfArtificalLight || minuteOfDay < stopMinuteOfArtificalLight) {
+                return true;
+            }
+        }
+        else {
+            if (minuteOfDay >= startMinuteOfArtificalLight && minuteOfDay < stopMinuteOfArtificalLight) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected double [][] getSensorData(final OneDaysSensorData oneDaysSensorData) throws  Exception {
 
         final List<Sample> light = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT);
         final List<Sample> soundcount = oneDaysSensorData.allSensorSampleList.get(Sensor.SOUND_NUM_DISTURBANCES);
@@ -126,8 +159,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             //get local time, enforce artificial light constraint
             final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
 
-            //if between 5am and 8pm, light is "natural", so we don't care about it, and want to zero it out
-            if (time.getHourOfDay() >= 5 && time.getHourOfDay() <= 19) {
+            //if between 5am and 10pm, light is "natural", so we don't care about it, and want to zero it out
+            if (!isArtificalLight(time)) {
 
                 final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
