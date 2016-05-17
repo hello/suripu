@@ -3,7 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -49,7 +49,7 @@ public class Account {
     public final String firstname;
 
     @JsonProperty("lastname")
-    public final String lastname;
+    public final Optional<String> lastname;
 
     @JsonProperty("gender")
     public final Gender gender;
@@ -107,7 +107,7 @@ public class Account {
                     final Integer tzOffsetMillis,
                     final String name,
                     final String firstname,
-                    final String lastname,
+                    final Optional<String> lastname,
                     final Gender gender,
                     final Integer height,
                     final Integer weight,
@@ -149,7 +149,7 @@ public class Account {
      */
     public static Account fromRegistration(final Registration registration, final Long id) {
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
-                registration.name, "", "", registration.gender, registration.height, registration.weight, registration.created,
+                registration.name, "", Optional.<String>absent(), registration.gender, registration.height, registration.weight, registration.created,
                 registration.created.getMillis(), registration.DOB, Boolean.FALSE,
                 registration.latitude, registration.longitude);
     }
@@ -165,7 +165,7 @@ public class Account {
         private Optional<Long> id;
         private String name;
         private String firstname;
-        private String lastname;
+        private Optional<String> lastname;
         private Gender gender;
         private Integer height;
         private Integer weight;
@@ -183,7 +183,7 @@ public class Account {
             this.id = Optional.absent();
             this.name = "";
             this.firstname = "";
-            this.lastname = "";
+            this.lastname = Optional.absent();
             this.gender = Gender.OTHER;
             this.height = 0;
             this.weight = 0;
@@ -230,7 +230,7 @@ public class Account {
 
         @JsonProperty("lastname")
         public Builder withLastname(final String lastname) {
-            this.lastname = lastname;
+            this.lastname = Optional.fromNullable(lastname);
             return this;
         }
 
@@ -347,7 +347,7 @@ public class Account {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(Account.class)
+        return MoreObjects.toStringHelper(Account.class)
                 .add("id", (id.isPresent()) ? id.get() : "N/A")
                 .add("external_id", generateExternalId())
                 .add("email", email)
