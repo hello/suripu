@@ -148,8 +148,9 @@ public class Account {
      * @return
      */
     public static Account fromRegistration(final Registration registration, final Long id) {
+        final String firstname = (registration.firstname == null) ? registration.name : registration.firstname;
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
-                registration.name, "", Optional.<String>absent(), registration.gender, registration.height, registration.weight, registration.created,
+                registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender, registration.height, registration.weight, registration.created,
                 registration.created.getMillis(), registration.DOB, Boolean.FALSE,
                 registration.latitude, registration.longitude);
     }
