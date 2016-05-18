@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -122,6 +123,7 @@ public class InsightProcessorTest {
         final InsightsDAODynamoDB insightsDAODynamoDB = Mockito.mock(InsightsDAODynamoDB.class);
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
         final AccountPreferencesDAO preferencesDAO = Mockito.mock(AccountPreferencesDAO.class);
+        final AccountDAO accountDAO = Mockito.mock(AccountDAO.class);
         final LightData lightData = Mockito.mock(LightData.class);
         final WakeStdDevData wakeStdDevData = Mockito.mock(WakeStdDevData.class);
         final CalibrationDAO calibrationDAO = Mockito.mock(CalibrationDAO.class);
@@ -186,13 +188,15 @@ public class InsightProcessorTest {
         Mockito.when(marketingInsightsSeenDAODynamoDB.updateSeenCategories(FAKE_ACCOUNT_ID, InsightCard.Category.WORK)).thenReturn(Boolean.TRUE);
 
         //Initialize InsightProcessor
-        final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAODynamoDB, deviceDAO,
+        final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAODynamoDB,
+                deviceDAO,
                 trendsInsightsDAO,
                 scoreDAODynamoDB,
                 insightsDAODynamoDB,
                 sleepStatsDAODynamoDB,
                 preferencesDAO,
                 accountInfoProcessor,
+                accountDAO,
                 lightData,
                 wakeStdDevData,
                 calibrationDAO,

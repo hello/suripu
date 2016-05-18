@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
@@ -27,6 +29,7 @@ import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
+import com.hello.suripu.core.processors.insights.CaffeineAlarm;
 import com.hello.suripu.core.processors.insights.Drive;
 import com.hello.suripu.core.processors.insights.Eat;
 import com.hello.suripu.core.processors.insights.GoalCoffee;
@@ -44,6 +47,7 @@ import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.PartnerMotionInsight;
 import com.hello.suripu.core.processors.insights.Play;
 import com.hello.suripu.core.processors.insights.Run;
+import com.hello.suripu.core.processors.insights.SleepAlarm;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.SleepScore;
 import com.hello.suripu.core.processors.insights.SoundDisturbance;
@@ -94,6 +98,7 @@ public class InsightProcessor {
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountInfoProcessor accountInfoProcessor;
+    private final AccountReadDAO accountReadDAO;
     private final CalibrationDAO calibrationDAO;
     private final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB;
 
@@ -114,6 +119,7 @@ public class InsightProcessor {
                             @NotNull final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
+                            @NotNull final AccountReadDAO accountReadDAO,
                             @NotNull final LightData lightData,
                             @NotNull final WakeStdDevData wakeStdDevData,
                             @NotNull final CalibrationDAO calibrationDAO,
@@ -129,6 +135,7 @@ public class InsightProcessor {
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountInfoProcessor = accountInfoProcessor;
+        this.accountReadDAO = accountReadDAO;
         this.calibrationDAO = calibrationDAO;
         this.marketingInsightsSeenDAODynamoDB = marketingInsightsSeenDAODynamoDB;
     }
@@ -423,6 +430,9 @@ public class InsightProcessor {
             case BED_LIGHT_INTENSITY_RATIO:
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
+            case CAFFEINE:
+                insightCardOptional = CaffeineAlarm.getInsights(accountInfoProcessor, sleepStatsDAODynamoDB, accountId);
+                break;
             case DRIVE:
                 insightCardOptional = Drive.getMarketingInsights(accountId);
                 break;
@@ -470,6 +480,9 @@ public class InsightProcessor {
                 break;
             case SLEEP_SCORE:
                 insightCardOptional = SleepScore.getMarketingInsights(accountId);
+                break;
+            case SLEEP_TIME:
+                insightCardOptional = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId);
                 break;
             case SOUND:
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
@@ -576,6 +589,7 @@ public class InsightProcessor {
         private @Nullable InsightsDAODynamoDB insightsDAODynamoDB;
         private @Nullable SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
         private @Nullable AccountPreferencesDAO preferencesDAO;
+        private @Nullable AccountReadDAO accountReadDAO;
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
@@ -610,6 +624,11 @@ public class InsightProcessor {
             return this;
         }
 
+        public Builder withAccountReadDAO(final AccountReadDAO accountReadDAO) {
+            this.accountReadDAO = accountReadDAO;
+            return this;
+        }
+
         public Builder withAccountInfoProcessor(final AccountInfoProcessor processor) {
             this.accountInfoProcessor = processor;
             return this;
@@ -638,17 +657,21 @@ public class InsightProcessor {
             checkNotNull(sleepStatsDAODynamoDB, "sleepStatsDAODynamoDB can not be null");
             checkNotNull(preferencesDAO, "preferencesDAO can not be null");
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
+            checkNotNull(accountReadDAO, "accountReadDAO can not be null");
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
             checkNotNull(marketingInsightsSeenDAODynamoDB, "marketInsightsSeenDAO cannot be null");
 
-            return new InsightProcessor(deviceDataDAODynamoDB, deviceReadDAO,
+            return new InsightProcessor(deviceDataDAODynamoDB,
+                    deviceReadDAO,
                     trendsInsightsDAO,
-                    scoreDAODynamoDB, insightsDAODynamoDB,
+                    scoreDAODynamoDB,
+                    insightsDAODynamoDB,
                     sleepStatsDAODynamoDB,
                     preferencesDAO,
                     accountInfoProcessor,
+                    accountReadDAO,
                     lightData,
                     wakeStdDevData,
                     calibrationDAO,

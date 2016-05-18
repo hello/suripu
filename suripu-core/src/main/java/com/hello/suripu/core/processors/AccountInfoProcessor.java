@@ -101,6 +101,10 @@ public class AccountInfoProcessor {
         return this.getYesNoResponse(accountId, AccountInfo.Type.LIGHT_SLEEPER);
     }
 
+    public Boolean checkUserDrinksCaffeine(final Long accountId) {
+        return this.getYesNoResponse(accountId, AccountInfo.Type.CAFFEINE);
+    }
+
     /**
      * To process "yes", "no", "sometimes" responses and return a boolean result
      * @param accountId Long
