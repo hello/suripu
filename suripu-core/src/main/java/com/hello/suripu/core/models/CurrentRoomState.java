@@ -340,12 +340,12 @@ public class CurrentRoomState {
         String idealSoundCondition = English.SOUND_ADVICE_MESSAGE;
         String message = (preSleep) ? English.IDEAL_SOUND_PRE_SLEEP_MESSAGE: English.IDEAL_SOUND_MESSAGE;;
 
-        if (sound > 90.0) {
+        if (sound > 90.0f) {
             // lawn mower
             condition = State.Condition.ALERT;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.ALERT_SOUND_PRE_SLEEP_MESSAGE : English.ALERT_SOUND_MESSAGE;
-        } else if (sound > 55.0) {
+        } else if (sound > 60.0f) {
             condition = State.Condition.WARNING;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.WARNING_SOUND_PRE_SLEEP_MESSAGE: English.WARNING_SOUND_MESSAGE;
