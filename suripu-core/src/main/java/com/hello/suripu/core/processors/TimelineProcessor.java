@@ -645,7 +645,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (this.hasSoundInTimeline(accountId)) {
             final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
 
-            LOGGER.debug("event=sound account={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
+            LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
             final List<Event> soundEvents = getSoundEvents(
                     allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
                     motionEvents,
@@ -881,6 +881,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return Collections.EMPTY_LIST;
     }
 
+    /**
+     * Get sound disturbance events for timeline
+     * @param soundSamples sound values
+     * @param motionEvents motion values (for populating segments)
+     * @param lightOutTimeOptional lightOut event time
+     * @param sleepEventsFromAlgorithm sleep/wake times
+     * @param usePeakEnergyThreshold use higher threshold ff
+     * @return list of events
+     */
     private List<Event> getSoundEvents(final List<Sample> soundSamples,
                                        final List<MotionEvent> motionEvents,
                                        final Optional<DateTime> lightOutTimeOptional,

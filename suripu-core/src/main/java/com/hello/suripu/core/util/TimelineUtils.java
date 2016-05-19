@@ -1242,7 +1242,7 @@ public class TimelineUtils {
             return Collections.EMPTY_LIST;
         }
 
-        LOGGER.debug("Sound samples size: {}", soundData.size());
+        LOGGER.debug("debug=sound-samples size={}", soundData.size());
 
         final LinkedList<AmplitudeData> soundAmplitudeData = new LinkedList<>();
         for (final Sample sample : soundData) {
@@ -1275,7 +1275,7 @@ public class TimelineUtils {
 
         // audio_peak_energy is more sensitive to sudden loud noise, use a higher threshold
         final float audioThreshold = (usePeakEnergyThreshold) ? SoundEventsDetector.PEAK_ENERGY_THRESHOLD : SoundEventsDetector.PEAK_DISTURBANCE_THRESHOLD;
-        LOGGER.debug("debug=sound-event-threshold threshold={}", audioThreshold);
+        LOGGER.debug("action=select-sound-event-threshold threshold={}", audioThreshold);
 
         final LinkedList<Segment> soundSegments = detector.process(soundAmplitudeData, audioThreshold);
 
