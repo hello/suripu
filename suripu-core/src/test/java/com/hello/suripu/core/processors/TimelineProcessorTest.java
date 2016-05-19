@@ -372,6 +372,16 @@ public class TimelineProcessorTest {
         public Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") String pillId) {
             return null;
         }
+
+        @Override
+        public Optional<Long> getAllSensesCount() {
+            return Optional.absent();
+        }
+
+        @Override
+        public Optional<Long> getAllPillsCount() {
+            return Optional.absent();
+        }
     };
 
     final AlgorithmConfiguration algorithmConfiguration = new AlgorithmConfiguration() {

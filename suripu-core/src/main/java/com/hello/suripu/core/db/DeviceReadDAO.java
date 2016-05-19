@@ -49,6 +49,10 @@ public interface DeviceReadDAO {
             "ORDER BY id DESC LIMIT 1")
     Optional<Long> getPartnerAccountId(@Bind("account_id") final Long accountId);
 
+    @SingleValueResult(Long.class)
+    @SqlQuery("SELECT COUNT(DISTINCT device_id) FROM account_device_map;")
+    Optional<Long> getAllSensesCount();
+
     // account to pill (aka tracker) map
 
     @RegisterMapper(DeviceAccountPairMapper.class)
@@ -67,4 +71,9 @@ public interface DeviceReadDAO {
     @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
     Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") final String pillId);
+
+    @SingleValueResult(Long.class)
+    @SqlQuery("SELECT COUNT(DISTINCT device_id) FROM account_tracker_map;")
+    Optional<Long> getAllPillsCount();
+
 }
