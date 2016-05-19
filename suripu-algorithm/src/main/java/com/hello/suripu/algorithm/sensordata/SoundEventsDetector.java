@@ -21,7 +21,8 @@ public class SoundEventsDetector {
     private static final Logger LOGGER = LoggerFactory.getLogger(SoundEventsDetector.class);
 
     private static final long MINUTE_IN_MILLIS = 60000L;
-    private static final float PEAK_DISTURBANCE_NOISE_FLOOR = 50.0f;
+    public static final float PEAK_DISTURBANCE_THRESHOLD = 50.0f;
+    public static final float PEAK_ENERGY_THRESHOLD = 60.0f;
 
     private final int approxQuietTimeStart;
     private final int approxQuietTimeEnd;
@@ -39,7 +40,7 @@ public class SoundEventsDetector {
      * @param rawDataMinutes raw sound data, one value per minute
      * @return list of sound segments
      */
-    public LinkedList<Segment> process(final LinkedList<AmplitudeData> rawDataMinutes) {
+    public LinkedList<Segment> process(final LinkedList<AmplitudeData> rawDataMinutes, final float audioThreshold) {
 
         LOGGER.debug("Data Start time: {}", rawDataMinutes.get(0).timestamp);
         LOGGER.debug("Data End time: {}", rawDataMinutes.getLast().timestamp);
@@ -113,7 +114,7 @@ public class SoundEventsDetector {
 
         final LinkedList<Segment> soundSegments = new LinkedList<>();
         for (final AmplitudeData datum : sortedAmplitudes) {
-            if (datum.amplitude <= PEAK_DISTURBANCE_NOISE_FLOOR) {
+            if (datum.amplitude <= audioThreshold) {
                 break;
             }
             soundSegments.add(new Segment(datum.timestamp, datum.timestamp + MINUTE_IN_MILLIS, datum.offsetMillis));

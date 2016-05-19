@@ -174,6 +174,9 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.OFF_BED_HMM_MOTION_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useHigherThesholdForSoundEvents(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_USE_HIGHER_THRESHOLD, accountId, Collections.EMPTY_LIST);
+    }
 
 
 }

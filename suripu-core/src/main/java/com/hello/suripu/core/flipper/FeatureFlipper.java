@@ -105,6 +105,7 @@ public class FeatureFlipper {
     public final static String SMART_ALARM = "smart_alarm";
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
+    public final static String SOUND_EVENTS_USE_HIGHER_THRESHOLD = "sound_events_use_higher_threshold";
     public final static String SOUND_INFO_TIMELINE = "sound_info_timeline";
     public final static String STOP_PROCESS_TIMELINE_FROM_WORKER = "stop_process_timeline_from_worker";
 
