@@ -11,7 +11,7 @@ env:
   - secure: Ed/gOoioqi7oacM+HpYsBF8nfXE6sd3Y99ZtNKg4mTrNUB9adF9jijv2B669TP+L/QXNoMvZizF7Cq+JFxjgH39pEMuMJfMsci2upxEtymZRbWKv3Kr6wM8AF7Jdyinf71RkIZC3VffKOluQ6vSFx1O51oVuSyrjyGxOYraPKWI=
 script:
 - if [ $TRAVIS_PULL_REQUEST != 'false' ]; then
-      BUILD_NUMBER=${BUILD_NUMBER}-SNAPSHOT
+      BUILD_NUMBER=${BUILD_NUMBER}-SNAPSHOT;
   fi
 - mvn clean
 - mvn versions:set -DnewVersion=$BUILD_NUMBER
