@@ -7,7 +7,7 @@ env:
   global:
   - APP_NAME=suripu
   - BUILD_NUMBER=0.8.$TRAVIS_BUILD_NUMBER
-  - if [ $TRAVIS_PULL_REQUEST -ne 'false' ]; then
+  - if [ $TRAVIS_PULL_REQUEST != 'false' ]; then
       BUILD_NUMBER=${BUILD_NUMBER}-SNAPSHOT
     fi
   - secure: ZtcabJIbdoPJSX8tHU6Hocj1dknD/UxATnqvvVo3RK9CwWYlzEbO/3AyAqul78ythMOnvouU9dIFoxjxb4lek1nsd3dvSix7zNa4YVDvcj0+uV/IBl12OqTO2RnxlP5MPIeRzkrhs0vg1OfvxquMizBcBdF7MbwmdUtL1g1IA3A=
