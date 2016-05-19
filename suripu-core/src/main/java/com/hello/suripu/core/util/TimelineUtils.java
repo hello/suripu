@@ -1233,15 +1233,16 @@ public class TimelineUtils {
      * @return
      */
     public List<Event> getSoundEvents(final List<Sample> soundData,
-                                             final Map<Long, Integer> sleepDepths,
-                                             final Optional<DateTime> optionalLightsOut,
-                                             final Optional<DateTime> optionalSleepTime,
-                                             final Optional<DateTime> optionalAwakeTime) {
+                                      final Map<Long, Integer> sleepDepths,
+                                      final Optional<DateTime> optionalLightsOut,
+                                      final Optional<DateTime> optionalSleepTime,
+                                      final Optional<DateTime> optionalAwakeTime,
+                                      final Boolean usePeakEnergyThreshold) {
         if (soundData.size() == 0) {
             return Collections.EMPTY_LIST;
         }
 
-        LOGGER.debug("Sound samples size: {}", soundData.size());
+        LOGGER.debug("debug=sound-samples size={}", soundData.size());
 
         final LinkedList<AmplitudeData> soundAmplitudeData = new LinkedList<>();
         for (final Sample sample : soundData) {
@@ -1272,7 +1273,11 @@ public class TimelineUtils {
         // get sound events
         final SoundEventsDetector detector = new SoundEventsDetector(approxQuietTimeStart, approxQuietTimeEnds, smoothingDegree);
 
-        final LinkedList<Segment> soundSegments = detector.process(soundAmplitudeData);
+        // audio_peak_energy is more sensitive to sudden loud noise, use a higher threshold
+        final float audioThreshold = (usePeakEnergyThreshold) ? SoundEventsDetector.PEAK_ENERGY_THRESHOLD : SoundEventsDetector.PEAK_DISTURBANCE_THRESHOLD;
+        LOGGER.debug("action=select-sound-event-threshold threshold={}", audioThreshold);
+
+        final LinkedList<Segment> soundSegments = detector.process(soundAmplitudeData, audioThreshold);
 
         final List<Event> events = new ArrayList<>();
         for (final Segment segment : soundSegments) {

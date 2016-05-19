@@ -5,11 +5,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
-import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
@@ -62,7 +62,6 @@ import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
-import com.hello.suripu.core.util.TrackerMotionUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -646,8 +645,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (this.hasSoundInTimeline(accountId)) {
             final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
 
-            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
-                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
+            LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
+            final List<Event> soundEvents = getSoundEvents(
+                    allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
+                    motionEvents,
+                    lightOutTimeOptional,
+                    sleepEventsFromAlgorithm,
+                    this.useHigherThesholdForSoundEvents(accountId));
+
             for (final Event event : soundEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
@@ -876,10 +881,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return Collections.EMPTY_LIST;
     }
 
+    /**
+     * Get sound disturbance events for timeline
+     * @param soundSamples sound values
+     * @param motionEvents motion values (for populating segments)
+     * @param lightOutTimeOptional lightOut event time
+     * @param sleepEventsFromAlgorithm sleep/wake times
+     * @param usePeakEnergyThreshold use higher threshold ff
+     * @return list of events
+     */
     private List<Event> getSoundEvents(final List<Sample> soundSamples,
                                        final List<MotionEvent> motionEvents,
                                        final Optional<DateTime> lightOutTimeOptional,
-                                       final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm) {
+                                       final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm,
+                                       final Boolean usePeakEnergyThreshold) {
         if (soundSamples.isEmpty()) {
             return Collections.EMPTY_LIST;
         }
@@ -919,7 +934,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        return timelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
+        return timelineUtils.getSoundEvents(soundSamples, sleepDepths,
+                lightOutTimeOptional, optionalSleepTime, optionalAwakeTime, usePeakEnergyThreshold);
     }
 
 
