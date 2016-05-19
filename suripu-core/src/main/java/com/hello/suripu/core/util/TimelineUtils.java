@@ -1275,6 +1275,8 @@ public class TimelineUtils {
 
         // audio_peak_energy is more sensitive to sudden loud noise, use a higher threshold
         final float audioThreshold = (usePeakEnergyThreshold) ? SoundEventsDetector.PEAK_ENERGY_THRESHOLD : SoundEventsDetector.PEAK_DISTURBANCE_THRESHOLD;
+        LOGGER.debug("debug=sound-event-threshold threshold={}", audioThreshold);
+
         final LinkedList<Segment> soundSegments = detector.process(soundAmplitudeData, audioThreshold);
 
         final List<Event> events = new ArrayList<>();
