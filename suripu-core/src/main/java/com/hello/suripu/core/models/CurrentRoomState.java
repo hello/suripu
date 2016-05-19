@@ -345,7 +345,7 @@ public class CurrentRoomState {
             condition = State.Condition.ALERT;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.ALERT_SOUND_PRE_SLEEP_MESSAGE : English.ALERT_SOUND_MESSAGE;
-        } else if (sound > 40.0) {
+        } else if (sound > 55.0) {
             condition = State.Condition.WARNING;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.WARNING_SOUND_PRE_SLEEP_MESSAGE: English.WARNING_SOUND_MESSAGE;
