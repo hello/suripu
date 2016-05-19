@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
+import com.hello.suripu.core.processors.insights.SoundLevel;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DataUtils;
@@ -340,12 +341,13 @@ public class CurrentRoomState {
         String idealSoundCondition = English.SOUND_ADVICE_MESSAGE;
         String message = (preSleep) ? English.IDEAL_SOUND_PRE_SLEEP_MESSAGE: English.IDEAL_SOUND_MESSAGE;;
 
-        if (sound > 90.0f) {
+        if (sound > SoundLevel.SOUND_LEVEL_ALERT) {
             // lawn mower
             condition = State.Condition.ALERT;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.ALERT_SOUND_PRE_SLEEP_MESSAGE : English.ALERT_SOUND_MESSAGE;
-        } else if (sound > 60.0f) {
+
+        } else if (sound > SoundLevel.SOUND_LEVEL_WARNING) {
             condition = State.Condition.WARNING;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.WARNING_SOUND_PRE_SLEEP_MESSAGE: English.WARNING_SOUND_MESSAGE;
