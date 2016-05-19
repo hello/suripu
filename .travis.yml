@@ -7,12 +7,12 @@ env:
   global:
   - APP_NAME=suripu
   - BUILD_NUMBER=0.8.$TRAVIS_BUILD_NUMBER
-  - if [ $TRAVIS_PULL_REQUEST != 'false' ]; then
-      BUILD_NUMBER=${BUILD_NUMBER}-SNAPSHOT
-    fi
   - secure: ZtcabJIbdoPJSX8tHU6Hocj1dknD/UxATnqvvVo3RK9CwWYlzEbO/3AyAqul78ythMOnvouU9dIFoxjxb4lek1nsd3dvSix7zNa4YVDvcj0+uV/IBl12OqTO2RnxlP5MPIeRzkrhs0vg1OfvxquMizBcBdF7MbwmdUtL1g1IA3A=
   - secure: Ed/gOoioqi7oacM+HpYsBF8nfXE6sd3Y99ZtNKg4mTrNUB9adF9jijv2B669TP+L/QXNoMvZizF7Cq+JFxjgH39pEMuMJfMsci2upxEtymZRbWKv3Kr6wM8AF7Jdyinf71RkIZC3VffKOluQ6vSFx1O51oVuSyrjyGxOYraPKWI=
 script:
+- if [ $TRAVIS_PULL_REQUEST != 'false' ]; then
+      BUILD_NUMBER=${BUILD_NUMBER}-SNAPSHOT
+  fi
 - mvn clean
 - mvn versions:set -DnewVersion=$BUILD_NUMBER
 - mvn versions:commit
