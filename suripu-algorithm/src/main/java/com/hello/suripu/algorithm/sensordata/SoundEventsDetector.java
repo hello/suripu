@@ -22,7 +22,7 @@ public class SoundEventsDetector {
 
     private static final long MINUTE_IN_MILLIS = 60000L;
     public static final float PEAK_DISTURBANCE_THRESHOLD = 50.0f;
-    public static final float PEAK_ENERGY_THRESHOLD = 60.0f;
+    public static final float PEAK_ENERGY_THRESHOLD = 65.0f;
 
     private final int approxQuietTimeStart;
     private final int approxQuietTimeEnd;
@@ -117,6 +117,8 @@ public class SoundEventsDetector {
             if (datum.amplitude <= audioThreshold) {
                 break;
             }
+            final DateTime dateTime = new DateTime(datum.timestamp, DateTimeZone.UTC).plusMillis(datum.offsetMillis);
+            LOGGER.debug("debug=sound-event-value value={} time={}", datum.amplitude, dateTime);
             soundSegments.add(new Segment(datum.timestamp, datum.timestamp + MINUTE_IN_MILLIS, datum.offsetMillis));
         }
 
