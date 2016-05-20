@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.MultiDensityImage;
+import com.hello.suripu.core.models.MultiDensityImage;
 
 import org.joda.time.DateTime;
 import org.junit.After;

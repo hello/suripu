@@ -1,4 +1,4 @@
-package com.hello.suripu.core.models.Insights;
+package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
