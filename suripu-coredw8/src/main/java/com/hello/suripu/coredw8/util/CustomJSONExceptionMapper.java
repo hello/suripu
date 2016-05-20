@@ -98,74 +98,46 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
     private Response handleWebApplicationException(Throwable exception, Response defaultResponse) {
         WebApplicationException webAppException = (WebApplicationException) exception;
 
-        if (webAppException.getResponse().getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
-            return Response
-                    .status(Response.Status.NO_CONTENT)
-                    .entity("")
-                    .type(MediaType.APPLICATION_JSON)
-                    .build();
+        final int status = webAppException.getResponse().getStatus();
+        final Object entity;
+
+        switch (status) {
+            case 204:
+                entity = "";
+                break;
+            case 401:
+                entity = notAuthorized;
+                break;
+            case 403:
+                entity = new JsonError(403, "Forbidden");
+                break;
+            case 404:
+                entity = notFoundError;
+                break;
+            case 400:
+                entity = new JsonError(400, "Malformed request");
+                break;
+            case 405:
+                entity = new JsonError(405, "Method not allowed");
+                break;
+            case 409:
+                entity = new JsonError(409, "conflict.");
+                break;
+            case 415:
+                entity = new JsonError(415, "Unsupported Media Type");
+                break;
+            case 429:
+                entity = new JsonError(429, "Too many requests");
+                break;
+            default:
+                LOGGER.error("WebApplicationException not caught: {} {}", status, webAppException.getMessage());
+                return defaultResponse;
         }
 
-        if (webAppException.getResponse().getStatus() == 401) {
-            return Response
-                    .status(Response.Status.UNAUTHORIZED)
-                    .entity(notAuthorized)
-                    .type(MediaType.APPLICATION_JSON)
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 403) {
-            return Response
-                    .status(Response.Status.FORBIDDEN)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(403, "Forbidden"))
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 404) {
-            return Response
-                    .status(Response.Status.NOT_FOUND)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(notFoundError)
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 400) {
-            return Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(400, "Malformed request"))
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 405) {
-            return Response
-                    .status(405)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(405, "Method not allowed"))
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 409) {
-            return Response
-                    .status(409)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(409, "conflict."))
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 415) {
-            return Response
-                    .status(415)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(415, "Unsupported Media Type"))
-                    .build();
-        }
-
-
-
-        LOGGER.error("WebApplicationException not caught: {} {}", webAppException.getResponse().getStatus(), webAppException.getMessage());
-
-        return defaultResponse;
+        return Response
+                .status(status)
+                .entity(entity)
+                .type(MediaType.APPLICATION_JSON)
+                .build();
     }
 }
