@@ -23,4 +23,8 @@ public class MultiDensityImage {
         this.phoneDensityHigh = phoneDensityHigh;
         this.phoneDensityExtraHigh = phoneDensityExtraHigh;
     }
+
+    public static MultiDensityImage empty(){
+        return new MultiDensityImage(Optional.<String>absent(),Optional.<String>absent(),Optional.<String>absent());
+    }
 }
