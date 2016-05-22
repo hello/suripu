@@ -89,14 +89,14 @@ public class ProfilePhotoStoreDynamoDB implements ProfilePhotoStore {
                 .withLong(AttributeName.ACCOUNT_ID.value, profilePhoto.accountId())
                 .withString(AttributeName.CREATED_AT.value, profilePhoto.createdAt().toString(dateTimeFormatter));
 
-        if(profilePhoto.photo().phoneDensityNormal.isPresent()) {
-            item.withString(AttributeName.DENSITY_NORMAL.value, profilePhoto.photo().phoneDensityNormal.get());
+        if(profilePhoto.photo().phoneDensityNormal().isPresent()) {
+            item.withString(AttributeName.DENSITY_NORMAL.value, profilePhoto.photo().phoneDensityNormal().get());
         }
-        if(profilePhoto.photo().phoneDensityHigh.isPresent()) {
-            item.withString(AttributeName.DENSITY_HIGH.value, profilePhoto.photo().phoneDensityNormal.get());
+        if(profilePhoto.photo().phoneDensityHigh().isPresent()) {
+            item.withString(AttributeName.DENSITY_HIGH.value, profilePhoto.photo().phoneDensityNormal().get());
         }
-        if(profilePhoto.photo().phoneDensityExtraHigh.isPresent()) {
-            item.withString(AttributeName.DENSITY_EXTRA_HIGH.value, profilePhoto.photo().phoneDensityNormal.get());
+        if(profilePhoto.photo().phoneDensityExtraHigh().isPresent()) {
+            item.withString(AttributeName.DENSITY_EXTRA_HIGH.value, profilePhoto.photo().phoneDensityNormal().get());
         }
 
         table.putItem(item);
