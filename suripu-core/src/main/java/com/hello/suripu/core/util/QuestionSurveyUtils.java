@@ -14,6 +14,11 @@ import java.util.List;
 public class QuestionSurveyUtils {
 
     @VisibleForTesting
+    /*
+    Requirements for being available:
+    1. User has not responded to this question before
+    2. User has responded to other questions with response_ids in this question's dependency_response
+     */
     public static List<Question> getSurveyXQuestion(final List<Response> surveyXResponses, final List<Question> surveyXQuestions) {
         if (surveyXResponses.size() == surveyXQuestions.size()) {
             return Lists.newArrayList();
