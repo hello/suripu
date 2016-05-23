@@ -24,7 +24,7 @@ import java.util.List;
  * Created by jyfan on 5/18/16.
  */
 public class SleepAlarm {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CaffeineAlarm.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SleepAlarm.class);
 
     public static final Integer PRE_SLEEP_TIME = 30;
 
@@ -43,7 +43,7 @@ public class SleepAlarm {
         final String queryStartDateString = DateTimeUtil.dateToYmdString(queryStartDate);
 
         final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartDateString, queryEndDateString);
-        LOGGER.debug("Account id {} length of sleep stats is {} and sleepStats is {} ", accountId, sleepStats.size(), sleepStats);
+        LOGGER.debug("insight=sleep_alarm-account_id={}-sleep_stat_len={}", accountId, sleepStats.size());
         final List<Integer> wakeTimeList = Lists.newArrayList();
         for (final AggregateSleepStats stat : sleepStats) {
 
@@ -71,11 +71,11 @@ public class SleepAlarm {
     public static Optional<InsightCard> processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge) {
 
         if (wakeTimeList.isEmpty()) {
-            LOGGER.debug("Got nothing in wakeTimeList");
+            LOGGER.info("account_id={}-insight=sleep_alarm-action=wake_time_list_empty", accountId);
             return Optional.absent();
         }
         else if (wakeTimeList.size() <= 2) {
-            LOGGER.debug("Size of wakeTimeList is less than 2 for accountId {}", accountId);
+            LOGGER.info("account_id={}-insight=sleep_alarm-action=wake_time_list_too_small", accountId);
             return Optional.absent(); //not big enough to calculate mean meaningfully har har
         }
 
@@ -86,6 +86,7 @@ public class SleepAlarm {
 
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
+            LOGGER.info("insight=sleep_alarm-account_id={}-action=fail_safe_guard");
             return Optional.absent();
         }
 

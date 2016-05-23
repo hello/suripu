@@ -49,7 +49,7 @@ public class CaffeineAlarm {
         final String queryStartDateString = DateTimeUtil.dateToYmdString(queryStartDate);
 
         final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartDateString, queryEndDateString);
-        LOGGER.debug("Account id {} length of sleep stats is {} and sleepStats is {} ", accountId, sleepStats.size(), sleepStats);
+        LOGGER.debug("insight=caffeine_alarm-account_id={}-sleep_stat_len={}", accountId, sleepStats.size());
         final List<Integer> sleepTimeList = Lists.newArrayList();
         for (final AggregateSleepStats stat : sleepStats) {
 
@@ -74,11 +74,11 @@ public class CaffeineAlarm {
     public static Optional<InsightCard> processCaffeineAlarm(final Long accountId, final List<Integer> sleepTimeList) {
 
         if (sleepTimeList.isEmpty()) {
-            LOGGER.debug("Got nothing in sleepTimeList");
+            LOGGER.info("account_id={}-insight=caffeine_alarm-action=sleep_time_list_empty", accountId);
             return Optional.absent();
         }
         else if (sleepTimeList.size() <= 2) {
-            LOGGER.debug("Size of sleepTimeList is less than 2 for accountId {}", accountId);
+            LOGGER.info("account_id={}-insight=caffeine_alarm-action=sleep_time_list_too_small", accountId);
             return Optional.absent(); //not big enough to calculate mean meaningfully har har
         }
 
@@ -93,6 +93,7 @@ public class CaffeineAlarm {
 
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
+            LOGGER.info("insight=caffeine_alarm-account_id={}-action=fail_safe_guard");
             return Optional.absent();
         }
 
