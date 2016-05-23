@@ -75,7 +75,7 @@ public class QuestionSurveyProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices2, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                QuestionCategory.SURVEY_ONE, dependency_response_null);
+                QuestionCategory.SURVEY, dependency_response_null);
         questions.add(question2);
 
         final List<Choice> choices3 = new ArrayList<>();
@@ -89,7 +89,7 @@ public class QuestionSurveyProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices3, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                QuestionCategory.SURVEY_ONE, dependency_response_level2);
+                QuestionCategory.SURVEY, dependency_response_level2);
         questions.add(question3);
 
         final List<Choice> choices4 = new ArrayList<>();
@@ -101,7 +101,7 @@ public class QuestionSurveyProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices4, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                QuestionCategory.SURVEY_ONE, dependency_response_level3);
+                QuestionCategory.SURVEY, dependency_response_level3);
         questions.add(question4);
 
         final List<Choice> choices5 = new ArrayList<>();
@@ -113,7 +113,7 @@ public class QuestionSurveyProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices5, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                QuestionCategory.SURVEY_ONE, dependency_response_level3);
+                QuestionCategory.SURVEY, dependency_response_level3);
         questions.add(question5);
 
         final List<Choice> choices6 = new ArrayList<>();
@@ -125,58 +125,58 @@ public class QuestionSurveyProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices6, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                QuestionCategory.SURVEY_ONE, dependency_response_level3);
+                QuestionCategory.SURVEY, dependency_response_level3);
         questions.add(question6);
 
         return ImmutableList.copyOf(questions);
     }
 
     private ImmutableList<Response> getMockResponseUser0() {
-        final List<Response> surveyOneResponses = new ArrayList<>();
+        final List<Response> surveyResponses = new ArrayList<>();
 
-        return ImmutableList.copyOf(surveyOneResponses);
+        return ImmutableList.copyOf(surveyResponses);
     }
 
     private ImmutableList<Response> getMockResponseUser1() {
-        final List<Response> surveyOneResponses = new ArrayList<>();
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        final List<Response> surveyResponses = new ArrayList<>();
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-        return ImmutableList.copyOf(surveyOneResponses);
+        return ImmutableList.copyOf(surveyResponses);
     }
 
     private ImmutableList<Response> getMockResponseUser2() {
-        final List<Response> surveyOneResponses = Lists.newArrayList();
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(6), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        final List<Response> surveyResponses = Lists.newArrayList();
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(6), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-        return ImmutableList.copyOf(surveyOneResponses);
+        return ImmutableList.copyOf(surveyResponses);
     }
 
     private ImmutableList<Response> getMockResponseUser3() {
-        final List<Response> surveyOneResponses = Lists.newArrayList();
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(9), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        final List<Response> surveyResponses = Lists.newArrayList();
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(9), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-        return ImmutableList.copyOf(surveyOneResponses);
+        return ImmutableList.copyOf(surveyResponses);
     }
 
     private ImmutableList<Response> getMockResponseUser4() {
-        final List<Response> surveyOneResponses = Lists.newArrayList();
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(10), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        final List<Response> surveyResponses = Lists.newArrayList();
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(10), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-        return ImmutableList.copyOf(surveyOneResponses);
+        return ImmutableList.copyOf(surveyResponses);
     }
 
     private ImmutableList<Response> getMockResponseUser5() {
-        final List<Response> surveyOneResponses = Lists.newArrayList();
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 4, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 5, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 6, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-        surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 7, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        final List<Response> surveyResponses = Lists.newArrayList();
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 4, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 5, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 6, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+        surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 7, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-        return ImmutableList.copyOf(surveyOneResponses);
+        return ImmutableList.copyOf(surveyResponses);
     }
 
     private QuestionSurveyProcessor setUp() {
@@ -195,12 +195,12 @@ public class QuestionSurveyProcessorTest {
         final ImmutableList<Response> user3_response = getMockResponseUser3();
         final ImmutableList<Response> user4_response = getMockResponseUser4();
         final ImmutableList<Response> user5_response = getMockResponseUser5();
-        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_0, QuestionCategory.SURVEY_ONE.toString().toLowerCase())).thenReturn(user0_response);
-        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_1, QuestionCategory.SURVEY_ONE.toString().toLowerCase())).thenReturn(user1_response);
-        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_2, QuestionCategory.SURVEY_ONE.toString().toLowerCase())).thenReturn(user2_response);
-        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_3, QuestionCategory.SURVEY_ONE.toString().toLowerCase())).thenReturn(user3_response);
-        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_4, QuestionCategory.SURVEY_ONE.toString().toLowerCase())).thenReturn(user4_response);
-        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_5, QuestionCategory.SURVEY_ONE.toString().toLowerCase())).thenReturn(user5_response);
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_0, QuestionCategory.SURVEY.toString().toLowerCase())).thenReturn(user0_response);
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_1, QuestionCategory.SURVEY.toString().toLowerCase())).thenReturn(user1_response);
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_2, QuestionCategory.SURVEY.toString().toLowerCase())).thenReturn(user2_response);
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_3, QuestionCategory.SURVEY.toString().toLowerCase())).thenReturn(user3_response);
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_4, QuestionCategory.SURVEY.toString().toLowerCase())).thenReturn(user4_response);
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_5, QuestionCategory.SURVEY.toString().toLowerCase())).thenReturn(user5_response);
 
         final List<AccountQuestion> noQuestionsSaved = Lists.newArrayList();
         for (Question question : allQuestions) {

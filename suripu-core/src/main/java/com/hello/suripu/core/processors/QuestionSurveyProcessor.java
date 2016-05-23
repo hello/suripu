@@ -26,14 +26,14 @@ public class QuestionSurveyProcessor {
     private final QuestionResponseReadDAO questionResponseReadDAO;
     private final QuestionResponseDAO questionResponseDAO;
 
-    private final List<Question> surveyOneQuestions;
+    private final List<Question> surveyQuestions;
 
     public QuestionSurveyProcessor(final QuestionResponseReadDAO questionResponseReadDAO,
                                    final QuestionResponseDAO questionResponseDAO,
-                                   final List<Question> surveyOneQuestions) {
+                                   final List<Question> surveyQuestions) {
         this.questionResponseReadDAO = questionResponseReadDAO;
         this.questionResponseDAO = questionResponseDAO;
-        this.surveyOneQuestions = surveyOneQuestions;
+        this.surveyQuestions = surveyQuestions;
     }
 
     /*
@@ -42,7 +42,7 @@ public class QuestionSurveyProcessor {
     public static class Builder {
         private QuestionResponseReadDAO questionResponseReadDAO;
         private QuestionResponseDAO questionResponseDAO;
-        private List<Question> surveyOneQuestions = Lists.newArrayList();
+        private List<Question> surveyQuestions = Lists.newArrayList();
 
         public Builder withQuestionResponseDAO(final QuestionResponseReadDAO questionResponseReadDAO,
                                                final QuestionResponseDAO questionResponseDAO) {
@@ -52,14 +52,14 @@ public class QuestionSurveyProcessor {
         }
 
         public Builder withQuestions(final QuestionResponseReadDAO questionResponseReadDAO) {
-            this.surveyOneQuestions = Lists.newArrayList();
+            this.surveyQuestions = Lists.newArrayList();
 
             final List<Question> allQuestions = questionResponseReadDAO.getAllQuestions();
             for (final Question question : allQuestions) {
-                if (question.category != QuestionCategory.SURVEY_ONE) {
+                if (question.category != QuestionCategory.SURVEY) {
                     continue;
                 }
-                this.surveyOneQuestions.add(question);
+                this.surveyQuestions.add(question);
             }
 
             return this;
@@ -68,9 +68,9 @@ public class QuestionSurveyProcessor {
         public QuestionSurveyProcessor build() {
             checkNotNull(questionResponseReadDAO, "questionResponseRead can not be null");
             checkNotNull(questionResponseDAO, "questionResponse can not be null");
-            checkNotNull(surveyOneQuestions, "surveyOneQuestions can not be null");
+            checkNotNull(surveyQuestions, "surveyQuestions can not be null");
 
-            return new QuestionSurveyProcessor(this.questionResponseReadDAO, this.questionResponseDAO, this.surveyOneQuestions);
+            return new QuestionSurveyProcessor(this.questionResponseReadDAO, this.questionResponseDAO, this.surveyQuestions);
         }
     }
 
@@ -79,16 +79,16 @@ public class QuestionSurveyProcessor {
      */
     public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today) {
 
-        //Get available survey one questions
-        final List<Response> surveyOneResponses = questionResponseReadDAO.getAccountResponseByQuestionCategoryStr(accountId, QuestionCategory.SURVEY_ONE.toString().toLowerCase());
-        final List<Question> availableQuestions = QuestionSurveyUtils.getSurveyXQuestion(surveyOneResponses, surveyOneQuestions);
+        //Get available survey questions
+        final List<Response> surveyResponses = questionResponseReadDAO.getAccountResponseByQuestionCategoryStr(accountId, QuestionCategory.SURVEY.toString().toLowerCase());
+        final List<Question> availableQuestions = QuestionSurveyUtils.getSurveyXQuestion(surveyResponses, surveyQuestions);
 
         if (availableQuestions.isEmpty()) {
             return availableQuestions;
         }
 
         //If user already responded to a survey question today, do not serve another
-        if (!surveyOneResponses.isEmpty() && surveyOneResponses.get(0).created.withTimeAtStartOfDay().isEqual(today)) {
+        if (!surveyResponses.isEmpty() && surveyResponses.get(0).created.withTimeAtStartOfDay().isEqual(today)) {
             return Lists.newArrayList();
         }
 

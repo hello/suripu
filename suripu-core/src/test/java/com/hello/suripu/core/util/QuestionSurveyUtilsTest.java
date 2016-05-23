@@ -37,7 +37,7 @@ public class QuestionSurveyUtilsTest {
 
         private ImmutableList<Question> getMockQuestions() {
 //        final List<Question> questions = new ArrayList<>();
-            final List<Question> SurveyOneQuestions = new ArrayList<>();
+            final List<Question> surveyQuestions = new ArrayList<>();
 
             final List<Integer> dependency_response_null = Lists.newArrayList();
             final List<Integer> dependency_response_level2 = Lists.newArrayList(4,5);
@@ -67,9 +67,9 @@ public class QuestionSurveyUtilsTest {
                     Question.FREQUENCY.ONE_TIME,
                     Question.ASK_TIME.ANYTIME,
                     DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices2, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                    QuestionCategory.SURVEY_ONE, dependency_response_null);
+                    QuestionCategory.SURVEY, dependency_response_null);
 //        questions.add(question2);
-            SurveyOneQuestions.add(question2);
+            surveyQuestions.add(question2);
 
             final List<Choice> choices3 = new ArrayList<>();
             choices3.add(new Choice(8, "Proceed", 2));
@@ -82,9 +82,9 @@ public class QuestionSurveyUtilsTest {
                     Question.FREQUENCY.ONE_TIME,
                     Question.ASK_TIME.ANYTIME,
                     DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices3, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                    QuestionCategory.SURVEY_ONE, dependency_response_level2);
+                    QuestionCategory.SURVEY, dependency_response_level2);
 //        questions.add(question3);
-            SurveyOneQuestions.add(question3);
+            surveyQuestions.add(question3);
 
             final List<Choice> choices4 = new ArrayList<>();
             choices4.add(new Choice(12, "Yes", 2));
@@ -95,9 +95,9 @@ public class QuestionSurveyUtilsTest {
                     Question.FREQUENCY.ONE_TIME,
                     Question.ASK_TIME.ANYTIME,
                     DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices4, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                    QuestionCategory.SURVEY_ONE, dependency_response_level3);
+                    QuestionCategory.SURVEY, dependency_response_level3);
 //        questions.add(question4);
-            SurveyOneQuestions.add(question4);
+            surveyQuestions.add(question4);
 
             final List<Choice> choices5 = new ArrayList<>();
             choices5.add(new Choice(14, "Yes", 2));
@@ -108,9 +108,9 @@ public class QuestionSurveyUtilsTest {
                     Question.FREQUENCY.ONE_TIME,
                     Question.ASK_TIME.ANYTIME,
                     DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices5, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                    QuestionCategory.SURVEY_ONE, dependency_response_level3);
+                    QuestionCategory.SURVEY, dependency_response_level3);
 //        questions.add(question5);
-            SurveyOneQuestions.add(question5);
+            surveyQuestions.add(question5);
 
             final List<Choice> choices6 = new ArrayList<>();
             choices6.add(new Choice(16, "Yes", 2));
@@ -121,63 +121,63 @@ public class QuestionSurveyUtilsTest {
                     Question.FREQUENCY.ONE_TIME,
                     Question.ASK_TIME.ANYTIME,
                     DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices6, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
-                    QuestionCategory.SURVEY_ONE, dependency_response_level3);
+                    QuestionCategory.SURVEY, dependency_response_level3);
 //        questions.add(question6);
-            SurveyOneQuestions.add(question6);
+            surveyQuestions.add(question6);
 
-            return ImmutableList.copyOf(SurveyOneQuestions);
+            return ImmutableList.copyOf(surveyQuestions);
         }
 
         @Test
-        public void testGetSurveyOneQuestion0() {
-            final List<Question> SurveyOneQuestions = getMockQuestions();
+        public void testGetsurveyQuestion0() {
+            final List<Question> surveyQuestions = getMockQuestions();
 
             //No survey questions have been asked yet. Should ask level 1 question
-            final List<Response> surveyOneResponses = Lists.newArrayList();
+            final List<Response> surveyResponses = Lists.newArrayList();
 
-            final List<Question> questionServed = getSurveyXQuestion(surveyOneResponses, SurveyOneQuestions);
+            final List<Question> questionServed = getSurveyXQuestion(surveyResponses, surveyQuestions);
 
             assertThat(questionServed.size(), is(1)); //Only one question from survey asked
             assertThat(questionServed.get(0).id, is(2)); //Ask level 1 question
         }
 
         @Test
-        public void testGetSurveyOneQuestion() {
-            final List<Question> SurveyOneQuestions = getMockQuestions();
+        public void testGetsurveyQuestion() {
+            final List<Question> surveyQuestions = getMockQuestions();
 
             //Proceed-worthy response to level 1 survey question. Should ask level 2 question
-            final List<Response> surveyOneResponses = Lists.newArrayList();
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            final List<Response> surveyResponses = Lists.newArrayList();
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-            final List<Question> questionServed = getSurveyXQuestion(surveyOneResponses, SurveyOneQuestions);
+            final List<Question> questionServed = getSurveyXQuestion(surveyResponses, surveyQuestions);
 
             assertThat(questionServed.size(), is(1)); //Only one question from survey asked
             assertThat(questionServed.get(0).id, is(3)); //Ask level 2 question
         }
 
         @Test
-        public void testGetSurveyOneQuestion2() {
-            final List<Question> SurveyOneQuestions = getMockQuestions();
+        public void testGetsurveyQuestion2() {
+            final List<Question> surveyQuestions = getMockQuestions();
 
             //No Proceed-worthy response to level 1 survey question. Ask no questions
-            final List<Response> surveyOneResponses = Lists.newArrayList();
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(6), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            final List<Response> surveyResponses = Lists.newArrayList();
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(6), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-            final List<Question> questionServed = getSurveyXQuestion(surveyOneResponses, SurveyOneQuestions);
+            final List<Question> questionServed = getSurveyXQuestion(surveyResponses, surveyQuestions);
 
             assertThat(questionServed.isEmpty(), is(Boolean.TRUE)); //No questions asked
         }
 
         @Test
-        public void testGetSurveyOneQuestion3() {
-            final List<Question> SurveyOneQuestions = getMockQuestions();
+        public void testGetsurveyQuestion3() {
+            final List<Question> surveyQuestions = getMockQuestions();
 
             //Proceed-worthy response to level 1 survey question. Proceed-worthy response to level 2 survey question. Should ask level 3 question
-            final List<Response> surveyOneResponses = Lists.newArrayList();
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(9), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            final List<Response> surveyResponses = Lists.newArrayList();
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(9), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-            final List<Question> questionServed = getSurveyXQuestion(surveyOneResponses, SurveyOneQuestions);
+            final List<Question> questionServed = getSurveyXQuestion(surveyResponses, surveyQuestions);
 
             assertThat(questionServed.size(), is(3)); //There are 3 level 3 questions in the mock
             assertThat(Collections.disjoint(Lists.newArrayList(questionServed.get(0).id), Lists.newArrayList(4,5,6)), is(Boolean.FALSE)); //Ask one of the level 3 question
@@ -186,33 +186,33 @@ public class QuestionSurveyUtilsTest {
         }
 
         @Test
-        public void testGetSurveyOneQuestion4() {
-            final List<Question> SurveyOneQuestions = getMockQuestions();
+        public void testGetsurveyQuestion4() {
+            final List<Question> surveyQuestions = getMockQuestions();
 
             //Proceed-worthy response to level 1 survey question. No Proceed-worthy response to level 2 survey question. Ask no questions
-            final List<Response> surveyOneResponses = Lists.newArrayList();
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(10), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            final List<Response> surveyResponses = Lists.newArrayList();
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(4), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(10), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-            final List<Question> questionServed = getSurveyXQuestion(surveyOneResponses, SurveyOneQuestions);
+            final List<Question> questionServed = getSurveyXQuestion(surveyResponses, surveyQuestions);
 
             assertThat(questionServed.isEmpty(), is(Boolean.TRUE)); //No questions asked
         }
 
         @Test
-        public void testGetSurveyOneQuestion5() {
-            final List<Question> SurveyOneQuestions = getMockQuestions();
+        public void testGetsurveyQuestion5() {
+            final List<Question> surveyQuestions = getMockQuestions();
 
             //Answered all questions. Ask no more questions
-            final List<Response> surveyOneResponses = Lists.newArrayList();
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 4, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 5, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 6, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
-            surveyOneResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 7, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            final List<Response> surveyResponses = Lists.newArrayList();
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 2, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 3, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 4, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 5, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 6, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
+            surveyResponses.add(new Response(ID_FILLER, ACCOUNT_QID_FILLER, 7, RESPONSE_STRING_FILLER, Optional.of(0), Optional.of(Boolean.FALSE), DATE_TIME_FILLER_NOW, ACCOUNT_QID_FILLER, Optional.of(Question.FREQUENCY.ONE_TIME), DATE_TIME_FILLER_NOW));
 
-            final List<Question> questionServed = getSurveyXQuestion(surveyOneResponses, SurveyOneQuestions);
+            final List<Question> questionServed = getSurveyXQuestion(surveyResponses, surveyQuestions);
 
             assertThat(questionServed.isEmpty(), is(Boolean.TRUE)); //No questions asked
         }
