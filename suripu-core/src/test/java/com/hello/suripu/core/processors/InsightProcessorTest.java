@@ -466,13 +466,26 @@ public class InsightProcessorTest {
         assertThat(marketingInsightPool.contains(insightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper).get()), is(Boolean.FALSE));
     }
 
+
+    @Test
+    public void test_selectMarketingInsightToGenerate_0() {
+        final InsightProcessor insightProcessor = setUp();
+        final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.RUN);
+
+        final Random random = new Random();
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random, FAKE_DATE_1);
+
+        //TEST - correct date, but we already generated a marketing insight today
+        assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
+    }
+
     @Test
     public void test_selectMarketingInsightToGenerate() {
         final InsightProcessor insightProcessor = setUp();
         final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.RUN);
 
         final Random random = new Random();
-        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random, FAKE_DATE_10);
 
         //TEST - correct date, and there are categories to pick from
         assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.TRUE));
@@ -484,7 +497,7 @@ public class InsightProcessorTest {
         final Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet(InsightCard.Category.RUN);
 
         final Random random = new Random();
-        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_NONE, marketingInsightsSeen, random);
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_NONE, marketingInsightsSeen, random, FAKE_DATE_10);
 
         //TEST - incorrect date
         assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
@@ -503,7 +516,7 @@ public class InsightProcessorTest {
                 InsightCard.Category.WORK);
 
         final Random random = new Random();
-        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        final Optional<InsightCard.Category> marketingInsightToGenerate = insightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random, FAKE_DATE_10);
 
         //TEST - correct date, but there are no categories to pick from
         assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
@@ -537,7 +550,7 @@ public class InsightProcessorTest {
         final Random random = new Random();
 
         //TEST No marketing insights have been generated yet, so marketingInsightToGenerate can be any of the entire pool
-        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random, FAKE_DATE_10);
         assertThat(marketingInsightPool.contains(marketingInsightToGenerate.get()), is(Boolean.TRUE));
     }
 
@@ -560,7 +573,7 @@ public class InsightProcessorTest {
         final Random random = new Random();
 
         //TEST All marketing insights have been generated, so we do not have a marketingInsightToGenerate
-        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random);
+        Optional<InsightCard.Category> marketingInsightToGenerate = spyInsightProcessor.selectMarketingInsightToGenerate(FAKE_DATE_1, marketingInsightsSeen, random, FAKE_DATE_10);
         assertThat(marketingInsightToGenerate.isPresent(), is(Boolean.FALSE));
     }
 

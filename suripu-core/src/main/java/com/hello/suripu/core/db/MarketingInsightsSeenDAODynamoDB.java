@@ -98,7 +98,6 @@ public class MarketingInsightsSeenDAODynamoDB {
             return fromDynamoDBItem(response.data.get());
         }
 
-        // MAYBE IF I GET PREGNANT, THIS CODE WONT CRASH ANYMORE
         return Optional.absent();
     }
 
@@ -128,7 +127,6 @@ public class MarketingInsightsSeenDAODynamoDB {
             }
         }
 
-        // AND THEN I TOLD HER TO STOP BEING A STUPID COW, CRASHING ALL THE TIME
         return false;
     }
 
