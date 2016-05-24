@@ -178,5 +178,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_USE_HIGHER_THRESHOLD, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useSleepScoreV3(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V3, accountId, Collections.EMPTY_LIST);
+    }
 
 }

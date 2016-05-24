@@ -1015,8 +1015,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats) {
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+        final Integer sleepDurationIdeal = (optionalAccount.isPresent()) ? 460 : 0; //place holder fix sleepduration ideal ??
 
-        if (hasSleepScoreDurationV2(accountId)) {
+        if (useSleepScoreV3(accountId)){
+            return SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepDurationIdeal, sleepStats.sleepDurationInMinutes);
+        }
+
+        else if (hasSleepScoreDurationV2(accountId)) {
             return SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
         }
 
