@@ -72,11 +72,11 @@ public class SleepAlarm {
 
         if (wakeTimeList.isEmpty()) {
             LOGGER.info("account_id={}-insight=sleep_alarm-action=wake_time_list_empty", accountId);
-            return Optional.absent();
+            return processSleepAlarmFallBack(accountId);
         }
         else if (wakeTimeList.size() <= 2) {
             LOGGER.info("account_id={}-insight=sleep_alarm-action=wake_time_list_too_small", accountId);
-            return Optional.absent(); //not big enough to calculate mean meaningfully har har
+            return processSleepAlarmFallBack(accountId); //not big enough to calculate mean meaningfully har har
         }
 
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -87,7 +87,7 @@ public class SleepAlarm {
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
             LOGGER.info("insight=sleep_alarm-account_id={}-action=fail_safe_guard");
-            return Optional.absent();
+            return processSleepAlarmFallBack(accountId);
         }
 
         final Double wakeAvgDouble = stats.getMean();
@@ -101,6 +101,15 @@ public class SleepAlarm {
         final String sleepTime = InsightUtils.timeConvert(recommendedSleepMinutesTime);
 
         final Text text = SleepAlarmMsgEN.getSleepAlarmMessage(wakeTime, recSleepDurationMins, preSleepTime, sleepTime);
+
+        return Optional.of(new InsightCard(accountId, text.title, text.message,
+                InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
+    }
+
+    @VisibleForTesting
+    public static Optional<InsightCard> processSleepAlarmFallBack(final Long accountId) {
+        final Text text = SleepAlarmMsgEN.getSleepAlarmFallBackMessage();
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,

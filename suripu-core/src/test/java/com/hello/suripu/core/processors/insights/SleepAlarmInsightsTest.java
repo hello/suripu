@@ -25,30 +25,33 @@ public class SleepAlarmInsightsTest {
     final private Integer FAKE_AGE_NONE = 0;
 
     @Test
-    public void test_NoCardGenerated() {
+    public void test_CardGenerated_fallBack() {
         //No wake times
         final List<Integer> wakeTimeList = Lists.newArrayList();
 
-        final Optional<InsightCard> noResult = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT);
-        assertThat(noResult.isPresent(), is(Boolean.FALSE));
+        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT);
+        final Optional<InsightCard> fallBackCard = SleepAlarm.processSleepAlarmFallBack(FAKE_ACCOUNT_ID);
+        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
     }
 
     @Test
-    public void test_NoCardGenerated_2() {
+    public void test_CardGenerated_fallBack_2() {
         //Not enough wake times
         final List<Integer> wakeTimeList = Lists.newArrayList(1,2);
 
-        final Optional<InsightCard> noResult = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT);
-        assertThat(noResult.isPresent(), is(Boolean.FALSE));
+        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT);
+        final Optional<InsightCard> fallBackCard = SleepAlarm.processSleepAlarmFallBack(FAKE_ACCOUNT_ID);
+        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
     }
 
     @Test
-    public void test_NoCardGenerated_3() {
+    public void test_CardGenerated_fallBack_3() {
         //Range too large
         final List<Integer> wakeTimeList = Lists.newArrayList(0, 60, 60*10);
 
-        final Optional<InsightCard> noResult = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT);
-        assertThat(noResult.isPresent(), is(Boolean.FALSE));
+        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT);
+        final Optional<InsightCard> fallBackCard = SleepAlarm.processSleepAlarmFallBack(FAKE_ACCOUNT_ID);
+        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
     }
 
     @Test

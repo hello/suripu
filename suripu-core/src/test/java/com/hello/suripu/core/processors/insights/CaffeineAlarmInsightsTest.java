@@ -18,30 +18,36 @@ public class CaffeineAlarmInsightsTest {
     final Long FAKE_ACCOUNT_ID = 999L;
 
     @Test
-    public void test_noCardGenerated() {
+    public void test_CardGenerated_fallBack() {
         //no data
         final List<Integer> sleepTimeList = Lists.newArrayList();
 
         final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
-        assertThat(card.isPresent(), is(Boolean.FALSE));
+        final Optional<InsightCard> fallBackCard = CaffeineAlarm.processCaffeineAlarmFallBack(FAKE_ACCOUNT_ID);
+        assertThat(card.isPresent(), is(Boolean.TRUE));
+        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
     }
 
     @Test
-    public void test_noCardGenerated_2() {
+    public void test_CardGenerated_fallBack_2() {
         //not enough data
         final List<Integer> sleepTimeList = Lists.newArrayList(1,2);
 
         final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
-        assertThat(card.isPresent(), is(Boolean.FALSE));
+        final Optional<InsightCard> fallBackCard = CaffeineAlarm.processCaffeineAlarmFallBack(FAKE_ACCOUNT_ID);
+        assertThat(card.isPresent(), is(Boolean.TRUE));
+        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
     }
 
     @Test
-    public void test_noCardGenerated_3() {
+    public void test_CardGenerated_fallBack_3() {
         //range too large
         final List<Integer> sleepTimeList = Lists.newArrayList(0, 60, 60*10);
 
         final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
-        assertThat(card.isPresent(), is(Boolean.FALSE));
+        final Optional<InsightCard> fallBackCard = CaffeineAlarm.processCaffeineAlarmFallBack(FAKE_ACCOUNT_ID);
+        assertThat(card.isPresent(), is(Boolean.TRUE));
+        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
     }
 
     @Test

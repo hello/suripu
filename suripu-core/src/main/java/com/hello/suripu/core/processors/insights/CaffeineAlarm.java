@@ -75,11 +75,11 @@ public class CaffeineAlarm {
 
         if (sleepTimeList.isEmpty()) {
             LOGGER.info("account_id={}-insight=caffeine_alarm-action=sleep_time_list_empty", accountId);
-            return Optional.absent();
+            return processCaffeineAlarmFallBack(accountId);
         }
         else if (sleepTimeList.size() <= 2) {
             LOGGER.info("account_id={}-insight=caffeine_alarm-action=sleep_time_list_too_small", accountId);
-            return Optional.absent(); //not big enough to calculate mean meaningfully har har
+            return processCaffeineAlarmFallBack(accountId); //not big enough to calculate mean meaningfully har har
         }
 
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -94,7 +94,7 @@ public class CaffeineAlarm {
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
             LOGGER.info("insight=caffeine_alarm-account_id={}-action=fail_safe_guard");
-            return Optional.absent();
+            return processCaffeineAlarmFallBack(accountId);
         }
 
         final Double sleepAvgDouble = stats.getMean();
@@ -106,6 +106,15 @@ public class CaffeineAlarm {
         final String coffeeTime = InsightUtils.timeConvert(recommendedCoffeeMinutesTime);
 
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmMessage(sleepTime, coffeeTime);
+
+        return Optional.of(new InsightCard(accountId, text.title, text.message,
+                InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
+    }
+
+    @VisibleForTesting
+    public static Optional<InsightCard> processCaffeineAlarmFallBack(final Long accountId) {
+        final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmFallBackMessage();
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
