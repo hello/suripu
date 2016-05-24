@@ -86,6 +86,8 @@ public class Account {
     @JsonIgnore
     public final Double longitude; // android
 
+    @JsonProperty("profile_photo")
+    public final Optional<MultiDensityImage> profilePhoto;
 
     /**
      *
@@ -116,7 +118,8 @@ public class Account {
                     final DateTime DOB,
                     final Boolean emailVerified,
                     final Double latitude,
-                    final Double longitude
+                    final Double longitude,
+                    final Optional<MultiDensityImage> profilePhoto
     ) {
 
         this.id = id;
@@ -139,6 +142,8 @@ public class Account {
 
         this.latitude = latitude;
         this.longitude = longitude;
+
+        this.profilePhoto = profilePhoto;
     }
 
     /**
@@ -152,7 +157,19 @@ public class Account {
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
                 registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender, registration.height, registration.weight, registration.created,
                 registration.created.getMillis(), registration.DOB, Boolean.FALSE,
-                registration.latitude, registration.longitude);
+                registration.latitude, registration.longitude, Optional.<MultiDensityImage>absent());
+    }
+
+    /**
+     *
+     * @param account
+     * @param profilePhoto
+     * @return
+     */
+    public static Account withProfilePhoto(final Account account, final MultiDensityImage profilePhoto) {
+        final Account.Builder builder = new Account.Builder(account);
+        builder.withProfilePhoto(profilePhoto);
+        return builder.build();
     }
 
     public Boolean hasLocation() {
@@ -179,6 +196,7 @@ public class Account {
         private Boolean emailVerified;
         private Double latitude;
         private Double longitude;
+        private Optional<MultiDensityImage> profilePhoto;
 
         public Builder() {
             this.id = Optional.absent();
@@ -196,6 +214,7 @@ public class Account {
             this.emailVerified = Boolean.FALSE;
             this.latitude = null;
             this.longitude = null;
+            this.profilePhoto = Optional.absent();
         }
 
         public Builder(final Account account) {
@@ -215,6 +234,7 @@ public class Account {
             this.emailVerified = account.emailVerified;
             this.latitude = account.latitude;
             this.longitude = account.longitude;
+            this.profilePhoto = account.profilePhoto;
         }
 
         @JsonProperty("name")
@@ -339,10 +359,16 @@ public class Account {
             return this;
         }
 
+        public Builder withProfilePhoto(final MultiDensityImage multiDensityImage) {
+            this.profilePhoto = Optional.fromNullable(multiDensityImage);
+            return this;
+        }
+
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tzOffsetMillis, name, firstname, lastname, gender, height, weight, created, lastModified, DOB, emailVerified, latitude, longitude);
+            return new Account(id, email, password, tzOffsetMillis, name, firstname, lastname, gender, height, weight,
+                    created, lastModified, DOB, emailVerified, latitude, longitude, profilePhoto);
         }
     }
 
@@ -400,7 +426,8 @@ public class Account {
                 account.DOB,
                 account.emailVerified,
                 account.latitude,
-                account.longitude
+                account.longitude,
+                account.profilePhoto
         );
     }
 
