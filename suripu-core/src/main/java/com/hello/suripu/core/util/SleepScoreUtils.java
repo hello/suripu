@@ -146,14 +146,30 @@ public class SleepScoreUtils {
 
         //Sets sleep duration target to individualized ideal within age-specific range
         if (sleepDurationIdeal == 0){
-            sleepDurationTarget = 460;
-        }
 
-        else if (sleepDurationTarget > idealHours.maxHours*60) {
+            if (userAgeInYears < 6){
+                sleepDurationTarget = 690;
+            }
+
+            else if (userAgeInYears < 14){
+                sleepDurationTarget = 600;
+            }
+
+            else if (userAgeInYears < 18){
+                sleepDurationTarget = 540;
+            }
+
+            else {
+                sleepDurationTarget = sleepDurationPopIdeal;
+            }
+
+
+        }
+        else if (sleepDurationIdeal > idealHours.maxHours*60) {
             sleepDurationTarget = idealHours.maxHours*60;
         }
 
-        else if (sleepDurationTarget < idealHours.minHours*60) {
+        else if (sleepDurationIdeal < idealHours.minHours*60) {
             sleepDurationTarget = idealHours.minHours*60;
         }
 
