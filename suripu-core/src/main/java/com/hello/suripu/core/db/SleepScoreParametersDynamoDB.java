@@ -96,7 +96,7 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
                 .withLimit(1)
                 .withScanIndexForward(false);
 
-        QueryResult queryResult;
+        final QueryResult queryResult;
         try {
             queryResult = this.dynamoDBClient.query(queryRequest);
         } catch (AmazonServiceException ase) {
@@ -114,8 +114,10 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
         return toSleepScoreParameters(item);
     }
 
+
     @Override
     public Boolean upsertSleepScoreParameters(final Long accountId, final SleepScoreParameters parameter) {
+
         final Map<String, AttributeValueUpdate> updateItem = Maps.newHashMap();
         updateItem.put(SleepScoreParameterAttribute.DURATION_THRESHOLD.shortName(), Util.putAction(parameter.durationThreshold));
 
