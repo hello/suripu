@@ -145,7 +145,11 @@ public class SleepScoreUtils {
         final Integer sleepDurationPopIdeal = 460; //median sleep duration for great quality sleep
 
         //Sets sleep duration target to individualized ideal within age-specific range
-        if (sleepDurationTarget > idealHours.maxHours*60) {
+        if (sleepDurationIdeal == 0){
+            sleepDurationTarget = 460;
+        }
+
+        else if (sleepDurationTarget > idealHours.maxHours*60) {
             sleepDurationTarget = idealHours.maxHours*60;
         }
 
