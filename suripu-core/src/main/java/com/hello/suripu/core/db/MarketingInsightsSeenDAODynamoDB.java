@@ -127,6 +127,7 @@ public class MarketingInsightsSeenDAODynamoDB {
             }
         }
 
+        // AND THEN I TOLD HER TO STOP BEING A STUPID COW, CRASHING ALL THE TIME
         return false;
     }
 
