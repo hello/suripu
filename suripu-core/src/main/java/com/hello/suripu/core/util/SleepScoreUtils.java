@@ -190,7 +190,7 @@ public class SleepScoreUtils {
 
         //rawScore calculated using 5th degree polynomial model to extrapolate change in sleep quality with sleep duration
         else{
-            rawScore = Math.round((14.8027f + (4.3001e-01) * adjSleepDuration + (-2.7177e-03) * (Math.pow(adjSleepDuration, 2)) + (8.2262e-06) * (Math.pow(adjSleepDuration, 3)) + (-1.1033e-08) * (Math.pow(adjSleepDuration, 4)) + ((5.333e-12) * (Math.pow(adjSleepDuration, 5))))*100)/100;
+            rawScore = 14.8027f + (4.3001e-01f) * adjSleepDuration + (-2.7177e-03f) * (adjSleepDuration * adjSleepDuration) + (8.2262e-06f) * (adjSleepDuration * adjSleepDuration * adjSleepDuration) + (-1.1033e-08f) * (adjSleepDuration * adjSleepDuration * adjSleepDuration * adjSleepDuration) + (5.333e-12f) * (adjSleepDuration * adjSleepDuration* adjSleepDuration* adjSleepDuration * adjSleepDuration);
         }
 
         //normalize rawscore  (score range: 0 to 100)
