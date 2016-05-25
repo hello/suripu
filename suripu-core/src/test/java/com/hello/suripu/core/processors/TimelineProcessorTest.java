@@ -21,6 +21,7 @@ import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
+import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
@@ -31,12 +32,12 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.Feature;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.SleepScore;
+import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
@@ -386,6 +387,18 @@ public class TimelineProcessorTest {
         }
     };
 
+    final SleepScoreParametersDAO sleepScoreParametersDAO = new SleepScoreParametersDAO() {
+
+        @Override
+        public SleepScoreParameters getSleepScoreParametersByDate(Long accountId, DateTime nightDate) {
+            return null;
+        }
+
+        @Override
+        public Boolean upsertSleepScoreParameters(Long accountId, SleepScoreParameters parameters) {
+            return null;
+        }
+    };
 
     public final Map<String,Boolean> features = Maps.newHashMap();
 
@@ -469,7 +482,9 @@ public class TimelineProcessorTest {
                 pillDataReadDAO,deviceReadDAO,deviceDataReadAllSensorsDAO,
                 ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAO,
                 senseColorDAO,priorsDAO,featureExtractionModelsDAO,calibrationDAO,
-                defaultModelEnsembleDAO,userTimelineTestGroupDAO, neuralNetEndpoint,algorithmConfiguration);
+                defaultModelEnsembleDAO,userTimelineTestGroupDAO,
+                sleepScoreParametersDAO,
+                neuralNetEndpoint,algorithmConfiguration);
 
 
         final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());

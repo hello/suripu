@@ -142,6 +142,10 @@ public class Util {
         return new AttributeValueUpdate(new AttributeValue().withN(String.valueOf(value)), "PUT");
     }
 
+    public static AttributeValueUpdate putAction(final Integer value) {
+        return new AttributeValueUpdate(new AttributeValue().withN(String.valueOf(value)), "PUT");
+    }
+
     public static AttributeValueUpdate putAction(final String value) {
         return new AttributeValueUpdate(new AttributeValue().withS(value), "PUT");
     }

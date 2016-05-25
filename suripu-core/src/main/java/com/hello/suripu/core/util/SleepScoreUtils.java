@@ -134,18 +134,18 @@ public class SleepScoreUtils {
     }
 
 
-    public static Integer getSleepScoreDurationV3(final int userAgeInYears, final Integer sleepDurationIdeal, final Integer sleepDurationMinutes) {
+    public static Integer getSleepScoreDurationV3(final int userAgeInYears, final Integer sleepDurationThreshold, final Integer sleepDurationMinutes) {
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
         final float rawScore;
         final int durationMin = 120; //2 hours
         final int durationMax = 720; //12 hours
-        final float rawScoreMin = 39.3289f;
-        final float rawScoreMax = 56.6229f;
+        final float rawScoreMin = 39.32f;
+        final float rawScoreMax = 56.63f;
         final Integer adjSleepDuration, sleepDurationTarget;
         final Integer sleepDurationPopIdeal = 460; //median sleep duration for great quality sleep
 
         //Sets sleep duration target to individualized ideal within age-specific range
-        if (sleepDurationIdeal == 0){
+        if (sleepDurationThreshold == 0){
 
             if (userAgeInYears < 6){
                 sleepDurationTarget = 690;
@@ -165,16 +165,16 @@ public class SleepScoreUtils {
 
 
         }
-        else if (sleepDurationIdeal > idealHours.maxHours*60) {
+        else if (sleepDurationThreshold > idealHours.maxHours*60) {
             sleepDurationTarget = idealHours.maxHours*60;
         }
 
-        else if (sleepDurationIdeal < idealHours.minHours*60) {
+        else if (sleepDurationThreshold < idealHours.minHours*60) {
             sleepDurationTarget = idealHours.minHours*60;
         }
 
         else {
-            sleepDurationTarget = sleepDurationIdeal;
+            sleepDurationTarget = sleepDurationThreshold;
         }
 
         //Adjusted sleep duration based on deviations from population mean
@@ -185,12 +185,12 @@ public class SleepScoreUtils {
         }
 
         else if (adjSleepDuration > durationMax) {
-            rawScore = 52.7505f;
+            rawScore = 52.75f;
         }
 
         //rawScore calculated using 5th degree polynomial model to extrapolate change in sleep quality with sleep duration
         else{
-            rawScore = 14.8027 + (4.30008542e-01) * adjSleepDuration + (-2.71766549e-03) * (Math.pow(adjSleepDuration, 2)) + (8.22617092e-06) * (Math.pow(adjSleepDuration, 3)) + (-1.10334341e-08) * (Math.pow(adjSleepDuration, 4)) + (5.33297511e-12)*((Math.pow(adjSleepDuration, 5));
+            rawScore = Math.round((14.8027f + (4.3001e-01) * adjSleepDuration + (-2.7177e-03) * (Math.pow(adjSleepDuration, 2)) + (8.2262e-06) * (Math.pow(adjSleepDuration, 3)) + (-1.1033e-08) * (Math.pow(adjSleepDuration, 4)) + ((5.333e-12) * (Math.pow(adjSleepDuration, 5))))*100)/100;
         }
 
         //normalize rawscore  (score range: 0 to 100)

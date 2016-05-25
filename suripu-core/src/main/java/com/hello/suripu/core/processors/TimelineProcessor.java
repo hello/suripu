@@ -22,6 +22,7 @@ import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
+import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
@@ -97,6 +98,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final SenseColorDAO senseColorDAO;
     private final CalibrationDAO calibrationDAO;
     private final UserTimelineTestGroupDAO userTimelineTestGroupDAO;
+    private final SleepScoreParametersDAO sleepScoreParametersDAO;
 
     private final AlgorithmFactory algorithmFactory;
 
@@ -124,6 +126,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final CalibrationDAO calibrationDAO,
                                                             final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
                                                             final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                                            final SleepScoreParametersDAO sleepScoreParametersDAO,
                                                             final NeuralNetEndpoint neuralNetEndpoint,
                                                             final AlgorithmConfiguration algorithmConfiguration) {
 
@@ -138,12 +141,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 Optional.<UUID>absent(),
                 calibrationDAO,
                 userTimelineTestGroupDAO,
+                sleepScoreParametersDAO,
                 algorithmFactory);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)));
+        return new TimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)));
     }
 
     //private SessionLogDebug(final String)
@@ -160,6 +164,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                               final Optional<UUID> uuid,
                               final CalibrationDAO calibrationDAO,
                               final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                              final SleepScoreParametersDAO sleepScoreParametersDAO,
                               final AlgorithmFactory algorithmFactory) {
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
@@ -172,6 +177,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.senseColorDAO = senseColorDAO;
         this.calibrationDAO = calibrationDAO;
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
+        this.sleepScoreParametersDAO = sleepScoreParametersDAO;
         this.algorithmFactory = algorithmFactory;
 
         timelineUtils = new TimelineUtils(uuid);
@@ -1015,10 +1021,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats) {
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-        final Integer sleepDurationIdeal = (optionalAccount.isPresent()) ? 460 : 0; //place holder fix sleepduration ideal ??
 
         if (useSleepScoreV3(accountId)){
-            return SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepDurationIdeal, sleepStats.sleepDurationInMinutes);
+            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId, DateTime.now()).durationThreshold;
+            return SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
         }
 
         else if (hasSleepScoreDurationV2(accountId)) {
