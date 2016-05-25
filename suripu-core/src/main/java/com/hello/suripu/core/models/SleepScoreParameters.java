@@ -18,4 +18,11 @@ public class SleepScoreParameters {
         this.dateTime = dateTime;
         this.durationThreshold = durationThreshold;
     }
+
+    public SleepScoreParameters(final Long accountId, final DateTime dateTime) {
+        this.accountId = accountId;
+        this.dateTime = dateTime;
+        this.durationThreshold = MISSING_DURATION_THRESHOLD;
+    }
+
 }

@@ -390,12 +390,12 @@ public class TimelineProcessorTest {
     final SleepScoreParametersDAO sleepScoreParametersDAO = new SleepScoreParametersDAO() {
 
         @Override
-        public SleepScoreParameters getSleepScoreParameters(Long accountId, DateTime nightDate) {
+        public SleepScoreParameters getSleepScoreParametersByDate(Long accountId, DateTime nightDate) {
             return null;
         }
 
         @Override
-        public Boolean updateSleepScoreParameters(Long accountId, SleepScoreParameters parameters) {
+        public Boolean upsertSleepScoreParameters(Long accountId, SleepScoreParameters parameters) {
             return null;
         }
     };

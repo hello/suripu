@@ -8,6 +8,6 @@ import org.joda.time.DateTime;
  */
 public interface SleepScoreParametersDAO {
 
-    SleepScoreParameters getSleepScoreParameters(final Long accountId, final DateTime nightDate);
-    Boolean updateSleepScoreParameters(final Long accountId, final SleepScoreParameters parameters);
+    SleepScoreParameters getSleepScoreParametersByDate(final Long accountId, final DateTime dateTimeUTC);
+    Boolean upsertSleepScoreParameters(final Long accountId, final SleepScoreParameters parameter);
 }
