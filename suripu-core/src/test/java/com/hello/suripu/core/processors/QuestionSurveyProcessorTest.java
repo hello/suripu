@@ -224,69 +224,126 @@ public class QuestionSurveyProcessorTest {
     }
 
     /*
-    Tests for spec'ed logic for serving survey one questions, dependant on user's previous responses. questionSurveyProcessor.getQuestions() should always serve only 1 question.
+    Tests for spec'ed logic for serving survey one questions, dependant on user's previous responses. questionSurveyProcessor.getSurveyQuestions() should always serve only 1 question.
      */
 
     @Test
-    public void test_getQuestions_user0() {
+    public void test_getSurveyQuestions_user0() {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
         //No survey questions have been asked yet. Should ask level 1 question
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_0, 2, DATE_TIME_FILLER_NOW);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_0, DATE_TIME_FILLER_NOW);
 
         assertThat(servedQuestions.size(), is(1)); //Only one question from survey asked
         assertThat(servedQuestions.get(0).id, is(2)); //Ask level 1 question
     }
 
     @Test
-    public void test_getQuestions_user1() {
+    public void test_getSurveyQuestions_user1() {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Proceed-worthy response to level 1 survey question. Should ask level 2 question
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_1, 2, DATE_TIME_FILLER_NOW);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_1, DATE_TIME_FILLER_NOW);
 
         assertThat(servedQuestions.size(), is(1)); //Only one question from survey asked
         assertThat(servedQuestions.get(0).id, is(3)); //Ask level 2 question
     }
 
     @Test
-    public void test_getQuestions_user2() {
+    public void test_getSurveyQuestions_user2() {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //No Proceed-worthy response to level 1 survey question. Ask no questions
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_2, 2, DATE_TIME_FILLER_NOW);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_2, DATE_TIME_FILLER_NOW);
 
         assertThat(servedQuestions.isEmpty(), is(Boolean.TRUE)); //No questions asked
     }
 
     @Test
-    public void test_getQuestions_user3() {
+    public void test_getSurveyQuestions_user3() {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Proceed-worthy response to level 1 survey question. Proceed-worthy response to level 2 survey question. Should ask level 3 question
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_3, 2, DATE_TIME_FILLER_NOW);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_3, DATE_TIME_FILLER_NOW);
 
         assertThat(servedQuestions.size(), is(1)); //Only one question from survey asked
         assertThat(Collections.disjoint(Lists.newArrayList(servedQuestions.get(0).id), Lists.newArrayList(4,5,6)), is(Boolean.FALSE)); //Ask one of the level 3 question
     }
 
     @Test
-    public void test_getQuestions_user4() {
+    public void test_getSurveyQuestions_user4() {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Proceed-worthy response to level 1 survey question. No Proceed-worthy response to level 2 survey question. Ask no questions
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_4, 2, DATE_TIME_FILLER_NOW);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_4, DATE_TIME_FILLER_NOW);
 
         assertThat(servedQuestions.isEmpty(), is(Boolean.TRUE)); //No questions asked
     }
 
     @Test
-    public void test_getQuestions_user5() {
+    public void test_getSurveyQuestions_user5() {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Answered all questions. Ask no more questions
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_5, 2, DATE_TIME_FILLER_NOW);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_5, DATE_TIME_FILLER_NOW);
 
         assertThat(servedQuestions.isEmpty(), is(Boolean.TRUE)); //No questions asked
+    }
+
+    @Test
+    public void test_getQuestions_user0() {
+        final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
+
+        final List<Question> questionProcessorQuestions = new ArrayList<>();
+
+        final List<Integer> dependency_response_null = Lists.newArrayList();
+
+        final List<Choice> choices1 = new ArrayList<>();
+        choices1.add(new Choice(1, "Yes", 7));
+        choices1.add(new Choice(2, "No", 7));
+        final Question question1 = new Question(7, ACCOUNT_QID_FILLER,
+                "Want a random fake onboarding question?", ENGLISH_STR,
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices1, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
+                QuestionCategory.ONBOARDING, dependency_response_null);
+
+        final List<Choice> choices2 = new ArrayList<>();
+        choices2.add(new Choice(1, "Yes", 8));
+        choices2.add(new Choice(2, "No", 8));
+        final Question question2 = new Question(8, ACCOUNT_QID_FILLER,
+                "Daily question - how was your sleep last night?", ENGLISH_STR,
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices1, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
+                QuestionCategory.DAILY, dependency_response_null);
+
+        final List<Choice> choices3 = new ArrayList<>();
+        choices3.add(new Choice(1, "Yes", 9));
+        choices3.add(new Choice(2, "No", 9));
+        final Question question3 = new Question(9, ACCOUNT_QID_FILLER,
+                "Daily question - how was your sleep last night?", ENGLISH_STR,
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices1, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
+                QuestionCategory.NONE, dependency_response_null);
+
+        // questioProcessor passes in 3 questions in random order
+        questionProcessorQuestions.add(question2);
+        questionProcessorQuestions.add(question3);
+        questionProcessorQuestions.add(question1);
+
+        // No survey questions have been asked yet. Should ask level 1 question
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_0, 2, DATE_TIME_FILLER_NOW, questionProcessorQuestions);
+
+        assertThat(servedQuestions.size(), is(4)); // Returns union of 2 lists, 3 + 1 = 4
+        assertThat(servedQuestions.get(0).category, is(QuestionCategory.ONBOARDING)); // Ask onboarding question first
+        assertThat(servedQuestions.get(1).category, is(QuestionCategory.DAILY));
+        assertThat(servedQuestions.get(2).category, is(QuestionCategory.SURVEY));
+        assertThat(servedQuestions.get(2).id, is(2)); //Ask level 1 question
+        assertThat(servedQuestions.get(3).category, is(QuestionCategory.NONE));
     }
 
 }

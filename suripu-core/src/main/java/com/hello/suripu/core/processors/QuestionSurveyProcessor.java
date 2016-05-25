@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
@@ -8,6 +9,8 @@ import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
 import com.hello.suripu.core.util.QuestionSurveyUtils;
+import com.hello.suripu.core.util.QuestionUtils;
+import org.apache.commons.collections.ListUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,10 +78,21 @@ public class QuestionSurveyProcessor {
     }
 
     /*
-    Logic for picking questions
+    Pick question, combine with output of questionProcessor and sort by question priority
      */
-    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today) {
+    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final List<Question> questionProcessorQuestions) {
 
+        final List<Question> surveyQuestions = getSurveyQuestions(accountId, today);
+        final List<Question> allQuestions = ListUtils.union(surveyQuestions, questionProcessorQuestions);
+
+        final ImmutableList<Question> sortedQuestions = QuestionUtils.sortQuestionByCategory(allQuestions);
+        return sortedQuestions;
+    }
+
+    /*
+    Logic for picking questions
+    */
+    public List<Question> getSurveyQuestions(final Long accountId, final DateTime today) {
         //Get available survey questions
         final List<Response> surveyResponses = questionResponseReadDAO.getAccountResponseByQuestionCategoryStr(accountId, QuestionCategory.SURVEY.toString().toLowerCase());
         final List<Question> availableQuestions = QuestionSurveyUtils.getSurveyXQuestion(surveyResponses, surveyQuestions);
