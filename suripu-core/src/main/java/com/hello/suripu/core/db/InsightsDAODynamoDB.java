@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class InsightsDAODynamoDB {
 
@@ -58,6 +59,8 @@ public class InsightsDAODynamoDB {
     public static final String IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME = "phone_image_2x";
     public static final String IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME = "phone_image_3x";
     public static final String INSIGHT_TYPE_ATTRIBUTE_NAME = "insight_type";
+    public static final String INSIGHT_UUID_ATTRIBUTE_NAME = "uuid";
+
     private static final int MAX_CALL_COUNT = 5;
 
     private static final String S3_BUCKET_PATH = "https://s3.amazonaws.com/hello-data/insights_images/";
@@ -70,6 +73,7 @@ public class InsightsDAODynamoDB {
         this.requiredAttributes = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
                                                   CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
                                                   TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME);
+
         this.attributesToFetch = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
                                                  CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
                                                  TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
@@ -268,6 +272,7 @@ public class InsightsDAODynamoDB {
         }
 
         item.put(INSIGHT_TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.insightType.toString()));
+        item.put(INSIGHT_UUID_ATTRIBUTE_NAME, new AttributeValue().withS(UUID.randomUUID().toString()));
 
         return item;
     }
