@@ -47,6 +47,9 @@ public class AccountInfoProcessor {
 
                 } else if (question.accountInfo == AccountInfo.Type.WORKOUT) {
                     infoQuestionMap.put(AccountInfo.Type.WORKOUT, question);
+
+                } else if (question.accountInfo == AccountInfo.Type.CAFFEINE) {
+                    infoQuestionMap.put(AccountInfo.Type.CAFFEINE, question);
                 }
             }
             return this;
@@ -102,7 +105,14 @@ public class AccountInfoProcessor {
     }
 
     public Boolean checkUserDrinksCaffeine(final Long accountId) {
-        return this.getYesNoResponse(accountId, AccountInfo.Type.CAFFEINE);
+        final Optional<Response> optionalResponse = this.getSingleUserResponse(accountId, AccountInfo.Type.CAFFEINE);
+        if(optionalResponse.isPresent()) {
+            final String responseText = optionalResponse.get().response;
+            if (responseText.equalsIgnoreCase("coffee")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
