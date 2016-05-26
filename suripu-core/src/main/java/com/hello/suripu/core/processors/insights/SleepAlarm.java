@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.SleepAlarmMsgEN;
@@ -60,7 +61,14 @@ public class SleepAlarm {
             wakeTimeList.add(wakeTime);
         }
 
-        final DateTime dob = accountReadDAO.getById(accountId).get().DOB;
+        final DateTime dob;
+        final Optional<Account> account = accountReadDAO.getById(accountId);
+        if (account.isPresent()) {
+            dob = account.get().DOB;
+        } else {
+            dob = DateTime.now();
+        }
+
         final Integer userAge = Years.yearsBetween(dob, DateTime.now()).toPeriod().getYears();
 
         final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge);

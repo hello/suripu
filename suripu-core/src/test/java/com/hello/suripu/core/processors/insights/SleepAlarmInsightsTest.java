@@ -1,11 +1,26 @@
 package com.hello.suripu.core.processors.insights;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountReadDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.MotionScore;
+import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.FileUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.joda.time.DateTime;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -146,8 +161,29 @@ public class SleepAlarmInsightsTest {
     }
 
     @Test
-    public void test_getSleepTimeRec() {
+    public void test_sleepAlarmProcessor() throws IOException {
+        final Long FAKE_ACCOUNT_ID = 9999L;
 
+        //Fake sleepStatsDAO
+        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
+        final List<AggregateSleepStats> fakeAggSleepStats = Lists.newArrayList(new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now().minusDays(2), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now().minusDays(4), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*10L, 0)));
+        final ImmutableList<AggregateSleepStats> immutableAggSleepStats = ImmutableList.copyOf(fakeAggSleepStats);
+        Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID, DateTimeUtil.dateToYmdString(DateTime.now().minusDays(14)), DateTimeUtil.dateToYmdString(DateTime.now()))).thenReturn(immutableAggSleepStats);
+
+        //Fake accountReadDAO
+        final AccountReadDAO accountReadDAO = Mockito.mock(AccountDAO.class);
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final File jsonFile = new File(FileUtils.getResourceFilePath("fixtures/account/valid_account.json"));
+        final Account fakeAccount = objectMapper.readValue(jsonFile, Account.class);
+        Mockito.when(accountReadDAO.getById(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(fakeAccount));
+
+        final Optional<InsightCard> generatedCard = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID);
+
+//        System.out.print(generatedCard.get().message);
+        assertThat(generatedCard.isPresent(), is(Boolean.TRUE));
     }
 
 }
