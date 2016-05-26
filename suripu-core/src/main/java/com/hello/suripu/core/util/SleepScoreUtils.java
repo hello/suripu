@@ -41,6 +41,16 @@ public class SleepScoreUtils {
 
     public static final Integer MAX_TIMES_AWAKE_PENALTY_SCORE = -30;
     public static final Integer AWAKE_PENALTY_SCORE = -5; // minus 5 for each time-awake
+
+    public static final int DURATION_MIN_V3 = 120; //2 hours
+    public static final int DURATION_MAX_V3 = 720; //12 hours
+    public static final float RAW_SCORE_MIN_V3 = 39.32f;
+    public static final float RAW_SCORE_MAX_V3 = 56.63f;
+    public static final float RAW_SCORE_MAX_DUR_V3 = 52.75f;//raw score if sleep > 12 hours
+    public static final Integer SLEEP_DURATION_POP_IDEAL_V3 = 460; //median sleep duration for great quality sleep
+
+
+
     /**
      * compute a score based on sleep duration.
      * if duration is within recommended range, return max score
@@ -136,71 +146,59 @@ public class SleepScoreUtils {
 
     public static Integer getSleepScoreDurationV3(final int userAgeInYears, final Integer sleepDurationThreshold, final Integer sleepDurationMinutes) {
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
-        final float rawScore;
-        final long adjSleepDuration_2, adjSleepDuration_3, adjSleepDuration_4, adjSleepDuration_5;
-        final int durationMin = 120; //2 hours
-        final int durationMax = 720; //12 hours
-        final float rawScoreMin = 39.32f;
-        final float rawScoreMax = 56.63f;
-        final Integer adjSleepDuration, sleepDurationTarget;
-        final Integer sleepDurationPopIdeal = 460; //median sleep duration for great quality sleep
+        final float rawScore_v3;
+        final long adjSleepDuration_v3_2, adjSleepDuration_v3_3, adjSleepDuration_v3_4, adjSleepDuration_v3_5;
+        final Integer adjSleepDuration_v3, sleepDurationTarget_v3;
+
 
         //Sets sleep duration target to individualized ideal within age-specific range
         if (sleepDurationThreshold == 0){
 
-            if (userAgeInYears < 6){
-                sleepDurationTarget = 690;
-            }
-
-            else if (userAgeInYears < 14){
-                sleepDurationTarget = 600;
-            }
-
-            else if (userAgeInYears < 18){
-                sleepDurationTarget = 540;
+            if (userAgeInYears < 18){
+                sleepDurationTarget_v3 = (idealHours.minHours +idealHours.maxHours)/2 * 60;
             }
 
             else {
-                sleepDurationTarget = sleepDurationPopIdeal;
+                sleepDurationTarget_v3 = SLEEP_DURATION_POP_IDEAL_V3;
             }
-
 
         }
         else if (sleepDurationThreshold > idealHours.maxHours*60) {
-            sleepDurationTarget = idealHours.maxHours*60;
+            sleepDurationTarget_v3 = idealHours.maxHours*60;
         }
 
         else if (sleepDurationThreshold < idealHours.minHours*60) {
-            sleepDurationTarget = idealHours.minHours*60;
+            sleepDurationTarget_v3 = idealHours.minHours*60;
         }
 
         else {
-            sleepDurationTarget = sleepDurationThreshold;
+            sleepDurationTarget_v3 = sleepDurationThreshold;
         }
 
         //Adjusted sleep duration based on deviations from population mean
-        adjSleepDuration = sleepDurationMinutes + (sleepDurationPopIdeal - sleepDurationTarget);
+        adjSleepDuration_v3 = sleepDurationMinutes + (SLEEP_DURATION_POP_IDEAL_V3 - sleepDurationTarget_v3);
 
-        if (adjSleepDuration < durationMin) {
-            rawScore = rawScoreMin;
+        if (adjSleepDuration_v3 < DURATION_MIN_V3) {
+            rawScore_v3 = RAW_SCORE_MIN_V3;
         }
 
-        else if (adjSleepDuration > durationMax) {
-            rawScore = 52.75f;
+        else if (adjSleepDuration_v3 > DURATION_MAX_V3) {
+            rawScore_v3 = RAW_SCORE_MAX_DUR_V3;
         }
 
         //rawScore calculated using 5th degree polynomial model to extrapolate change in sleep quality with sleep duration
         else{
 
-            adjSleepDuration_2 = adjSleepDuration * adjSleepDuration;
-            adjSleepDuration_3 = adjSleepDuration_2 * adjSleepDuration;
-            adjSleepDuration_4 = adjSleepDuration_3 * adjSleepDuration;
-            adjSleepDuration_5 = adjSleepDuration_4 * adjSleepDuration;
-            rawScore = 14.8027f + (4.3001e-01f) * adjSleepDuration + (-2.7177e-03f) * adjSleepDuration_2 + (8.2262e-06f) * adjSleepDuration_3 + (-1.1033e-08f) * adjSleepDuration_4 + (5.333e-12f) * adjSleepDuration_5;
+            adjSleepDuration_v3_2 = adjSleepDuration_v3 * adjSleepDuration_v3;
+            adjSleepDuration_v3_3 = adjSleepDuration_v3_2 * adjSleepDuration_v3;
+            adjSleepDuration_v3_4 = adjSleepDuration_v3_3 * adjSleepDuration_v3;
+            adjSleepDuration_v3_5 = adjSleepDuration_v3_4 * adjSleepDuration_v3;
+
+            rawScore_v3 = 14.8027f + (4.3001e-01f) * adjSleepDuration_v3 + (-2.7177e-03f) * adjSleepDuration_v3_2 + (8.2262e-06f) * adjSleepDuration_v3_3 + (-1.1033e-08f) * adjSleepDuration_v3_4 + (5.333e-12f) * adjSleepDuration_v3_5;
         }
 
         //normalize rawscore  (score range: 0 to 100)
-        return Math.round((rawScore-rawScoreMin)/(rawScoreMax-rawScoreMin)*100);
+        return Math.round((rawScore_v3-RAW_SCORE_MIN_V3)/(RAW_SCORE_MAX_V3-RAW_SCORE_MIN_V3)*100);
     }
 
         /**

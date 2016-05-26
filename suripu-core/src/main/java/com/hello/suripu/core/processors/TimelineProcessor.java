@@ -988,7 +988,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats);
+        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats, targetDate);
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
         final Integer timesAwakePenalty;
@@ -1018,12 +1018,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return sleepScore.value;
     }
 
-    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats) {
+    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats, final DateTime targetDateLocalUTC) {
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
 
         if (useSleepScoreV3(accountId)){
-            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId, DateTime.now()).durationThreshold;
+            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
             return SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
         }
 
