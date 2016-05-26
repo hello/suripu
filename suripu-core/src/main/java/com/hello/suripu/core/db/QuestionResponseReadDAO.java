@@ -110,5 +110,8 @@ public interface QuestionResponseReadDAO {
                                                                        @Bind("question_id") final int question_id,
                                                                        @Bind("limit") final int limit);
 
+    @RegisterMapper(AccountQuestionMapper.class)
+    @SqlQuery("SELECT account_id, DATE_TRUNC('day', created_local_utc_ts) - INTERVAL '1 days' as night FROM account_questions where id IN (select account_question_id from responses where response_id = :response_id);")
+    ImmutableList<AccountQuestion> getAccountDatebyResponse (@Bind("response_id") final int response_id);
 
 }
