@@ -137,6 +137,7 @@ public class SleepScoreUtils {
     public static Integer getSleepScoreDurationV3(final int userAgeInYears, final Integer sleepDurationThreshold, final Integer sleepDurationMinutes) {
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
         final float rawScore;
+        final long adjSleepDuration_2, adjSleepDuration_3, adjSleepDuration_4, adjSleepDuration_5;
         final int durationMin = 120; //2 hours
         final int durationMax = 720; //12 hours
         final float rawScoreMin = 39.32f;
@@ -190,7 +191,12 @@ public class SleepScoreUtils {
 
         //rawScore calculated using 5th degree polynomial model to extrapolate change in sleep quality with sleep duration
         else{
-            rawScore = 14.8027f + (4.3001e-01f) * adjSleepDuration + (-2.7177e-03f) * (adjSleepDuration * adjSleepDuration) + (8.2262e-06f) * (adjSleepDuration * adjSleepDuration * adjSleepDuration) + (-1.1033e-08f) * (adjSleepDuration * adjSleepDuration * adjSleepDuration * adjSleepDuration) + (5.333e-12f) * (adjSleepDuration * adjSleepDuration* adjSleepDuration* adjSleepDuration * adjSleepDuration);
+
+            adjSleepDuration_2 = adjSleepDuration * adjSleepDuration;
+            adjSleepDuration_3 = adjSleepDuration_2 * adjSleepDuration;
+            adjSleepDuration_4 = adjSleepDuration_3 * adjSleepDuration;
+            adjSleepDuration_5 = adjSleepDuration_4 * adjSleepDuration;
+            rawScore = 14.8027f + (4.3001e-01f) * adjSleepDuration + (-2.7177e-03f) * adjSleepDuration_2 + (8.2262e-06f) * adjSleepDuration_3 + (-1.1033e-08f) * adjSleepDuration_4 + (5.333e-12f) * adjSleepDuration_5;
         }
 
         //normalize rawscore  (score range: 0 to 100)

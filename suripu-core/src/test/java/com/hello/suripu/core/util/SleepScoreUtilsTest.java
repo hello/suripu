@@ -66,6 +66,32 @@ public class SleepScoreUtilsTest {
 
     }
 
+    @Test
+    public void testScoresV3WithParam() {
+        final int age = 23;
+        final int durThreshold = 480;
+        final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
+        final List<Integer> correct = Lists.newArrayList(0, 27, 44, 93, 78);
+        for (int i = 0; i < sleepDurationMinutes.size(); i++) {
+            final int score = SleepScoreUtils.getSleepScoreDurationV3(age, durThreshold, sleepDurationMinutes.get(i));
+            LOGGER.trace("value {} -> {}", sleepDurationMinutes.get(i), score);
+            assertThat(score, is(correct.get(i)));
+        }
+    }
+
+    @Test
+    public void testScoresV3WithoutParam() {
+        final int age = 23;
+        final int durThreshold = 0;
+        final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
+        final List<Integer> correct = Lists.newArrayList(0, 32, 51, 97, 78);
+        for (int i = 0; i < sleepDurationMinutes.size(); i++) {
+            final int score = SleepScoreUtils.getSleepScoreDurationV3(age, durThreshold, sleepDurationMinutes.get(i));
+            LOGGER.trace("value {} -> {}", sleepDurationMinutes.get(i), score);
+            assertThat(score, is(correct.get(i)));
+        }
+    }
+
 
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
         final URL fixtureCSVFile = Resources.getResource(fixturePath);
