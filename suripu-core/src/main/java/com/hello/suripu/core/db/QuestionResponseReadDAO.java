@@ -2,15 +2,8 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.mappers.AccountQuestionMapper;
-import com.hello.suripu.core.db.mappers.AccountQuestionResponsesMapper;
-import com.hello.suripu.core.db.mappers.QuestionMapper;
-import com.hello.suripu.core.db.mappers.RecentResponseMapper;
-import com.hello.suripu.core.db.mappers.ResponseMapper;
-import com.hello.suripu.core.models.AccountQuestion;
-import com.hello.suripu.core.models.AccountQuestionResponses;
-import com.hello.suripu.core.models.Question;
-import com.hello.suripu.core.models.Response;
+import com.hello.suripu.core.db.mappers.*;
+import com.hello.suripu.core.models.*;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -110,8 +103,8 @@ public interface QuestionResponseReadDAO {
                                                                        @Bind("question_id") final int question_id,
                                                                        @Bind("limit") final int limit);
 
-    @RegisterMapper(AccountQuestionMapper.class)
-    @SqlQuery("SELECT account_id, DATE_TRUNC('day', created_local_utc_ts) - INTERVAL '1 days' as night FROM account_questions where id IN (select account_question_id from responses where response_id = :response_id);")
-    ImmutableList<AccountQuestion> getAccountDatebyResponse (@Bind("response_id") final int response_id);
+    @RegisterMapper(AccountDateMapper.class)
+    @SqlQuery("SELECT account_id, DATE_TRUNC('day', created_local_utc_ts) - INTERVAL '1 days' as night FROM account_questions where id IN (select account_question_id from responses where response_id = :response_id) ORDER BY account_id, night DESC;")
+    ImmutableList<AccountDate> getAccountDatebyResponse (@Bind("response_id") final int response_id);
 
 }
