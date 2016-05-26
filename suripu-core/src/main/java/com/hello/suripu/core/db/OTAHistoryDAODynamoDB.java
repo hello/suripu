@@ -59,8 +59,8 @@ public class OTAHistoryDAODynamoDB {
         final Map<String, AttributeValue> item = new HashMap<>();
         item.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.deviceId));
         item.put(EVENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(dateTimeToString(historyEntry.eventTime)));
-        item.put(CURRENT_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.currentFWVersion));
-        item.put(NEW_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.newFWVersion));
+        item.put(CURRENT_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.currentFWVersion));
+        item.put(NEW_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.newFWVersion));
         item.put(FILE_LIST_ATTRIBUTE_NAME, new AttributeValue().withSS(historyEntry.fileList));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
@@ -133,8 +133,8 @@ public class OTAHistoryDAODynamoDB {
 
                 final String itemDeviceId = item.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
                 final DateTime itemEventTime = stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
-                final String itemCurrentFW = item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getS();
-                final String itemNewFW = item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getS();
+                final String itemCurrentFW = item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN();
+                final String itemNewFW = item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN();
                 final List<String> itemFileList = item.get(FILE_LIST_ATTRIBUTE_NAME).getSS();
 
                 otaHistoryList.add(new OTAHistory(itemDeviceId, itemEventTime, itemCurrentFW, itemNewFW, itemFileList));
@@ -155,8 +155,8 @@ public class OTAHistoryDAODynamoDB {
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(DEVICE_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S),
-                new AttributeDefinition().withAttributeName(EVENT_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
+                new AttributeDefinition().withAttributeName(DEVICE_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
+                new AttributeDefinition().withAttributeName(EVENT_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
 
         );
 
