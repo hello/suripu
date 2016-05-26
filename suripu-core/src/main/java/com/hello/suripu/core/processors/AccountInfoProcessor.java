@@ -23,6 +23,9 @@ public class AccountInfoProcessor {
     private final QuestionResponseReadDAO questionResponseDAO;
     private final ImmutableMap<AccountInfo.Type, Question> infoQuestionMap;
 
+    private static final String RESPONSE_DRINKS_COFFEE = "coffee";
+    private static final String RESPONSE_YES = "yes";
+    private static final String RESPONSE_SOMETIMES = "sometimes";
 
     public static class Builder {
         private QuestionResponseReadDAO questionResponseDAO;
@@ -108,7 +111,7 @@ public class AccountInfoProcessor {
         final Optional<Response> optionalResponse = this.getSingleUserResponse(accountId, AccountInfo.Type.CAFFEINE);
         if(optionalResponse.isPresent()) {
             final String responseText = optionalResponse.get().response;
-            if (responseText.equalsIgnoreCase("coffee")) {
+            if (responseText.equalsIgnoreCase(RESPONSE_DRINKS_COFFEE)) {
                 return true;
             }
         }
@@ -126,7 +129,7 @@ public class AccountInfoProcessor {
         if(optionalResponse.isPresent()) {
             final String responseText = optionalResponse.get().response;
             //TODO: still easier to compare text response for now
-            if (responseText.equalsIgnoreCase("yes") || responseText.equalsIgnoreCase("sometimes")) {
+            if (responseText.equalsIgnoreCase(RESPONSE_YES) || responseText.equalsIgnoreCase(RESPONSE_SOMETIMES)) {
                 return true;
             }
         }
