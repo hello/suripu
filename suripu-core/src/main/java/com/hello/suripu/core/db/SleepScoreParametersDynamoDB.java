@@ -38,7 +38,7 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
     public enum SleepScoreParameterAttribute implements Attribute {
         ACCOUNT_ID("account_id", "N"), // hash key
         DATE("date", "S"), // sort key
-        DURATION_THRESHOLD("duration_threshold", "B");
+        DURATION_THRESHOLD("duration_threshold", "N");
 
         private final String name;
         private final String type;

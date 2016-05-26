@@ -146,59 +146,58 @@ public class SleepScoreUtils {
 
     public static Integer getSleepScoreDurationV3(final int userAgeInYears, final Integer sleepDurationThreshold, final Integer sleepDurationMinutes) {
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
-        final float rawScore_v3;
-        final long adjSleepDuration_v3_2, adjSleepDuration_v3_3, adjSleepDuration_v3_4, adjSleepDuration_v3_5;
-        final Integer adjSleepDuration_v3, sleepDurationTarget_v3;
-
+        final float rawScoreV3;
+        final long adjSleepDurationV3p2, adjSleepDurationV3p3, adjSleepDurationV3p4, adjSleepDurationV3p5;
+        final Integer adjSleepDurationV3, sleepDurationTargetV3;
 
         //Sets sleep duration target to individualized ideal within age-specific range
         if (sleepDurationThreshold == 0){
 
             if (userAgeInYears < 18){
-                sleepDurationTarget_v3 = (idealHours.minHours +idealHours.maxHours)/2 * 60;
+                sleepDurationTargetV3 = (idealHours.minHours +idealHours.maxHours)/2 * 60;
             }
 
             else {
-                sleepDurationTarget_v3 = SLEEP_DURATION_POP_IDEAL_V3;
+                sleepDurationTargetV3 = SLEEP_DURATION_POP_IDEAL_V3;
             }
 
         }
         else if (sleepDurationThreshold > idealHours.maxHours*60) {
-            sleepDurationTarget_v3 = idealHours.maxHours*60;
+            sleepDurationTargetV3 = idealHours.maxHours*60;
         }
 
         else if (sleepDurationThreshold < idealHours.minHours*60) {
-            sleepDurationTarget_v3 = idealHours.minHours*60;
+            sleepDurationTargetV3 = idealHours.minHours*60;
         }
 
         else {
-            sleepDurationTarget_v3 = sleepDurationThreshold;
+            sleepDurationTargetV3 = sleepDurationThreshold;
         }
 
         //Adjusted sleep duration based on deviations from population mean
-        adjSleepDuration_v3 = sleepDurationMinutes + (SLEEP_DURATION_POP_IDEAL_V3 - sleepDurationTarget_v3);
+        adjSleepDurationV3 = sleepDurationMinutes + (SLEEP_DURATION_POP_IDEAL_V3 - sleepDurationTargetV3);
 
-        if (adjSleepDuration_v3 < DURATION_MIN_V3) {
-            rawScore_v3 = RAW_SCORE_MIN_V3;
+        if (adjSleepDurationV3 < DURATION_MIN_V3) {
+            rawScoreV3 = RAW_SCORE_MIN_V3;
         }
 
-        else if (adjSleepDuration_v3 > DURATION_MAX_V3) {
-            rawScore_v3 = RAW_SCORE_MAX_DUR_V3;
+        else if (adjSleepDurationV3 > DURATION_MAX_V3) {
+            rawScoreV3 = RAW_SCORE_MAX_DUR_V3;
         }
 
         //rawScore calculated using 5th degree polynomial model to extrapolate change in sleep quality with sleep duration
         else{
 
-            adjSleepDuration_v3_2 = adjSleepDuration_v3 * adjSleepDuration_v3;
-            adjSleepDuration_v3_3 = adjSleepDuration_v3_2 * adjSleepDuration_v3;
-            adjSleepDuration_v3_4 = adjSleepDuration_v3_3 * adjSleepDuration_v3;
-            adjSleepDuration_v3_5 = adjSleepDuration_v3_4 * adjSleepDuration_v3;
+            adjSleepDurationV3p2 = adjSleepDurationV3 * adjSleepDurationV3;
+            adjSleepDurationV3p3 = adjSleepDurationV3p2 * adjSleepDurationV3;
+            adjSleepDurationV3p4 = adjSleepDurationV3p3 * adjSleepDurationV3;
+            adjSleepDurationV3p5 = adjSleepDurationV3p4 * adjSleepDurationV3;
 
-            rawScore_v3 = 14.8027f + (4.3001e-01f) * adjSleepDuration_v3 + (-2.7177e-03f) * adjSleepDuration_v3_2 + (8.2262e-06f) * adjSleepDuration_v3_3 + (-1.1033e-08f) * adjSleepDuration_v3_4 + (5.333e-12f) * adjSleepDuration_v3_5;
+            rawScoreV3 = 14.8027f + (4.3001e-01f) * adjSleepDurationV3 + (-2.7177e-03f) * adjSleepDurationV3p2 + (8.2262e-06f) * adjSleepDurationV3p3 + (-1.1033e-08f) * adjSleepDurationV3p4 + (5.333e-12f) * adjSleepDurationV3p5;
         }
 
         //normalize rawscore  (score range: 0 to 100)
-        return Math.round((rawScore_v3-RAW_SCORE_MIN_V3)/(RAW_SCORE_MAX_V3-RAW_SCORE_MIN_V3)*100);
+        return Math.round((rawScoreV3 - RAW_SCORE_MIN_V3)/(RAW_SCORE_MAX_V3 - RAW_SCORE_MIN_V3)*100);
     }
 
         /**
