@@ -463,7 +463,12 @@ public class FirmwareUpdateStore {
         }
 
         try {
-            return Optional.of(buildInfo.get("version"));
+            final String versionText = buildInfo.get("version");
+            //TODO: Remove this hacky method of distinguishing old fw versions from new
+            if (versionText.length() < 6) {
+                return Optional.of(versionText);
+            }
+            return Optional.of(Integer.toString(Integer.decode("0x" + versionText)));
         } catch (NumberFormatException nfe) {
             return Optional.absent();
         }

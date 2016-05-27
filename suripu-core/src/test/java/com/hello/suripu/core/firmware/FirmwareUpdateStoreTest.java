@@ -23,8 +23,8 @@ public class FirmwareUpdateStoreTest {
     @Test
     public void testIsValidFirmwareUpdate(){
 
-        final String sameFirmwareVersion = "BC614E";
-        final String diffFirmwareVersion = "75BCD15";
+        final String sameFirmwareVersion = "12345678";
+        final String diffFirmwareVersion = "123456789";
         final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
         fileDownloadList.add(OutputProtos.SyncResponse.FileDownload.newBuilder().build());
 
@@ -91,7 +91,7 @@ public class FirmwareUpdateStoreTest {
 
         Optional<String> fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(oldFirmwareBuildInfo);
         assertThat(fwVersion.isPresent(), is(true));
-        assertThat(fwVersion.get(), is("2ea40f21"));
+        assertThat(fwVersion.get(), is("782503713"));
 
         fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(newFirmwareBuildInfo);
         assertThat(fwVersion.isPresent(), is(true));
