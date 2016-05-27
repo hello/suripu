@@ -224,7 +224,7 @@ public class AccountDAOTest {
         assertThat(updated.isPresent(), is(true));
         final Optional<Account> fromDBOptional = accountDAO.getById(updated.get().id.get());
         assertThat(fromDBOptional.isPresent(), is(true));
-        assertThat(fromDBOptional.get().name, equalTo(updatedAccount.name));
+        assertThat(fromDBOptional.get().name(), equalTo(updatedAccount.name()));
     }
 
     @Test
@@ -236,7 +236,7 @@ public class AccountDAOTest {
         assertThat(updated.isPresent(), is(true));
         final Optional<Account> fromDBOptional = accountDAO.getById(updated.get().id.get());
         assertThat(fromDBOptional.isPresent(), is(true));
-        assertThat(fromDBOptional.get().name, equalTo(updatedAccount.name));
+        assertThat(fromDBOptional.get().name(), equalTo(updatedAccount.name()));
         assertThat(fromDBOptional.get().firstname, equalTo(updatedAccount.firstname));
         assertThat(updated.get().lastname.isPresent(), is(false));
     }

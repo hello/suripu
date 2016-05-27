@@ -26,7 +26,7 @@ public @interface BindAccount {
 
             return new Binder<BindAccount, Account>() {
                 public void bind(SQLStatement q, BindAccount bind, Account arg) {
-                    q.bind("name", arg.name);
+                    q.bind("name", arg.name());
                     q.bind("firstname", arg.firstname);
                     q.bind("lastname", arg.lastname.orNull());
                     q.bind("email", arg.email);

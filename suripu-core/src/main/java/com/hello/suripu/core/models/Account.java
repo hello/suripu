@@ -42,8 +42,15 @@ public class Account {
     @JsonProperty("tz")
     public final Integer tzOffsetMillis;
 
+    private final String name;
+
     @JsonProperty("name")
-    public final String name;
+    public final String name() {
+        if(name.isEmpty()) {
+            return firstname;
+        }
+        return name;
+    }
 
     @JsonProperty("firstname")
     public final String firstname;
