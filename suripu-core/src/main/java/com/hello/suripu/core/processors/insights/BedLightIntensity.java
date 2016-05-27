@@ -77,7 +77,7 @@ public class BedLightIntensity {
             text = BedLightIntensityMsgEN.getMoreThanThree(nightRatio.intValue());
         }
 
-        return Optional.of(new InsightCard(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
                 InsightCard.Category.BED_LIGHT_INTENSITY_RATIO, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
