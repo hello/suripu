@@ -7,6 +7,8 @@ import com.google.common.collect.ComparisonChain;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 
+import java.util.UUID;
+
 /**
  * Created by kingshy on 10/24/14.
  */
@@ -160,28 +162,38 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("insight_type")
     public final InsightType insightType;
 
+    @JsonIgnore // for now
+    public final Optional<UUID> uuid;
+
+    // used by a bunch of insight Processors
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp, final InsightType insightType) {
-        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent(), Optional.<MultiDensityImage>absent(), insightType);
+        this(accountId, title, message, category, timePeriod, timestamp,
+                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), insightType, Optional.<UUID>absent());
     }
 
+    // use by insight processors with no computations
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
                        final String categoryName, final InsightType insightType) {
         this(accountId, title, message, category, timePeriod, timestamp,
-                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName, insightType);
+                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName, insightType,
+                Optional.<UUID>absent());
     }
 
+    // dynamoDB
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                       final Optional<String> infoPreview, final Optional<MultiDensityImage> image, final InsightType insightType) {
-        this(accountId, title, message, category, timePeriod, timestamp, infoPreview, image, "", insightType);
+                       final Optional<String> infoPreview, final Optional<MultiDensityImage> image, final InsightType insightType,
+                       final Optional<UUID> uuidOptional) {
+        this(accountId, title, message, category, timePeriod, timestamp, infoPreview, image, "", insightType, uuidOptional);
     }
 
     private InsightCard(final Long accountId, final String title, final String message,
-                       final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                       final Optional<String> infoPreview, final Optional<MultiDensityImage> image,
-                       final String categoryName, final InsightType insightType) {
+                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                        final Optional<String> infoPreview, final Optional<MultiDensityImage> image,
+                        final String categoryName, final InsightType insightType,
+                        final Optional<UUID> uuidOptional ) {
         this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
@@ -192,6 +204,7 @@ public class InsightCard implements Comparable<InsightCard> {
         this.image = image;
         this.categoryName = categoryName;
         this.insightType = insightType;
+        this.uuid = uuidOptional;
     }
 
     @Override
@@ -217,7 +230,9 @@ public class InsightCard implements Comparable<InsightCard> {
                 this.timestamp,
                 infoPreview,
                 this.image,
-                this.insightType);
+                this.insightType,
+                this.uuid
+                );
     }
 
     /**
@@ -228,7 +243,8 @@ public class InsightCard implements Comparable<InsightCard> {
      */
     public static InsightCard withImage(final InsightCard card, @NotNull final MultiDensityImage image) {
         return new InsightCard(card.accountId.get(), card.title, card.message, card.category,
-                card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), card.insightType);
+                card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), card.insightType,
+                card.uuid);
     }
 
 
@@ -241,6 +257,7 @@ public class InsightCard implements Comparable<InsightCard> {
      */
     public static InsightCard withImageAndCategory(final InsightCard card, @NotNull final MultiDensityImage image, @NotNull String categoryName) {
         return new InsightCard(card.accountId.get(), card.title, card.message, card.category,
-                card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), categoryName, card.insightType);
+                card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), categoryName, card.insightType,
+                card.uuid);
     }
 }

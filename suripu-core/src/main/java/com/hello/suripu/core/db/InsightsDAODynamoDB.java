@@ -75,15 +75,25 @@ public class InsightsDAODynamoDB {
                                                   TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME);
 
         this.attributesToFetch = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
-                                                 CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
-                                                 TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
-                                                 IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME,
-                                                 IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, INSIGHT_TYPE_ATTRIBUTE_NAME);
+                CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
+                TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
+                IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME,
+                IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, INSIGHT_TYPE_ATTRIBUTE_NAME,
+                INSIGHT_UUID_ATTRIBUTE_NAME);
     }
 
     public void insertInsight(final InsightCard insightCard) {
         LOGGER.debug("write single insight {}, {}, {}", insightCard.accountId, insightCard.category, insightCard.timestamp);
-        final HashMap<String, AttributeValue> item = this.createItem(insightCard);
+        final HashMap<String, AttributeValue> item = this.createItem(insightCard, true);
+        final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
+        final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
+        LOGGER.debug("write single insight {}", result.toString());
+
+    }
+
+    public void insertInsightWithoutUUID(final InsightCard insightCard) {
+        LOGGER.debug("write single insight {}, {}, {}", insightCard.accountId, insightCard.category, insightCard.timestamp);
+        final HashMap<String, AttributeValue> item = this.createItem(insightCard, false);
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
         final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
         LOGGER.debug("write single insight {}", result.toString());
@@ -93,7 +103,7 @@ public class InsightsDAODynamoDB {
     public void insertListOfInsights(final List<InsightCard> insightCards) {
         final List<WriteRequest> insights = new ArrayList<>();
         for (InsightCard insightCard : insightCards) {
-            final HashMap<String, AttributeValue> item = this.createItem(insightCard);
+            final HashMap<String, AttributeValue> item = this.createItem(insightCard, true);
             final PutRequest putRequest = new PutRequest().withItem(item);
             insights.add(new WriteRequest().withPutRequest(putRequest));
         }
@@ -241,7 +251,7 @@ public class InsightsDAODynamoDB {
         return DateTimeUtil.dateToYmdString(date) + "_" + category;
     }
 
-    private HashMap<String, AttributeValue> createItem(final InsightCard insightCard) {
+    private HashMap<String, AttributeValue> createItem(final InsightCard insightCard, final Boolean createUUID) {
         final HashMap<String, AttributeValue> item = new HashMap<>();
         item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(insightCard.accountId.get())));
 
@@ -272,7 +282,10 @@ public class InsightsDAODynamoDB {
         }
 
         item.put(INSIGHT_TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.insightType.toString()));
-        item.put(INSIGHT_UUID_ATTRIBUTE_NAME, new AttributeValue().withS(UUID.randomUUID().toString()));
+
+        if (createUUID) {
+            item.put(INSIGHT_UUID_ATTRIBUTE_NAME, new AttributeValue().withS(UUID.randomUUID().toString()));
+        }
 
         return item;
     }
@@ -317,6 +330,11 @@ public class InsightsDAODynamoDB {
 
         final InsightCard.InsightType insightType = InsightsDAODynamoDB.generateInsightType(category, optionalType);
 
+        final Optional<UUID> uuidOptional = item.containsKey(INSIGHT_UUID_ATTRIBUTE_NAME)
+                ? Optional.of(UUID.fromString(item.get(INSIGHT_UUID_ATTRIBUTE_NAME).getS()))
+                : Optional.<UUID>absent();
+
+
         return new InsightCard(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
                 item.get(TITLE_ATTRIBUTE_NAME).getS(),
@@ -326,7 +344,8 @@ public class InsightsDAODynamoDB {
                 new DateTime(item.get(TIMESTAMP_UTC_ATTRIBUTE_NAME).getS(), DateTimeZone.UTC),
                 Optional.<String>absent(),
                 image,
-                insightType
+                insightType,
+                uuidOptional
         );
     }
 
