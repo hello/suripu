@@ -284,7 +284,8 @@ public class InsightsDAODynamoDB {
         item.put(INSIGHT_TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.insightType.toString()));
 
         if (createUUID) {
-            item.put(INSIGHT_UUID_ATTRIBUTE_NAME, new AttributeValue().withS(UUID.randomUUID().toString()));
+            final UUID uuid = insightCard.uuid.isPresent() ? insightCard.uuid.get() : UUID.randomUUID();
+            item.put(INSIGHT_UUID_ATTRIBUTE_NAME, new AttributeValue().withS(uuid.toString()));
         }
 
         return item;
@@ -335,7 +336,7 @@ public class InsightsDAODynamoDB {
                 : Optional.<UUID>absent();
 
 
-        return new InsightCard(
+        return InsightCard.createInsightCardFromDynamoDB(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
                 item.get(TITLE_ATTRIBUTE_NAME).getS(),
                 item.get(MESSAGE_ATTRIBUTE_NAME).getS(),

@@ -207,6 +207,42 @@ public class InsightCard implements Comparable<InsightCard> {
         this.uuid = uuidOptional;
     }
 
+    // static methods to create insightcards
+    public static InsightCard createInsightCards(final Long accountId, final String title, final String message,
+                                                              final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                                                              final InsightType insightType) {
+        return new InsightCard(accountId, title, message, category, timePeriod, timestamp,
+                Optional.<String>absent(),
+                Optional.<MultiDensityImage>absent(),
+                "",
+                insightType,
+                Optional.<UUID>absent());
+    }
+
+    public static InsightCard createInsightCardWithCategoryName(final Long accountId, final String title, final String message,
+                                          final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                                          final String categoryName, final InsightType insightType) {
+        return new InsightCard(accountId, title, message, category, timePeriod, timestamp,
+                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName, insightType,
+                Optional.<UUID>absent());
+    }
+
+    public static InsightCard createIntroductionInsightCards(final Long accountId, final String title, final String message,
+                                                            final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                                                            final String categoryName, final InsightType insightType) {
+        return new InsightCard(accountId, title, message, category, timePeriod, timestamp,
+                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName, insightType,
+                Optional.of(UUID.randomUUID()));
+    }
+
+    public static InsightCard createInsightCardFromDynamoDB(final Long accountId, final String title, final String message,
+                                                            final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                                                            final Optional<String> infoPreview, final Optional<MultiDensityImage> image,
+                                                            final InsightType insightType,
+                                                            final Optional<UUID> uuidOptional) {
+        return new InsightCard(accountId, title, message, category, timePeriod, timestamp, infoPreview, image, "", insightType, uuidOptional);
+    }
+
     @Override
     public int compareTo(InsightCard o) {
         // TODO: test this

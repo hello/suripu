@@ -12,7 +12,9 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.MultiDensityImage;
 
+import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -204,4 +206,19 @@ public class InsightsDAODynamoDBIT {
         assertThat(retrievedCards.get(0).uuid.isPresent(), is(false));
     }
 
+    @Test
+    public void testIntroductionInsightCardWithUUID() {
+        final InsightCard introCard = IntroductionInsights.getIntroSleepDurationCard(1L);
+        assertThat(introCard.uuid.isPresent(), is(true));
+
+        insightsDAODynamoDB.insertInsight(introCard);
+
+        final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(2);
+        final ImmutableList<InsightCard> retrievedCards = insightsDAODynamoDB.getInsightsByDate(1L, queryDate, false, 2);
+        assertThat(retrievedCards.size(), is (1));
+        assertThat(retrievedCards.get(0).uuid.isPresent(), is(true));
+        assertThat(retrievedCards.get(0).uuid.get().equals(introCard.uuid.get()), is(true));
+
+
+    }
 }
