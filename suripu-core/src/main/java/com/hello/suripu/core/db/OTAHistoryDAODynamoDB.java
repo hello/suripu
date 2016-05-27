@@ -155,8 +155,8 @@ public class OTAHistoryDAODynamoDB {
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(DEVICE_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
-                new AttributeDefinition().withAttributeName(EVENT_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
+                new AttributeDefinition().withAttributeName(DEVICE_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S),
+                new AttributeDefinition().withAttributeName(EVENT_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
 
         );
 
