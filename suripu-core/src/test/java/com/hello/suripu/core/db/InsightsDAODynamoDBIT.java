@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.MultiDensityImage;
+import com.hello.suripu.core.models.MultiDensityImage;
 
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -144,25 +144,25 @@ public class InsightsDAODynamoDBIT {
         assertThat(withCompleteImage.image.isPresent(), is(true));
 
         final MultiDensityImage fromDbCompleteImage = withCompleteImage.image.get();
-        assertThat(fromDbCompleteImage.phoneDensityNormal.isPresent(), is(true));
-        assertThat(fromDbCompleteImage.phoneDensityNormal, is(equalTo(completeImage.phoneDensityNormal)));
+        assertThat(fromDbCompleteImage.phoneDensityNormal().isPresent(), is(true));
+        assertThat(fromDbCompleteImage.phoneDensityNormal(), is(equalTo(completeImage.phoneDensityNormal())));
 
-        assertThat(fromDbCompleteImage.phoneDensityHigh.isPresent(), is(true));
-        assertThat(fromDbCompleteImage.phoneDensityHigh, is(equalTo(completeImage.phoneDensityHigh)));
+        assertThat(fromDbCompleteImage.phoneDensityHigh().isPresent(), is(true));
+        assertThat(fromDbCompleteImage.phoneDensityHigh(), is(equalTo(completeImage.phoneDensityHigh())));
 
-        assertThat(fromDbCompleteImage.phoneDensityExtraHigh.isPresent(), is(true));
-        assertThat(fromDbCompleteImage.phoneDensityExtraHigh, is(equalTo(completeImage.phoneDensityExtraHigh)));
+        assertThat(fromDbCompleteImage.phoneDensityExtraHigh().isPresent(), is(true));
+        assertThat(fromDbCompleteImage.phoneDensityExtraHigh(), is(equalTo(completeImage.phoneDensityExtraHigh())));
 
         final InsightCard withIncompleteImage = insights.get(1);
         assertThat(withIncompleteImage.image.isPresent(), is(true));
 
         final MultiDensityImage fromDbIncompleteImage = withIncompleteImage.image.get();
-        assertThat(fromDbIncompleteImage.phoneDensityNormal.isPresent(), is(true));
-        assertThat(fromDbIncompleteImage.phoneDensityNormal, is(equalTo(completeImage.phoneDensityNormal)));
+        assertThat(fromDbIncompleteImage.phoneDensityNormal().isPresent(), is(true));
+        assertThat(fromDbIncompleteImage.phoneDensityNormal(), is(equalTo(completeImage.phoneDensityNormal())));
 
-        assertThat(fromDbIncompleteImage.phoneDensityHigh.isPresent(), is(false));
+        assertThat(fromDbIncompleteImage.phoneDensityHigh().isPresent(), is(false));
 
-        assertThat(fromDbIncompleteImage.phoneDensityExtraHigh.isPresent(), is(true));
-        assertThat(fromDbIncompleteImage.phoneDensityExtraHigh, is(equalTo(completeImage.phoneDensityExtraHigh)));
+        assertThat(fromDbIncompleteImage.phoneDensityExtraHigh().isPresent(), is(true));
+        assertThat(fromDbIncompleteImage.phoneDensityExtraHigh(), is(equalTo(completeImage.phoneDensityExtraHigh())));
     }
 }
