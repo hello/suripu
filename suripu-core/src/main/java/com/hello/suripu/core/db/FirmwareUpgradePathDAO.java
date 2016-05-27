@@ -194,7 +194,7 @@ public class FirmwareUpgradePathDAO {
         }
 
         final Map<String, AttributeValue> item = items.get(0);
-        final String itemNextFW = item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getS();
+        final String itemNextFW = item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN();
 
         final Float rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Float.parseFloat(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
 
