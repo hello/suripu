@@ -65,6 +65,14 @@ public class FirmwareUpdateStoreTest {
             "travis_build_number: 3278\n" +
             "travis_job_id: 30690259\n" +
             "travis_job_number: 3278.1";
+        final String oldFirmwareBuildInfoHighFWVersion = "version: da952d21\n" +
+            "last_tag: 1.0.5.3.4\n" +
+            "travis_branch: 1.0.5.3.4\n" +
+            "travis_tag: 1.0.5.3.4\n" +
+            "travis_build_id: 19787387\n" +
+            "travis_build_number: 3278\n" +
+            "travis_job_id: 30690259\n" +
+            "travis_job_number: 3278.1";
         final String newFirmwareBuildInfo = "version: 3300\n" +
             "last_tag: 1.0.5.3.3\n" +
             "travis_branch: alphas\n" +
@@ -92,6 +100,9 @@ public class FirmwareUpdateStoreTest {
         Optional<String> fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(oldFirmwareBuildInfo);
         assertThat(fwVersion.isPresent(), is(true));
         assertThat(fwVersion.get(), is("782503713"));
+
+        fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(oldFirmwareBuildInfoHighFWVersion);
+        assertThat(fwVersion.isPresent(), is(false));
 
         fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(newFirmwareBuildInfo);
         assertThat(fwVersion.isPresent(), is(true));
