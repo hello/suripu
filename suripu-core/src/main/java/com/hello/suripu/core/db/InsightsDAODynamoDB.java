@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class InsightsDAODynamoDB {
 
@@ -58,6 +59,8 @@ public class InsightsDAODynamoDB {
     public static final String IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME = "phone_image_2x";
     public static final String IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME = "phone_image_3x";
     public static final String INSIGHT_TYPE_ATTRIBUTE_NAME = "insight_type";
+    public static final String INSIGHT_ID_ATTRIBUTE_NAME = "id";
+
     private static final int MAX_CALL_COUNT = 5;
 
     private static final String S3_BUCKET_PATH = "https://s3.amazonaws.com/hello-data/insights_images/";
@@ -70,16 +73,27 @@ public class InsightsDAODynamoDB {
         this.requiredAttributes = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
                                                   CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
                                                   TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME);
+
         this.attributesToFetch = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
-                                                 CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
-                                                 TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
-                                                 IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME,
-                                                 IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, INSIGHT_TYPE_ATTRIBUTE_NAME);
+                CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
+                TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
+                IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME,
+                IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, INSIGHT_TYPE_ATTRIBUTE_NAME,
+                INSIGHT_ID_ATTRIBUTE_NAME);
     }
 
     public void insertInsight(final InsightCard insightCard) {
         LOGGER.debug("write single insight {}, {}, {}", insightCard.accountId, insightCard.category, insightCard.timestamp);
-        final HashMap<String, AttributeValue> item = this.createItem(insightCard);
+        final HashMap<String, AttributeValue> item = this.createItem(insightCard, true);
+        final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
+        final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
+        LOGGER.debug("write single insight {}", result.toString());
+
+    }
+
+    public void insertInsightWithoutID(final InsightCard insightCard) {
+        LOGGER.debug("write single insight {}, {}, {}", insightCard.accountId, insightCard.category, insightCard.timestamp);
+        final HashMap<String, AttributeValue> item = this.createItem(insightCard, false);
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
         final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
         LOGGER.debug("write single insight {}", result.toString());
@@ -89,7 +103,7 @@ public class InsightsDAODynamoDB {
     public void insertListOfInsights(final List<InsightCard> insightCards) {
         final List<WriteRequest> insights = new ArrayList<>();
         for (InsightCard insightCard : insightCards) {
-            final HashMap<String, AttributeValue> item = this.createItem(insightCard);
+            final HashMap<String, AttributeValue> item = this.createItem(insightCard, true);
             final PutRequest putRequest = new PutRequest().withItem(item);
             insights.add(new WriteRequest().withPutRequest(putRequest));
         }
@@ -237,7 +251,7 @@ public class InsightsDAODynamoDB {
         return DateTimeUtil.dateToYmdString(date) + "_" + category;
     }
 
-    private HashMap<String, AttributeValue> createItem(final InsightCard insightCard) {
+    private HashMap<String, AttributeValue> createItem(final InsightCard insightCard, final Boolean createID) {
         final HashMap<String, AttributeValue> item = new HashMap<>();
         item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(insightCard.accountId.get())));
 
@@ -268,6 +282,11 @@ public class InsightsDAODynamoDB {
         }
 
         item.put(INSIGHT_TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.insightType.toString()));
+
+        if (createID) {
+            final UUID id = insightCard.id.isPresent() ? insightCard.id.get() : UUID.randomUUID();
+            item.put(INSIGHT_ID_ATTRIBUTE_NAME, new AttributeValue().withS(id.toString()));
+        }
 
         return item;
     }
@@ -312,7 +331,12 @@ public class InsightsDAODynamoDB {
 
         final InsightCard.InsightType insightType = InsightsDAODynamoDB.generateInsightType(category, optionalType);
 
-        return new InsightCard(
+        final Optional<UUID> idOptional = item.containsKey(INSIGHT_ID_ATTRIBUTE_NAME)
+                ? Optional.of(UUID.fromString(item.get(INSIGHT_ID_ATTRIBUTE_NAME).getS()))
+                : Optional.<UUID>absent();
+
+
+        return InsightCard.createInsightCardNoCategoryName(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
                 item.get(TITLE_ATTRIBUTE_NAME).getS(),
                 item.get(MESSAGE_ATTRIBUTE_NAME).getS(),
@@ -321,7 +345,8 @@ public class InsightsDAODynamoDB {
                 new DateTime(item.get(TIMESTAMP_UTC_ATTRIBUTE_NAME).getS(), DateTimeZone.UTC),
                 Optional.<String>absent(),
                 image,
-                insightType
+                insightType,
+                idOptional
         );
     }
 

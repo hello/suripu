@@ -8,10 +8,13 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.MultiDensityImage;
 
+import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -78,8 +82,10 @@ public class InsightsDAODynamoDBIT {
         final String message = "message";
         final InsightCard.Category category = InsightCard.Category.LIGHT;
         final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.NONE;
-        insightCards.add(new InsightCard(accountId, title, message, category, timePeriod,
-                                         DateTime.parse(date), Optional.<String>absent(), image, InsightCard.InsightType.DEFAULT));
+        insightCards.add(InsightCard.createInsightCardNoCategoryName(accountId, title, message, category, timePeriod,
+                DateTime.parse(date), Optional.<String>absent(), image,
+                InsightCard.InsightType.DEFAULT, Optional.<UUID>absent()));
+
     }
 
     @Test
@@ -164,5 +170,56 @@ public class InsightsDAODynamoDBIT {
 
         assertThat(fromDbIncompleteImage.phoneDensityExtraHigh().isPresent(), is(true));
         assertThat(fromDbIncompleteImage.phoneDensityExtraHigh(), is(equalTo(completeImage.phoneDensityExtraHigh())));
+    }
+
+
+    @Test
+    public void testHasUUID() {
+        final String title = "title";
+        final String message = "message";
+        final InsightCard.Category category = InsightCard.Category.LIGHT;
+        final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.NONE;
+        final String date = "2016-05-06T23:17:25.162Z";
+        final InsightCard card = InsightCard.createInsightCardNoCategoryName(1L, title, message, category, timePeriod,
+                DateTime.parse(date), Optional.<String>absent(), Optional.<MultiDensityImage>absent(), InsightCard.InsightType.DEFAULT,
+                Optional.<UUID>absent());
+
+        insightsDAODynamoDB.insertInsight(card);
+        final ImmutableList<InsightCard> retrievedCards = insightsDAODynamoDB.getInsightsByCategory(1L, InsightCard.Category.LIGHT, 1);
+        assertThat(retrievedCards.size(), is (1));
+        assertThat(retrievedCards.get(0).id.isPresent(), is(true));
+    }
+
+    @Test
+    public void testHasNoUUID() {
+        final String title = "title";
+        final String message = "message";
+        final InsightCard.Category category = InsightCard.Category.AIR_QUALITY;
+        final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.NONE;
+        final String date = "2016-05-07T00:17:25.162Z";
+        final InsightCard card = InsightCard.createInsightCardNoCategoryName(1L, title, message, category, timePeriod,
+                DateTime.parse(date), Optional.<String>absent(), Optional.<MultiDensityImage>absent(), InsightCard.InsightType.DEFAULT,
+                Optional.<UUID>absent());
+
+        insightsDAODynamoDB.insertInsightWithoutID(card);
+        final ImmutableList<InsightCard> retrievedCards = insightsDAODynamoDB.getInsightsByCategory(1L, InsightCard.Category.AIR_QUALITY, 1);
+        assertThat(retrievedCards.size(), is (1));
+        assertThat(retrievedCards.get(0).id.isPresent(), is(false));
+    }
+
+    @Test
+    public void testIntroductionInsightCardWithUUID() {
+        final InsightCard introCard = IntroductionInsights.getIntroSleepDurationCard(1L);
+        assertThat(introCard.id.isPresent(), is(true));
+
+        insightsDAODynamoDB.insertInsight(introCard);
+
+        final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(2);
+        final ImmutableList<InsightCard> retrievedCards = insightsDAODynamoDB.getInsightsByDate(1L, queryDate, false, 2);
+        assertThat(retrievedCards.size(), is (1));
+        assertThat(retrievedCards.get(0).id.isPresent(), is(true));
+        assertThat(retrievedCards.get(0).id.get().equals(introCard.id.get()), is(true));
+
+
     }
 }
