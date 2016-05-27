@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.MultiDensityImage;
+import com.hello.suripu.core.models.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -268,16 +268,16 @@ public class InsightsDAODynamoDB {
         item.put(TIMESTAMP_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.timestamp.toString()));
         if (insightCard.image.isPresent()) {
             final MultiDensityImage image = insightCard.image.get();
-            if (image.phoneDensityNormal.isPresent()) {
-                item.put(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityNormal.get()));
+            if (image.phoneDensityNormal().isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityNormal().get()));
             }
 
-            if (image.phoneDensityHigh.isPresent()) {
-                item.put(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityHigh.get()));
+            if (image.phoneDensityHigh().isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityHigh().get()));
             }
 
-            if (image.phoneDensityExtraHigh.isPresent()) {
-                item.put(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityExtraHigh.get()));
+            if (image.phoneDensityExtraHigh().isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityExtraHigh().get()));
             }
         }
 
@@ -293,12 +293,12 @@ public class InsightsDAODynamoDB {
 
     private static MultiDensityImage generateImageUrlBasedOnCategory(InsightCard.Category category) {
         final String categoryName = category.name().toLowerCase();
-        final String image1x = String.format(S3_BUCKET_PATH + "%s.png", categoryName);
-        final String image2x = String.format(S3_BUCKET_PATH + "%s@2x.png", categoryName);
-        final String image3x = String.format(S3_BUCKET_PATH + "%s@3x.png", categoryName);
-        return new MultiDensityImage(Optional.fromNullable(image1x),
-                Optional.fromNullable(image2x),
-                Optional.fromNullable(image3x));
+        final String image1x = String.format("%s.png", categoryName);
+        final String image2x = String.format("%s@2x.png", categoryName);
+        final String image3x = String.format("%s@3x.png", categoryName);
+        return MultiDensityImage.create(S3_BUCKET_PATH,
+                Optional.of(image1x), Optional.of(image2x), Optional.of(image3x)
+        );
     }
 
     private InsightCard createInsightCard(Map<String, AttributeValue> item) {

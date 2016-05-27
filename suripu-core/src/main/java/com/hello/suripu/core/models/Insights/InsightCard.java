@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
+import com.hello.suripu.core.models.MultiDensityImage;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 
