@@ -189,9 +189,9 @@ public class InsightCard implements Comparable<InsightCard> {
     // public static methods to create InsightCard
 
     // custom Insight Processors such as WakeVariance
-    public static InsightCard createInsightCards(final Long accountId, final String title, final String message,
-                                                 final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                                                 final InsightType insightType) {
+    public static InsightCard createBasicInsightCard(final Long accountId, final String title, final String message,
+                                                     final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                                                     final InsightType insightType) {
         return new InsightCard(accountId, title, message, category, timePeriod, timestamp,
                 Optional.<String>absent(),
                 Optional.<MultiDensityImage>absent(),

@@ -51,7 +51,7 @@ public class PartnerMotionInsight {
 
         final Text text = getInsightText(myMotionTtl, partnerMotionTtl);
 
-        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.PARTNER_MOTION, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }

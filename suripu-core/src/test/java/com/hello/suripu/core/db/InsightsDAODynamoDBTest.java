@@ -22,7 +22,7 @@ public class InsightsDAODynamoDBTest {
 
 
     private InsightCard generate(InsightCard.Category category) {
-        return InsightCard.createInsightCards(13L, "title", "message", category, InsightCard.TimePeriod.DAILY, DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT);
+        return InsightCard.createBasicInsightCard(13L, "title", "message", category, InsightCard.TimePeriod.DAILY, DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT);
     }
 
     @Test

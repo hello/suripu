@@ -157,7 +157,7 @@ public class TemperatureHumidity {
             text = TemperatureMsgEN.getTempMsgBad(commonMsg, idealMin, idealMax, tempUnit.toString());
         }
 
-        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.TEMPERATURE, InsightCard.TimePeriod.RECENTLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }

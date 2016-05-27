@@ -102,7 +102,7 @@ public class SleepAlarm {
 
         final Text text = SleepAlarmMsgEN.getSleepAlarmMessage(wakeTime, recSleepDurationMins, preSleepTime, sleepTime);
 
-        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
@@ -111,7 +111,7 @@ public class SleepAlarm {
     public static Optional<InsightCard> processSleepAlarmFallBack(final Long accountId) {
         final Text text = SleepAlarmMsgEN.getSleepAlarmFallBackMessage();
 
-        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }

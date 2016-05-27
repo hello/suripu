@@ -107,7 +107,7 @@ public class CaffeineAlarm {
 
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmMessage(sleepTime, coffeeTime);
 
-        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
@@ -116,7 +116,7 @@ public class CaffeineAlarm {
     public static Optional<InsightCard> processCaffeineAlarmFallBack(final Long accountId) {
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmFallBackMessage();
 
-        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }

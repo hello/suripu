@@ -81,7 +81,7 @@ public class WakeVariance {
             text = WakeVarianceMsgEN.getWakeVarianceTooHigh(wakeStdDev, percentile);
         }
 
-        return Optional.of(InsightCard.createInsightCards(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.WAKE_VARIANCE, InsightCard.TimePeriod.WEEKLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
 
