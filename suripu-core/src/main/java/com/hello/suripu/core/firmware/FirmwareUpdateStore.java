@@ -126,7 +126,7 @@ public class FirmwareUpdateStore {
         final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
 
         final Map<String, String> filenameSHAMap = Maps.newHashMap(); //a map of filename->SHA1 value from S3 metaData
-        String firmwareVersion = "0";
+        String firmwareVersion = "";
 
         for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
             if(!summary.getKey().contains(".map") && !summary.getKey().contains(".out") && !summary.getKey().contains(".txt")) {
