@@ -291,12 +291,12 @@ public class InsightsDAODynamoDB {
         return item;
     }
 
-    private static MultiDensityImage generateImageUrlBasedOnCategory(InsightCard.Category category) {
+    private static MultiDensityImage generateImageUrlBasedOnCategory(final InsightCard.Category category, final String endpointPath) {
         final String categoryName = category.name().toLowerCase();
         final String image1x = String.format("%s.png", categoryName);
         final String image2x = String.format("%s@2x.png", categoryName);
         final String image3x = String.format("%s@3x.png", categoryName);
-        return MultiDensityImage.create(S3_BUCKET_PATH,
+        return MultiDensityImage.create(endpointPath,
                 Optional.of(image1x), Optional.of(image2x), Optional.of(image3x)
         );
     }
@@ -355,16 +355,20 @@ public class InsightsDAODynamoDB {
      * @param cards
      * @return
      */
-    public static List<InsightCard> backfillImagesBasedOnCategory(final List<InsightCard> cards, final Map<InsightCard.Category, String> categoryNames) {
+    public static List<InsightCard> backfillImagesBasedOnCategory(final List<InsightCard> cards, final Map<InsightCard.Category, String> categoryNames, final String endpoint) {
         // TODO: make this nicer with Java8
         final List<InsightCard> cardsWithImages = Lists.newArrayListWithCapacity(cards.size());
         for(final InsightCard card : cards) {
             final String categoryName = categoryNames.containsKey(card.category) ? categoryNames.get(card.category) : "";
-            cardsWithImages.add(InsightCard.withImageAndCategory(card, generateImageUrlBasedOnCategory(card.category), categoryName));
+            cardsWithImages.add(InsightCard.withImageAndCategory(card, generateImageUrlBasedOnCategory(card.category, endpoint), categoryName));
         }
         return cardsWithImages;
     }
 
+
+    public static List<InsightCard> backfillImagesBasedOnCategory(final List<InsightCard> cards, final Map<InsightCard.Category, String> categoryNames) {
+        return backfillImagesBasedOnCategory(cards, categoryNames, S3_BUCKET_PATH);
+    }
 
     /**
      * Returns appropriate insight type based on db value or category
