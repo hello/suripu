@@ -250,4 +250,19 @@ public class AccountDAOTest {
         assertThat(fromDBOptional.get().lastname.isPresent(), is(false));
         assertThat(fromDBOptional.get().firstname.isEmpty(), is(false));
     }
+
+
+    @Test
+    public void updateFirstname() {
+        final Registration registration = newRegistration("test@test.com", "test");
+        final Account account = accountDAO.register(registration);
+        final Optional<Account> fromDBOptional = accountDAO.getById(account.id.get());
+        assertThat(fromDBOptional.isPresent(), is(true));
+        final Account updated = new Account.Builder(account).withFirstname("updated").
+                withLastname("").build();
+        accountDAO.update(updated, account.id.get());
+        final Optional<Account> fromDBUpdatedOptional = accountDAO.getById(account.id.get());
+        assertThat(fromDBUpdatedOptional.get().lastname.isPresent(), is(true));
+        assertThat(fromDBUpdatedOptional.get().lastname.get().isEmpty(), is(false));
+    }
 }
