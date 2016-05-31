@@ -45,8 +45,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     public static final int DAYS_BETWEEN_ANOMALY_QUESTIONS = 2; // allows 1 anomaly-question every 3 days
     public static final int ANOMALY_TOO_OLD_THRESHOLD = 2; // night date older than this number of days
 
-    public static final int AFTERNOON_TIME = 12;
-    public static final int EVENING_TIME = 16;
+    public static final int AFTERNOON_TIME = 12; //afternoon starts at 12:00 pm
+    public static final int EVENING_TIME = 16; //evening starts at 4:00 pm
 
 
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
@@ -57,16 +57,17 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     private final Map<Integer, Question> questionIdMap = new HashMap<>();
     private final Set<Integer> baseQuestionIds = new HashSet<>();
     private final Map<QuestionCategory, List<Integer>> questionCategoryMap = new HashMap<>();
-    private final ListMultimap<Integer, Question.ASK_TIME> questionAskTimeMap = ArrayListMultimap.create();
+    private final ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap = ArrayListMultimap.create();
 
     public static class Builder {
         private QuestionResponseDAO questionResponseDAO;
+        private TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
         private int checkSkipsNum;
         private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
         private Map<Integer, Question> questionIdMap;
         private Set<Integer> baseQuestionIds;
         private Map<QuestionCategory, List<Integer>> questionCategoryMap;
-        private ListMultimap<Integer, Question.ASK_TIME> questionAskTimeMap;
+        private ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap;
 
         public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
             this.questionResponseDAO = questionResponseDAO;
@@ -83,7 +84,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
             this.questionIdMap = new HashMap<>();
             this.baseQuestionIds = new HashSet<>();
             this.questionCategoryMap = Maps.newHashMap();
-            this.questionAskTimeMap = ArrayListMultimap.
+            this.questionAskTimeMap = ArrayListMultimap.create();
             final ImmutableList<Question> allQuestions = questionResponseDAO.getAllQuestions();
             for (final Question question : allQuestions) {
                 if (question.dependency != 0) {
@@ -95,7 +96,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 // note: trigger questions should not be added to the pool
                 if (!question.frequency.equals(Question.FREQUENCY.TRIGGER)) {
                     this.availableQuestionIds.put(question.frequency, question.id);
-                }
+                    this.questionAskTimeMap.put(question.askTime, question.id);
+                    }
 
                 this.questionIdMap.put(question.id, question);
                 if (question.frequency == Question.FREQUENCY.ONE_TIME) {
@@ -114,18 +116,19 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         }
 
         public QuestionProcessor build() {
-            return new QuestionProcessor(this.questionResponseDAO, this.checkSkipsNum,
+            return new QuestionProcessor(this.questionResponseDAO, this.timeZoneHistoryDAODynamoDB, this.checkSkipsNum,
                     this.availableQuestionIds, this.questionIdMap, this.baseQuestionIds,
                     this.questionCategoryMap);
         }
     }
 
-    public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum,
+    public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB, final int checkSkipsNum,
                              final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
                              final Map<Integer, Question> questionIdMap,
                              final Set<Integer> baseQuestionIds,
                              final Map<QuestionCategory, List<Integer>> questionCategoryMap) {
         this.questionResponseDAO = questionResponseDAO;
+        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.checkSkipsNum = checkSkipsNum;
         this.availableQuestionIds.putAll(availableQuestionIds);
         this.questionIdMap.putAll(questionIdMap);
@@ -160,19 +163,17 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         // grab user question and response status for today if this is not a "get-more questions" request
         final DateTime expiration = today.plusDays(1);
         final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
-
+        List<Integer>  ineligibleQuestions = new ArrayList();
 
         //removes afternoon and evening questions for accounts without AskTime
         if (!useQuestionAskTime(accountId)){
-            final List<Integer>  ineligibleQuestions= availableQuestionAsktime.get(Question.ASK_TIME.AFTERNOON);
-            ineligibleQuestions.addAll(availableQuestionAsktime.get(Question.ASK_TIME.EVENING));
-            availableQuestionAsktime.values().removeAll(ineligibleQuestions);
-            availableQuestionAsktime.values().removeAll(ineligibleQuestions);
+            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+            availableQuestionIds.values().removeAll(ineligibleQuestions);
         }else{
-
+            ineligibleQuestions.addAll(checkAskTime(accountId));
+            availableQuestionIds.values().removeAll(ineligibleQuestions);
         }
-
-
 
         // check if we have generated any questions for this user TODAY
         int answered = 0;
@@ -184,6 +185,11 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
             for (final AccountQuestionResponses question : questionResponseList) {
                 if (question.responded) {
                     answered++;
+                    continue;
+                }
+
+                //checks to see if question is blacklisted (i.e. wrong time of day
+                if (ineligibleQuestions.contains(question.questionId)){
                     continue;
                 }
 
@@ -519,7 +525,6 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         questionsPool.removeAll(seenIds);
 
 
-
         int poolSize = questionsPool.size();
 
         if (poolSize == 0) {
@@ -558,28 +563,31 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         return questions;
     }
 
-    private List<Integer> checkTime (final long accountId, final List<Integer> questionIds){
-
+    //returns list of questions OUTside of timewindow
+    private List<Integer> checkAskTime (final long accountId){
         final Optional<TimeZoneHistory> optionalTimeZone = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        List <Integer> questionInTimeWindow = new ArrayList<>();
+        List <Integer> questionOutsideTimeWindow = new ArrayList<>();
         if (optionalTimeZone.isPresent()) {
             final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
             if (currentHour >= EVENING_TIME){
-                questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
 
             }else if (currentHour >= AFTERNOON_TIME){
-                questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
 
             }else{
-                questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
-
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
             }
         }else{
-            questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
+            //defaults to morning questions
+            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
         }
-        questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.ANYTIME));
 
-        return questionInTimeWindow;
+        return questionOutsideTimeWindow;
     }
 
 
