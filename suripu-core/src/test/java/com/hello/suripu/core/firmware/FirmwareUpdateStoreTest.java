@@ -23,13 +23,13 @@ public class FirmwareUpdateStoreTest {
     @Test
     public void testIsValidFirmwareUpdate(){
 
-        final Integer sameFirmwareVersion = 12345678;
-        final Integer diffFirmwareVersion = 123456789;
+        final String sameFirmwareVersion = "12345678";
+        final String diffFirmwareVersion = "123456789";
         final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
         fileDownloadList.add(OutputProtos.SyncResponse.FileDownload.newBuilder().build());
 
-        final Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>> firmwareFileList = new Pair<>(sameFirmwareVersion, fileDownloadList);
-        final Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>> emptyFileList = new Pair(-1, Collections.EMPTY_LIST);
+        final Pair<String, List<OutputProtos.SyncResponse.FileDownload>> firmwareFileList = new Pair<>(sameFirmwareVersion, fileDownloadList);
+        final Pair<String, List<OutputProtos.SyncResponse.FileDownload>> emptyFileList = new Pair("0", Collections.EMPTY_LIST);
 
 
 
@@ -65,6 +65,14 @@ public class FirmwareUpdateStoreTest {
             "travis_build_number: 3278\n" +
             "travis_job_id: 30690259\n" +
             "travis_job_number: 3278.1";
+        final String oldFirmwareBuildInfoHighFWVersion = "version: da952d21\n" +
+            "last_tag: 1.0.5.3.4\n" +
+            "travis_branch: 1.0.5.3.4\n" +
+            "travis_tag: 1.0.5.3.4\n" +
+            "travis_build_id: 19787387\n" +
+            "travis_build_number: 3278\n" +
+            "travis_job_id: 30690259\n" +
+            "travis_job_number: 3278.1";
         final String newFirmwareBuildInfo = "version: 3300\n" +
             "last_tag: 1.0.5.3.3\n" +
             "travis_branch: alphas\n" +
@@ -89,17 +97,20 @@ public class FirmwareUpdateStoreTest {
             "travis_job_id: 30867510\n" +
             "travis_job_number: 3300.1";
 
-        Optional<Integer> fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(oldFirmwareBuildInfo);
+        Optional<String> fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(oldFirmwareBuildInfo);
         assertThat(fwVersion.isPresent(), is(true));
-        assertThat(fwVersion.get(), is(782503713));
+        assertThat(fwVersion.get(), is("782503713"));
+
+        fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(oldFirmwareBuildInfoHighFWVersion);
+        assertThat(fwVersion.isPresent(), is(false));
 
         fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(newFirmwareBuildInfo);
         assertThat(fwVersion.isPresent(), is(true));
-        assertThat(fwVersion.get(), is(3300));
+        assertThat(fwVersion.get(), is("3300"));
 
         fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(newFirmwareBadBuildInfo);
         assertThat(fwVersion.isPresent(), is(true));
-        assertThat(fwVersion.get(), is(13056));
+        assertThat(fwVersion.get(), is("3300"));
 
         fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(badBuildInfo);
         assertThat(fwVersion.isPresent(), is(false));
