@@ -178,5 +178,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_USE_HIGHER_THRESHOLD, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useQuestionAskTime(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ASK_TIME, accountId, Collections.EMPTY_LIST);
+    }
 
 }

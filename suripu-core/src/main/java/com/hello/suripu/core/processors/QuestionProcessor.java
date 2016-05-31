@@ -7,13 +7,16 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
-import com.hello.suripu.core.models.Response;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
+import com.hello.suripu.core.models.Response;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
@@ -22,15 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 
 /**
@@ -50,10 +45,16 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     public static final int DAYS_BETWEEN_ANOMALY_QUESTIONS = 2; // allows 1 anomaly-question every 3 days
     public static final int ANOMALY_TOO_OLD_THRESHOLD = 2; // night date older than this number of days
 
+    public static final int AFTERNOON_TIME = 12;
+    public static final int EVENING_TIME = 16;
+
+
+    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
     private final QuestionResponseDAO questionResponseDAO;
     private final int checkSkipsNum;
 
     private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds = ArrayListMultimap.create();
+    private final ListMultimap<Question.ASK_TIME, Integer> availableQuestionAsktime = ArrayListMultimap.create();
     private final Map<Integer, Question> questionIdMap = new HashMap<>();
     private final Set<Integer> baseQuestionIds = new HashSet<>();
     private final Map<QuestionCategory, List<Integer>> questionCategoryMap = new HashMap<>();
@@ -62,6 +63,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         private QuestionResponseDAO questionResponseDAO;
         private int checkSkipsNum;
         private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
+        private ListMultimap<Question.ASK_TIME, Integer> availableQuestionAskTime;
         private Map<Integer, Question> questionIdMap;
         private Set<Integer> baseQuestionIds;
         private Map<QuestionCategory, List<Integer>> questionCategoryMap;
@@ -78,13 +80,14 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         public Builder withQuestions(final QuestionResponseDAO questionResponseDAO) {
             this.availableQuestionIds = ArrayListMultimap.create();
+            this.availableQuestionAskTime = ArrayListMultimap.create();
             this.questionIdMap = new HashMap<>();
             this.baseQuestionIds = new HashSet<>();
             this.questionCategoryMap = Maps.newHashMap();
 
             final ImmutableList<Question> allQuestions = questionResponseDAO.getAllQuestions();
             for (final Question question : allQuestions) {
-                if (question.dependency != 0 || question.askTime == Question.ASK_TIME.AFTERNOON || question.askTime == Question.ASK_TIME.EVENING) {
+                if (question.dependency != 0) {
                     // TODO: implement dependency and asktime
                     // don't show these questions till dependency and asktime is implemented
                     continue;
@@ -93,6 +96,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 // note: trigger questions should not be added to the pool
                 if (!question.frequency.equals(Question.FREQUENCY.TRIGGER)) {
                     this.availableQuestionIds.put(question.frequency, question.id);
+                    this.availableQuestionAskTime.put(question.askTime, question.id);
                 }
 
                 this.questionIdMap.put(question.id, question);
@@ -105,6 +109,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 } else {
                     questionCategoryMap.put(question.category, Lists.newArrayList(question.id));
                 }
+
             }
 
             return this;
@@ -112,19 +117,21 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         public QuestionProcessor build() {
             return new QuestionProcessor(this.questionResponseDAO, this.checkSkipsNum,
-                    this.availableQuestionIds, this.questionIdMap, this.baseQuestionIds,
+                    this.availableQuestionIds, this.availableQuestionAskTime, this.questionIdMap, this.baseQuestionIds,
                     this.questionCategoryMap);
         }
     }
 
     public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum,
                              final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
+                             final ListMultimap<Question.ASK_TIME, Integer> availableQuestionAsktime,
                              final Map<Integer, Question> questionIdMap,
                              final Set<Integer> baseQuestionIds,
                              final Map<QuestionCategory, List<Integer>> questionCategoryMap) {
         this.questionResponseDAO = questionResponseDAO;
         this.checkSkipsNum = checkSkipsNum;
         this.availableQuestionIds.putAll(availableQuestionIds);
+        this.availableQuestionAsktime.putAll(availableQuestionAsktime);
         this.questionIdMap.putAll(questionIdMap);
         this.baseQuestionIds.addAll(baseQuestionIds);
         this.questionCategoryMap.putAll(questionCategoryMap);
@@ -162,6 +169,13 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         int answered = 0;
         boolean foundAnomalyQuestion = false;
         boolean hasCBTIGoals = hasCBTIGoalGoOutside(accountId);
+
+        if (!useQuestionAskTime(accountId)){
+            final List<Integer>  ineligbleQuestions = availableQuestionAsktime.get(Question.ASK_TIME.AFTERNOON);
+            ineligbleQuestions.addAll(availableQuestionAsktime.get(Question.ASK_TIME.EVENING));
+            availableQuestionAsktime.values().removeAll(ineligbleQuestions);
+            availableQuestionAsktime.values().removeAll(ineligbleQuestions);
+        }
 
         if (!questionResponseList.isEmpty()) {
             // check number of today's question the user has answered
@@ -502,6 +516,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         questionsPool.addAll(this.availableQuestionIds.get(questionType));
         questionsPool.removeAll(seenIds);
 
+
+
         int poolSize = questionsPool.size();
 
         if (poolSize == 0) {
@@ -539,6 +555,31 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         }
         return questions;
     }
+
+    private List<Integer> checkTime (final long accountId, final List<Integer> questionIds){
+
+        final Optional<TimeZoneHistory> optionalTimeZone = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        List <Integer> questionInTimeWindow = new ArrayList<>();
+        if (optionalTimeZone.isPresent()) {
+            final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
+            if (currentHour >= EVENING_TIME){
+                questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
+
+            }else if (currentHour >= AFTERNOON_TIME){
+                questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
+
+            }else{
+                questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
+
+            }
+        }else{
+            questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.MORNING));
+        }
+        questionInTimeWindow.addAll(availableQuestionAsktime.get(Question.ASK_TIME.ANYTIME));
+
+        return questionInTimeWindow;
+    }
+
 
     private Long saveGeneratedQuestion(final Long accountId, final Integer id, final DateTime today) {
         try {
