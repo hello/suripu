@@ -528,3 +528,9 @@ You don''t need to swear off coffee completely. In fact, there are other benefit
 UPDATE info_insight_cards SET text='Maintaining a consistent bedtime routine helps you maintain a healthy circadian rhythm, which improves the quality of your sleep. Plan ahead of time when you want to be in bed, and wind down 30 minutes before - dim the lights, shut down screens, and focus on relaxing.
 
 Most healthy adults, including the elderly, need **between 7.5 to 9 hours** of sleep per night to function at their best.  However, there''s no magic number that''s ideal for everyone. Everybody''s different when it comes to sleep, so don''t feel pressured by what other people think is best. It''s important to listen to your body, and determine for yourself the amount of sleep you need to feel great the next day.' WHERE category='sleep_time';
+
+UPDATE info_insight_cards SET title='Caffeine' WHERE category='caffeine';
+UPDATE info_insight_cards SET category_name='Last Call for Coffee' WHERE category='caffeine';
+
+UPDATE info_insight_cards SET title='Plan for a Better Night''s Sleep' WHERE category='sleep_time';
+UPDATE info_insight_cards SET category_name='Sleep Time' WHERE category='sleep_time';
