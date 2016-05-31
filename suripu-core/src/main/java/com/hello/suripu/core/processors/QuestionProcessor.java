@@ -54,19 +54,19 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     private final int checkSkipsNum;
 
     private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds = ArrayListMultimap.create();
-    private final ListMultimap<Question.ASK_TIME, Integer> availableQuestionAsktime = ArrayListMultimap.create();
     private final Map<Integer, Question> questionIdMap = new HashMap<>();
     private final Set<Integer> baseQuestionIds = new HashSet<>();
     private final Map<QuestionCategory, List<Integer>> questionCategoryMap = new HashMap<>();
+    private final ListMultimap<Integer, Question.ASK_TIME> questionAskTimeMap = ArrayListMultimap.create();
 
     public static class Builder {
         private QuestionResponseDAO questionResponseDAO;
         private int checkSkipsNum;
         private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
-        private ListMultimap<Question.ASK_TIME, Integer> availableQuestionAskTime;
         private Map<Integer, Question> questionIdMap;
         private Set<Integer> baseQuestionIds;
         private Map<QuestionCategory, List<Integer>> questionCategoryMap;
+        private ListMultimap<Integer, Question.ASK_TIME> questionAskTimeMap;
 
         public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
             this.questionResponseDAO = questionResponseDAO;
@@ -80,23 +80,21 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         public Builder withQuestions(final QuestionResponseDAO questionResponseDAO) {
             this.availableQuestionIds = ArrayListMultimap.create();
-            this.availableQuestionAskTime = ArrayListMultimap.create();
             this.questionIdMap = new HashMap<>();
             this.baseQuestionIds = new HashSet<>();
             this.questionCategoryMap = Maps.newHashMap();
-
+            this.questionAskTimeMap = ArrayListMultimap.
             final ImmutableList<Question> allQuestions = questionResponseDAO.getAllQuestions();
             for (final Question question : allQuestions) {
                 if (question.dependency != 0) {
                     // TODO: implement dependency and asktime
-                    // don't show these questions till dependency and asktime is implemented
+                    // don't show these questions till dependency is implemented
                     continue;
                 }
 
                 // note: trigger questions should not be added to the pool
                 if (!question.frequency.equals(Question.FREQUENCY.TRIGGER)) {
                     this.availableQuestionIds.put(question.frequency, question.id);
-                    this.availableQuestionAskTime.put(question.askTime, question.id);
                 }
 
                 this.questionIdMap.put(question.id, question);
@@ -117,21 +115,19 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         public QuestionProcessor build() {
             return new QuestionProcessor(this.questionResponseDAO, this.checkSkipsNum,
-                    this.availableQuestionIds, this.availableQuestionAskTime, this.questionIdMap, this.baseQuestionIds,
+                    this.availableQuestionIds, this.questionIdMap, this.baseQuestionIds,
                     this.questionCategoryMap);
         }
     }
 
     public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum,
                              final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
-                             final ListMultimap<Question.ASK_TIME, Integer> availableQuestionAsktime,
                              final Map<Integer, Question> questionIdMap,
                              final Set<Integer> baseQuestionIds,
                              final Map<QuestionCategory, List<Integer>> questionCategoryMap) {
         this.questionResponseDAO = questionResponseDAO;
         this.checkSkipsNum = checkSkipsNum;
         this.availableQuestionIds.putAll(availableQuestionIds);
-        this.availableQuestionAsktime.putAll(availableQuestionAsktime);
         this.questionIdMap.putAll(questionIdMap);
         this.baseQuestionIds.addAll(baseQuestionIds);
         this.questionCategoryMap.putAll(questionCategoryMap);
@@ -165,17 +161,23 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         final DateTime expiration = today.plusDays(1);
         final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
 
+
+        //removes afternoon and evening questions for accounts without AskTime
+        if (!useQuestionAskTime(accountId)){
+            final List<Integer>  ineligibleQuestions= availableQuestionAsktime.get(Question.ASK_TIME.AFTERNOON);
+            ineligibleQuestions.addAll(availableQuestionAsktime.get(Question.ASK_TIME.EVENING));
+            availableQuestionAsktime.values().removeAll(ineligibleQuestions);
+            availableQuestionAsktime.values().removeAll(ineligibleQuestions);
+        }else{
+
+        }
+
+
+
         // check if we have generated any questions for this user TODAY
         int answered = 0;
         boolean foundAnomalyQuestion = false;
         boolean hasCBTIGoals = hasCBTIGoalGoOutside(accountId);
-
-        if (!useQuestionAskTime(accountId)){
-            final List<Integer>  ineligbleQuestions = availableQuestionAsktime.get(Question.ASK_TIME.AFTERNOON);
-            ineligbleQuestions.addAll(availableQuestionAsktime.get(Question.ASK_TIME.EVENING));
-            availableQuestionAsktime.values().removeAll(ineligbleQuestions);
-            availableQuestionAsktime.values().removeAll(ineligbleQuestions);
-        }
 
         if (!questionResponseList.isEmpty()) {
             // check number of today's question the user has answered
