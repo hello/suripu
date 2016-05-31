@@ -34,6 +34,6 @@ public class PasswordReset {
 
     public static PasswordReset create(final Account account) {
         final String state = DigestUtils.md5Hex(account.password);
-        return new PasswordReset(account.id.get(), account.name, UUID.randomUUID(), state, DateTime.now(DateTimeZone.UTC));
+        return new PasswordReset(account.id.get(), account.name(), UUID.randomUUID(), state, DateTime.now(DateTimeZone.UTC));
     }
 }

@@ -173,7 +173,7 @@ public class BedLightDuration {
             text = BedLightDurationMsgEN.getHighLight();
         }
 
-        return Optional.of(new InsightCard(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.BED_LIGHT_DURATION, InsightCard.TimePeriod.MONTHLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }

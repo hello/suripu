@@ -75,7 +75,12 @@ public class AccountDAOTest {
     }
 
     private Registration newRegistration(final String email, final String password) {
-        return new Registration("Test registration",  email, password, 123,
+        return new Registration("Test registration",  "test firstname", "test lastname", email, password, 123,
+                Gender.OTHER, 123, 321, DateTime.now(), 10, 0.0, 0.0);
+    }
+
+    private Registration newRegistrationWithoutLastname(final String email, final String password) {
+        return new Registration("Test registration",  "test firstname", null, email, password, 123,
                 Gender.OTHER, 123, 321, DateTime.now(), 10, 0.0, 0.0);
     }
 
@@ -219,6 +224,30 @@ public class AccountDAOTest {
         assertThat(updated.isPresent(), is(true));
         final Optional<Account> fromDBOptional = accountDAO.getById(updated.get().id.get());
         assertThat(fromDBOptional.isPresent(), is(true));
-        assertThat(fromDBOptional.get().name, equalTo(updatedAccount.name));
+        assertThat(fromDBOptional.get().name(), equalTo(updatedAccount.name()));
+    }
+
+    @Test
+    public void updateAccountNoLastname() {
+        final Registration registration = newRegistrationWithoutLastname("test@test.com", "test");
+        final Account account = accountDAO.register(registration);
+        final Account updatedAccount = new Account.Builder(account).withName("New Name").build();
+        final Optional<Account> updated = accountDAO.update(updatedAccount, account.id.get());
+        assertThat(updated.isPresent(), is(true));
+        final Optional<Account> fromDBOptional = accountDAO.getById(updated.get().id.get());
+        assertThat(fromDBOptional.isPresent(), is(true));
+        assertThat(fromDBOptional.get().name(), equalTo(updatedAccount.name()));
+        assertThat(fromDBOptional.get().firstname, equalTo(updatedAccount.firstname));
+        assertThat(updated.get().lastname.isPresent(), is(false));
+    }
+
+    @Test
+    public void getAccount() {
+        final Registration registration = newRegistrationWithoutLastname("test@test.com", "test");
+        final Account account = accountDAO.register(registration);
+        final Optional<Account> fromDBOptional = accountDAO.getById(account.id.get());
+        assertThat(fromDBOptional.isPresent(), is(true));
+        assertThat(fromDBOptional.get().lastname.isPresent(), is(false));
+        assertThat(fromDBOptional.get().firstname.isEmpty(), is(false));
     }
 }

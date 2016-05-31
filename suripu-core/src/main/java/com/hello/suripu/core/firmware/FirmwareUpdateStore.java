@@ -63,19 +63,19 @@ public class FirmwareUpdateStore {
     private final AmazonS3 s3Signer;
     private final static String FIRMWARE_BUCKET_ASIA = "hello-firmware-asia";
     private final static String S3_CACHE_CLEAR_GROUP_NAME = "clear_cache";
-    private final static Integer S3_CACHE_CLEAR_VERSION_NUMBER = 666666;
+    private final static String S3_CACHE_CLEAR_VERSION_NUMBER = "666666";
 
-    final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
-    final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache;
+    final Cache<String, Pair<String, List<SyncResponse.FileDownload>>> s3FWCache;
+    final Cache<Pair<String, String>, Pair<String, Float>> s3ObjectKeyCache;
 
     public FirmwareUpdateStore(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                final AmazonS3 s3, 
                                final String bucketName, 
                                final AmazonS3 s3Signer,
-                               final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache,
+                               final Cache<String, Pair<String, List<SyncResponse.FileDownload>>> s3FWCache,
                                final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                final FirmwareUpgradePathDAO firmwareUpgradePathDAO,
-                               final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache) {
+                               final Cache<Pair<String, String>, Pair<String, Float>> s3ObjectKeyCache) {
         this.otaHistoryDAO = otaHistoryDAO;
         this.s3 = s3;
         this.bucketName = bucketName;
@@ -90,10 +90,10 @@ public class FirmwareUpdateStore {
                                              final AmazonS3 s3,
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
-                                             final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3Cache,
+                                             final Cache<String, Pair<String, List<SyncResponse.FileDownload>>> s3Cache,
                                              final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                              final FirmwareUpgradePathDAO firmwareUpgradePathDAO,
-                                             final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache) {
+                                             final Cache<Pair<String, String>, Pair<String, Float>> s3ObjectKeyCache) {
         return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache, firmwareVersionMappingDAO, firmwareUpgradePathDAO, s3ObjectKeyCache);
     }
 
@@ -104,28 +104,30 @@ public class FirmwareUpdateStore {
                                              final Integer s3CacheExpireMinutes,
                                              final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                              final FirmwareUpgradePathDAO firmwareUpgradePathDAO) {
-        final Cache<String, Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
+        final Cache<String, Pair<String, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(s3CacheExpireMinutes, TimeUnit.MINUTES)
                 .build();
 
-        final Cache<Pair<String, Integer>, Pair<String, Float>> s3ObjectKeyCache = CacheBuilder.newBuilder()
+        final Cache<Pair<String, String>, Pair<String, Float>> s3ObjectKeyCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(1, TimeUnit.MINUTES)
                 .build();
 
         return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache, firmwareVersionMappingDAO, firmwareUpgradePathDAO, s3ObjectKeyCache);
     }
 
-    public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForS3ObjectKey(final String objectKey, final String bucketName) {
+    public Pair<String, List<SyncResponse.FileDownload>> getFirmwareFilesForS3ObjectKey(final String objectKey, final String bucketName) {
 
-        final Pair<Integer, List<SyncResponse.FileDownload>> emptyPair = new Pair(-1, Collections.EMPTY_LIST);
+        final Pair<String, List<SyncResponse.FileDownload>> emptyPair = new Pair("0", Collections.EMPTY_LIST);
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
         listObjectsRequest.withPrefix("sense/" + objectKey + "/");
 
         final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
+
         final Map<String, String> filenameSHAMap = Maps.newHashMap(); //a map of filename->SHA1 value from S3 metaData
-        Integer firmwareVersion = 0;
+        String firmwareVersion = "";
+
         for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
             if(!summary.getKey().contains(".map") && !summary.getKey().contains(".out") && !summary.getKey().contains(".txt")) {
                 LOGGER.trace("Adding file: {} to list of files to be prepared for update", summary.getKey());
@@ -155,7 +157,7 @@ public class FirmwareUpdateStore {
                     }
                 }
 
-                final Optional<Integer> fwVersion = getFirmwareVersionFromBuildInfo(text);
+                final Optional<String> fwVersion = getFirmwareVersionFromBuildInfo(text);
                 if (!fwVersion.isPresent()) {
                     LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", objectKey);
                     return emptyPair;
@@ -252,10 +254,10 @@ public class FirmwareUpdateStore {
      * @param group
      * @return
      */
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final Integer currentFirmwareVersion, final Boolean pchOTA) {
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final String currentFirmwareVersion, final Boolean pchOTA) {
 
         try {
-            Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
+            Pair<String, List<SyncResponse.FileDownload>> fw_files = new Pair("0", Collections.EMPTY_LIST);
 
             final Optional<String> s3ObjectKey = getCachedS3ObjectForDeviceInGroup(deviceId, group, currentFirmwareVersion);
             if(!s3ObjectKey.isPresent()){
@@ -267,9 +269,9 @@ public class FirmwareUpdateStore {
                 fw_files = getFirmwareFilesForS3ObjectKey(s3ObjectKey.get(), FIRMWARE_BUCKET_ASIA);
             } else {
                 try {
-                    fw_files = s3FWCache.get(s3ObjectKey.get(), new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
+                    fw_files = s3FWCache.get(s3ObjectKey.get(), new Callable<Pair<String, List<SyncResponse.FileDownload>>>() {
                         @Override
-                        public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
+                        public Pair<String, List<SyncResponse.FileDownload>> call() throws Exception {
                             LOGGER.info("Nothing in cache found for S3 Object Key: [{}]. Grabbing info from S3.", s3ObjectKey.get());
                             return getFirmwareFilesForS3ObjectKey(s3ObjectKey.get(), bucketName);
                         }
@@ -331,11 +333,11 @@ public class FirmwareUpdateStore {
         }
     }
 
-    public static boolean isValidFirmwareUpdate(final Pair<Integer, List<SyncResponse.FileDownload>> fw_files, final Integer currentFirmwareVersion) {
+    public static boolean isValidFirmwareUpdate(final Pair<String, List<SyncResponse.FileDownload>> fw_files, final String currentFirmwareVersion) {
 
-        final Integer firmwareVersion = fw_files.getKey();
+        final String firmwareVersion = fw_files.getKey();
 
-        if (firmwareVersion == -1) {
+        if (firmwareVersion.equals("0")) {
             LOGGER.error("Failed to retrieve S3 file list.");
             return false;
         }
@@ -366,7 +368,7 @@ public class FirmwareUpdateStore {
         }
     }
 
-    private Optional<String> getCachedS3ObjectForDeviceInGroup(final String deviceId, final String group, final Integer currentFWVersion) {
+    private Optional<String> getCachedS3ObjectForDeviceInGroup(final String deviceId, final String group, final String currentFWVersion) {
 
         //TODO: Refactor the way cache clearing is called. 
         if (group.equals(S3_CACHE_CLEAR_GROUP_NAME) && currentFWVersion.equals(S3_CACHE_CLEAR_VERSION_NUMBER)) {
@@ -374,7 +376,7 @@ public class FirmwareUpdateStore {
             s3ObjectKeyCache.invalidateAll();
         }
 
-        final Pair<String, Integer> groupFWPair = new Pair<>(group, currentFWVersion);
+        final Pair<String, String> groupFWPair = new Pair<>(group, currentFWVersion);
         final Pair<String, Float> objectKey;
 
         try {
@@ -402,18 +404,18 @@ public class FirmwareUpdateStore {
         return Optional.of(s3Object);
     }
 
-    private Pair<String, Float> getS3ObjectAndRolloutPercentForGroup(Pair<String, Integer> groupFw) {
+    private Pair<String, Float> getS3ObjectAndRolloutPercentForGroup(Pair<String, String> groupFw) {
 
         final String group = groupFw.getKey();
-        final Integer currentFWVersion = groupFw.getValue();
+        final String currentFWVersion = groupFw.getValue();
         final Pair<String, Float> defaultInfo = new Pair<>(group, FeatureUtils.MAX_ROLLOUT_VALUE);
         //Retrieve destination fw version
-        final Optional<Pair<Integer, Float>> nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(group, currentFWVersion);
+        final Optional<Pair<String, Float>> nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(group, currentFWVersion);
         final List<String> humanNames = new ArrayList<>();
 
         if (nextFirmwareVersion.isPresent()) {
             //Get human-readable name(s) from firmwareVersionMappingDAO & use this for the S3 FW object
-            humanNames.addAll(firmwareVersionMappingDAO.get(Integer.toHexString(nextFirmwareVersion.get().getKey())));
+            humanNames.addAll(firmwareVersionMappingDAO.get(nextFirmwareVersion.get().getKey()));
         }
 
         if (humanNames.isEmpty()) {
@@ -441,7 +443,7 @@ public class FirmwareUpdateStore {
         }
     }
 
-    static Optional<Integer> getFirmwareVersionFromBuildInfo(final String buildInfoText) {
+    static Optional<String> getFirmwareVersionFromBuildInfo(final String buildInfoText) {
         final Iterable<String> strings = Splitter.on("\n").split(buildInfoText);
         final Map<String, String> buildInfo = Maps.newHashMap();
 
@@ -461,13 +463,17 @@ public class FirmwareUpdateStore {
         }
 
         try {
-            if (buildInfo.get("version").equals(buildInfo.get("travis_build_number"))) {
-                //version number is already dec
-                return Optional.of(Integer.parseInt(buildInfo.get("version"), 10));
-            } else {
-                //Assume version is stored as hex
-                return Optional.of(Integer.parseInt(buildInfo.get("version"), 16));
+            final String versionText = buildInfo.get("version").trim();
+            //TODO: Remove this hacky method of distinguishing old fw versions from new
+
+            if (Long.parseLong(versionText, 16) > Integer.MAX_VALUE) {
+                return Optional.absent();
             }
+
+            if (versionText.length() < 6) {
+                return Optional.of(versionText);
+            }
+            return Optional.of(Integer.toString(Integer.parseInt(versionText, 16)));
         } catch (NumberFormatException nfe) {
             return Optional.absent();
         }

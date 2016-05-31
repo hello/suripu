@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
@@ -27,31 +28,21 @@ import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
-import com.hello.suripu.core.processors.insights.Drive;
-import com.hello.suripu.core.processors.insights.Eat;
-import com.hello.suripu.core.processors.insights.GoalCoffee;
-import com.hello.suripu.core.processors.insights.GoalGoOutside;
-import com.hello.suripu.core.processors.insights.GoalScheduleThoughts;
-import com.hello.suripu.core.processors.insights.GoalScreens;
-import com.hello.suripu.core.processors.insights.GoalWakeVariance;
+import com.hello.suripu.core.processors.insights.CaffeineAlarm;
+import com.hello.suripu.core.processors.insights.GoalsInsights;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
-import com.hello.suripu.core.processors.insights.Learn;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
-import com.hello.suripu.core.processors.insights.Love;
+import com.hello.suripu.core.processors.insights.MarketingInsights;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.PartnerMotionInsight;
-import com.hello.suripu.core.processors.insights.Play;
-import com.hello.suripu.core.processors.insights.Run;
+import com.hello.suripu.core.processors.insights.SleepAlarm;
 import com.hello.suripu.core.processors.insights.SleepMotion;
-import com.hello.suripu.core.processors.insights.SleepScore;
 import com.hello.suripu.core.processors.insights.SoundDisturbance;
-import com.hello.suripu.core.processors.insights.Swim;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.processors.insights.WakeVariance;
-import com.hello.suripu.core.processors.insights.Work;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
 import org.jetbrains.annotations.NotNull;
@@ -94,6 +85,7 @@ public class InsightProcessor {
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountInfoProcessor accountInfoProcessor;
+    private final AccountReadDAO accountReadDAO;
     private final CalibrationDAO calibrationDAO;
     private final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB;
 
@@ -114,6 +106,7 @@ public class InsightProcessor {
                             @NotNull final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
+                            @NotNull final AccountReadDAO accountReadDAO,
                             @NotNull final LightData lightData,
                             @NotNull final WakeStdDevData wakeStdDevData,
                             @NotNull final CalibrationDAO calibrationDAO,
@@ -129,6 +122,7 @@ public class InsightProcessor {
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountInfoProcessor = accountInfoProcessor;
+        this.accountReadDAO = accountReadDAO;
         this.calibrationDAO = calibrationDAO;
         this.marketingInsightsSeenDAODynamoDB = marketingInsightsSeenDAODynamoDB;
     }
@@ -431,59 +425,65 @@ public class InsightProcessor {
             case BED_LIGHT_INTENSITY_RATIO:
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
+            case CAFFEINE:
+                insightCardOptional = CaffeineAlarm.getInsights(accountInfoProcessor, sleepStatsDAODynamoDB, accountId);
+                break;
             case DRIVE:
-                insightCardOptional = Drive.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getDriveInsight(accountId);
                 break;
             case EAT:
-                insightCardOptional = Eat.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getEatInsight(accountId);
                 break;
             case GOAL_COFFEE:
-                insightCardOptional = GoalCoffee.getInsights(accountId);
+                insightCardOptional = GoalsInsights.getCoffeeInsight(accountId);
                 break;
             case GOAL_GO_OUTSIDE:
-                insightCardOptional = GoalGoOutside.getInsights(accountId);
+                insightCardOptional = GoalsInsights.getGoOutsideInsight(accountId);
                 break;
             case GOAL_SCHEDULE_THOUGHTS:
-                insightCardOptional = GoalScheduleThoughts.getInsights(accountId);
+                insightCardOptional = GoalsInsights.getScheduleThoughtsInsight(accountId);
                 break;
             case GOAL_SCREENS:
-                insightCardOptional = GoalScreens.getInsights(accountId);
+                insightCardOptional = GoalsInsights.getScreensInsight(accountId);
                 break;
             case GOAL_WAKE_VARIANCE:
-                insightCardOptional = GoalWakeVariance.getInsights(accountId);
+                insightCardOptional = GoalsInsights.getWakeVarianceInsight(accountId);
                 break;
             case HUMIDITY:
                 insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case LEARN:
-                insightCardOptional = Learn.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getLearnInsight(accountId);
                 break;
             case LIGHT:
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
                 break;
             case LOVE:
-                insightCardOptional = Love.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getLoveInsight(accountId);
                 break;
             case PARTNER_MOTION:
                 insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
                 break;
             case PLAY:
-                insightCardOptional = Play.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getPlayInsight(accountId);
                 break;
             case RUN:
-                insightCardOptional = Run.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getRunInsight(accountId);
                 break;
             case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
                 break;
             case SLEEP_SCORE:
-                insightCardOptional = SleepScore.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getMarketingSleepScoreInsight(accountId);
+                break;
+            case SLEEP_TIME:
+                insightCardOptional = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId);
                 break;
             case SOUND:
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
                 break;
             case SWIM:
-                insightCardOptional = Swim.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getSwimInsight(accountId);
                 break;
             case TEMPERATURE:
                 final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
@@ -494,7 +494,7 @@ public class InsightProcessor {
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
                 break;
             case WORK:
-                insightCardOptional = Work.getMarketingInsights(accountId);
+                insightCardOptional = MarketingInsights.getWorkInsight(accountId);
                 break;
         }
 
@@ -584,6 +584,7 @@ public class InsightProcessor {
         private @Nullable InsightsDAODynamoDB insightsDAODynamoDB;
         private @Nullable SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
         private @Nullable AccountPreferencesDAO preferencesDAO;
+        private @Nullable AccountReadDAO accountReadDAO;
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
@@ -618,6 +619,11 @@ public class InsightProcessor {
             return this;
         }
 
+        public Builder withAccountReadDAO(final AccountReadDAO accountReadDAO) {
+            this.accountReadDAO = accountReadDAO;
+            return this;
+        }
+
         public Builder withAccountInfoProcessor(final AccountInfoProcessor processor) {
             this.accountInfoProcessor = processor;
             return this;
@@ -646,17 +652,21 @@ public class InsightProcessor {
             checkNotNull(sleepStatsDAODynamoDB, "sleepStatsDAODynamoDB can not be null");
             checkNotNull(preferencesDAO, "preferencesDAO can not be null");
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
+            checkNotNull(accountReadDAO, "accountReadDAO can not be null");
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
             checkNotNull(marketingInsightsSeenDAODynamoDB, "marketInsightsSeenDAO cannot be null");
 
-            return new InsightProcessor(deviceDataDAODynamoDB, deviceReadDAO,
+            return new InsightProcessor(deviceDataDAODynamoDB,
+                    deviceReadDAO,
                     trendsInsightsDAO,
-                    scoreDAODynamoDB, insightsDAODynamoDB,
+                    scoreDAODynamoDB,
+                    insightsDAODynamoDB,
                     sleepStatsDAODynamoDB,
                     preferencesDAO,
                     accountInfoProcessor,
+                    accountReadDAO,
                     lightData,
                     wakeStdDevData,
                     calibrationDAO,

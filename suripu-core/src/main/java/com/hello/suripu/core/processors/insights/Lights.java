@@ -94,7 +94,7 @@ public class Lights {
             text = LightMsgEN.getLightWayTooBright(meanLight, percentile);
         }
 
-        return Optional.of(new InsightCard(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.LIGHT, InsightCard.TimePeriod.RECENTLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }

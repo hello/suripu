@@ -17,6 +17,9 @@ public class AccountMapper implements ResultSetMapper<Account> {
     public Account map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
         final Account.Builder builder = new Account.Builder();
+        final String firstnameOrNull = r.getString("firstname");
+        final String firstname = (firstnameOrNull == null || firstnameOrNull.isEmpty()) ? r.getString("name") : firstnameOrNull;
+
         builder.withName(r.getString("name"));
         builder.withEmail(r.getString("email"));
         builder.withHeight(r.getInt("height"));
@@ -26,8 +29,7 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withPassword(r.getString("password_hash"));
         builder.withGender(r.getString("gender"));
 
-        final String firstnameOrNull = r.getString("firstname");
-        final String firstname = (firstnameOrNull == null) ? r.getString("name") : firstnameOrNull;
+
         builder.withFirstname(firstname);
         builder.withLastname(r.getString("lastname"));
 

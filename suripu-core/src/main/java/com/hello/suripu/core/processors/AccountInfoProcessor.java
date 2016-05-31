@@ -23,6 +23,9 @@ public class AccountInfoProcessor {
     private final QuestionResponseReadDAO questionResponseDAO;
     private final ImmutableMap<AccountInfo.Type, Question> infoQuestionMap;
 
+    private static final String RESPONSE_DRINKS_COFFEE = "coffee";
+    private static final String RESPONSE_YES = "yes";
+    private static final String RESPONSE_SOMETIMES = "sometimes";
 
     public static class Builder {
         private QuestionResponseReadDAO questionResponseDAO;
@@ -47,6 +50,9 @@ public class AccountInfoProcessor {
 
                 } else if (question.accountInfo == AccountInfo.Type.WORKOUT) {
                     infoQuestionMap.put(AccountInfo.Type.WORKOUT, question);
+
+                } else if (question.accountInfo == AccountInfo.Type.CAFFEINE) {
+                    infoQuestionMap.put(AccountInfo.Type.CAFFEINE, question);
                 }
             }
             return this;
@@ -101,6 +107,17 @@ public class AccountInfoProcessor {
         return this.getYesNoResponse(accountId, AccountInfo.Type.LIGHT_SLEEPER);
     }
 
+    public Boolean checkUserDrinksCaffeine(final Long accountId) {
+        final Optional<Response> optionalResponse = this.getSingleUserResponse(accountId, AccountInfo.Type.CAFFEINE);
+        if(optionalResponse.isPresent()) {
+            final String responseText = optionalResponse.get().response;
+            if (responseText.equalsIgnoreCase(RESPONSE_DRINKS_COFFEE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * To process "yes", "no", "sometimes" responses and return a boolean result
      * @param accountId Long
@@ -112,7 +129,7 @@ public class AccountInfoProcessor {
         if(optionalResponse.isPresent()) {
             final String responseText = optionalResponse.get().response;
             //TODO: still easier to compare text response for now
-            if (responseText.equalsIgnoreCase("yes") || responseText.equalsIgnoreCase("sometimes")) {
+            if (responseText.equalsIgnoreCase(RESPONSE_YES) || responseText.equalsIgnoreCase(RESPONSE_SOMETIMES)) {
                 return true;
             }
         }

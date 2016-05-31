@@ -3,10 +3,10 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.models.*;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.Message.WakeVarianceMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.models.Insights.Message.WakeVarianceMsgEN;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
@@ -14,7 +14,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -82,7 +81,7 @@ public class WakeVariance {
             text = WakeVarianceMsgEN.getWakeVarianceTooHigh(wakeStdDev, percentile);
         }
 
-        return Optional.of(new InsightCard(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.WAKE_VARIANCE, InsightCard.TimePeriod.WEEKLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
 

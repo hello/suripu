@@ -156,8 +156,8 @@ public class FirmwareUpgradePathDAO {
 
         return Optional.absent();
     }
-
-    public Optional<Pair<Integer, Float>> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
+    
+    public Optional<Pair<String, Float>> getNextFWVersionForGroup(final String GroupName, final String fromFWVersion) {
 
         final Condition byGroupName = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -165,7 +165,7 @@ public class FirmwareUpgradePathDAO {
 
         final Condition byRange = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(new AttributeValue().withN(fromFWVersion.toString()));
+                .withAttributeValueList(new AttributeValue().withN(fromFWVersion));
 
         final Map<String, Condition> queryConditions = new HashMap<>();
         queryConditions.put(GROUP_NAME_ATTRIBUTE_NAME, byGroupName);
@@ -194,11 +194,11 @@ public class FirmwareUpgradePathDAO {
         }
 
         final Map<String, AttributeValue> item = items.get(0);
-        final Integer itemNextFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
+        final String itemNextFW = item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN();
 
         final Float rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Float.parseFloat(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
 
-        final Pair<Integer, Float> nextFW = new Pair<>(itemNextFW, rolloutPercent);
+        final Pair<String, Float> nextFW = new Pair<>(itemNextFW, rolloutPercent);
         return Optional.of(nextFW);
     }
 
