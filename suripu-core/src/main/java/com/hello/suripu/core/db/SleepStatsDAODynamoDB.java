@@ -232,7 +232,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int loopCount = 0;
 
-
         do {
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
@@ -266,9 +265,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
         Collections.sort(scoreResults);
         return ImmutableList.copyOf(scoreResults);
-
     }
-
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
 
