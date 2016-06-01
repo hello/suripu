@@ -100,7 +100,7 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
         try {
             queryResult = this.dynamoDBClient.query(queryRequest);
         } catch (AmazonServiceException ase) {
-            LOGGER.error("error=query-sleep-score-parameters-fail account_id={}, date={}", accountId, dateTimeUTC);
+            LOGGER.error("error=query-sleep-score-parameters-fail account_id={} date={}", accountId, dateTimeUTC);
             return new SleepScoreParameters(accountId, dateTimeUTC); // return default values
         }
 

@@ -185,7 +185,7 @@ public class SleepScoreUtils {
         }
         //normalize rawscore  (score range: 0 to 100)
         final int durationScorev3 = Math.round((rawScoreV3 - RAW_SCORE_MIN_V3)/(RAW_SCORE_MAX_V3 - RAW_SCORE_MIN_V3)*100);
-        LOGGER.info("Duration V3 Scoring - Account_Id: {},Sleep_Duration: {}, Duration_Score_V3: {}", accountId, sleepDurationMinutes, durationScorev3);
+        LOGGER.info("action=calculated-durationscore-v3 account_id={} sleep_duration={} duration_threshold={} durationscore_v3={}", accountId, sleepDurationMinutes, sleepDurationTargetV3, durationScorev3);
 
         return durationScorev3;
     }
