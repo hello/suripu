@@ -252,52 +252,18 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
         queryConditions.put(DATE_ATTRIBUTE_NAME, selectByDate);
 
-        final List<AggregateSleepStats> scoreResults = new ArrayList<>();
-
-        Map<String, AttributeValue> lastEvaluatedKey = null;
-        int loopCount = 0;
-
-
-        do {
-            final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(this.tableName)
-                    .withKeyConditions(queryConditions)
-                    .withAttributesToGet(this.targetAttributes)
-                    .withExclusiveStartKey(lastEvaluatedKey);
-
-            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-            final List<Map<String, AttributeValue>> items = queryResult.getItems();
-
-            if (queryResult.getItems() != null) {
-                for (final Map<String, AttributeValue> item : items) {
-                    if (!item.keySet().containsAll(this.mustHaveAttributes)) {
-                        LOGGER.warn("Missing field in item {}", item);
-                        continue;
-                    }
-                    final AggregateSleepStats score = this.createAggregateStat(item);
-                    // temp fix for when sleep scores are out of range
-                    if(score.motionScore.score >= 0 && score.motionScore.score < 100) {
-                        scoreResults.add(score);
-                    }
-
-                }
-            }
-
-            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-            loopCount++;
-
-        } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT);
-
-
-        Collections.sort(scoreResults);
-        return ImmutableList.copyOf(scoreResults);
-
+        return getData(queryConditions, Collections.<String, Condition>emptyMap());
     }
 
     @Override
     public ImmutableList<AggregateSleepStats> getBatchStatsFilterByDates(Long accountId,
                                                                    final String startDate, final String endDate,
                                                                    Set<String> filterDates) {
+
+        if (filterDates.isEmpty()) {
+            LOGGER.error("error=sleep-stats-no-filter-dates-specified account_id={}", accountId);
+            return ImmutableList.copyOf(Collections.<AggregateSleepStats>emptyList());
+        }
 
         final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -334,7 +300,9 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         return ImmutableList.copyOf(results);
     }
 
-    private ImmutableList<AggregateSleepStats> getData(final Map<String, Condition> queryConditions, final Map<String, Condition> queryFilters) {
+
+    private ImmutableList<AggregateSleepStats> getData(final Map<String, Condition> queryConditions,
+                                                       final Map<String, Condition> queryFilters) {
 
         final List<AggregateSleepStats> scoreResults = new ArrayList<>();
 
@@ -345,9 +313,13 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
-                    .withQueryFilter(queryFilters)
                     .withAttributesToGet(this.targetAttributes)
                     .withExclusiveStartKey(lastEvaluatedKey);
+
+
+            if (!queryFilters.isEmpty()) {
+                queryRequest.withQueryFilter(queryFilters);
+            }
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
             final List<Map<String, AttributeValue>> items = queryResult.getItems();

@@ -32,15 +32,9 @@ public class SleepStatsDAODynamoDBIT extends DynamoDBIT<SleepStatsDAODynamoDB> {
         return new SleepStatsDAODynamoDB(amazonDynamoDBClient, TABLE_NAME, "1");
     }
 
-    @Test
-    public void testBatchGetByDates() throws Exception {
-
-        // insert data for the past 600 days for the past 2 years
-        final Long accoundId = 1L;
-        final DateTime dateTime = new DateTime(DateTimeZone.UTC).withYear(2016).withMonthOfYear(5).withDayOfMonth(31).withTimeAtStartOfDay();
-        final int overallSleepScore = 90;
-
-        for (int i = 0; i < 600; i++) {
+    private int addData(final Long accoundId, final DateTime dateTime, final int overallSleepScore, final int numDays) {
+        int inserted = 0;
+        for (int i = 0; i < numDays; i++) {
 
             final MotionScore motionScore = new MotionScore(10, 20, 30.0f, 40, 80);
             final SleepScore sleepScore = new SleepScore(90, motionScore, 90, 10, 1);
@@ -49,8 +43,20 @@ public class SleepStatsDAODynamoDBIT extends DynamoDBIT<SleepStatsDAODynamoDB> {
 
             final Boolean insertResult = dao.updateStat(accoundId, dateTime.minusDays(i), Math.max(overallSleepScore - i, 10), sleepScore, stats, offsetMillis);
 
-            assertThat(insertResult, is(true));
+            inserted++;
         }
+        return inserted;
+    }
+
+    @Test
+    public void testBatchGetByDates() {
+        // insert data for the past 600 days for the past 2 years
+        final Long accoundId = 1L;
+        final DateTime dateTime = new DateTime(DateTimeZone.UTC).withYear(2016).withMonthOfYear(5).withDayOfMonth(31).withTimeAtStartOfDay();
+        final int overallSleepScore = 90;
+
+        final int inserted = addData(accoundId, dateTime, overallSleepScore, 600);
+        assertThat(inserted, is(600));
 
         final DateTime zeroDate = dateTime.minusDays(300);
         final int zeroScore = 10;
@@ -77,7 +83,41 @@ public class SleepStatsDAODynamoDBIT extends DynamoDBIT<SleepStatsDAODynamoDB> {
 
         assertThat(results.get(2).dateTime.equals(secondDate), is(true));
         assertThat(results.get(2).sleepScore, is(secondScore));
-
     }
 
+    @Test
+    public void testInvalidFilterDates() {
+        final Long accountId = 1L;
+        final DateTime dateTime = new DateTime(DateTimeZone.UTC).withYear(2016).withMonthOfYear(5).withDayOfMonth(31).withTimeAtStartOfDay();
+        final int overallSleepScore = 90;
+
+        final int inserted = addData(accountId, dateTime, overallSleepScore, 600);
+        assertThat(inserted, is(600));
+
+        final Set<String> datesToGet = Sets.newHashSet();
+        final ImmutableList<AggregateSleepStats> results = dao.getBatchStatsFilterByDates(accountId,
+                DateTimeUtil.dateToYmdString(dateTime.minusDays(400)),
+                DateTimeUtil.dateToYmdString(dateTime), datesToGet);
+        assertThat(results.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testBatchGet() {
+        final Long accoundId = 1L;
+        final DateTime dateTime = new DateTime(DateTimeZone.UTC).withYear(2016).withMonthOfYear(5).withDayOfMonth(31).withTimeAtStartOfDay();
+        final int overallSleepScore = 90;
+
+        final int inserted = addData(accoundId, dateTime, overallSleepScore, 100);
+        assertThat(inserted, is(100));
+
+        final int numData = 10;
+        final ImmutableList<AggregateSleepStats> results = dao.getBatchStats(accoundId,
+                DateTimeUtil.dateToYmdString(dateTime.minusDays(numData)),
+                DateTimeUtil.dateToYmdString(dateTime));
+        assertThat(results.size(), is(numData+1));
+        for (int i = 0; i <= numData; i++) {
+            assertThat(results.get(i).dateTime.equals(dateTime.minusDays(numData-i)), is(true));
+            assertThat(results.get(i).sleepScore, is (overallSleepScore - (numData - i)));
+        }
+    }
 }
