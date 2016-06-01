@@ -175,11 +175,6 @@ public class TimelineProcessorTest {
         public ImmutableList<AggregateSleepStats> getBatchStats(Long accountId, String startDate, String endDate) {
             return null;
         }
-
-        @Override
-        public ImmutableList<AggregateSleepStats> getBatchStatsFilterByDates(Long accountId,  String startDate, String endDate, Set<String> filterDates) {
-            return null;
-        }
     };
 
     final SenseColorDAO senseColorDAO = new SenseColorDAO() {
