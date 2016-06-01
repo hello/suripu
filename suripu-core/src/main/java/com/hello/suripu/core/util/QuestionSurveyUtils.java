@@ -28,7 +28,7 @@ public class QuestionSurveyUtils {
         final List<Integer> responded_response_ids = getRespondedResponseIds(surveyXResponses);
 
         final List<Question> availableQuestions = Lists.newArrayList();
-        for (Question question : surveyXQuestions) {
+        for (final Question question : surveyXQuestions) {
 
             if (!Collections.disjoint(responded_question_ids, Lists.newArrayList(question.id))) {
                 //User already responded to this question
@@ -49,7 +49,7 @@ public class QuestionSurveyUtils {
     public static List<Integer> getRespondedQuestionIds(final List<Response> responses) {
         final List<Integer> respondedQuestions = Lists.newArrayList();
 
-        for (Response response : responses) {
+        for (final Response response : responses) {
             respondedQuestions.add(response.questionId);
         }
 
@@ -60,7 +60,7 @@ public class QuestionSurveyUtils {
     public static List<Integer> getRespondedResponseIds(final List<Response> responses) {
         final List<Integer> respondedResponses = Lists.newArrayList();
 
-        for (Response response : responses) {
+        for (final Response response : responses) {
             respondedResponses.add(response.responseId.get());
         }
 

@@ -45,7 +45,7 @@ public class QuestionSurveyProcessor {
     public static class Builder {
         private QuestionResponseReadDAO questionResponseReadDAO;
         private QuestionResponseDAO questionResponseDAO;
-        private List<Question> surveyQuestions = Lists.newArrayList();
+        private List<Question> surveyQuestions;
 
         public Builder withQuestionResponseDAO(final QuestionResponseReadDAO questionResponseReadDAO,
                                                final QuestionResponseDAO questionResponseDAO) {
@@ -130,11 +130,6 @@ public class QuestionSurveyProcessor {
 
     private Boolean savedAccountQuestion(final Long accountId, final Question question, final DateTime created) {
         final List<AccountQuestion> questions = questionResponseReadDAO.getAskedQuestionByQuestionIdCreatedDate(accountId, question.id, created);
-        if (questions.isEmpty()) {
-            return Boolean.FALSE;
-        } else {
-            LOGGER.info("event=multiple_question_impression account_id={} question_id={} usr_local_utc_date={}", accountId, question.id, created);
-            return Boolean.TRUE;
-        }
+        return !questions.isEmpty();
     }
 }
