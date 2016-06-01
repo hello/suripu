@@ -23,6 +23,9 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.dynamo.Attribute;
+import com.hello.suripu.core.db.dynamo.Util;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepScore;
@@ -88,6 +91,28 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
     private static final int MAX_CALL_COUNT = 5;
 
     public static final String DEFAULT_SCORE_TYPE = "sleep";
+
+    public enum SleepStatsAttribute implements Attribute {
+        ACCOUNT_ID("account_id", "N"), // hash key
+        DATE("date", "S"); // sort key
+
+        private final String name;
+        private final String type;
+
+        SleepStatsAttribute(String name, String type) {
+            this.name = name;
+            this.type = type;
+        }
+
+        @Override
+        public String shortName() { return name; }
+
+        @Override
+        public String sanitizedName() { return toString(); }
+
+        @Override
+        public String type() { return type; }
+    }
 
     public SleepStatsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName, final String version) {
         this.dynamoDBClient = dynamoDBClient;
@@ -227,11 +252,62 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
         queryConditions.put(DATE_ATTRIBUTE_NAME, selectByDate);
 
+        return getData(queryConditions, Collections.<String, Condition>emptyMap());
+    }
+
+    @Override
+    public ImmutableList<AggregateSleepStats> getBatchStatsFilterByDates(Long accountId,
+                                                                   final String startDate, final String endDate,
+                                                                   Set<String> filterDates) {
+
+        if (filterDates.isEmpty()) {
+            LOGGER.error("error=sleep-stats-no-filter-dates-specified account_id={}", accountId);
+            return ImmutableList.copyOf(Collections.<AggregateSleepStats>emptyList());
+        }
+
+        final Condition selectByAccountId = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+
+        final Condition selectByDate = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withAttributeValueList(new AttributeValue().withS(startDate),
+                        new AttributeValue().withS(endDate));
+
+        final List<AggregateSleepStats> results = Lists.newArrayList();
+        final List<List<String>> dateBatches = Lists.partition(Lists.newArrayList(filterDates), 50);
+
+        for (final List<String> batch : dateBatches) {
+            final List<AttributeValue> dateList = Lists.newArrayList();
+            for (final String date : batch) {
+                dateList.add(new AttributeValue().withS(date));
+            }
+
+            final Condition filterByDates = new Condition()
+                    .withComparisonOperator(ComparisonOperator.IN)
+                    .withAttributeValueList(dateList);
+
+            final Map<String, Condition> queryConditions = new HashMap<>();
+            queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
+            queryConditions.put(DATE_ATTRIBUTE_NAME, selectByDate);
+
+            final Map<String, Condition> queryFilters = new HashMap<>();
+            queryFilters.put(DATE_ATTRIBUTE_NAME, filterByDates);
+
+            results.addAll(getData(queryConditions, queryFilters));
+        }
+
+        return ImmutableList.copyOf(results);
+    }
+
+
+    private ImmutableList<AggregateSleepStats> getData(final Map<String, Condition> queryConditions,
+                                                       final Map<String, Condition> queryFilters) {
+
         final List<AggregateSleepStats> scoreResults = new ArrayList<>();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int loopCount = 0;
-
 
         do {
             final QueryRequest queryRequest = new QueryRequest()
@@ -239,6 +315,11 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                     .withKeyConditions(queryConditions)
                     .withAttributesToGet(this.targetAttributes)
                     .withExclusiveStartKey(lastEvaluatedKey);
+
+
+            if (!queryFilters.isEmpty()) {
+                queryRequest.withQueryFilter(queryFilters);
+            }
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
             final List<Map<String, AttributeValue>> items = queryResult.getItems();
@@ -266,7 +347,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
         Collections.sort(scoreResults);
         return ImmutableList.copyOf(scoreResults);
-
     }
 
 
@@ -295,6 +375,11 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
         return dynamoDBClient.createTable(request);
 
+    }
+
+    public CreateTableResult createTable(final Long readCapacity, final Long writeCapacity) {
+        // used in test
+        return Util.createTable(dynamoDBClient, tableName, SleepStatsAttribute.ACCOUNT_ID, SleepStatsAttribute.DATE, readCapacity, writeCapacity);
     }
 
     private HashMap<String, AttributeValue> createItem(final Long accountId, final DateTime date, final Integer overallSleepScore,
