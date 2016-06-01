@@ -48,7 +48,8 @@ public enum DynamoDBTableName {
     TIMELINE_LOG("timeline_log"),
     TIMEZONE_HISTORY("timezone_history"),
     WIFI_INFO("wifi_info"),
-    WORKER_LAUNCH_HISTORY("worker_launch_history");
+    WORKER_LAUNCH_HISTORY("worker_launch_history"),
+    PROFILE_PHOTO("profile_photo");
 
 
     private String value;

@@ -18,13 +18,17 @@ public class Registration {
         NAME_TOO_SHORT,
         EMAIL_INVALID,
         PASSWORD_INSECURE,
-        PASSWORD_TOO_SHORT;
+        PASSWORD_TOO_SHORT,
+        MISSING_FIRSTNAME,
+        MISSING_FIRSTNAME_AND_NAME;
     }
 
     public final static Integer MAX_NAME_LENGTH = 100;
     public final static Integer MIN_PASSWORD_LENGTH = 6;
 
     public final String name;
+    public final String firstname;
+    public final String lastname;
     public final String email;
     public final String password;
     public final Integer age;
@@ -56,6 +60,8 @@ public class Registration {
     @JsonCreator
     public Registration(
             @JsonProperty("name") final String name,
+            @JsonProperty("firstname") final String firstname,
+            @JsonProperty("lastname") final String lastname,
             @JsonProperty("email") final String email,
             @JsonProperty("password") final String password,
             @JsonProperty("age") final Integer age,
@@ -69,9 +75,11 @@ public class Registration {
     ) {
         checkNotNull(email, "email cannot be null");
         checkNotNull(password, "password cannot be null");
-        checkNotNull(name, "name cannot be null");
+//        checkNotNull(name, "name cannot be null");
         checkNotNull(tzOffsetMillis, "tz offset can not be null");
         this.name = name;
+        this.firstname = firstname;
+        this.lastname = lastname;
         this.email = email;
         this.password = password;
         this.age = age;
@@ -102,6 +110,8 @@ public class Registration {
      */
     private Registration(
             final String name,
+            final String firstname,
+            final String lastname,
             final String email,
             final String hashedPassword,
             final Integer age,
@@ -115,6 +125,8 @@ public class Registration {
             final Double longitude
     ) {
         this.name = name;
+        this.firstname = firstname;
+        this.lastname = lastname;
         this.email = email;
         this.password = hashedPassword;
         this.age = age;
@@ -137,8 +149,13 @@ public class Registration {
      * @return Registration
      */
     public static Registration secureAndNormalize(final Registration registration) {
+        // for backward compatibility and to keep the not null constraint on the db
+        // we effectively treat the new firstname as the old name
+        final String name = (registration.name == null) ? registration.firstname : registration.name;
         return new Registration(
-                registration.name,
+                name,
+                registration.firstname,
+                registration.lastname,
                 registration.email.toLowerCase().trim(),
                 PasswordUtil.encrypt(registration.password),
                 registration.age,
@@ -162,11 +179,20 @@ public class Registration {
      */
     public static Optional<RegistrationError> validate(final Registration registration) {
 
-        if(registration.name.length() > MAX_NAME_LENGTH) {
+        // we need a firstname if we don't have a name
+        if(registration.name == null && registration.firstname == null) {
+            return Optional.of(RegistrationError.MISSING_FIRSTNAME_AND_NAME);
+        }
+
+        if(registration.name == null && registration.firstname.isEmpty()) {
+            return Optional.of(RegistrationError.MISSING_FIRSTNAME);
+        }
+
+        if(registration.name != null && registration.name.length() > MAX_NAME_LENGTH) {
             return Optional.of(RegistrationError.NAME_TOO_LONG);
         }
 
-        if(registration.name.isEmpty()) {
+        if(registration.name != null && registration.name.isEmpty()) {
             return Optional.of(RegistrationError.NAME_TOO_SHORT);
         }
 

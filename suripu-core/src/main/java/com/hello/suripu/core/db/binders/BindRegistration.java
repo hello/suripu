@@ -24,6 +24,8 @@ public @interface BindRegistration {
             return new Binder<BindRegistration, Registration>() {
                 public void bind(SQLStatement q, BindRegistration bind, Registration arg) {
                     q.bind("name", arg.name);
+                    q.bind("firstname", arg.firstname);
+                    q.bind("lastname", arg.lastname);
                     q.bind("email", arg.email);
                     q.bind("password", arg.password);
                     q.bind("dob", arg.DOB);

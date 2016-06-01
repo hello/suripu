@@ -94,7 +94,7 @@ public class SleepMotion {
             }
         }
 
-        return Optional.of(new InsightCard(accountId, text.title, text.message,
+        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_QUALITY, InsightCard.TimePeriod.RECENTLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
 

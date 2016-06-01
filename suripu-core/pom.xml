@@ -134,5 +134,11 @@
             <version>1.6</version>
         </dependency>
         <!-- end logging -->
+        <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>value</artifactId>
+            <version>2.2</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
