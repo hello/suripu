@@ -134,10 +134,14 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 3, today, today.plusDays(1))).thenReturn(12L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 4, today, today.plusDays(1))).thenReturn(13L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 5, today, today.plusDays(1))).thenReturn(14L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 6, today, today.plusDays(1))).thenReturn(21L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 7, today, today.plusDays(1))).thenReturn(19L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 8, today, today.plusDays(1))).thenReturn(20L);
+        //when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 9, today, today.plusDays(1))).thenReturn(22L);
+        //when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10, today, today.plusDays(1))).thenReturn(23L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10000, today, today.plusDays(1))).thenReturn(15L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
-        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10005, today, today.plusDays(1))).thenReturn(19L);
 
 
         // anomaly question
@@ -270,7 +274,7 @@ public class QuestionProcessorTest {
 
 
         List<Choice> choices5 = new ArrayList<>();
-        qid =6;
+        qid = 6;
         choices5.add(new Choice(15, "everyday", qid));
         choices5.add(new Choice(16, ">4 times a week", qid));
         choices5.add(new Choice(17, ">2 times a week", qid));
@@ -293,7 +297,7 @@ public class QuestionProcessorTest {
                 "How was your sleep?", "EN",
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.MORNING,
+                Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices6, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
@@ -349,16 +353,54 @@ public class QuestionProcessorTest {
                 QuestionCategory.ONBOARDING));
 
         List<Choice> choices11 = new ArrayList<>();
-        qid = 10005;
+        qid = 7;
         choices11.add(new Choice(41, "Yes", qid));
         choices11.add(new Choice(42, "No", qid));
         questions.add(new Question(qid, accountQId,
                 "Did you take a nap today?", "EN",
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.AFTERNOON,
-                dependency, parentId, now, choices8, AccountInfo.Type.NONE, now,
+                Question.ASK_TIME.MORNING,
+                dependency, parentId, now, choices11, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
+
+
+        List<Choice> choices12 = new ArrayList<>();
+        qid = 8;
+        choices12.add(new Choice(41, "Yes", qid));
+        choices12.add(new Choice(42, "No", qid));
+        questions.add(new Question(qid, accountQId,
+                "Did you take a nap today?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
+
+        List<Choice> choices13 = new ArrayList<>();
+        qid = 9;
+        choices13.add(new Choice(41, "Yes", qid));
+        choices13.add(new Choice(42, "No", qid));
+        questions.add(new Question(qid, accountQId,
+                "Did you take a nap today?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
+
+        List<Choice> choices14 = new ArrayList<>();
+        qid = 10;
+        choices14.add(new Choice(41, "Yes", qid));
+        choices14.add(new Choice(42, "No", qid));
+        questions.add(new Question(qid, accountQId,
+                "Did you take a nap today?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
+
 
         return questions;
     }
@@ -415,7 +457,7 @@ public class QuestionProcessorTest {
         assertThat(foundCalibrationQ, is(true));
 
         // get 7, should include one ongoing question
-        numQ = 7;
+        numQ = 9;
         questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         foundBaseQ = false;
         boolean foundOngoing = false;
@@ -438,8 +480,13 @@ public class QuestionProcessorTest {
     @Test
     public void testGetOldieQuestions() {
         final int accountAge = 8;
-        int numQ = 4;
+        int numQ = 5;
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
+
+        for (int i = 0; i < questions.size(); i++) {
+            LOGGER.info("Questions {}", questions.get(i));
+        }
+
         assertThat(questions.size(), is(numQ));
 
         boolean foundBaseQ = false;
