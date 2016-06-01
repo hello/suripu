@@ -1012,6 +1012,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
                 targetDate.withTimeAtStartOfDay(), sleepScore.value, sleepScore, sleepStats, userOffsetMillis);
 
+        if (useSleepScoreV3(accountId)){
+            LOGGER.debug("key=use-v3-duration account_id={}", accountId);
+        } else {
+            LOGGER.debug("key=not-using-v3-duration account_id={}", accountId);
+        }
+
         LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}",
                 updatedStats, accountId, sleepScore, sleepStats);
 
