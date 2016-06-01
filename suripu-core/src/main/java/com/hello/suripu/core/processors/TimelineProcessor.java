@@ -1023,14 +1023,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
 
         if (useSleepScoreV3(accountId)){
+            LOGGER.debug("key=use-v3 account_id={}", accountId);
             final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
             return SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
         }
 
         else if (hasSleepScoreDurationV2(accountId)) {
+            LOGGER.debug("key=use-v2 account_id={}", accountId);
             return SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
         }
 
+        LOGGER.debug("key=use-v1 account_id={}", accountId);
         return SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
     }
 
