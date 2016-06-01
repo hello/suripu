@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -54,20 +55,20 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     private final int checkSkipsNum;
 
     private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds = ArrayListMultimap.create();
+    private final ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap = ArrayListMultimap.create();
     private final Map<Integer, Question> questionIdMap = new HashMap<>();
     private final Set<Integer> baseQuestionIds = new HashSet<>();
     private final Map<QuestionCategory, List<Integer>> questionCategoryMap = new HashMap<>();
-    private final ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap = ArrayListMultimap.create();
 
     public static class Builder {
         private QuestionResponseDAO questionResponseDAO;
         private TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
         private int checkSkipsNum;
         private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
+        private ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap;
         private Map<Integer, Question> questionIdMap;
         private Set<Integer> baseQuestionIds;
         private Map<QuestionCategory, List<Integer>> questionCategoryMap;
-        private ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap;
 
         public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
             this.questionResponseDAO = questionResponseDAO;
@@ -81,10 +82,10 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         public Builder withQuestions(final QuestionResponseDAO questionResponseDAO) {
             this.availableQuestionIds = ArrayListMultimap.create();
+            this.questionAskTimeMap = ArrayListMultimap.create();
             this.questionIdMap = new HashMap<>();
             this.baseQuestionIds = new HashSet<>();
             this.questionCategoryMap = Maps.newHashMap();
-            this.questionAskTimeMap = ArrayListMultimap.create();
             final ImmutableList<Question> allQuestions = questionResponseDAO.getAllQuestions();
             for (final Question question : allQuestions) {
                 if (question.dependency != 0) {
@@ -117,13 +118,14 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         public QuestionProcessor build() {
             return new QuestionProcessor(this.questionResponseDAO, this.timeZoneHistoryDAODynamoDB, this.checkSkipsNum,
-                    this.availableQuestionIds, this.questionIdMap, this.baseQuestionIds,
+                    this.availableQuestionIds, this.questionAskTimeMap, this.questionIdMap, this.baseQuestionIds,
                     this.questionCategoryMap);
         }
     }
 
     public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB, final int checkSkipsNum,
                              final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
+                             final ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap,
                              final Map<Integer, Question> questionIdMap,
                              final Set<Integer> baseQuestionIds,
                              final Map<QuestionCategory, List<Integer>> questionCategoryMap) {
@@ -131,6 +133,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.checkSkipsNum = checkSkipsNum;
         this.availableQuestionIds.putAll(availableQuestionIds);
+        this.questionAskTimeMap.putAll(questionAskTimeMap);
         this.questionIdMap.putAll(questionIdMap);
         this.baseQuestionIds.addAll(baseQuestionIds);
         this.questionCategoryMap.putAll(questionCategoryMap);
@@ -165,14 +168,13 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
         List<Integer>  ineligibleQuestions = new ArrayList();
 
-        //removes afternoon and evening questions for accounts without AskTime
-        if (!useQuestionAskTime(accountId)){
-            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
-
+        //removes afternoon and evening questions for accounts without AskTime and creates question blacklist
+        if (useQuestionAskTime(accountId)){
+            ineligibleQuestions.addAll(checkAskTime(accountId));
             availableQuestionIds.values().removeAll(ineligibleQuestions);
         }else{
-            ineligibleQuestions.addAll(checkAskTime(accountId));
+            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
             availableQuestionIds.values().removeAll(ineligibleQuestions);
         }
 
@@ -189,8 +191,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                     continue;
                 }
 
-                //checks to see if question is blacklisted (i.e. wrong time of day
-                if (ineligibleQuestions.contains(question.questionId)){
+                //checks if question is for the wrong time of day
+                if (ineligibleQuestions.contains(question.id)){
                     continue;
                 }
 
@@ -564,7 +566,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         return questions;
     }
 
-    //returns list of questions OUTside of timewindow
+    //returns list of questions outside of timewindow
     private List<Integer> checkAskTime (final long accountId){
         final Optional<TimeZoneHistory> optionalTimeZone = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
         List <Integer> questionOutsideTimeWindow = new ArrayList<>();

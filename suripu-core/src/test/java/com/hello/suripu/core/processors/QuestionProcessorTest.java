@@ -137,8 +137,6 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 6, today, today.plusDays(1))).thenReturn(21L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 7, today, today.plusDays(1))).thenReturn(19L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 8, today, today.plusDays(1))).thenReturn(20L);
-        //when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 9, today, today.plusDays(1))).thenReturn(22L);
-        //when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10, today, today.plusDays(1))).thenReturn(23L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10000, today, today.plusDays(1))).thenReturn(15L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
@@ -297,7 +295,7 @@ public class QuestionProcessorTest {
                 "How was your sleep?", "EN",
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.ANYTIME,
+                Question.ASK_TIME.MORNING,
                 dependency, parentId, now, choices6, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
@@ -309,7 +307,7 @@ public class QuestionProcessorTest {
                 "Did you workout today?", "EN",
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.ANYTIME,
+                Question.ASK_TIME.EVENING,
                 5, parentId, now, choices7, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
@@ -321,8 +319,8 @@ public class QuestionProcessorTest {
         questions.add(new Question(qid, accountQId,
                 "How are you feeling?", "EN",
                 Question.Type.CHOICE,
-                Question.FREQUENCY.OCCASIONALLY,
-                Question.ASK_TIME.ANYTIME,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.AFTERNOON,
                 dependency, parentId, now, choices8, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
@@ -359,8 +357,8 @@ public class QuestionProcessorTest {
         questions.add(new Question(qid, accountQId,
                 "Did you take a nap today?", "EN",
                 Question.Type.CHOICE,
-                Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.MORNING,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices11, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
@@ -372,31 +370,7 @@ public class QuestionProcessorTest {
         questions.add(new Question(qid, accountQId,
                 "Did you take a nap today?", "EN",
                 Question.Type.CHOICE,
-                Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.ANYTIME,
-                dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
-
-        List<Choice> choices13 = new ArrayList<>();
-        qid = 9;
-        choices13.add(new Choice(41, "Yes", qid));
-        choices13.add(new Choice(42, "No", qid));
-        questions.add(new Question(qid, accountQId,
-                "Did you take a nap today?", "EN",
-                Question.Type.CHOICE,
-                Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.ANYTIME,
-                dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
-
-        List<Choice> choices14 = new ArrayList<>();
-        qid = 10;
-        choices14.add(new Choice(41, "Yes", qid));
-        choices14.add(new Choice(42, "No", qid));
-        questions.add(new Question(qid, accountQId,
-                "Did you take a nap today?", "EN",
-                Question.Type.CHOICE,
-                Question.FREQUENCY.DAILY,
+                Question.FREQUENCY.OCCASIONALLY,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
@@ -479,12 +453,12 @@ public class QuestionProcessorTest {
 
     @Test
     public void testGetOldieQuestions() {
-        final int accountAge = 8;
-        int numQ = 5;
+        final int accountAge = 14;
+        int numQ = 3;
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
 
         for (int i = 0; i < questions.size(); i++) {
-            LOGGER.info("Questions {}", questions.get(i));
+            LOGGER.debug("Questions {}", questions.get(i));
         }
 
         assertThat(questions.size(), is(numQ));
@@ -512,6 +486,36 @@ public class QuestionProcessorTest {
         assertThat(foundAfternoonQ, is (false));
         assertThat(foundMorningQ, is (true));
     }
+
+    @Test
+    public void testCheckAskTime() {
+        final int accountAge = 14;
+        int numQ = 3;
+        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
+
+        assertThat(questions.size(), is(numQ));
+        boolean foundMorningQ = false;
+        boolean foundAfternoonQ = false;
+        boolean foundEveningQ = false;
+
+        for (Question question : questions) {
+            final Question.FREQUENCY questionFrequency = question.frequency;
+            final Question.ASK_TIME questionAskTime = question.askTime;
+            if (questionAskTime == Question.ASK_TIME.MORNING) {
+                foundMorningQ = true;
+            } else if (questionAskTime == Question.ASK_TIME.AFTERNOON) {
+                foundAfternoonQ = true;
+            } else if (questionAskTime == Question.ASK_TIME.EVENING) {
+                foundEveningQ = true;
+            }
+        }
+        assertThat(foundMorningQ, is (true));
+        assertThat(foundAfternoonQ, is (false));
+        assertThat(foundEveningQ, is (false));
+
+
+    }
+
 
     @Test
     public void testSkips() {
