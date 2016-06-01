@@ -167,7 +167,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         //removes afternoon and evening questions for accounts without AskTime
         if (!useQuestionAskTime(accountId)){
-            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+           // ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
             ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
             availableQuestionIds.values().removeAll(ineligibleQuestions);
         }else{

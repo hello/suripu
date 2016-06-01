@@ -137,6 +137,8 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10000, today, today.plusDays(1))).thenReturn(15L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10005, today, today.plusDays(1))).thenReturn(19L);
+
 
         // anomaly question
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 20000, today, today.plusDays(1))).thenReturn(18L);
@@ -322,9 +324,9 @@ public class QuestionProcessorTest {
 
         List<Choice> choices9 = new ArrayList<>();
         qid = ANOMALY_QUESTION_ID;
-        choices9.add(new Choice(32, "Yep", qid));
-        choices9.add(new Choice(33, "No", qid));
-        choices9.add(new Choice(34, "wtf", qid));
+        choices9.add(new Choice(35, "Yep", qid));
+        choices9.add(new Choice(36, "No", qid));
+        choices9.add(new Choice(37, "wtf", qid));
         questions.add(new Question(qid, accountQId,
                 "Too much light huh?", "EN",
                 Question.Type.CHOICE,
@@ -335,9 +337,9 @@ public class QuestionProcessorTest {
 
         List<Choice> choices10 = new ArrayList<>();
         qid = 4;
-        choices10.add(new Choice(32, "try", qid));
-        choices10.add(new Choice(33, "try not", qid));
-        choices10.add(new Choice(34, "go away", qid));
+        choices10.add(new Choice(38, "try", qid));
+        choices10.add(new Choice(39, "try not", qid));
+        choices10.add(new Choice(40, "go away", qid));
         questions.add(new Question(qid, accountQId,
                 "Do you work on being a good person", "EN",
                 Question.Type.CHOICE,
@@ -345,6 +347,18 @@ public class QuestionProcessorTest {
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices10, AccountInfo.Type.NONE, now,
                 QuestionCategory.ONBOARDING));
+
+        List<Choice> choices11 = new ArrayList<>();
+        qid = 10005;
+        choices11.add(new Choice(41, "Yes", qid));
+        choices11.add(new Choice(42, "No", qid));
+        questions.add(new Question(qid, accountQId,
+                "Did you take a nap today?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.AFTERNOON,
+                dependency, parentId, now, choices8, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         return questions;
     }
@@ -423,23 +437,33 @@ public class QuestionProcessorTest {
 
     @Test
     public void testGetOldieQuestions() {
-        final int accountAge = 2;
-        int numQ = 2;
+        final int accountAge = 8;
+        int numQ = 4;
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         assertThat(questions.size(), is(numQ));
 
         boolean foundBaseQ = false;
         boolean foundCalibrationQ = false;
+        boolean foundAfternoonQ = false;
+        boolean foundMorningQ = false;
+
         for (Question question : questions) {
             final Question.FREQUENCY questionFrequency = question.frequency;
+            final Question.ASK_TIME questionAskTime = question.askTime;
             if (questionFrequency == Question.FREQUENCY.ONE_TIME) {
                 foundBaseQ = true;
             } else if (questionFrequency == Question.FREQUENCY.DAILY) {
                 foundCalibrationQ = true;
             }
+            if (questionAskTime == Question.ASK_TIME.AFTERNOON){
+                foundAfternoonQ = true;
+            }else if (questionAskTime == Question.ASK_TIME.MORNING)
+                foundMorningQ = true;
         }
         assertThat(foundBaseQ, is(true));
         assertThat(foundCalibrationQ, is(true));
+        assertThat(foundAfternoonQ, is (false));
+        assertThat(foundMorningQ, is (true));
     }
 
     @Test
