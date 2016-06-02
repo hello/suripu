@@ -18,10 +18,14 @@ import com.hello.suripu.core.util.DataUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class Particulates {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Particulates.class);
+
     //https://hello.hackpad.com/Study-of-fine-Particulates-and-contribution-BhCh9eV2qE5
     //https://hello.hackpad.com/Dust-sensor-data-mapping-employing-offset-calibration-n9EJHA22Q20
 
@@ -37,12 +41,14 @@ public class Particulates {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
+            LOGGER.debug("action=insight_absent-insight=particulates-reason=timezoneoffset_absent-account_id={}", accountId);
             return Optional.absent(); //cannot compute insight without timezone info
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         final List<Float> dustList = getAvgAirQualityList(accountId, deviceId, NUM_DAYS, timeZoneOffset, deviceDataDAO, calibrationDAO);
         if (dustList.isEmpty()) {
+            LOGGER.debug("action=insight_absent-insight=particulates-reason=dust_list_empty-account_id={}", accountId);
             return Optional.absent();
         }
 

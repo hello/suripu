@@ -54,6 +54,7 @@ public class SleepMotion {
 
     public static Optional<InsightCard> processData(final Long accountId, final ImmutableList<AggregateSleepStats> sleepStats, final Boolean isNewUser) {
         if (sleepStats.isEmpty()) {
+            LOGGER.debug("action=insight_absent-insight=motion-reason=sleepstats_empty-account_id={}", accountId);
             return Optional.absent();
         }
 
@@ -72,6 +73,7 @@ public class SleepMotion {
         }
 
         if (totMotion == 0 || numDays < MIN_DAYS_REQUIRED) {
+            LOGGER.debug("action=insight_absent-insight=motion-reason=zero_motion_or_not_enough_days-account_id={}", accountId);
             return Optional.absent();
         }
 

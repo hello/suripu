@@ -13,13 +13,18 @@ import com.hello.suripu.core.models.Insights.Message.LightMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+
 
 /**
  * Created by kingshy on 1/5/15.
  */
 public class Lights {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Lights.class);
 
     private static final int NIGHT_START_HOUR = 18; // 6pm
     private static final int NIGHT_END_HOUR = 1; // 1am
@@ -35,6 +40,7 @@ public class Lights {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
+            LOGGER.debug("action=insight_absent-insight=lights-reason=timezoneoffset_absent-account_id={}", accountId);
             return Optional.absent(); //cannot compute insight without timezone info
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
@@ -63,6 +69,7 @@ public class Lights {
     public static Optional<InsightCard> processLightData(final Long accountId, final List<DeviceData> data, final LightData lightData) {
 
         if (data.size() == 0) {
+            LOGGER.debug("action=insight_absent-insight=lights-reason=data_empty-account_id={}", accountId);
             return Optional.absent();
         }
 

@@ -42,7 +42,7 @@ public class SoundDisturbance {
 
         final Optional<Integer> timeZoneOffsetOptional = getTimeZoneOffsetOptional(sleepStatsDAODynamoDB, accountId, DateTime.now(DateTimeZone.UTC));
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("Could not get timeZoneOffset, not generating sound disturbance insight for accountId {}", accountId);
+            LOGGER.debug("action=insight_absent-insight=sound-reason=timezoneoffset_absent-account_id={}", accountId);
             return Optional.absent();
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
@@ -52,6 +52,7 @@ public class SoundDisturbance {
 
         final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, queryEndTime, timeZoneOffset);
         if (deviceDatas.isEmpty()) {
+            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=devicedata_empty-account_id={}", accountId);
             return Optional.absent();
         }
 
@@ -64,6 +65,7 @@ public class SoundDisturbance {
 
         final Text text;
         if (sumDisturbance < NORMAL_SUM_DISTURBANCE) {
+            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=sumdisturbance_low-account_id={}", accountId);
             return Optional.absent();
         } else if (sumDisturbance < HIGH_SUM_DISTURBANCE) {
             text = SoundDisturbanceMsgEN.getHighSumDisturbance();
@@ -141,7 +143,7 @@ er
             return Optional.of(sleepStats.get(0).offsetMillis);
         }
 
-        LOGGER.debug("SleepStats empty, fail to retrieve timeZoneOffset for accountId {} from {} to {}", accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
+        LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=sleepstats_empty-account_id={}-query_start={}-query_end={}", accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
         return Optional.absent();
     }
 }

@@ -37,17 +37,25 @@ public class BedLightIntensity {
         //get timezone offset
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("Could not get timeZoneOffset, not generating humidity insight for accountId {}", accountId);
+            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=timezoneoffset_absent-account_id={}", accountId);
             return Optional.absent();
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         //integrate night light for week
         final List<DeviceData> nightData = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        if (nightData.isEmpty()) {
+            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=no_night_data-account_id={}", accountId);
+            return Optional.absent();
+        }
         final Integer nightIntegral = integrateLight(nightData);
 
         //integrate morning light for week
         final List<DeviceData> morningData =getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset, MORNING_START_HOUR_LOCAL, MORNING_END_HOUR_LOCAL);
+        if (morningData.isEmpty()) {
+            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=no_morning_data-account_id={}", accountId);
+            return Optional.absent();
+        }
         final Integer morningIntegral = integrateLight(morningData);
 
         //find night/morning
