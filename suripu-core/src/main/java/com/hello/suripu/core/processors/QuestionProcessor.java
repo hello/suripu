@@ -567,27 +567,27 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     }
 
     //returns list of questions outside of timewindow
-    private List<Integer> checkAskTime (final long accountId){
-        final Optional<TimeZoneHistory> optionalTimeZone = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+    public List<Integer> checkAskTime (final long accountId){
+        final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
         List <Integer> questionOutsideTimeWindow = new ArrayList<>();
         if (optionalTimeZone.isPresent()) {
             final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
             if (currentHour >= EVENING_TIME){
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
 
             }else if (currentHour >= AFTERNOON_TIME){
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
 
             }else{
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
             }
         }else{
             //defaults to morning questions
-            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+            questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+            questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
         }
 
         return questionOutsideTimeWindow;

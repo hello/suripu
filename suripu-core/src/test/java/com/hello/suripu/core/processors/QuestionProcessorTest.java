@@ -489,30 +489,51 @@ public class QuestionProcessorTest {
 
     @Test
     public void testCheckAskTime() {
-        final int accountAge = 14;
         int numQ = 3;
+        int accountAge = 14;
+        setFeature(FeatureFlipper.QUESTION_ASK_TIME, false);
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
-
-        assertThat(questions.size(), is(numQ));
         boolean foundMorningQ = false;
         boolean foundAfternoonQ = false;
         boolean foundEveningQ = false;
 
         for (Question question : questions) {
-            final Question.FREQUENCY questionFrequency = question.frequency;
             final Question.ASK_TIME questionAskTime = question.askTime;
-            if (questionAskTime == Question.ASK_TIME.MORNING) {
+            if (questionAskTime == Question.ASK_TIME.MORNING){
                 foundMorningQ = true;
-            } else if (questionAskTime == Question.ASK_TIME.AFTERNOON) {
-                foundAfternoonQ = true;
-            } else if (questionAskTime == Question.ASK_TIME.EVENING) {
+            }else if (questionAskTime == Question.ASK_TIME.AFTERNOON){
+                foundAfternoonQ= true;
+            }else if (questionAskTime == Question.ASK_TIME.EVENING){
                 foundEveningQ = true;
             }
+
+
         }
         assertThat(foundMorningQ, is (true));
         assertThat(foundAfternoonQ, is (false));
-        assertThat(foundEveningQ, is (false));
+        assertThat(foundEveningQ, is(false));
 
+        setFeature(FeatureFlipper.QUESTION_ASK_TIME, true);
+        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
+        foundMorningQ = false;
+        foundAfternoonQ = false;
+        foundEveningQ = false;
+
+        for (Question question : questions) {
+            final Question.ASK_TIME questionAskTime = question.askTime;
+            if (questionAskTime == Question.ASK_TIME.MORNING){
+                foundMorningQ = true;
+            }else if (questionAskTime == Question.ASK_TIME.AFTERNOON){
+                foundAfternoonQ= true;
+            }else if (questionAskTime == Question.ASK_TIME.EVENING){
+                foundEveningQ = true;
+            }
+
+
+        }
+        assertThat(foundMorningQ, is (true));
+        assertThat(foundAfternoonQ, is (false));
+        assertThat(foundEveningQ, is(false));
 
     }
 
