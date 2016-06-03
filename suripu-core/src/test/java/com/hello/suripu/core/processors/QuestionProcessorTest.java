@@ -1,9 +1,8 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
@@ -27,15 +26,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.hello.suripu.core.models.TimeZoneHistory;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+
 
 /**
  * Created by ksg on 09/19/14
@@ -118,10 +118,10 @@ public class QuestionProcessorTest {
         features.clear();
 
         final List<Question> questions = this.getMockQuestions();
-
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
-
         when(questionResponseDAO.getAllQuestions()).thenReturn(ImmutableList.copyOf(questions));
+        //when(timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS)).thenReturn(ImmutableList.copyOf(timeZoneHistory));
+
 
         final Timestamp nextAskTimePass = new Timestamp(today.minusDays(2).getMillis());
         when(questionResponseDAO.getNextAskTime(ACCOUNT_ID_PASS)).thenReturn(Optional.fromNullable(nextAskTimePass));
@@ -141,8 +141,8 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
 
-
         // anomaly question
+
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 20000, today, today.plusDays(1))).thenReturn(18L);
 
         final List<AccountQuestion> recentAnomalyQuestionsFail = Lists.newArrayList();
@@ -206,6 +206,7 @@ public class QuestionProcessorTest {
 
         return responses;
     }
+
 
     private List<Question> getMockQuestions() {
         final List<Question> questions = new ArrayList<>();
@@ -493,6 +494,11 @@ public class QuestionProcessorTest {
         int accountAge = 14;
         setFeature(FeatureFlipper.QUESTION_ASK_TIME, false);
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
+        ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap = ArrayListMultimap.create();;
+        questionAskTimeMap.put(Question.ASK_TIME.MORNING, 10000);
+        questionAskTimeMap.put(Question.ASK_TIME.AFTERNOON, 10003);
+        questionAskTimeMap.put(Question.ASK_TIME.EVENING, 10002);
+
         boolean foundMorningQ = false;
         boolean foundAfternoonQ = false;
         boolean foundEveningQ = false;
@@ -513,8 +519,39 @@ public class QuestionProcessorTest {
         assertThat(foundAfternoonQ, is (false));
         assertThat(foundEveningQ, is(false));
 
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = mock(TimeZoneHistoryDAODynamoDB.class);
+        TimeZoneHistory timeZone = new TimeZoneHistory(1459288586567L, 14400000, "America/New_York");
+        when(timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS)).thenReturn(Optional.of(timeZone));
+        Optional<TimeZoneHistory> optionalTimeZone =  timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS);
+        List <Integer> questionOutsideTimeWindow = new ArrayList<>();
+        if (optionalTimeZone.isPresent()) {
+            final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
+            if (currentHour >= 16){
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+
+            }else if (currentHour >= 12){
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+
+            }else{
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+            }
+        }else{
+            //defaults to morning questions
+            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+        }
+
+        assertThat(questionOutsideTimeWindow.contains(10000), is(true) );
+        assertThat(questionOutsideTimeWindow.contains(10003), is(true) );
+
+        /*
         setFeature(FeatureFlipper.QUESTION_ASK_TIME, true);
+        List <Integer> test = this.questionProcessor.checkAskTime(ACCOUNT_ID_PASS);
         questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
+        //no timezonehistory -> should omit afternoon and evening questions
         foundMorningQ = false;
         foundAfternoonQ = false;
         foundEveningQ = false;
@@ -534,7 +571,7 @@ public class QuestionProcessorTest {
         assertThat(foundMorningQ, is (true));
         assertThat(foundAfternoonQ, is (false));
         assertThat(foundEveningQ, is(false));
-
+*/
     }
 
 
