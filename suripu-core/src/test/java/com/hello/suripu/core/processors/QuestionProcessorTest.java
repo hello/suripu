@@ -527,7 +527,7 @@ public class QuestionProcessorTest {
         final Optional<TimeZoneHistory> optionalTimeZone =  timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS);
         List <Integer> questionOutsideTimeWindow = new ArrayList<>();
 
-        //checkAskTime logic - selects qids outside of time window 
+        //checkAskTime logic - selects qids outside of time window
         if (optionalTimeZone.isPresent()) {
             final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
             if (currentHour >= 16){
