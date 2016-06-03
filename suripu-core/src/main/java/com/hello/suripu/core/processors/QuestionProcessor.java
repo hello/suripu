@@ -96,7 +96,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 }
 
                 this.questionIdMap.put(question.id, question);
-                if (question.frequency == Question.FREQUENCY.ONE_TIME) {
+                if (question.frequency == Question.FREQUENCY.ONE_TIME && question.category != QuestionCategory.SURVEY) {
+                    //Filtering out SURVEY qs b/c separately handled by QuestionSurveyProcessor
                     baseQuestionIds.add(question.id);
                 }
 
