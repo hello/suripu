@@ -532,6 +532,123 @@ WHERE questions.id = S.question_id;
 --- Update question text grammar consistency
 UPDATE questions SET question_text='How often did you meet last week''s goal?' WHERE question_text='How often did you meet this week''s goal?' AND lang='EN';
 
+-- jyfan 2016-06-03
+ALTER TABLE questions ADD COLUMN dependency_response INTEGER[] DEFAULT '{}';
+UPDATE questions SET dependency_response='{}' WHERE dependency_response IS null;
+
+ALTER TYPE question_category ADD VALUE 'survey';
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How satisfied are you with your sleep?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Very satisfied", "Satisfied", "Moderately satisfied", "Dissatisfied", "Very dissatisfied"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'survey' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'Are you worried or distressed about sleep problems?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Not at all", "A little", "Somewhat", "Very", "Extremely"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'survey' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How much difficulty, if any, do you have falling asleep?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"None", "Mild", "Moderate", "Severe", "Very Severe"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'survey' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How much difficulty, if any, do you have staying asleep?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"None", "Mild", "Moderate", "Severe", "Very Severe"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'survey' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How often do you find yourself waking earlier than you should?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"None", "Mild", "Moderate", "Severe", "Very Severe"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'survey' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'If you struggle with sleep, how much do these problems interfere with the rest of your day?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Not at all", "A little", "Somewhat", "Very", "Extremely"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'survey' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'If you struggle with sleep, how noticeable do you think the effects of these problems are to other people?', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Not at all", "A little", "Somewhat", "Very", "Extremely"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'survey' --category
+);
+
+INSERT INTO response_choices (question_id, response_text)
+    (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 7));
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 7) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
+
+-- dependency for survey 1 level 2 ask
+UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_choices WHERE id IN (
+    SELECT id FROM response_choices WHERE response_text=ANY(ARRAY['Moderately satisfied', 'Dissatisfied', 'Very dissatisfied'])
+                                    AND question_id=(SELECT id FROM questions WHERE question_text='How satisfied are you with your sleep?')))
+    WHERE question_text='Are you worried or distressed about sleep problems?';
+
+-- dependency for survey 1 level 3 ask
+UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_choices WHERE id IN (
+    SELECT id FROM response_choices WHERE response_text=ANY(ARRAY['A little', 'Somewhat', 'Very', 'Extremely'])
+                                    AND question_id=(SELECT id FROM questions WHERE question_text='Are you worried or distressed about sleep problems?')))
+    WHERE question_text=ANY(ARRAY['If you struggle with sleep, how much do these problems interfere with the rest of your day?',
+                                  'If you struggle with sleep, how noticeable do you think the effects of these problems are to other people?',
+                                  'How often do you find yourself waking earlier than you should?',
+                                  'How much difficulty, if any, do you have staying asleep?',
+                                  'How much difficulty, if any, do you have falling asleep?']);
+
+-- jyfan update question category for daily question for prioritization
+UPDATE questions SET category='daily' WHERE question_text='How was your sleep last night?';
 
 
 
