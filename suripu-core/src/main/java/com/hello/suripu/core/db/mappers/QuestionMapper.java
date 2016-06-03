@@ -14,6 +14,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,10 +34,15 @@ public class QuestionMapper implements ResultSetMapper<Question> {
             choices.add(new Choice(response_ids[i], response_text[i], question_id));
         }
 
-        final Integer[] dependencyResponseIds = (Integer []) r.getArray("dependency_response").getArray();
         final List<Integer> dependencyResponse = Lists.newArrayList();
-        for (final Integer responseId : dependencyResponseIds) {
-            dependencyResponse.add(responseId);
+        
+        final String dependencyResponseString = r.getString("dependency_response");
+        if (dependencyResponseString != null) {
+            final Integer[] dependencyResponseIds;
+            dependencyResponseIds = (Integer []) r.getArray("dependency_response").getArray();
+            for (final Integer responseId : dependencyResponseIds) {
+                dependencyResponse.add(responseId);
+            }
         }
 
         // TODO: refactor this at some point
