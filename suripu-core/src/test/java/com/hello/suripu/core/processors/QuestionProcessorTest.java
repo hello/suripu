@@ -492,6 +492,8 @@ public class QuestionProcessorTest {
     public void testCheckAskTime() {
         int numQ = 3;
         int accountAge = 14;
+
+        //Check feature flipper logic
         setFeature(FeatureFlipper.QUESTION_ASK_TIME, false);
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap = ArrayListMultimap.create();;
@@ -512,18 +514,20 @@ public class QuestionProcessorTest {
             }else if (questionAskTime == Question.ASK_TIME.EVENING){
                 foundEveningQ = true;
             }
-
-
         }
+
         assertThat(foundMorningQ, is (true));
         assertThat(foundAfternoonQ, is (false));
         assertThat(foundEveningQ, is(false));
 
         final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = mock(TimeZoneHistoryDAODynamoDB.class);
-        TimeZoneHistory timeZone = new TimeZoneHistory(1459288586567L, 14400000, "America/New_York");
+        final TimeZoneHistory timeZone = new TimeZoneHistory(1459288586567L, 14400000, "America/Los_Angeles");
+
         when(timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS)).thenReturn(Optional.of(timeZone));
-        Optional<TimeZoneHistory> optionalTimeZone =  timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS);
+        final Optional<TimeZoneHistory> optionalTimeZone =  timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS);
         List <Integer> questionOutsideTimeWindow = new ArrayList<>();
+
+        //checkAskTime logic - selects qids outside of time window 
         if (optionalTimeZone.isPresent()) {
             final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
             if (currentHour >= 16){
@@ -544,34 +548,20 @@ public class QuestionProcessorTest {
             questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
         }
 
-        assertThat(questionOutsideTimeWindow.contains(10000), is(true) );
-        assertThat(questionOutsideTimeWindow.contains(10003), is(true) );
-
-        /*
-        setFeature(FeatureFlipper.QUESTION_ASK_TIME, true);
-        List <Integer> test = this.questionProcessor.checkAskTime(ACCOUNT_ID_PASS);
-        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
-        //no timezonehistory -> should omit afternoon and evening questions
-        foundMorningQ = false;
-        foundAfternoonQ = false;
-        foundEveningQ = false;
-
-        for (Question question : questions) {
-            final Question.ASK_TIME questionAskTime = question.askTime;
-            if (questionAskTime == Question.ASK_TIME.MORNING){
-                foundMorningQ = true;
-            }else if (questionAskTime == Question.ASK_TIME.AFTERNOON){
-                foundAfternoonQ= true;
-            }else if (questionAskTime == Question.ASK_TIME.EVENING){
-                foundEveningQ = true;
-            }
-
-
+        final int currentHour = DateTime.now().getHourOfDay();
+        if (currentHour<12) {
+            //Morning - qid = 10000
+            assertThat(questionOutsideTimeWindow.contains(10002), is(true));
+            assertThat(questionOutsideTimeWindow.contains(10003), is(true));
+        }else if (currentHour < 16){
+            //Afternoon - qid = 10003
+            assertThat(questionOutsideTimeWindow.contains(10000), is(true));
+            assertThat(questionOutsideTimeWindow.contains(10002), is(true));
+        } else{
+            //Evening qid = 100002
+            assertThat(questionOutsideTimeWindow.contains(10000), is(true));
+            assertThat(questionOutsideTimeWindow.contains(10003), is(true));
         }
-        assertThat(foundMorningQ, is (true));
-        assertThat(foundAfternoonQ, is (false));
-        assertThat(foundEveningQ, is(false));
-*/
     }
 
 
