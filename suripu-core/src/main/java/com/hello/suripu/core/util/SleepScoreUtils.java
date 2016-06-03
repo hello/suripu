@@ -44,7 +44,7 @@ public class SleepScoreUtils {
 
     public static final int DURATION_MIN_V3 = 120; //2 hours
     public static final int DURATION_MAX_V3 = 720; //12 hours
-    public static final float RAW_SCORE_SCALING_MIN_V3 = 33;
+    public static final float RAW_SCORE_SCALING_MIN_V3 = 33.0f;
     public static final float RAW_SCORE_SCALING_MAX_V3 = 57f;
     public static final float RAW_SCORE_MIN_V3 = 39.32f;
     public static final float RAW_SCORE_MAX_DUR_V3 = 52.866f;//raw score if sleep > 12 hours
