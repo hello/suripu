@@ -31,7 +31,7 @@ public class WakeVariance {
         final String queryStartDateString = DateTimeUtil.dateToYmdString(queryStartDate);
 
         final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartDateString, queryEndDateString);
-        LOGGER.debug("insight=wake_variance-sleep_stat_len={}-account_id={}", sleepStats.size(), accountId);
+        LOGGER.debug("insight=wake-variance sleep_stat_len={} account_id={}", sleepStats.size(), accountId);
         final List<Integer> wakeTimeList = Lists.newArrayList();
         for (final AggregateSleepStats stat : sleepStats) {
             final Long wakeTimeStamp = stat.sleepStats.wakeTime;
@@ -47,11 +47,11 @@ public class WakeVariance {
     public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final List<Integer> wakeTimeList, final WakeStdDevData wakeStdDevData) {
 
         if (wakeTimeList.isEmpty()) {
-            LOGGER.debug("action=insight_absent-insight=wake_variance-reason=wake_time_list_empty-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=wake-variance reason=wake-time-list-empty account_id={}", accountId);
             return Optional.absent();
         }
         else if (wakeTimeList.size() <= 2) {
-            LOGGER.debug("action=insight_absent-insight=wake_variance-reason=wake_time_list_small-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=wake-variance reason=wake-time-list-small account_id={}", accountId);
             return Optional.absent(); //not big enough to calculate variance usefully
         }
 
@@ -64,7 +64,7 @@ public class WakeVariance {
         final Double wakeStdDevDouble = stats.getStandardDeviation();
         final int wakeStdDev = (int) Math.round(wakeStdDevDouble);
 
-        LOGGER.debug("insight=wake_variance-account_id={}-wake_std_dev={}", accountId, wakeStdDev);
+        LOGGER.debug("insight=wake-variance account_id={} wake_std_dev={}", accountId, wakeStdDev);
         final Integer percentile = wakeStdDevData.getWakeStdDevPercentile(wakeStdDev);
 
         Text text;

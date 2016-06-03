@@ -26,7 +26,7 @@ public class PartnerMotionInsight {
             LOGGER.debug("action=insight_absent-insight=partner_motion-reason=no_partner-account_id={}", accountId);
             return Optional.absent();
         }
-        LOGGER.debug("action=found_partner-account_id={}-partner_id={}", accountId, optionalPartnerAccountId.get());
+        LOGGER.debug("action=found-partner account_id={} partner_id={}", accountId, optionalPartnerAccountId.get());
 
         final String queryLastNightTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1).toString("yyyy-MM-dd"); //Note tz for trigger time
 
@@ -34,7 +34,7 @@ public class PartnerMotionInsight {
         final Optional<AggregateSleepStats> partnerSleepStat = sleepStatsDAODynamoDB.getSingleStat(optionalPartnerAccountId.get(), queryLastNightTime);
 
         if (!mySleepStat.isPresent() || !partnerSleepStat.isPresent()) {
-            LOGGER.debug("action=insight_absent-insight=partner_motion-reason=sleep_stats_absent-account_id={}-partner-id={}", accountId, optionalPartnerAccountId.get());
+            LOGGER.debug("action=insight-absent insight=partner-motion reason=sleep-stats-absent account_id={} partner_id={}", accountId, optionalPartnerAccountId.get());
             return Optional.absent();
         }
 
@@ -45,7 +45,7 @@ public class PartnerMotionInsight {
         final Float partnerMotionTtl = (float) partnerSleepStat.get().motionScore.numMotions;
 
         if (myMotionTtl == 0f || partnerMotionTtl ==0f) {
-            LOGGER.debug("action=insight_absent-insight=partner_motion-reason=motion_ttl_zero-account_id={}-partner_id={}", accountId, optionalPartnerAccountId.get());
+            LOGGER.debug("action=insight-absent insight=partner-motion reason=motion-ttl-zero account_id={} partner_id={}", accountId, optionalPartnerAccountId.get());
             return Optional.absent();
         }
 

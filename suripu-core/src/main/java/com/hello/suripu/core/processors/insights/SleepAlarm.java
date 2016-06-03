@@ -44,7 +44,7 @@ public class SleepAlarm {
         final String queryStartDateString = DateTimeUtil.dateToYmdString(queryStartDate);
 
         final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartDateString, queryEndDateString);
-        LOGGER.debug("insight=sleep_alarm-account_id={}-sleep_stat_len={}", accountId, sleepStats.size());
+        LOGGER.debug("insight=sleep-alarm account_id={} sleep_stat_len={}", accountId, sleepStats.size());
         final List<Integer> wakeTimeList = Lists.newArrayList();
         for (final AggregateSleepStats stat : sleepStats) {
 
@@ -79,11 +79,11 @@ public class SleepAlarm {
     public static Optional<InsightCard> processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge) {
 
         if (wakeTimeList.isEmpty()) {
-            LOGGER.info("account_id={}-insight=sleep_alarm-action=wake_time_list_empty", accountId);
+            LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-empty", accountId);
             return processSleepAlarmFallBack(accountId);
         }
         else if (wakeTimeList.size() <= 2) {
-            LOGGER.info("account_id={}-insight=sleep_alarm-action=wake_time_list_too_small", accountId);
+            LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-too-small", accountId);
             return processSleepAlarmFallBack(accountId); //not big enough to calculate mean meaningfully har har
         }
 
@@ -94,7 +94,7 @@ public class SleepAlarm {
 
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
-            LOGGER.info("insight=sleep_alarm-account_id={}-action=fail_safe_guard");
+            LOGGER.info("insight=sleep-alarm account_id={} action=fail-safe-guard");
             return processSleepAlarmFallBack(accountId);
         }
 

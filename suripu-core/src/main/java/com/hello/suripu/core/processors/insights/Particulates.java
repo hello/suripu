@@ -41,14 +41,14 @@ public class Particulates {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight_absent-insight=particulates-reason=timezoneoffset_absent-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=particulates reason=timezoneoffset-absent account_id={}", accountId);
             return Optional.absent(); //cannot compute insight without timezone info
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         final List<Float> dustList = getAvgAirQualityList(accountId, deviceId, NUM_DAYS, timeZoneOffset, deviceDataDAO, calibrationDAO);
         if (dustList.isEmpty()) {
-            LOGGER.debug("action=insight_absent-insight=particulates-reason=dust_list_empty-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=particulates reason=dust-list-empty account_id={}", accountId);
             return Optional.absent();
         }
 

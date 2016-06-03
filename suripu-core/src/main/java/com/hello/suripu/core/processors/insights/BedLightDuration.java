@@ -40,14 +40,14 @@ public class BedLightDuration {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight_absent-insight=bed_light_duration-reason=timezoneoffset_absent-account_id={}", accountId);
+            LOGGER.debug("action=insight_absent insight=bed_light_duration reason=timezoneoffset_absent account_id={}", accountId);
             return Optional.absent(); //cannot compute insight without timezone info
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset);
         if (deviceDatas.isEmpty()) {
-            LOGGER.debug("action=insight_absent-insight=bed_light_duration-reason=device_datas_empty-account_id={}", accountId);
+            LOGGER.debug("action=insight_absent insight=bed_light_duration reason=device_datas_empty account_id={}", accountId);
             return Optional.absent();
         }
 
@@ -101,7 +101,7 @@ public class BedLightDuration {
             if (offMinutes >= offMinutesThreshold) {
                 final Period onTimeTruncated = new Period(previousLightOnTimeStamp, lastLightOnTimeStamp);
                 final Integer onMinutesTruncated = onTimeTruncated.getMinutes();
-                LOGGER.debug("Truncated beginning {} minutes of night's DeviceData for accountId {} b/c light was off for {} minutes", onMinutesTruncated, accountId, offMinutes);
+                LOGGER.trace("action=truncate_begin mins_cut={} account_id={} lights_off_min={}", onMinutesTruncated, accountId, offMinutes);
                 return onMinutesTruncated;
             }
         }
@@ -165,7 +165,7 @@ public class BedLightDuration {
     public static Optional<InsightCard> scoreCardBedLightDuration(final Integer avgLightOn, final Long accountId) {
         final Text text;
         if (avgLightOn <= 60) {
-            LOGGER.debug("action=insight_absent-insight=bed_light_duration-reason=avg_light_on_vshort-account_id={}", accountId);
+            LOGGER.debug("action=insight_absent insight=bed_light_duration reason=avg_light_on_vshort account_id={}", accountId);
             return Optional.absent();
 //            text = BedLightDurationMsgEN.getLittleLight();
         }

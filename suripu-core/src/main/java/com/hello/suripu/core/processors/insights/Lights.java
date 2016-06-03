@@ -40,7 +40,7 @@ public class Lights {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight_absent-insight=lights-reason=timezoneoffset_absent-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=lights reason=timezoneoffset-absent account_id={}", accountId);
             return Optional.absent(); //cannot compute insight without timezone info
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
@@ -69,7 +69,7 @@ public class Lights {
     public static Optional<InsightCard> processLightData(final Long accountId, final List<DeviceData> data, final LightData lightData) {
 
         if (data.size() == 0) {
-            LOGGER.debug("action=insight_absent-insight=lights-reason=data_empty-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=lights reason=data-empty account_id={}", accountId);
             return Optional.absent();
         }
 

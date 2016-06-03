@@ -37,7 +37,7 @@ public class BedLightIntensity {
         //get timezone offset
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=timezoneoffset_absent-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=bed-light-intensity reason=timezoneoffset-absent account_id={}", accountId);
             return Optional.absent();
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
@@ -45,7 +45,7 @@ public class BedLightIntensity {
         //integrate night light for week
         final List<DeviceData> nightData = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
         if (nightData.isEmpty()) {
-            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=no_night_data-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=bed-light-intensity reason=no-night-data account_id={}", accountId);
             return Optional.absent();
         }
         final Integer nightIntegral = integrateLight(nightData);
@@ -53,7 +53,7 @@ public class BedLightIntensity {
         //integrate morning light for week
         final List<DeviceData> morningData =getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset, MORNING_START_HOUR_LOCAL, MORNING_END_HOUR_LOCAL);
         if (morningData.isEmpty()) {
-            LOGGER.debug("action=insight_absent-insight=bed_light_intensity-reason=no_morning_data-account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=bed-light-intensity reason=no-morning-data account_id={}", accountId);
             return Optional.absent();
         }
         final Integer morningIntegral = integrateLight(morningData);
