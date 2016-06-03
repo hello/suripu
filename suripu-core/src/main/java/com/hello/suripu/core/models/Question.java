@@ -156,7 +156,7 @@ public class Question {
                     final AccountInfo.Type accountInfo,
                     final DateTime accountCreationDate,
                     final QuestionCategory category,
-                    @NotNull final List<Integer> dependency_response) {
+                    @NotNull final List<Integer> dependencyResponse) {
         this.id = id;
         this.accountQuestionId = accountQuestionId;
         this.text = text;
@@ -171,7 +171,7 @@ public class Question {
         this.accountInfo = accountInfo;
         this.accountCreationDate = accountCreationDate;
         this.category = category;
-        this.dependencyResponse = dependency_response;
+        this.dependencyResponse = dependencyResponse;
     }
 
     public static Question withAskTimeAccountQId(final Question question,

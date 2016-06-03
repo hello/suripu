@@ -35,7 +35,7 @@ public class QuestionMapper implements ResultSetMapper<Question> {
 
         final Integer[] dependencyResponseIds = (Integer []) r.getArray("dependency_response").getArray();
         final List<Integer> dependencyResponse = Lists.newArrayList();
-        for (Integer responseId : dependencyResponseIds) {
+        for (final Integer responseId : dependencyResponseIds) {
             dependencyResponse.add(responseId);
         }
 
