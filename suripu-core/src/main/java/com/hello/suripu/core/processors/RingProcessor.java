@@ -200,21 +200,40 @@ public class RingProcessor {
     protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
-                                                               final PillDataDAODynamoDB pillDataDAODynamoDB){
-        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(PROGRESSIVE_MOTION_WINDOW_MIN);
+                                                               final PillDataDAODynamoDB pillDataDAODynamoDB,
+                                                               final RolloutClient feature){
+
+        Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
+        if (feature != null && feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM_TEST_VALUES, accountId, Collections.EMPTY_LIST)) {
+            progressiveWindow = 6;
+        }
+
+        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(progressiveWindow);
 
         final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(accountId,
                 dataCollectionBeginTime, nowAlignedToStartOfMinute.plusMinutes(1));
 
         if(motionWithinProgressiveWindow.isEmpty()){
-            LOGGER.info("No motion data in last {} minutes for Account ID: {}. Not computing progressive alarm.", PROGRESSIVE_MOTION_WINDOW_MIN, accountId);
+            LOGGER.info("No motion data in last {} minutes for Account ID: {}. Not computing progressive alarm.", progressiveWindow, accountId);
             return Optional.absent();
         }
         final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionWithinProgressiveWindow);
         final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionWithinProgressiveWindow);
 
-        // TODO: CHANGE THRESHOLD WHEN NECESSARY
-        if(SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts)){
+        Boolean isUserAwake = false;
+        if (feature != null && feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM_TEST_VALUES, accountId, Collections.EMPTY_LIST)) {
+            isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(
+                amplitudeData,
+                kickOffCounts,
+                SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD,
+                4500,
+                SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT
+            );
+        } else {
+            isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts);
+        }
+
+        if(isUserAwake){
             // TODO: STATE CHECK NEEDED FOR ROBUST IMPLEMENTATION
             final RingTime progressiveRingTime = new RingTime(
                     nowAlignedToStartOfMinute.plusMinutes(PROGRESSIVE_SAFE_GAP_MIN).getMillis(),
@@ -223,7 +242,7 @@ public class RingProcessor {
                     true);
             return Optional.of(progressiveRingTime);
         }
-        LOGGER.info("User deemed 'not awake' in last {} minutes for Account ID: {}. Not computing progressive alarm.", PROGRESSIVE_MOTION_WINDOW_MIN, accountId);
+        LOGGER.info("User deemed 'not awake' in last {} minutes for Account ID: {}. Not computing progressive alarm.", progressiveWindow, accountId);
         return Optional.absent();
     }
 
@@ -249,7 +268,8 @@ public class RingProcessor {
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
-                        pillDataDAODynamoDB);
+                        pillDataDAODynamoDB,
+                        feature);
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
                     smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
