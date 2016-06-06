@@ -211,6 +211,8 @@ public class QuestionProcessorTest {
         final int parentId = 0;
         final long accountQId = 0L;
 
+        final List<Integer> dependencyResponse = Lists.newArrayList();
+
         List<Choice> choices = new ArrayList<>();
         int qid = 1;
         choices.add(new Choice(1, "Hot", qid));
@@ -222,7 +224,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices, AccountInfo.Type.NONE, now,
-                QuestionCategory.ONBOARDING));
+                QuestionCategory.ONBOARDING, dependencyResponse));
 
         List<Choice> choices2 = new ArrayList<>();
         qid = 2;
@@ -235,7 +237,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices2, AccountInfo.Type.NONE, now,
-                QuestionCategory.ONBOARDING));
+                QuestionCategory.ONBOARDING, dependencyResponse));
 
 
         List<Choice> choices3 = new ArrayList<>();
@@ -249,7 +251,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices3, AccountInfo.Type.NONE, now,
-                QuestionCategory.ONBOARDING));
+                QuestionCategory.ONBOARDING, dependencyResponse));
 
         List<Choice> choices4 = new ArrayList<>();
         qid = 5;
@@ -264,7 +266,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices4, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.NONE, dependencyResponse));
 
 
         List<Choice> choices5 = new ArrayList<>();
@@ -280,7 +282,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices5, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.NONE, dependencyResponse));
 
         List<Choice> choices6 = new ArrayList<>();
         qid = 10000;
@@ -293,7 +295,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.DAILY,
                 Question.ASK_TIME.MORNING,
                 dependency, parentId, now, choices6, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.NONE, dependencyResponse));
 
         List<Choice> choices7 = new ArrayList<>();
         qid = 10002;
@@ -305,7 +307,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.DAILY,
                 Question.ASK_TIME.ANYTIME,
                 5, parentId, now, choices7, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.NONE, dependencyResponse));
 
         List<Choice> choices8 = new ArrayList<>();
         qid = 10003;
@@ -318,7 +320,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.OCCASIONALLY,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices8, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.NONE, dependencyResponse));
 
         List<Choice> choices9 = new ArrayList<>();
         qid = ANOMALY_QUESTION_ID;
@@ -331,7 +333,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.TRIGGER,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices9, AccountInfo.Type.NONE, now,
-                QuestionCategory.ANOMALY_LIGHT));
+                QuestionCategory.ANOMALY_LIGHT, dependencyResponse));
 
         List<Choice> choices10 = new ArrayList<>();
         qid = 4;
@@ -344,7 +346,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices10, AccountInfo.Type.NONE, now,
-                QuestionCategory.ONBOARDING));
+                QuestionCategory.ONBOARDING, dependencyResponse));
 
         return questions;
     }

@@ -10,7 +10,8 @@ public enum QuestionCategory {
     DAILY("daily"),
     ANOMALY_LIGHT("anomaly_light"),
     GOAL_GO_OUTSIDE("goal_go_outside"),
-    GOAL("goal");
+    GOAL("goal"),
+    SURVEY("survey");
 
     private String value;
 

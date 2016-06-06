@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db.mappers;
 
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
@@ -13,6 +14,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,6 +32,17 @@ public class QuestionMapper implements ResultSetMapper<Question> {
         final List<Choice> choices = new ArrayList<>();
         for (int i = 0; i < response_ids.length; i++) {
             choices.add(new Choice(response_ids[i], response_text[i], question_id));
+        }
+
+        final List<Integer> dependencyResponse = Lists.newArrayList();
+        
+        final String dependencyResponseString = r.getString("dependency_response");
+        if (dependencyResponseString != null) {
+            final Integer[] dependencyResponseIds;
+            dependencyResponseIds = (Integer []) r.getArray("dependency_response").getArray();
+            for (final Integer responseId : dependencyResponseIds) {
+                dependencyResponse.add(responseId);
+            }
         }
 
         // TODO: refactor this at some point
@@ -56,7 +69,8 @@ public class QuestionMapper implements ResultSetMapper<Question> {
                 choices,
                 AccountInfo.Type.fromString(r.getString("account_info")),
                 createdLocal,
-                QuestionCategory.fromString(r.getString("category"))
+                QuestionCategory.fromString(r.getString("category")),
+                dependencyResponse
         );
 
         return question;
