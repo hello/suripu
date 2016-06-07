@@ -140,6 +140,8 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10000, today, today.plusDays(1))).thenReturn(15L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 9, today, today.plusDays(1))).thenReturn(21L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10, today, today.plusDays(1))).thenReturn(22L);
 
         // anomaly question
 
@@ -309,7 +311,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
                 Question.ASK_TIME.EVENING,
-                5, parentId, now, choices7, AccountInfo.Type.NONE, now,
+                dependency, parentId, now, choices7, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
         List<Choice> choices8 = new ArrayList<>();
@@ -366,8 +368,8 @@ public class QuestionProcessorTest {
 
         List<Choice> choices12 = new ArrayList<>();
         qid = 8;
-        choices12.add(new Choice(41, "Yes", qid));
-        choices12.add(new Choice(42, "No", qid));
+        choices12.add(new Choice(43, "Yes", qid));
+        choices12.add(new Choice(44, "No", qid));
         questions.add(new Question(qid, accountQId,
                 "Did you take a nap today?", "EN",
                 Question.Type.CHOICE,
@@ -376,6 +378,18 @@ public class QuestionProcessorTest {
                 dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
+        List<Choice> choices13 = new ArrayList<>();
+        qid = 9;
+        choices13.add(new Choice(45, "great", qid));
+        choices13.add(new Choice(46, "normal", qid));
+        choices13.add(new Choice(47, "poor", qid));
+        questions.add(new Question(qid, accountQId,
+                "How was the weather?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.ANYTIME,
+                5, parentId, now, choices13, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         return questions;
     }
@@ -455,7 +469,8 @@ public class QuestionProcessorTest {
     @Test
     public void testGetOldieQuestions() {
         final int accountAge = 14;
-        int numQ = 3;
+        int numQ = 4;
+        setFeature(FeatureFlipper.QUESTION_ASK_TIME, false);
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
 
         for (int i = 0; i < questions.size(); i++) {
@@ -487,83 +502,6 @@ public class QuestionProcessorTest {
         assertThat(foundAfternoonQ, is (false));
         assertThat(foundMorningQ, is (true));
     }
-
-    @Test
-    public void testCheckAskTime() {
-        int numQ = 3;
-        int accountAge = 14;
-
-        //Check feature flipper logic
-        setFeature(FeatureFlipper.QUESTION_ASK_TIME, false);
-        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
-        ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap = ArrayListMultimap.create();;
-        questionAskTimeMap.put(Question.ASK_TIME.MORNING, 10000);
-        questionAskTimeMap.put(Question.ASK_TIME.AFTERNOON, 10003);
-        questionAskTimeMap.put(Question.ASK_TIME.EVENING, 10002);
-
-        boolean foundMorningQ = false;
-        boolean foundAfternoonQ = false;
-        boolean foundEveningQ = false;
-
-        for (Question question : questions) {
-            final Question.ASK_TIME questionAskTime = question.askTime;
-            if (questionAskTime == Question.ASK_TIME.MORNING){
-                foundMorningQ = true;
-            }else if (questionAskTime == Question.ASK_TIME.AFTERNOON){
-                foundAfternoonQ= true;
-            }else if (questionAskTime == Question.ASK_TIME.EVENING){
-                foundEveningQ = true;
-            }
-        }
-
-        assertThat(foundMorningQ, is (true));
-        assertThat(foundAfternoonQ, is (false));
-        assertThat(foundEveningQ, is(false));
-
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = mock(TimeZoneHistoryDAODynamoDB.class);
-        final TimeZoneHistory timeZone = new TimeZoneHistory(1459288586567L, 14400000, "America/Los_Angeles");
-
-        when(timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS)).thenReturn(Optional.of(timeZone));
-        final Optional<TimeZoneHistory> optionalTimeZone =  timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS);
-        List <Integer> questionOutsideTimeWindow = new ArrayList<>();
-
-        //checkAskTime logic - selects qids outside of time window
-        if (optionalTimeZone.isPresent()) {
-            final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
-            if (currentHour >= 16){
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-
-            }else if (currentHour >= 12){
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
-
-            }else{
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-                questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
-            }
-        }else{
-            //defaults to morning questions
-            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-            questionOutsideTimeWindow.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
-        }
-
-        final int currentHour = DateTime.now().getHourOfDay();
-        if (currentHour<12) {
-            //Morning - qid = 10000
-            assertThat(questionOutsideTimeWindow.contains(10002), is(true));
-            assertThat(questionOutsideTimeWindow.contains(10003), is(true));
-        }else if (currentHour < 16){
-            //Afternoon - qid = 10003
-            assertThat(questionOutsideTimeWindow.contains(10000), is(true));
-            assertThat(questionOutsideTimeWindow.contains(10002), is(true));
-        } else{
-            //Evening qid = 100002
-            assertThat(questionOutsideTimeWindow.contains(10000), is(true));
-            assertThat(questionOutsideTimeWindow.contains(10003), is(true));
-        }
-    }
-
 
     @Test
     public void testSkips() {

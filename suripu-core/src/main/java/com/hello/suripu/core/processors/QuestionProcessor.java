@@ -26,9 +26,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.regex.Matcher;
-
 /**
  * Created by ksg on 10/24/14
  */
@@ -166,17 +173,6 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         // grab user question and response status for today if this is not a "get-more questions" request
         final DateTime expiration = today.plusDays(1);
         final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
-        List<Integer>  ineligibleQuestions = new ArrayList();
-
-        //removes afternoon and evening questions for accounts without AskTime and creates question blacklist
-        if (useQuestionAskTime(accountId)){
-            ineligibleQuestions.addAll(checkAskTime(accountId));
-            availableQuestionIds.values().removeAll(ineligibleQuestions);
-        }else{
-            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-            ineligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.EVENING));
-            availableQuestionIds.values().removeAll(ineligibleQuestions);
-        }
 
         // check if we have generated any questions for this user TODAY
         int answered = 0;
@@ -191,10 +187,6 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                     continue;
                 }
 
-                //checks if question is for the wrong time of day
-                if (ineligibleQuestions.contains(question.id)){
-                    continue;
-                }
 
                 // add this unanswered question to list
                 final Integer qid = question.questionId;
@@ -428,6 +420,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         addedIds.addAll(seenIds);
 
         // always include the ONE daily calibration question, most important Q has lower id
+        // This should always be question 22
         final Integer questionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
         if (!addedIds.contains(questionId)) {
             addedIds.add(questionId);
@@ -519,6 +512,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                                                           final DateTime today, final int numQuestions) {
 
         final List<Question> questions = new ArrayList<>();
+        List <Integer> eligibleQuestions = new ArrayList<>();
+
 
         final Set<Integer> addedIds = new HashSet<>();
         addedIds.addAll(seenIds);
@@ -527,6 +522,15 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         questionsPool.addAll(this.availableQuestionIds.get(questionType));
         questionsPool.removeAll(seenIds);
 
+        //checks ask time if feature flipped
+        if (useQuestionAskTime(accountId)){
+            eligibleQuestions =  getQuestionsByAskTime(accountId);
+        }else{
+            eligibleQuestions = questionAskTimeMap.get(Question.ASK_TIME.MORNING);
+            eligibleQuestions.addAll(questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
+        }
+
+        questionsPool.retainAll(eligibleQuestions);
 
         int poolSize = questionsPool.size();
 
@@ -566,32 +570,33 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         return questions;
     }
 
-    //returns list of questions outside of timewindow
-    public List<Integer> checkAskTime (final long accountId){
+    //returns list of questions in of time window
+    private List<Integer> getQuestionsByAskTime (final long accountId){
         final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        List <Integer> questionOutsideTimeWindow = new ArrayList<>();
+        List <Integer> questionsInTimeWindow = new ArrayList<>();
         if (optionalTimeZone.isPresent()) {
             final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
             if (currentHour >= EVENING_TIME){
-                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
 
             }else if (currentHour >= AFTERNOON_TIME){
-                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
 
             }else{
-                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-                questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
             }
         }else{
             //defaults to morning questions
-            questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-            questionOutsideTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+            questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+            questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
         }
 
-        return questionOutsideTimeWindow;
+        return questionsInTimeWindow;
     }
+
 
 
     private Long saveGeneratedQuestion(final Long accountId, final Integer id, final DateTime today) {
