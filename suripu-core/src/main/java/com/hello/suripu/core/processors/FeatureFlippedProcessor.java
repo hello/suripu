@@ -182,4 +182,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V3, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useQuestionAskTime(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ASK_TIME, accountId, Collections.EMPTY_LIST);
+    }
+
 }
