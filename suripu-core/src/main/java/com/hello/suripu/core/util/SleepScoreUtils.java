@@ -44,6 +44,7 @@ public class SleepScoreUtils {
 
     public static final int DURATION_MIN_V3 = 120; //2 hours
     public static final int DURATION_MAX_V3 = 720; //12 hours
+    public static final int DURATION_POP_IDEAL = 480; //8 hours
     public static final float RAW_SCORE_SCALING_MIN_V3 = 33.0f;
     public static final float RAW_SCORE_SCALING_MAX_V3 = 57f;
     public static final float RAW_SCORE_MIN_V3 = 39.32f;
@@ -149,14 +150,13 @@ public class SleepScoreUtils {
         final float rawScoreV3;
         final long adjSleepDurationV3p2, adjSleepDurationV3p3, adjSleepDurationV3p4, adjSleepDurationV3p5;
         final Integer adjSleepDurationV3, sleepDurationTargetV3;
-        final int sleepDurationPopIdeal = 480;
         //Sets sleep duration target to individualized ideal within age-specific range
         if (sleepDurationThreshold == 0){
 
             if (userAgeInYears < 18){
                 sleepDurationTargetV3 = (idealHours.minHours +idealHours.maxHours)/2 * 60;
             }else {
-                sleepDurationTargetV3 = sleepDurationPopIdeal;
+                sleepDurationTargetV3 = DURATION_POP_IDEAL;
             }
 
         }else if (sleepDurationThreshold > idealHours.maxHours*60) {
@@ -168,7 +168,7 @@ public class SleepScoreUtils {
         }
 
         //Adjusted sleep duration based on deviations from population mean, reduced magnitude of delta
-        adjSleepDurationV3 = sleepDurationMinutes + (sleepDurationPopIdeal - sleepDurationTargetV3)/2;
+        adjSleepDurationV3 = sleepDurationMinutes + (DURATION_POP_IDEAL - sleepDurationTargetV3)/2;
 
         if (adjSleepDurationV3 < DURATION_MIN_V3) {
             rawScoreV3 = RAW_SCORE_MIN_V3;
