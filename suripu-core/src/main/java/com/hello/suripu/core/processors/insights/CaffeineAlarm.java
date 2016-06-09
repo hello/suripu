@@ -102,8 +102,8 @@ public class CaffeineAlarm {
 
         final int recommendedCoffeeMinutesTime = getRecommendedCoffeeMinutesTime(sleepAvg);
 
-        final String sleepTime = InsightUtils.timeConvert(sleepAvg);
-        final String coffeeTime = InsightUtils.timeConvert(recommendedCoffeeMinutesTime);
+        final String sleepTime = InsightUtils.timeConvertRound(sleepAvg);
+        final String coffeeTime = InsightUtils.timeConvertRound(recommendedCoffeeMinutesTime);
 
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmMessage(sleepTime, coffeeTime);
 

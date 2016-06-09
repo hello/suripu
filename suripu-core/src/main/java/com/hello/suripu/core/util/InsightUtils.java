@@ -16,4 +16,27 @@ public class InsightUtils {
         final String timeString = DateTimeFormat.forPattern("h:mm aa").print(new DateTime(0).withHourOfDay(hours).withMinuteOfHour(minutes));
         return timeString;
     }
+
+    public static String timeConvertRound(final int minuteOfDay) {
+        final int minutes = (minuteOfDay + DAY_MINUTES) % 60;
+
+        final int minutesRound;
+        final int hourAdd;
+        if (minutes < 15) {
+            minutesRound = 0;
+            hourAdd = 0;
+        } else if (minutes < 45) {
+            minutesRound = 30;
+            hourAdd = 0;
+        } else {
+            minutesRound = 0;
+            hourAdd = 1;
+        }
+
+        final int hours = ((minuteOfDay + DAY_MINUTES) % DAY_MINUTES) / 60;
+        final int hoursRound = hours + hourAdd;
+
+        final String timeString = DateTimeFormat.forPattern("h:mm aa").print(new DateTime(0).withHourOfDay(hoursRound).withMinuteOfHour(minutesRound));
+        return timeString;
+    }
 }

@@ -60,4 +60,36 @@ public class InsightUtilsTest {
         assertThat(expectedTime, is(convertedTime));
     }
 
+    @Test
+    public void testTimeConvertRound3() {
+        final int minute = 421;
+        final String expectedTime = "7:00 AM";
+        final String convertedTime = InsightUtils.timeConvertRound(minute);
+        assertThat(expectedTime, is(convertedTime));
+    }
+
+    @Test
+    public void testTimeConvertRound4() {
+        final int minute = 635;
+        final String expectedTime = "10:30 AM";
+        final String convertedTime = InsightUtils.timeConvertRound(minute);
+        assertThat(expectedTime, is(convertedTime));
+    }
+
+    @Test
+    public void testTimeConvertRound5() {
+        final int minute = 2;
+        final String expectedTime = "12:00 AM";
+        final String convertedTime = InsightUtils.timeConvertRound(minute);
+        assertThat(expectedTime, is(convertedTime));
+    }
+
+    @Test
+    public void testTimeConvertRound6() {
+        final int minute = 2 + (24 * 60) * 2;
+        final String expectedTime = "12:00 AM";
+        final String convertedTime = InsightUtils.timeConvertRound(minute);
+        assertThat(expectedTime, is(convertedTime));
+    }
+
 }
