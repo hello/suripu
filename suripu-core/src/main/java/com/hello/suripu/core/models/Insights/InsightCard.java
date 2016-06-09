@@ -165,7 +165,7 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("insight_type")
     public final InsightType insightType;
 
-    @JsonIgnore // for now
+    @JsonProperty("id")
     public final Optional<UUID> id;
 
 
