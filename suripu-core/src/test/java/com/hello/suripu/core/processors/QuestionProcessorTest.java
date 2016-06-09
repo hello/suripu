@@ -37,9 +37,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.hello.suripu.core.models.TimeZoneHistory;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
-
 
 /**
  * Created by ksg on 09/19/14
@@ -122,10 +119,6 @@ public class QuestionProcessorTest {
         features.clear();
 
 
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = mock(TimeZoneHistoryDAODynamoDB.class);
-        final TimeZoneHistory timeZone = new TimeZoneHistory(1459288586567L, 14400000, "America/Los_Angeles");
-        when(timeZoneHistoryDAODynamoDB.getCurrentTimeZone(ACCOUNT_ID_PASS)).thenReturn(Optional.of(timeZone));
-
         final List<Question> questions = this.getMockQuestions();
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
         when(questionResponseDAO.getAllQuestions()).thenReturn(ImmutableList.copyOf(questions));
@@ -182,7 +175,6 @@ public class QuestionProcessorTest {
                 .thenReturn(ImmutableList.copyOf(Collections.<AccountQuestionResponses>emptyList()));
         final QuestionProcessor.Builder builder = new QuestionProcessor.Builder()
                 .withQuestionResponseDAO(questionResponseDAO)
-                .withTimeZoneHistoryDaoDynamoDB(timeZoneHistoryDAODynamoDB)
                 .withCheckSkipsNum(CHECK_SKIP_NUM)
                 .withQuestions(questionResponseDAO);
 
@@ -478,10 +470,7 @@ public class QuestionProcessorTest {
     public void testGetOldieQuestions() {
         final int accountAge = 14;
         int numQ = 4;
-        final int currentHour = DateTime.now().getHourOfDay();
 
-        //checks getOldieQuestions w/out check ask time
-        setFeature(FeatureFlipper.QUESTION_ASK_TIME, false);
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
 
         for (int i = 0; i < questions.size(); i++) {
@@ -518,37 +507,72 @@ public class QuestionProcessorTest {
         assertThat(foundAfternoonQ, is (false));
         assertThat(foundEveningQ, is (false));
 
-        //checks getOldieQuestions w/ check ask time
-        setFeature(FeatureFlipper.QUESTION_ASK_TIME, true);
-        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
+    }
+
+    @Test
+    public void testGetQuestionsByAskTime() {
+        //checks getOldieQuestions w/out check ask time
+        boolean foundMorningQ = false;
+        boolean foundAfternoonQ = false;
+        boolean foundEveningQ = false;
+
+        final Integer morningQuestionId = 10000;
+        final Integer afternoonQuestionId = 10003;
+        final Integer eveningQuestionId = 10002;
+
+        //8 am
+        List<Integer> eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(8);
+        if (eligibleQuestions.contains(morningQuestionId)){
+            foundMorningQ = true;
+        }
+        if (eligibleQuestions.contains(afternoonQuestionId)){
+            foundAfternoonQ = true;
+        }
+        if (eligibleQuestions.contains(eveningQuestionId)){
+            foundEveningQ = true;
+        }
+
+        assertThat(foundMorningQ, is (true));
+        assertThat(foundAfternoonQ, is (false));
+        assertThat(foundEveningQ, is (false));
+
         foundMorningQ = false;
         foundAfternoonQ = false;
         foundEveningQ = false;
-
-        for (Question question : questions) {
-            final Question.ASK_TIME questionAskTime = question.askTime;
-            if (questionAskTime == Question.ASK_TIME.MORNING){
-                foundMorningQ = true;
-            }else if (questionAskTime == Question.ASK_TIME.AFTERNOON) {
-                foundAfternoonQ = true;
-            }else if (questionAskTime == Question.ASK_TIME.EVENING){
-                foundEveningQ = true;
-            }
+        //2 pm
+        eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(14);
+        if (eligibleQuestions.contains(morningQuestionId)){
+            foundMorningQ = true;
+        }
+        if (eligibleQuestions.contains(afternoonQuestionId)){
+            foundAfternoonQ = true;
+        }
+        if (eligibleQuestions.contains(eveningQuestionId)){
+            foundEveningQ = true;
         }
 
-        if (currentHour >= 16 ) {
-            assertThat(foundMorningQ, is (false));
-            assertThat(foundAfternoonQ, is (false));
-            assertThat(foundEveningQ, is (true));
-        }else if (currentHour >= 12){
-            assertThat(foundMorningQ, is (false));
-            assertThat(foundAfternoonQ, is (true));
-            assertThat(foundEveningQ, is (false));
-        }else{
-            assertThat(foundMorningQ, is (true));
-            assertThat(foundAfternoonQ, is (false));
-            assertThat(foundEveningQ, is (false));
+        assertThat(foundMorningQ, is (true));
+        assertThat(foundAfternoonQ, is (true));
+        assertThat(foundEveningQ, is (false));
+
+        foundMorningQ = false;
+        foundAfternoonQ = false;
+        foundEveningQ = false;
+        //8 pm
+        eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(20);
+        if (eligibleQuestions.contains(morningQuestionId)){
+            foundMorningQ = true;
         }
+        if (eligibleQuestions.contains(afternoonQuestionId)){
+            foundAfternoonQ = true;
+        }
+        if (eligibleQuestions.contains(eveningQuestionId)){
+            foundEveningQ = true;
+        }
+
+        assertThat(foundMorningQ, is (true));
+        assertThat(foundAfternoonQ, is (true));
+        assertThat(foundEveningQ, is (true));
     }
 
     @Test

@@ -525,9 +525,16 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         questionsPool.removeAll(seenIds);
 
         //checks ask time if feature flipped
-        if (useQuestionAskTime(accountId)){
-            eligibleQuestions.addAll(this.getQuestionsByAskTime(accountId));
-        }else{
+        if (useQuestionAskTime(accountId)) {
+            final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+            if (optionalTimeZone.isPresent()) {
+                final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
+                eligibleQuestions.addAll(this.getQuestionsByAskTime(currentHour));
+            } else {
+                eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+                eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
+            }
+        } else {
             eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
             eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
         }
@@ -572,29 +579,17 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         return questions;
     }
 
-    //returns list of questions in of time window
-    private List<Integer> getQuestionsByAskTime (final long accountId){
-        final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+    //returns list of questions in time window
+    public List<Integer> getQuestionsByAskTime (final int currentHour){
         List<Integer> questionsInTimeWindow = new ArrayList<>();
-        if (optionalTimeZone.isPresent()) {
-            final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
-            if (currentHour >= EVENING_TIME){
+        if (currentHour >= EVENING_TIME){
                 questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
-                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
-
-            }else if (currentHour >= AFTERNOON_TIME){
-                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
-                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
-
-            }else{
-                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
-            }
-        }else{
-            //defaults to morning questions
-            questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
-            questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
         }
+        if (currentHour >= AFTERNOON_TIME){
+                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+        }
+        questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+        questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
 
         return questionsInTimeWindow;
     }
