@@ -534,3 +534,25 @@ UPDATE info_insight_cards SET category_name='Last Call for Coffee' WHERE categor
 
 UPDATE info_insight_cards SET title='Plan for a Better Night''s Sleep' WHERE category='sleep_time';
 UPDATE info_insight_cards SET category_name='Sleep Time' WHERE category='sleep_time';
+
+-- jyfan 2016-06-08 copy editing
+-- partner motion
+UPDATE info_insight_cards SET text=
+'When you sleep next to someone, their movements can cause you to move more too, and this can affect the overall quality of your sleep. However, sleeping next to someone can have a positive effect as well. Many couples report sleeping better when they sleep together than when they sleep apart, hinting at a more complex link between your sleep and your partner.
+
+Satisfaction with your relationship is simultaneously impacted by and affects sleep quality. In addition to managing personal sleep disruptions such as sleep apnea and snoring, you and your partner can encourage each other to keep good sleep habits. Go to bed and wake up at a consistent time, keep distracting electronics out of the bedroom, and if possible, you and your partner should try to go to bed at the same time.'
+WHERE category='partner_motion';
+-- sleep hygiene
+UPDATE info_insight_cards SET text=
+'Everyone''s sleep is different, but there are some general guidelines that can help anyone get better sleep:
+
+* Taking a midday nap can sometimes be tempting, but it can throw off your natural sleep cycle and make it much harder to fall asleep at night.
+* Stay away from stimulants such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, your sleep might be disrupted during the night after the effect has worn off.
+* Regular exercise has been shown to promote good sleep, but vigorous exercise close to bedtime may amp you up and make it harder to sleep. If the only time you have to exercise is late at night before bed, try a more gentle exercise like yoga.
+
+While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns.'
+WHERE category='sleep_hygiene';
+-- caffeine
+UPDATE info_insight_cards SET text='Consuming caffeinated beverages late in the day can make it more difficult to fall asleep, and prevent you from getting deep, restorative sleep. The National Sleep Foundation recommends avoiding caffeine in any form at least 4 to 6 hours before bed to avoid caffeine-related sleep problems. Caffeine can stay in the body for up to 12 hours, though, so you may want have your last cup of coffee even earlier if you are particularly susceptible to its effects.
+
+You don''t need to swear off coffee completely. In fact, caffeine has benefits beyond a morning pick-me-up. Researchers at Johns Hopkins have found that consuming 200 mg of caffeine (roughly one cup of coffee) enhances long-term memory. Just make sure to limit your caffeine intake to before 2 pm, so that you reap the benefits while minimizing disruptions to your sleep.' WHERE category='caffeine';
