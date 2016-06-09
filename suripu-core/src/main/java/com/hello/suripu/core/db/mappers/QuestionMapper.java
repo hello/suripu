@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
-
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -14,7 +13,6 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,7 +33,6 @@ public class QuestionMapper implements ResultSetMapper<Question> {
         }
 
         final List<Integer> dependencyResponse = Lists.newArrayList();
-        
         final String dependencyResponseString = r.getString("dependency_response");
         if (dependencyResponseString != null) {
             final Integer[] dependencyResponseIds;
