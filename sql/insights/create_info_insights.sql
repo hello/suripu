@@ -552,3 +552,7 @@ UPDATE info_insight_cards SET text=
 
 While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns.'
 WHERE category='sleep_hygiene';
+-- caffeine
+UPDATE info_insight_cards SET text='Consuming caffeinated beverages late in the day can make it more difficult to fall asleep, and prevent you from getting deep, restorative sleep. The National Sleep Foundation recommends avoiding caffeine in any form at least 4 to 6 hours before bed to avoid caffeine-related sleep problems. Caffeine can stay in the body for up to 12 hours, though, so you may want have your last cup of coffee even earlier if you are particularly susceptible to its effects.
+
+You don''t need to swear off coffee completely. In fact, caffeine has benefits beyond a morning pick-me-up. Researchers at Johns Hopkins have found that consuming 200 mg of caffeine (roughly one cup of coffee) enhances long-term memory. Just make sure to limit your caffeine intake to before 2 pm, so that you reap the benefits while minimizing disruptions to your sleep.' WHERE category='caffeine';
