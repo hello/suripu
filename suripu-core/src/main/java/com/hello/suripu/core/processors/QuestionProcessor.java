@@ -51,6 +51,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     public static final int DAYS_BETWEEN_ANOMALY_QUESTIONS = 2; // allows 1 anomaly-question every 3 days
     public static final int ANOMALY_TOO_OLD_THRESHOLD = 2; // night date older than this number of days
 
+    public static final int MORNING_CUTOFF = 20; // morning cut off at 8pm
     public static final int AFTERNOON_TIME = 12; //afternoon starts at 12:00 pm
     public static final int EVENING_TIME = 16; //evening starts at 4:00 pm
 
@@ -588,7 +589,9 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         if (currentHour >= AFTERNOON_TIME){
                 questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
         }
-        questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+        if (currentHour <= MORNING_CUTOFF) {
+            questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
+        }
         questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
 
         return questionsInTimeWindow;
