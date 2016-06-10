@@ -37,6 +37,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 300L,
+                8640000L,
                 DateTime.now(DateTimeZone.UTC),
                 clientDetails.accountId,
                 clientDetails.application.get().id,
@@ -48,7 +49,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
     }
 
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
+    public Optional<AccessToken> getTokenByClientCredentials(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
 
         final AccessToken accessToken = tokens.get(credentials.tokenOrCode);
         if(accessToken == null) {
@@ -68,6 +69,11 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         }
 
         return Optional.of(accessToken);
+    }
+
+    @Override
+    public Optional<ClientDetails> getClientDetailsByRefreshToken(String token, DateTime now) throws MissingRequiredScopeException {
+        return Optional.absent();
     }
 
     @Override
@@ -96,5 +102,9 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         tokens.remove(accessToken.token);
     }
 
+    @Override
+    public void disableByRefreshToken(String token) {
+        tokens.remove(token);
+    }
 
 }

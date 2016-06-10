@@ -32,6 +32,7 @@ public @interface BindAccessToken {
                     q.bind("access_token", arg.token);
                     q.bind("refresh_token", arg.refreshToken);
                     q.bind("expires_in", arg.expiresIn);
+                    q.bind("refresh_expires_in", arg.refreshExpiresIn);
                     q.bind("created_at", arg.createdAt);
                     q.bind("account_id", arg.accountId);
                     q.bind("app_id", arg.appId);

@@ -29,4 +29,7 @@ public interface AccessTokenDAO {
 
     @SqlUpdate("UPDATE oauth_tokens SET expires_in=0 WHERE access_token = cast(:access_token as uuid);")
     void disable(@Bind("access_token") UUID accessToken);
+
+    @SqlUpdate("UPDATE oauth_tokens SET expires_in=0,refresh_expires_in=0 WHERE refresh_token = cast(:refresh_token as uuid);")
+    void disableByRefreshToken(@Bind("refresh_token") UUID refreshToken);
 }

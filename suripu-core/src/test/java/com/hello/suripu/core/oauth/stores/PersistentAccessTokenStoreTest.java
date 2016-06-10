@@ -88,7 +88,7 @@ public class PersistentAccessTokenStoreTest {
         when(accessTokenDAO.getByAccessToken(uuid)).thenReturn(Optional.<AccessToken>absent());
 
         final ClientCredentials credentials = new ClientCredentials(new OAuthScope[]{}, accessToken.serializeAccessToken());
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
+        final Optional<AccessToken> accessTokenOptional = store.getTokenByClientCredentials(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(false));
     }
 
@@ -98,7 +98,7 @@ public class PersistentAccessTokenStoreTest {
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.absent());
 
         final ClientCredentials credentials = new ClientCredentials(new OAuthScope[]{}, accessToken.serializeAccessToken());
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
+        final Optional<AccessToken> accessTokenOptional = store.getTokenByClientCredentials(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(false));
     }
 
@@ -108,7 +108,7 @@ public class PersistentAccessTokenStoreTest {
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.of(application));
 
         final ClientCredentials credentials = new ClientCredentials(new OAuthScope[]{}, accessToken.serializeAccessToken());
-        store.getClientDetailsByToken(credentials, now);
+        store.getTokenByClientCredentials(credentials, now);
     }
 
     @Test
@@ -120,7 +120,7 @@ public class PersistentAccessTokenStoreTest {
         final String serialized = accessToken.serializeAccessToken();
         // scopes match the application scopes
         final ClientCredentials credentials = new ClientCredentials(application.scopes, serialized);
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
+        final Optional<AccessToken> accessTokenOptional = store.getTokenByClientCredentials(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(true));
     }
 }

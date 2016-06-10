@@ -114,7 +114,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @return
      */
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
+    public Optional<AccessToken> getTokenByClientCredentials(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
         final Optional<AccessToken> token = getToken(credentials);
 
         if(!token.isPresent()) {
@@ -127,6 +127,10 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return token;
     }
 
+    @Override
+    public Optional<ClientDetails> getClientDetailsByRefreshToken(String token, DateTime now) throws MissingRequiredScopeException {
+        return Optional.absent();
+    }
 
     @Override
     public ClientCredentials storeAuthorizationCode(final ClientDetails clientDetails) throws ClientAuthenticationException {
@@ -141,6 +145,15 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     @Override
     public void disable(final AccessToken accessToken) {
         accessTokenDAO.disable(accessToken.token);
+    }
+
+    @Override
+    public void disableByRefreshToken(final String dirtyToken) {
+        final Optional<UUID> optionalToken = AccessTokenUtils.cleanUUID(dirtyToken);
+        if(!optionalToken.isPresent()) {
+            LOGGER.error("error=invalid_refresh_token token={}", dirtyToken);
+        }
+        accessTokenDAO.disableByRefreshToken(optionalToken.get());
     }
 
 
@@ -163,6 +176,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
                 .withToken(accessTokenUUID)
                 .withRefreshToken(refreshTokenUUID)
                 .withExpiresIn(expirationTimeInSeconds)
+
                 .withCreatedAt(createdAt)
                 .withAccountId(clientDetails.accountId)
                 .withAppId(clientDetails.application.get().id)

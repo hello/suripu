@@ -61,12 +61,35 @@ public enum OAuthScope {
         }
     }
 
+    public static Optional<OAuthScope> fromString(String value){
+        try{
+            return Optional.of(OAuthScope.valueOf(value));
+        }catch (ArrayIndexOutOfBoundsException ex){
+            return Optional.absent();
+        }
+    }
+
     public static OAuthScope[] fromIntegerArray(Integer[] array){
         checkNotNull(array, "Cannot convert null to OAuthScope array.");
 
         final ArrayList<OAuthScope> scopeArrayList = new ArrayList<OAuthScope>();
         for(int i = 0; i < array.length; i ++) {
             final Optional<OAuthScope> oAuthScopeOptional = OAuthScope.fromInteger(array[i]);
+            if(oAuthScopeOptional.isPresent()){
+                scopeArrayList.add(oAuthScopeOptional.get());
+            }
+        }
+
+        final OAuthScope[] scopeArray = scopeArrayList.toArray(new OAuthScope[0]);
+        return scopeArray;
+    }
+
+    public static OAuthScope[] fromStringArray(String[] array){
+        checkNotNull(array, "Cannot convert null to OAuthScope array.");
+
+        final ArrayList<OAuthScope> scopeArrayList = new ArrayList<OAuthScope>();
+        for (final String value : array) {
+            final Optional<OAuthScope> oAuthScopeOptional = OAuthScope.fromString(value);
             if(oAuthScopeOptional.isPresent()){
                 scopeArrayList.add(oAuthScopeOptional.get());
             }
