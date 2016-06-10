@@ -106,6 +106,14 @@ public interface QuestionResponseReadDAO {
     ImmutableList<Response> getAccountResponseByQuestionId(@Bind("account_id") long account_id,
                                                            @Bind("question_id") int question_id);
 
+    @RegisterMapper(ResponseMapper.class)
+    @SqlQuery("SELECT R.*, C.response_text FROM responses R " +
+            "INNER JOIN response_choices C ON R.response_id = C.id " +
+            "WHERE account_id = :account_id AND R.question_id IN (SELECT id FROM questions WHERE category = CAST(:question_category AS question_category)) ORDER BY created DESC")
+    ImmutableList<Response> getAccountResponseByQuestionCategoryStr(@Bind("account_id") long account_id,
+                                                                    @Bind("question_category") String question_category);
+
+
     @RegisterMapper(AccountQuestionMapper.class)
     @SqlQuery("SELECT * FROM account_questions WHERE account_id = :account_id and question_id = :question_id ORDER BY id DESC LIMIT :limit")
     ImmutableList<AccountQuestion> getRecentAskedQuestionByQuestionId (@Bind("account_id") final long account_id,
@@ -116,4 +124,9 @@ public interface QuestionResponseReadDAO {
     @SqlQuery("SELECT account_id, DATE_TRUNC('day', created_local_utc_ts) - INTERVAL '1 days' as night FROM account_questions where id IN (select account_question_id from responses where response_id = :response_id) ORDER BY account_id, night DESC")
     ImmutableList<AccountDate> getAccountDatebyResponse (@Bind("response_id") final int response_id);
 
+    @RegisterMapper(AccountQuestionMapper.class)
+    @SqlQuery("SELECT * FROM account_questions WHERE account_id = :account_id and question_id = :question_id AND created_local_utc_ts = :created_local_utc_ts")
+    ImmutableList<AccountQuestion> getAskedQuestionByQuestionIdCreatedDate (@Bind("account_id") final long account_id,
+                                                                            @Bind("question_id") final int question_id,
+                                                                            @Bind("created_local_utc_ts") final DateTime created_date);
 }
