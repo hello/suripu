@@ -39,6 +39,7 @@ public class AccessTokenDAOTest {
                 "    access_token UUID, " +
                 "    refresh_token UUID, " +
                 "    expires_in INTEGER, " +
+                "    refresh_expires_in INTEGER, " +
                 "    created_at TIMESTAMP, " +
                 "    app_id INTEGER, " +
                 "    account_id BIGINT, " +
@@ -85,7 +86,7 @@ public class AccessTokenDAOTest {
          */
         final OAuthScope[] scopes = new OAuthScope[0];
         UUID token = UUID.randomUUID();
-        final AccessToken accessToken = new AccessToken(token, UUID.randomUUID(), 10L, DateTime.now(), 1L, 1L, scopes);
+        final AccessToken accessToken = new AccessToken(token, UUID.randomUUID(), 10L, 10L, DateTime.now(), 1L, 1L, scopes);
         dao.storeAccessToken(accessToken);
         Optional<AccessToken> optional = dao.getByAccessToken(token);
         assertThat(optional.isPresent(), is(true));

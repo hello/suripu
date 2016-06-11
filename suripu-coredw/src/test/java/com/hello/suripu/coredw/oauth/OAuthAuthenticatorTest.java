@@ -32,6 +32,7 @@ public class OAuthAuthenticatorTest {
                 UUID.randomUUID(), //token
                 UUID.randomUUID(), //refreshToken
                 DateTime.now().plusSeconds(10).getMillis(), // expires_in
+                DateTime.now().plusSeconds(10).getMillis(), // expires_in
                 DateTime.now(), //createdAt,
                 123L, // account_id
                 999L, // app_id

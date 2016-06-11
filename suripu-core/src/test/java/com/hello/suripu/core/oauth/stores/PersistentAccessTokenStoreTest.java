@@ -43,6 +43,7 @@ public class PersistentAccessTokenStoreTest {
                 .withToken(validUUID)
                 .withRefreshToken(UUID.randomUUID())
                 .withExpiresIn(86400L)
+                .withRefreshExpiresIn(86400L)
                 .withScopes(new OAuthScope[]{})
                 .build();
 
@@ -82,6 +83,7 @@ public class PersistentAccessTokenStoreTest {
                 .withToken(uuid)
                 .withRefreshToken(UUID.randomUUID())
                 .withExpiresIn(86400L)
+                .withRefreshExpiresIn(86400L)
                 .withScopes(new OAuthScope[]{})
                 .build();
 
