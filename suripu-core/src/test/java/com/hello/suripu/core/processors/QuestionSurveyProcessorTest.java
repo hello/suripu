@@ -244,7 +244,7 @@ public class QuestionSurveyProcessorTest {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Proceed-worthy response to level 1 survey question. Should ask level 2 question
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_0, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_1, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
 
         assertThat(servedQuestions.size(), is(1)); //Only one question from survey asked
         assertThat(servedQuestions.get(0).id, is(3)); //Ask level 2 question
@@ -255,7 +255,7 @@ public class QuestionSurveyProcessorTest {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //No Proceed-worthy response to level 1 survey question. Ask no questions
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_0, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_2, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
 
         assertThat(servedQuestions.isEmpty(), is(Boolean.TRUE)); //No questions asked
     }
@@ -265,7 +265,7 @@ public class QuestionSurveyProcessorTest {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Proceed-worthy response to level 1 survey question. Proceed-worthy response to level 2 survey question. Should ask level 3 question
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_0, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_3, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
 
         assertThat(servedQuestions.size(), is(1)); //Only one question from survey asked
         assertThat(Collections.disjoint(Lists.newArrayList(servedQuestions.get(0).id), Lists.newArrayList(4,5,6)), is(Boolean.FALSE)); //Ask one of the level 3 question
@@ -276,7 +276,7 @@ public class QuestionSurveyProcessorTest {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Proceed-worthy response to level 1 survey question. No Proceed-worthy response to level 2 survey question. Ask no questions
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_0, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_4, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
 
         assertThat(servedQuestions.isEmpty(), is(Boolean.TRUE)); //No questions asked
     }
@@ -286,7 +286,7 @@ public class QuestionSurveyProcessorTest {
         final QuestionSurveyProcessor mockQuestionSurveyProcessor = setUp();
 
         //Answered all questions. Ask no more questions
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_0, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_5, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
 
         assertThat(servedQuestions.isEmpty(), is(Boolean.TRUE)); //No questions asked
     }
@@ -338,7 +338,7 @@ public class QuestionSurveyProcessorTest {
         questionProcessorQuestions.add(question1);
 
         // No survey questions have been asked yet. Should ask level 1 question
-        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getSurveyQuestions(FAKE_USER_ID_0, DATE_TIME_FILLER_NOW, FAKE_TIMEZONE_OFFSET);
+        final List<Question> servedQuestions = mockQuestionSurveyProcessor.getQuestions(FAKE_USER_ID_0, 2, DATE_TIME_FILLER_NOW, questionProcessorQuestions, FAKE_TIMEZONE_OFFSET);
 
         assertThat(servedQuestions.size(), is(4)); // Returns union of 2 lists, 3 + 1 = 4
         assertThat(servedQuestions.get(0).category, is(QuestionCategory.ONBOARDING)); // Ask onboarding question first
