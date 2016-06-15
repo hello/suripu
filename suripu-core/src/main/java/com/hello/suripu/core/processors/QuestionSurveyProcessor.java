@@ -80,9 +80,9 @@ public class QuestionSurveyProcessor {
     /*
     Pick question, combine with output of questionProcessor and sort by question priority
      */
-    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final List<Question> questionProcessorQuestions, final int timeZoneOffset) {
+    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime todayLocal, final List<Question> questionProcessorQuestions, final int timeZoneOffset) {
 
-        final List<Question> surveyQuestions = getSurveyQuestions(accountId, today, timeZoneOffset);
+        final List<Question> surveyQuestions = getSurveyQuestions(accountId, todayLocal, timeZoneOffset);
         final List<Question> allQuestions = ListUtils.union(surveyQuestions, questionProcessorQuestions);
 
         final ImmutableList<Question> sortedQuestions = QuestionUtils.sortQuestionByCategory(allQuestions);
@@ -92,7 +92,7 @@ public class QuestionSurveyProcessor {
     /*
     Logic for picking questions
     */
-    public List<Question> getSurveyQuestions(final Long accountId, final DateTime today, final int timeZoneOffset) {
+    public List<Question> getSurveyQuestions(final Long accountId, final DateTime todayLocal, final int timeZoneOffset) {
         //Get available survey questions
         final List<Response> surveyResponses = questionResponseReadDAO.getAccountResponseByQuestionCategoryStr(accountId, QuestionCategory.SURVEY.toString().toLowerCase());
         final List<Question> availableQuestions = QuestionSurveyUtils.getSurveyXQuestion(surveyResponses, surveyQuestions);
@@ -102,20 +102,20 @@ public class QuestionSurveyProcessor {
         }
 
         //If user already responded to a survey question today, do not serve another
-        if (!surveyResponses.isEmpty() && surveyResponses.get(0).created.plusMillis(timeZoneOffset).withTimeAtStartOfDay().isEqual(today)) {
+        if (!surveyResponses.isEmpty() && surveyResponses.get(0).created.plusMillis(timeZoneOffset).withTimeAtStartOfDay().isEqual(todayLocal)) {
             return Lists.newArrayList();
         }
 
         //Returns and saves 1st available question.
-        final DateTime expiration = today.plusDays(1);
+        final DateTime expiration = todayLocal.plusDays(1);
 
         //Check if database already has question with unique index on (account_id, question_id, created_local_utc_ts)
-        final Boolean savedQuestion = savedAccountQuestion(accountId, availableQuestions.get(0), today);
+        final Boolean savedQuestion = savedAccountQuestion(accountId, availableQuestions.get(0), todayLocal);
         if (savedQuestion) {
             return availableQuestions.subList(0, 1);
         }
 
-        saveQuestion(accountId, availableQuestions.subList(0, 1).get(0), today, expiration);
+        saveQuestion(accountId, availableQuestions.subList(0, 1).get(0), todayLocal, expiration);
         return availableQuestions.subList(0, 1);
     }
 
@@ -123,9 +123,9 @@ public class QuestionSurveyProcessor {
     Insert questions
      */
 
-    private void saveQuestion(final Long accountId, final Question question, final DateTime today, final DateTime expireDate) {
-        LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today={} expire_date={}", accountId, question.id, today, expireDate);
-        this.questionResponseDAO.insertAccountQuestion(accountId, question.id, today, expireDate);
+    private void saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
+        LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
+        this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
     }
 
     private Boolean savedAccountQuestion(final Long accountId, final Question question, final DateTime created) {
