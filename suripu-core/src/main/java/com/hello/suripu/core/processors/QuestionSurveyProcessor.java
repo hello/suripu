@@ -80,9 +80,9 @@ public class QuestionSurveyProcessor {
     /*
     Pick question, combine with output of questionProcessor and sort by question priority
      */
-    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final List<Question> questionProcessorQuestions) {
+    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final List<Question> questionProcessorQuestions, final int timeZoneOffset) {
 
-        final List<Question> surveyQuestions = getSurveyQuestions(accountId, today);
+        final List<Question> surveyQuestions = getSurveyQuestions(accountId, today, timeZoneOffset);
         final List<Question> allQuestions = ListUtils.union(surveyQuestions, questionProcessorQuestions);
 
         final ImmutableList<Question> sortedQuestions = QuestionUtils.sortQuestionByCategory(allQuestions);
@@ -92,7 +92,7 @@ public class QuestionSurveyProcessor {
     /*
     Logic for picking questions
     */
-    public List<Question> getSurveyQuestions(final Long accountId, final DateTime today) {
+    public List<Question> getSurveyQuestions(final Long accountId, final DateTime today, final int timeZoneOffset) {
         //Get available survey questions
         final List<Response> surveyResponses = questionResponseReadDAO.getAccountResponseByQuestionCategoryStr(accountId, QuestionCategory.SURVEY.toString().toLowerCase());
         final List<Question> availableQuestions = QuestionSurveyUtils.getSurveyXQuestion(surveyResponses, surveyQuestions);
@@ -102,7 +102,7 @@ public class QuestionSurveyProcessor {
         }
 
         //If user already responded to a survey question today, do not serve another
-        if (!surveyResponses.isEmpty() && surveyResponses.get(0).created.withTimeAtStartOfDay().isEqual(today)) {
+        if (!surveyResponses.isEmpty() && surveyResponses.get(0).created.plusMillis(timeZoneOffset).withTimeAtStartOfDay().isEqual(today)) {
             return Lists.newArrayList();
         }
 
