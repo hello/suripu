@@ -107,4 +107,8 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         tokens.remove(token);
     }
 
+    @Override
+    public void disableAuthCode(UUID authCodeUUID) {
+
+    }
 }

@@ -5,6 +5,8 @@ import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import org.joda.time.DateTime;
 
+import java.util.UUID;
+
 /**
  * Token store
  *
@@ -32,5 +34,7 @@ public interface OAuthTokenStore<T, I, C> {
     void disable(T accessToken);
 
     void disableByRefreshToken(String token);
+
+    void disableAuthCode(UUID authCodeUUID);
 
 }

@@ -26,8 +26,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.html.Option;
-
 /**
  * PersistentAccessTokenStore keeps track of assigned access tokens
  */
@@ -227,11 +225,14 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
             app.clientSecret
         );
         clientDetails.setApp(app);
-
-        //Authorization codes are single-use ONLY. Disable the one that was just used to obtain client credentials
-        authCodeDAO.disableByAuthCode(authCodeUUID);
+        disableAuthCode(authCodeUUID);
 
         return Optional.of(clientDetails);
+    }
+
+    @Override
+    public void disableAuthCode(UUID authCodeUUID) {
+        authCodeDAO.disableByAuthCode(authCodeUUID);
     }
 
     @Override

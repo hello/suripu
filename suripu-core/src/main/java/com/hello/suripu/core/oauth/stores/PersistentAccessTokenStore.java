@@ -143,6 +143,11 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     }
 
     @Override
+    public void disableAuthCode(UUID authCodeUUID) {
+
+    }
+
+    @Override
     public void disable(final AccessToken accessToken) {
         accessTokenDAO.disable(accessToken.token);
     }

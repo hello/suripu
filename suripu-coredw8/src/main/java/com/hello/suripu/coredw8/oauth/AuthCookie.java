@@ -19,10 +19,6 @@ public class AuthCookie {
   @JsonSerialize(using = ToStringSerializer.class)
   public final Long accountId;
 
-  @JsonProperty("application_id")
-  @JsonSerialize(using = ToStringSerializer.class)
-  public final Long appId;
-
   @JsonProperty("logged_in")
   public final Boolean loggedIn;
 
@@ -36,12 +32,10 @@ public class AuthCookie {
   @JsonCreator
   public AuthCookie(
       @JsonProperty("account_id") final Long accountId,
-      @JsonProperty("application_id") final Long appId,
       @JsonProperty("logged_in") final Boolean loggedIn,
       @JsonProperty("created_at") final DateTime createdAt,
       @JsonProperty("expires_in") final Integer expiresIn) {
     this.accountId = accountId;
-    this.appId = appId;
     this.loggedIn = loggedIn;
     this.createdAt = createdAt;
     this.expiresIn = expiresIn;
@@ -49,7 +43,6 @@ public class AuthCookie {
 
   public static class Builder {
     private Long accountId;
-    private Long appId;
     private Boolean loggedIn;
     private DateTime createdAt;
     private Integer expiresIn;
@@ -60,11 +53,6 @@ public class AuthCookie {
 
     public Builder withAccountId(final Long accountId) {
       this.accountId = accountId;
-      return this;
-    }
-
-    public Builder withAppId(final Long appId) {
-      this.appId = appId;
       return this;
     }
 
@@ -84,7 +72,7 @@ public class AuthCookie {
     }
 
     public AuthCookie build() {
-      return new AuthCookie(accountId, appId, loggedIn, createdAt, expiresIn);
+      return new AuthCookie(accountId, loggedIn, createdAt, expiresIn);
     }
   }
 
