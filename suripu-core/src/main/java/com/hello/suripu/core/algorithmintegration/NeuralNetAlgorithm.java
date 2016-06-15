@@ -1,6 +1,7 @@
 package com.hello.suripu.core.algorithmintegration;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
@@ -8,17 +9,20 @@ import com.hello.suripu.algorithm.interpretation.EventIndices;
 import com.hello.suripu.algorithm.interpretation.IdxPair;
 import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreterWithSearch;
 import com.hello.suripu.algorithm.outlier.OnBedBounding;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.timeline.v2.EventType;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.TimelineError;
+import com.hello.suripu.core.util.TimelineSafeguards;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -26,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +46,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     private final int startMinuteOfArtificalLight;
     private final int stopMinuteOfArtificalLight;
+
+    private final TimelineSafeguards timelineSafeguards;
 
     //DO NOT CHANGE THE INDICES
     //as long as index is right, the order shouldn't matter
@@ -69,12 +76,14 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         this.endpoint = endpoint;
         this.startMinuteOfArtificalLight = algorithmConfiguration.getArtificalLightStartMinuteOfDay();
         this.stopMinuteOfArtificalLight = algorithmConfiguration.getArtificalLightStopMinuteOfDay();
+        timelineSafeguards = new TimelineSafeguards(Optional.<UUID>absent());
     }
 
     public NeuralNetAlgorithm(final NeuralNetEndpoint endpoint) {
         this.endpoint = endpoint;
         startMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 21 + 30; //21:30
         stopMinuteOfArtificalLight = 5*60;
+        timelineSafeguards = new TimelineSafeguards(Optional.<UUID>absent());
     }
 
 
@@ -359,9 +368,36 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final List<Event> events = getAllEvents(offsetMap,t0,indicesOptional.get());
 
-            log.addMessage(AlgorithmType.NEURAL_NET,events);
+            final Map<Event.Type,Event> eventMap = Maps.newHashMap();
+            for (final Event event : events) {
+                eventMap.put(event.getType(),event);
+            }
 
-            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events));
+            final Optional<Event> inbedOptional = Optional.fromNullable(eventMap.get(Event.Type.IN_BED));
+            final Optional<Event> sleepOptional = Optional.fromNullable(eventMap.get(Event.Type.SLEEP));
+            final Optional<Event> wakeOptional = Optional.fromNullable(eventMap.get(Event.Type.WAKE_UP));
+            final Optional<Event> outOfBedOptional = Optional.fromNullable(eventMap.get(Event.Type.OUT_OF_BED));
+
+            final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inbedOptional,sleepOptional,wakeOptional,outOfBedOptional);
+
+            //verify that algorithm produced something useable
+            final TimelineError error = timelineSafeguards.checkIfValidTimeline(
+                    sleepEvents,
+                    ImmutableList.copyOf(Collections.EMPTY_LIST),
+                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)));
+
+            //IF NO ERROR, THEN RETURN
+            if (error.equals(TimelineError.NO_ERROR)) {
+
+                log.addMessage(AlgorithmType.NEURAL_NET,events);
+
+                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events));
+
+            }
+
+            //THERE WAS AN ERROR
+            log.addMessage(AlgorithmType.NEURAL_NET,error);
+
 
         } catch (Exception e) {
             log.addMessage(AlgorithmType.NEURAL_NET, TimelineError.UNEXEPECTED);
