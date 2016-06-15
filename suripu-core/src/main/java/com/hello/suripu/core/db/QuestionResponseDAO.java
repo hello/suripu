@@ -1,26 +1,9 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.mappers.AccountQuestionMapper;
-import com.hello.suripu.core.db.mappers.AccountQuestionResponsesMapper;
-import com.hello.suripu.core.db.mappers.QuestionMapper;
-import com.hello.suripu.core.db.mappers.RecentResponseMapper;
-import com.hello.suripu.core.db.mappers.ResponseMapper;
-import com.hello.suripu.core.models.AccountQuestion;
-import com.hello.suripu.core.models.AccountQuestionResponses;
-import com.hello.suripu.core.models.Question;
-import com.hello.suripu.core.models.Response;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
-
-import java.sql.Timestamp;
-import java.util.List;
 
 /**
  * Created by kingshy on 10/24/14.

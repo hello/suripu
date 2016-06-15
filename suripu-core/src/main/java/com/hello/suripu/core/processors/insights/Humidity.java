@@ -46,13 +46,14 @@ public class Humidity {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("Could not get timeZoneOffset, not generating humidity insight for accountId {}", accountId);
+            LOGGER.debug("action=insight-absent insight=humidity reason=timezoneoffset-absent account_id={}", accountId);
             return Optional.absent();
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset);
         if (deviceDatas.isEmpty()) {
+            LOGGER.debug("action=insight-absent insight=lights reason=device-data-empty account_id={}", accountId);
             return Optional.absent();
         }
 

@@ -384,14 +384,13 @@ public class InsightProcessor {
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
             case 10:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_AIR_QUALITY, accountId, Collections.EMPTY_LIST)) {
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_CAFFEINE, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
-                if (recentCategories.contains(InsightCard.Category.AIR_QUALITY)) {
+                if (recentCategories.contains(InsightCard.Category.CAFFEINE)) {
                     return Optional.absent();
                 }
-                return Optional.of(InsightCard.Category.AIR_QUALITY);
-
+                return Optional.of(InsightCard.Category.CAFFEINE);
             case 13:
                 if (recentCategories.contains(InsightCard.Category.LIGHT)) {
                     return Optional.absent();
@@ -407,6 +406,22 @@ public class InsightProcessor {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.SLEEP_QUALITY);
+            case 22:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_TIME, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.SLEEP_TIME)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.SLEEP_TIME);
+            case 25:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_AIR_QUALITY, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.AIR_QUALITY)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.AIR_QUALITY);
         }
         return Optional.absent();
     }

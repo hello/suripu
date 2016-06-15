@@ -25,8 +25,9 @@ import java.util.Random;
  */
 public class SleepCycleAlgorithm {
     private final static Logger LOGGER = LoggerFactory.getLogger(SleepCycleAlgorithm.class);
-    private final static int AWAKE_AMPLITUDE_THRESHOLD_MILLIG = 5000;
-    private final static int AWAKE_KICKOFF_THRESHOLD = 5;
+    public final static int AWAKE_AMPLITUDE_THRESHOLD_MILLIG = 5000;
+    public final static int AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT = 2;
+    public final static int AWAKE_KICKOFF_THRESHOLD = 5;
 
     private DataSource<AmplitudeData> dataSource;
     private int slidingWindowSizeInMinutes = 15;
@@ -256,28 +257,41 @@ public class SleepCycleAlgorithm {
     * In a certain minute, the user moves more than [certain threshold] times.
      */
     public static boolean isUserAwakeInGivenDataSpan(final List<AmplitudeData> maxAmplitude,
-                                                     final List<AmplitudeData> kickOffCounts){
+                                                     final List<AmplitudeData> kickOffCounts) {
+        return isUserAwakeInGivenDataSpan(
+            maxAmplitude,
+            kickOffCounts,
+            AWAKE_KICKOFF_THRESHOLD,
+            AWAKE_AMPLITUDE_THRESHOLD_MILLIG,
+            AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT
+        );
+    }
+
+    public static boolean isUserAwakeInGivenDataSpan(final List<AmplitudeData> maxAmplitude,
+                                                     final List<AmplitudeData> kickOffCounts,
+                                                     final Integer awakeKickoffThreshold,
+                                                     final Integer awakeAmplitudeThresholdMilliG,
+                                                     final Integer ampThresholdCountLimit) {
         if(maxAmplitude.size() != kickOffCounts.size()) {
             return false;
         }
 
         for(final AmplitudeData kickOff:kickOffCounts){
-            if(kickOff.amplitude > AWAKE_KICKOFF_THRESHOLD){
+            if(kickOff.amplitude > awakeKickoffThreshold){
                 return true;
             }
         }
 
         int count = 0;
         for(final AmplitudeData amplitude:maxAmplitude){
-            if(amplitude.amplitude > AWAKE_AMPLITUDE_THRESHOLD_MILLIG){
+            if(amplitude.amplitude > awakeAmplitudeThresholdMilliG){
                 count++;
             }
 
-            if(count >= 2){
+            if(count >= ampThresholdCountLimit){
                 return true;
             }
         }
         return false;
-
     }
 }

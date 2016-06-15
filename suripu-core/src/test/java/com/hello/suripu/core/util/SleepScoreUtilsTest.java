@@ -69,9 +69,9 @@ public class SleepScoreUtilsTest {
     @Test
     public void testScoresV3WithParam() {
         final int age = 23;
-        final int durThreshold = 480;
+        final int durThreshold = 540;
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
-        final List<Integer> correct = Lists.newArrayList(0, 27, 44, 93, 78);
+        final List<Integer> correct = Lists.newArrayList(26, 45, 56, 92, 83);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
             final int score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);
@@ -84,7 +84,7 @@ public class SleepScoreUtilsTest {
         final int age = 23;
         final int durThreshold = 0;
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
-        final List<Integer> correct = Lists.newArrayList(0, 32, 51, 97, 78);
+        final List<Integer> correct = Lists.newArrayList(26, 49, 63, 96, 83);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
             final int score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);

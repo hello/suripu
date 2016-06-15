@@ -44,12 +44,14 @@ public class FeatureFlipper {
 
     public final static String IN_OUT_BED_EVENTS = "in_out_bed_events";
     public final static String INCREASE_UPLOAD_INTERVAL = "increase_upload_interval";
+    public final static String INSIGHTS_AIR_QUALITY = "insights_air_quality";
     public final static String INSIGHTS_BED_LIGHT_DURATION = "insights_bed_light_duration";
     public final static String INSIGHTS_BED_LIGHT_INTENSITY_RATIO = "insights_bed_light_intensity_ratio";
+    public final static String INSIGHTS_CAFFEINE = "insights_caffeine";
     public final static String INSIGHTS_HUMIDITY = "insights_humidity";
     public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
-    public final static String INSIGHTS_AIR_QUALITY = "insights_air_quality";
     public final static String INSIGHTS_MARKETING_SCHEDULE = "insights_marketing_schedule";
+    public final static String INSIGHTS_SLEEP_TIME = "insights_sleep_time";
     public final static String IN_BED_SEARCH = "in_bed_search";
 
     public final static String MEASURE_CLOCK_DRIFT = "measure_clock_drift";
@@ -75,10 +77,12 @@ public class FeatureFlipper {
     public final static String PILL_PAIR_MOTION_FILTER = "pill_pair_motion_filter";
     public final static String PRINT_RAW_PB = "print_raw_pb";
     public final static String PROGRESSIVE_SMART_ALARM = "progressive_smart_alarm";
+    public final static String PROGRESSIVE_SMART_ALARM_TEST_VALUES = "progressive_smart_alarm_test_values";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
 
     public final static String QUESTION_ANOMALY_LIGHT_VISIBLE = "question_anomaly_light_enabled";
     public final static String QUESTION_ASK_TIME = "question_ask_time";
+    public final static String QUESTION_SURVEY_PROCESSOR_ENABLED = "question_survey_processor_enabled";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";

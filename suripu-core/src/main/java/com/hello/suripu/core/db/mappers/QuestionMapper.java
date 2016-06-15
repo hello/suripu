@@ -1,9 +1,9 @@
 package com.hello.suripu.core.db.mappers;
 
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
-
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -32,6 +32,16 @@ public class QuestionMapper implements ResultSetMapper<Question> {
             choices.add(new Choice(response_ids[i], response_text[i], question_id));
         }
 
+        final List<Integer> dependencyResponse = Lists.newArrayList();
+        final String dependencyResponseString = r.getString("dependency_response");
+        if (dependencyResponseString != null) {
+            final Integer[] dependencyResponseIds;
+            dependencyResponseIds = (Integer []) r.getArray("dependency_response").getArray();
+            for (final Integer responseId : dependencyResponseIds) {
+                dependencyResponse.add(responseId);
+            }
+        }
+
         // TODO: refactor this at some point
         DateTime createdLocal;
         try {
@@ -56,7 +66,8 @@ public class QuestionMapper implements ResultSetMapper<Question> {
                 choices,
                 AccountInfo.Type.fromString(r.getString("account_info")),
                 createdLocal,
-                QuestionCategory.fromString(r.getString("category"))
+                QuestionCategory.fromString(r.getString("category")),
+                dependencyResponse
         );
 
         return question;
