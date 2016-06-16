@@ -98,12 +98,12 @@ public class CaffeineAlarm {
             return Optional.absent();
         }
 
-        final Double sleepAvgDouble = stats.getMean();
-        final int sleepAvg = (int) Math.round(sleepAvgDouble);
+        final Double sleepMedDouble = stats.getPercentile(50);
+        final int sleepMed = (int) Math.round(sleepMedDouble);
 
-        final int recommendedCoffeeMinutesTime = getRecommendedCoffeeMinutesTime(sleepAvg);
+        final int recommendedCoffeeMinutesTime = getRecommendedCoffeeMinutesTime(sleepMed);
 
-        final String sleepTime = InsightUtils.timeConvertRound(sleepAvg);
+        final String sleepTime = InsightUtils.timeConvertRound(sleepMed);
         final String coffeeTime = InsightUtils.timeConvertRound(recommendedCoffeeMinutesTime);
 
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmMessage(sleepTime, coffeeTime);
@@ -125,11 +125,11 @@ public class CaffeineAlarm {
         }
 
         //Sleep time sanity check, should be between 8PM and 4AM
-        final Double sleepAvg = stats.getMean();
-        if (sleepAvg > LATEST_ALLOWED_SLEEP_TIME) {
+        final Double sleepMed = stats.getPercentile(50);
+        if (sleepMed > LATEST_ALLOWED_SLEEP_TIME) {
             return Boolean.FALSE;
         }
-        if (sleepAvg < EARLIEST_ALLOWED_SLEEP_TIME) {
+        if (sleepMed < EARLIEST_ALLOWED_SLEEP_TIME) {
             return Boolean.FALSE;
         }
 

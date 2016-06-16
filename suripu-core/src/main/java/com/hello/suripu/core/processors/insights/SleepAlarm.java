@@ -98,13 +98,13 @@ public class SleepAlarm {
             return Optional.absent();
         }
 
-        final Double wakeAvgDouble = stats.getMean();
-        final int wakeAvg = (int) Math.round(wakeAvgDouble);
+        final Double wakeMedDouble = stats.getPercentile(50);
+        final int wakeMed = (int) Math.round(wakeMedDouble);
 
         final int recSleepDurationMins = getRecommendedSleepDurationMinutes(userAge);
-        final int recommendedSleepMinutesTime = wakeAvg - recSleepDurationMins;
+        final int recommendedSleepMinutesTime = wakeMed - recSleepDurationMins;
 
-        final String wakeTime = InsightUtils.timeConvertRound(wakeAvg);
+        final String wakeTime = InsightUtils.timeConvertRound(wakeMed);
         final String preSleepTime = InsightUtils.timeConvertRound((recommendedSleepMinutesTime - PRE_SLEEP_TIME));
         final String sleepTime = InsightUtils.timeConvertRound(recommendedSleepMinutesTime);
 
@@ -127,11 +127,11 @@ public class SleepAlarm {
         }
 
         //Wake time sanity check, should be between 4AM and 11AM
-        final Double wakeAvg = stats.getMean();
-        if (wakeAvg > LATEST_ALLOWED_WAKE_TIME) {
+        final Double wakeMed = stats.getPercentile(50);
+        if (wakeMed > LATEST_ALLOWED_WAKE_TIME) {
             return Boolean.FALSE;
         }
-        if (wakeAvg < EARLIEST_ALLOWED_WAKE_TIME) {
+        if (wakeMed < EARLIEST_ALLOWED_WAKE_TIME) {
             return Boolean.FALSE;
         }
 
