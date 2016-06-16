@@ -80,11 +80,11 @@ public class SleepAlarm {
 
         if (wakeTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-empty", accountId);
-            return processSleepAlarmFallBack(accountId);
+            return Optional.absent();
         }
         else if (wakeTimeList.size() <= 2) {
             LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-too-small", accountId);
-            return processSleepAlarmFallBack(accountId); //not big enough to calculate mean meaningfully har har
+            return Optional.absent(); //not big enough to calculate mean meaningfully har har
         }
 
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -95,7 +95,7 @@ public class SleepAlarm {
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
             LOGGER.info("insight=sleep-alarm account_id={} action=fail-safe-guard");
-            return processSleepAlarmFallBack(accountId);
+            return Optional.absent();
         }
 
         final Double wakeAvgDouble = stats.getMean();
@@ -109,15 +109,6 @@ public class SleepAlarm {
         final String sleepTime = InsightUtils.timeConvertRound(recommendedSleepMinutesTime);
 
         final Text text = SleepAlarmMsgEN.getSleepAlarmMessage(wakeTime, recSleepDurationMins, preSleepTime, sleepTime);
-
-        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
-                InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
-    }
-
-    @VisibleForTesting
-    public static Optional<InsightCard> processSleepAlarmFallBack(final Long accountId) {
-        final Text text = SleepAlarmMsgEN.getSleepAlarmFallBackMessage();
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,

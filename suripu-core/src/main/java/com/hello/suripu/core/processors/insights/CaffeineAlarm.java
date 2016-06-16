@@ -76,11 +76,11 @@ public class CaffeineAlarm {
 
         if (sleepTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=caffeine-alarm action=sleep-time-list-empty", accountId);
-            return processCaffeineAlarmFallBack(accountId);
+            return Optional.absent();
         }
         else if (sleepTimeList.size() <= 2) {
             LOGGER.info("account_id={} insight=caffeine-alarm action=sleep-time-list-too-small", accountId);
-            return processCaffeineAlarmFallBack(accountId); //not big enough to calculate mean meaningfully har har
+            return Optional.absent(); //not big enough to calculate mean meaningfully har har
         }
 
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -95,7 +95,7 @@ public class CaffeineAlarm {
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
             LOGGER.info("insight=caffeine-alarm account_id={} action=fail-safe-guard");
-            return processCaffeineAlarmFallBack(accountId);
+            return Optional.absent();
         }
 
         final Double sleepAvgDouble = stats.getMean();
@@ -107,15 +107,6 @@ public class CaffeineAlarm {
         final String coffeeTime = InsightUtils.timeConvertRound(recommendedCoffeeMinutesTime);
 
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmMessage(sleepTime, coffeeTime);
-
-        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
-                InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
-    }
-
-    @VisibleForTesting
-    public static Optional<InsightCard> processCaffeineAlarmFallBack(final Long accountId) {
-        final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmFallBackMessage();
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
