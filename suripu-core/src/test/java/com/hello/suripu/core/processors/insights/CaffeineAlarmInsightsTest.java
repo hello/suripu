@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.preferences.TimeFormat;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.junit.Test;
 
@@ -22,7 +23,7 @@ public class CaffeineAlarmInsightsTest {
         //no data
         final List<Integer> sleepTimeList = Lists.newArrayList();
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, TimeFormat.CIVILIAN);
         assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
@@ -31,7 +32,7 @@ public class CaffeineAlarmInsightsTest {
         //not enough data
         final List<Integer> sleepTimeList = Lists.newArrayList(1,2);
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, TimeFormat.CIVILIAN);
         assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
@@ -40,7 +41,7 @@ public class CaffeineAlarmInsightsTest {
         //range too large
         final List<Integer> sleepTimeList = Lists.newArrayList(0, 60, 60*10);
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, TimeFormat.CIVILIAN);
         assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
@@ -48,7 +49,16 @@ public class CaffeineAlarmInsightsTest {
     public void test_ProcessCaffeieneAlarm() {
         final List<Integer> sleepTimeList = Lists.newArrayList(1,2,3);
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, TimeFormat.CIVILIAN);
+//        System.out.print(card.get().message);
+        assertThat(card.isPresent(), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void test_ProcessCaffeieneAlarm_2() {
+        final List<Integer> sleepTimeList = Lists.newArrayList(30,30,30);
+
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, TimeFormat.MILITARY);
 //        System.out.print(card.get().message);
         assertThat(card.isPresent(), is(Boolean.TRUE));
     }

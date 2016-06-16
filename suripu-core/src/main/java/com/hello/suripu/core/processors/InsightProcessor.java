@@ -26,6 +26,7 @@ import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
+import com.hello.suripu.core.preferences.TimeFormat;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.CaffeineAlarm;
@@ -429,6 +430,9 @@ public class InsightProcessor {
     @VisibleForTesting
     public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category) {
 
+        final TimeFormat timeFormat;
+        final TemperatureUnit tempUnit;
+
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
             case AIR_QUALITY:
@@ -441,7 +445,8 @@ public class InsightProcessor {
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case CAFFEINE:
-                insightCardOptional = CaffeineAlarm.getInsights(accountInfoProcessor, sleepStatsDAODynamoDB, accountId);
+                timeFormat = this.getTimeFormat(accountId);
+                insightCardOptional = CaffeineAlarm.getInsights(accountInfoProcessor, sleepStatsDAODynamoDB, accountId, timeFormat);
                 break;
             case DRIVE:
                 insightCardOptional = MarketingInsights.getDriveInsight(accountId);
@@ -492,7 +497,8 @@ public class InsightProcessor {
                 insightCardOptional = MarketingInsights.getMarketingSleepScoreInsight(accountId);
                 break;
             case SLEEP_TIME:
-                insightCardOptional = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId);
+                timeFormat = this.getTimeFormat(accountId);
+                insightCardOptional = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, timeFormat);
                 break;
             case SOUND:
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
@@ -501,7 +507,7 @@ public class InsightProcessor {
                 insightCardOptional = MarketingInsights.getSwimInsight(accountId);
                 break;
             case TEMPERATURE:
-                final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
+                tempUnit = this.getTemperatureUnitString(accountId);
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
                 break;
             case WAKE_VARIANCE:
@@ -586,6 +592,18 @@ public class InsightProcessor {
         }
         // set default to fahrenheit for now. TODO: Use location
         return TemperatureUnit.FAHRENHEIT;
+    }
+
+    private TimeFormat getTimeFormat(final Long accountId) {
+        final Map<PreferenceName, Boolean> preferences = this.preferencesDAO.get(accountId);
+        if (preferences.containsKey(PreferenceName.TIME_TWENTY_FOUR_HOUR)) {
+            final Boolean isMilitary = preferences.get(PreferenceName.TIME_TWENTY_FOUR_HOUR);
+            if (isMilitary) {
+                return TimeFormat.MILITARY;
+            }
+        }
+        // default is 12-hour time format. USA!
+        return TimeFormat.CIVILIAN;
     }
 
     /**

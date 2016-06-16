@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.CaffeineAlarmMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.preferences.TimeFormat;
 import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.InsightUtils;
@@ -35,7 +36,7 @@ public class CaffeineAlarm {
     public static final Integer LATEST_ALLOWED_SLEEP_TIME = (4 + 24) * 60; //4AM
     public static final Integer EARLIEST_ALLOWED_SLEEP_TIME = 20 * 60; //8PM
 
-    public static Optional<InsightCard> getInsights(final AccountInfoProcessor accountInfoProcessor, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId) {
+    public static Optional<InsightCard> getInsights(final AccountInfoProcessor accountInfoProcessor, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final TimeFormat timeFormat) {
 
         final Boolean drinksCoffee = accountInfoProcessor.checkUserDrinksCaffeine(accountId);
         if (!drinksCoffee) {
@@ -67,12 +68,12 @@ public class CaffeineAlarm {
             sleepTimeList.add(sleepTime);
         }
 
-        final Optional<InsightCard> card = processCaffeineAlarm(accountId, sleepTimeList);
+        final Optional<InsightCard> card = processCaffeineAlarm(accountId, sleepTimeList, timeFormat);
         return card;
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard> processCaffeineAlarm(final Long accountId, final List<Integer> sleepTimeList) {
+    public static Optional<InsightCard> processCaffeineAlarm(final Long accountId, final List<Integer> sleepTimeList, final TimeFormat timeFormat) {
 
         if (sleepTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=caffeine-alarm action=sleep-time-list-empty", accountId);
@@ -103,8 +104,8 @@ public class CaffeineAlarm {
 
         final int recommendedCoffeeMinutesTime = getRecommendedCoffeeMinutesTime(sleepMed);
 
-        final String sleepTime = InsightUtils.timeConvertRound(sleepMed);
-        final String coffeeTime = InsightUtils.timeConvertRound(recommendedCoffeeMinutesTime);
+        final String sleepTime = InsightUtils.timeConvertRound(sleepMed, timeFormat);
+        final String coffeeTime = InsightUtils.timeConvertRound(recommendedCoffeeMinutesTime, timeFormat);
 
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmMessage(sleepTime, coffeeTime);
 
