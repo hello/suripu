@@ -30,7 +30,7 @@ public class SleepAlarm {
     public static final Integer PRE_SLEEP_TIME = 30;
 
     public static final Integer NUM_DAYS = 14;
-    public static final Integer MAX_ALLOWED_RANGE = 3 * 60; //3 hrs
+    public static final Integer MAX_ALLOWED_RANGE = 6 * 60; //6 hrs
     public static final Integer LATEST_ALLOWED_WAKE_TIME = (11) * 60; //11 AM
     public static final Integer EARLIEST_ALLOWED_WAKE_TIME = 4 * 60; //4 AM
 

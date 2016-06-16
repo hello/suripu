@@ -31,7 +31,7 @@ public class CaffeineAlarm {
     public static final Integer SIX_AM_MINUTES = 6 * 60;
 
     public static final Integer NUM_DAYS = 14;
-    public static final Integer MAX_ALLOWED_RANGE = 3 * 60; //3 hrs
+    public static final Integer MAX_ALLOWED_RANGE = 6 * 60; //6 hrs
     public static final Integer LATEST_ALLOWED_SLEEP_TIME = (4 + 24) * 60; //4AM
     public static final Integer EARLIEST_ALLOWED_SLEEP_TIME = 20 * 60; //8PM
 
