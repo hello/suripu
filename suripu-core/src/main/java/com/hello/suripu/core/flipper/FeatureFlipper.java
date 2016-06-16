@@ -97,6 +97,7 @@ public class FeatureFlipper {
     public final static String SLEEP_SCORE_DURATION_V2 = "sleep_score_duration_v2";
     public final static String SLEEP_SCORE_TIMES_AWAKE_PENALTY = "sleep_score_times_awake_penalty";
     public final static String SLEEP_SCORE_V3 = "sleep_score_v3";
+    public final static String SLEEP_SCORE_V4 = "sleep_score_v4";
 
     // Return enum to the app that Sleep Sounds cannot be played because Sense requires a firmware update
     public final static String SLEEP_SOUNDS_DISPLAY_FW_UPDATE = "sleep_sounds_display_fw_update";
