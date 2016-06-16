@@ -537,11 +537,11 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
             if (optionalTimeZone.isPresent()) {
                 final int currentHour = DateTime.now(DateTimeZone.forID(optionalTimeZone.get().timeZoneId)).getHourOfDay();
                 eligibleQuestions.addAll(this.getQuestionsByAskTime(currentHour));
-            } else {
+            }else{
                 eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
                 eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
             }
-        } else {
+        }else{
             eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));
             eligibleQuestions.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.ANYTIME));
         }
@@ -563,7 +563,6 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         while (questions.size() < numQuestions) {
             final int qid = rnd.nextInt(poolSize); // next random question
             final Question question = this.questionIdMap.get(questionsPool.get(qid));
-
             if (!addedIds.contains(question.id)) {
                 addedIds.add(question.id);
                 final Long savedId = this.saveGeneratedQuestion(accountId, question.id, today);
@@ -590,10 +589,10 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     public List<Integer> getQuestionsByAskTime (final int currentHour){
         List<Integer> questionsInTimeWindow = new ArrayList<>();
         if (currentHour >= EVENING_TIME){
-                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
+            questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.EVENING));
         }
         if (currentHour >= AFTERNOON_TIME){
-                questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
+            questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.AFTERNOON));
         }
         if (currentHour <= MORNING_CUTOFF) {
             questionsInTimeWindow.addAll(this.questionAskTimeMap.get(Question.ASK_TIME.MORNING));

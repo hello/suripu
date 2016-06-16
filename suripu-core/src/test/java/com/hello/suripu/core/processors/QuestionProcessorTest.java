@@ -512,9 +512,6 @@ public class QuestionProcessorTest {
     @Test
     public void testGetQuestionsByAskTime() {
         //checks getOldieQuestions w/out check ask time
-        boolean foundMorningQ = false;
-        boolean foundAfternoonQ = false;
-        boolean foundEveningQ = false;
 
         final Integer morningQuestionId = 10000;
         final Integer afternoonQuestionId = 10003;
@@ -522,57 +519,21 @@ public class QuestionProcessorTest {
 
         //8 am
         List<Integer> eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(8);
-        if (eligibleQuestions.contains(morningQuestionId)){
-            foundMorningQ = true;
-        }
-        if (eligibleQuestions.contains(afternoonQuestionId)){
-            foundAfternoonQ = true;
-        }
-        if (eligibleQuestions.contains(eveningQuestionId)){
-            foundEveningQ = true;
-        }
+        assertThat(eligibleQuestions.contains(morningQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(afternoonQuestionId), is(false));
+        assertThat(eligibleQuestions.contains(eveningQuestionId), is(false));
 
-        assertThat(foundMorningQ, is (true));
-        assertThat(foundAfternoonQ, is (false));
-        assertThat(foundEveningQ, is (false));
-
-        foundMorningQ = false;
-        foundAfternoonQ = false;
-        foundEveningQ = false;
         //2 pm
         eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(14);
-        if (eligibleQuestions.contains(morningQuestionId)){
-            foundMorningQ = true;
-        }
-        if (eligibleQuestions.contains(afternoonQuestionId)){
-            foundAfternoonQ = true;
-        }
-        if (eligibleQuestions.contains(eveningQuestionId)){
-            foundEveningQ = true;
-        }
+        assertThat(eligibleQuestions.contains(morningQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(afternoonQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(eveningQuestionId), is(false));
 
-        assertThat(foundMorningQ, is (true));
-        assertThat(foundAfternoonQ, is (true));
-        assertThat(foundEveningQ, is (false));
-
-        foundMorningQ = false;
-        foundAfternoonQ = false;
-        foundEveningQ = false;
         //8 pm
         eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(20);
-        if (eligibleQuestions.contains(morningQuestionId)){
-            foundMorningQ = true;
-        }
-        if (eligibleQuestions.contains(afternoonQuestionId)){
-            foundAfternoonQ = true;
-        }
-        if (eligibleQuestions.contains(eveningQuestionId)){
-            foundEveningQ = true;
-        }
-
-        assertThat(foundMorningQ, is (true));
-        assertThat(foundAfternoonQ, is (true));
-        assertThat(foundEveningQ, is (true));
+        assertThat(eligibleQuestions.contains(morningQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(afternoonQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(eveningQuestionId), is(true));
     }
 
     @Test
