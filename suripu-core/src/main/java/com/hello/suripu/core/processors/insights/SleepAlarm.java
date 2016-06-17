@@ -76,7 +76,7 @@ public class SleepAlarm {
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard> processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge) {
+    public static Optional<InsightCard>  processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge) {
 
         if (wakeTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-empty", accountId);
@@ -104,9 +104,9 @@ public class SleepAlarm {
         final int recSleepDurationMins = getRecommendedSleepDurationMinutes(userAge);
         final int recommendedSleepMinutesTime = wakeAvg - recSleepDurationMins;
 
-        final String wakeTime = InsightUtils.timeConvert(wakeAvg);
-        final String preSleepTime = InsightUtils.timeConvert((recommendedSleepMinutesTime - PRE_SLEEP_TIME));
-        final String sleepTime = InsightUtils.timeConvert(recommendedSleepMinutesTime);
+        final String wakeTime = InsightUtils.timeConvertRound(wakeAvg);
+        final String preSleepTime = InsightUtils.timeConvertRound((recommendedSleepMinutesTime - PRE_SLEEP_TIME));
+        final String sleepTime = InsightUtils.timeConvertRound(recommendedSleepMinutesTime);
 
         final Text text = SleepAlarmMsgEN.getSleepAlarmMessage(wakeTime, recSleepDurationMins, preSleepTime, sleepTime);
 

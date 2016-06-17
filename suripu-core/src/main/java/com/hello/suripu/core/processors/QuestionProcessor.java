@@ -196,6 +196,11 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                     foundAnomalyQuestion = true;
                 }
 
+                // Do not present survey questions in this processor
+                if (questionTemplate.category.equals(QuestionCategory.SURVEY)) {
+                    continue;
+                }
+
                 // question inserted into queue
                 preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
                         accountQId,
