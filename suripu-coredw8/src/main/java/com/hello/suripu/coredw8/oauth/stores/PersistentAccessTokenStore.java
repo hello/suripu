@@ -36,7 +36,8 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     private final AuthorizationCodeDAO authCodeDAO;
     private final Long expirationTimeInSeconds;
 
-    private static final Long DEFAULT_EXPIRATION_TIME_IN_SECONDS = 86400L * 365; // 365 days
+    private static final Long REFRESH_EXPIRATION_TIME_IN_SECONDS = 86400L * 365; // 365 days
+    private static final Long ACCESS_EXPIRATION_TIME_IN_SECONDS = 86400L; // 1 day
     private static final Logger LOGGER = LoggerFactory.getLogger(com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore.class);
 
     final LoadingCache<String, Optional<AccessToken>> cache;
@@ -50,7 +51,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     };
 
     public PersistentAccessTokenStore(final AccessTokenDAO accessTokenDAO, final ApplicationStore<Application, ApplicationRegistration> applicationStore, final AuthorizationCodeDAO authCodeDAO) {
-        this(accessTokenDAO, applicationStore,  authCodeDAO, DEFAULT_EXPIRATION_TIME_IN_SECONDS);
+        this(accessTokenDAO, applicationStore,  authCodeDAO, ACCESS_EXPIRATION_TIME_IN_SECONDS);
     }
 
 
@@ -268,8 +269,8 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         final AccessToken accessToken = new AccessToken.Builder()
                 .withToken(accessTokenUUID)
                 .withRefreshToken(refreshTokenUUID)
-                .withExpiresIn(86400L)
-                .withRefreshExpiresIn(DEFAULT_EXPIRATION_TIME_IN_SECONDS)
+                .withExpiresIn(ACCESS_EXPIRATION_TIME_IN_SECONDS)
+                .withRefreshExpiresIn(REFRESH_EXPIRATION_TIME_IN_SECONDS)
                 .withCreatedAt(createdAt)
                 .withAccountId(clientDetails.accountId)
                 .withAppId(clientDetails.application.get().id)
