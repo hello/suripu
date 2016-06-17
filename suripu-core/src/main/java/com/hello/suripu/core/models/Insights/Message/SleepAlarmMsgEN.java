@@ -1,7 +1,5 @@
 package com.hello.suripu.core.models.Insights.Message;
 
-import com.hello.suripu.core.preferences.TimeFormat;
-
 /**
  * Created by jyfan on 5/18/16.
  */
@@ -23,15 +21,4 @@ public class SleepAlarmMsgEN {
         return new Text("Bed Time", messageBody);
     }
 
-    public static Text getSleepAlarmFallBackMessage(final TimeFormat timeFormat) {
-        final String messageBody;
-
-        if (timeFormat.equals(TimeFormat.TIME_TWENTY_FOUR_HOUR)) {
-            messageBody = String.format("If you typically wake up at 07:00 and want to get 8.5 hours of sleep, you should start preparing for bed at 22:00, and plan to sleep by 22:30 PM.");
-        } else {
-            messageBody = String.format("If you typically wake up at 7 AM and want to get 8.5 hours of sleep, you should start preparing for bed at 10 PM, and plan to sleep by 10:30 PM.");
-        }
-
-        return new Text("Bed Time", messageBody);
-    }
 }

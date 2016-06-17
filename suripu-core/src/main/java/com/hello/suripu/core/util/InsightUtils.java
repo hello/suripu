@@ -1,30 +1,24 @@
 package com.hello.suripu.core.util;
 
-import com.hello.suripu.core.preferences.TimeFormat;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Created by jyfan on 5/18/16.
  */
 public class InsightUtils {
 
-    public static String timeConvert(final int minuteOfDay, final TimeFormat timeFormat) {
+    public static String timeConvert(final int minuteOfDay, final DateTimeFormatter timeFormat) {
         final int hours = ((minuteOfDay + DateTimeConstants.MINUTES_PER_DAY) % DateTimeConstants.MINUTES_PER_DAY) / 60;
         final int minutes = (minuteOfDay + DateTimeConstants.MINUTES_PER_DAY) % 60;
 
-        final String timeString;
-        if (timeFormat.equals(TimeFormat.TIME_TWENTY_FOUR_HOUR)) {
-            timeString = DateTimeFormat.forPattern("HH:mm").print(new DateTime(0).withHourOfDay(hours).withMinuteOfHour(minutes));
-        } else {
-            timeString = DateTimeFormat.forPattern("h:mm aa").print(new DateTime(0).withHourOfDay(hours).withMinuteOfHour(minutes));
-        }
+        final String timeString = timeFormat.print(new DateTime(0).withHourOfDay(hours).withMinuteOfHour(minutes));
 
         return timeString;
     }
 
-    public static String timeConvertRound(final int minuteOfDay, final TimeFormat timeFormat) {
+    public static String timeConvertRound(final int minuteOfDay, final DateTimeFormatter timeFormat) {
         final int minutes = (minuteOfDay + DateTimeConstants.MINUTES_PER_DAY) % 60;
 
         final int minutesRound;
@@ -43,12 +37,7 @@ public class InsightUtils {
         final int hours = ((minuteOfDay + DateTimeConstants.MINUTES_PER_DAY) % DateTimeConstants.MINUTES_PER_DAY) / 60;
         final int hoursRound = hours + hourAdd;
 
-        final String timeString;
-        if (timeFormat.equals(TimeFormat.TIME_TWENTY_FOUR_HOUR)) {
-            timeString = DateTimeFormat.forPattern("HH:mm").print(new DateTime(0).withHourOfDay(hoursRound).withMinuteOfHour(minutesRound));
-        } else {
-            timeString = DateTimeFormat.forPattern("h:mm aa").print(new DateTime(0).withHourOfDay(hoursRound).withMinuteOfHour(minutesRound));
-        }
+        final String timeString = timeFormat.print(new DateTime(0).withHourOfDay(hoursRound).withMinuteOfHour(minutesRound));
         return timeString;
     }
 }

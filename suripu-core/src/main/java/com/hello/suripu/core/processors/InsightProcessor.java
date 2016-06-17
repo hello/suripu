@@ -26,7 +26,6 @@ import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
-import com.hello.suripu.core.preferences.TimeFormat;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.CaffeineAlarm;
@@ -50,6 +49,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -430,7 +431,7 @@ public class InsightProcessor {
     @VisibleForTesting
     public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category) {
 
-        final TimeFormat timeFormat;
+        final DateTimeFormatter timeFormat;
         final TemperatureUnit tempUnit;
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
@@ -594,16 +595,16 @@ public class InsightProcessor {
         return TemperatureUnit.FAHRENHEIT;
     }
 
-    private TimeFormat getTimeFormat(final Long accountId) {
+    private DateTimeFormatter getTimeFormat(final Long accountId) {
         final Map<PreferenceName, Boolean> preferences = this.preferencesDAO.get(accountId);
         if (preferences.containsKey(PreferenceName.TIME_TWENTY_FOUR_HOUR)) {
             final Boolean isMilitary = preferences.get(PreferenceName.TIME_TWENTY_FOUR_HOUR);
             if (isMilitary) {
-                return TimeFormat.TIME_TWENTY_FOUR_HOUR;
+                return DateTimeFormat.forPattern("HH:mm");
             }
         }
         // default is 12-hour time format. USA!
-        return TimeFormat.TIME_TWELVE_HOUR;
+        return DateTimeFormat.forPattern("h:mm aa");
     }
 
     /**

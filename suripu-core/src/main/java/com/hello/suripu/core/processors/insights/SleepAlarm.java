@@ -10,13 +10,13 @@ import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.SleepAlarmMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import com.hello.suripu.core.preferences.TimeFormat;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.InsightUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Years;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ public class SleepAlarm {
     public static final Integer LATEST_ALLOWED_WAKE_TIME = (11) * 60; //11 AM
     public static final Integer EARLIEST_ALLOWED_WAKE_TIME = 4 * 60; //4 AM
 
-    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final TimeFormat timeFormat) {
+    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTimeFormatter timeFormat) {
 
         //get sleep variance data for the past NUM_DAYS
         final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
@@ -77,7 +77,7 @@ public class SleepAlarm {
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard>  processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge, final TimeFormat timeFormat) {
+    public static Optional<InsightCard>  processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge, final DateTimeFormatter timeFormat) {
 
         if (wakeTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-empty", accountId);

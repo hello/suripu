@@ -12,11 +12,11 @@ import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepStats;
-import com.hello.suripu.core.preferences.TimeFormat;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FileUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -45,7 +45,7 @@ public class SleepAlarmInsightsTest {
         //No wake times
         final List<Integer> wakeTimeList = Lists.newArrayList();
 
-        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, TimeFormat.TIME_TWELVE_HOUR);
+        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, DateTimeFormat.forPattern("h:mm aa"));
         assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
@@ -54,7 +54,7 @@ public class SleepAlarmInsightsTest {
         //Not enough wake times
         final List<Integer> wakeTimeList = Lists.newArrayList(1,2);
 
-        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, TimeFormat.TIME_TWELVE_HOUR);
+        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, DateTimeFormat.forPattern("h:mm aa"));
         assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
@@ -63,7 +63,7 @@ public class SleepAlarmInsightsTest {
         //Range too large
         final List<Integer> wakeTimeList = Lists.newArrayList(0, 60, 60*10);
 
-        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, TimeFormat.TIME_TWELVE_HOUR);
+        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, DateTimeFormat.forPattern("h:mm aa"));
         assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
@@ -71,7 +71,7 @@ public class SleepAlarmInsightsTest {
     public void test_generateCard() {
 
         final List<Integer> wakeTimeList = Lists.newArrayList(60*8, 60*9, 60*10);
-        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, TimeFormat.TIME_TWENTY_FOUR_HOUR);
+        final Optional<InsightCard> card = SleepAlarm.processSleepAlarm(FAKE_ACCOUNT_ID, wakeTimeList, FAKE_AGE_ADULT, DateTimeFormat.forPattern("HH:mm"));
 //        System.out.print(card.get().message);
         assertThat(card.isPresent(), is(Boolean.TRUE));
     }
@@ -178,7 +178,7 @@ public class SleepAlarmInsightsTest {
         final Account fakeAccount = objectMapper.readValue(jsonFile, Account.class);
         Mockito.when(accountReadDAO.getById(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(fakeAccount));
 
-        final Optional<InsightCard> generatedCard = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, TimeFormat.TIME_TWELVE_HOUR);
+        final Optional<InsightCard> generatedCard = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, DateTimeFormat.forPattern("h:mm aa"));
 
 //        System.out.print(generatedCard.get().message);
         assertThat(generatedCard.isPresent(), is(Boolean.TRUE));

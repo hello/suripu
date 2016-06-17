@@ -8,7 +8,6 @@ import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.CaffeineAlarmMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import com.hello.suripu.core.preferences.TimeFormat;
 import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.InsightUtils;
@@ -16,6 +15,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class CaffeineAlarm {
     public static final Integer LATEST_ALLOWED_SLEEP_TIME = (4 + 24) * 60; //4AM
     public static final Integer EARLIEST_ALLOWED_SLEEP_TIME = 20 * 60; //8PM
 
-    public static Optional<InsightCard> getInsights(final AccountInfoProcessor accountInfoProcessor, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final TimeFormat timeFormat) {
+    public static Optional<InsightCard> getInsights(final AccountInfoProcessor accountInfoProcessor, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTimeFormatter timeFormat) {
 
         final Boolean drinksCoffee = accountInfoProcessor.checkUserDrinksCaffeine(accountId);
         if (!drinksCoffee) {
@@ -73,7 +73,7 @@ public class CaffeineAlarm {
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard> processCaffeineAlarm(final Long accountId, final List<Integer> sleepTimeList, final TimeFormat timeFormat) {
+    public static Optional<InsightCard> processCaffeineAlarm(final Long accountId, final List<Integer> sleepTimeList, final DateTimeFormatter timeFormat) {
 
         if (sleepTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=caffeine-alarm action=sleep-time-list-empty", accountId);
