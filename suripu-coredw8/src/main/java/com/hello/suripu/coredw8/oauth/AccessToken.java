@@ -198,4 +198,9 @@ public class AccessToken implements Principal {
         }
         return Boolean.FALSE;
     }
+
+    public Boolean hasExpired(DateTime now) {
+        long diffInSeconds= (now.getMillis() - this.createdAt.getMillis()) / 1000;
+        return (diffInSeconds > this.expiresIn);
+    }
 }
