@@ -599,11 +599,11 @@ public class InsightProcessor {
         if (preferences.containsKey(PreferenceName.TIME_TWENTY_FOUR_HOUR)) {
             final Boolean isMilitary = preferences.get(PreferenceName.TIME_TWENTY_FOUR_HOUR);
             if (isMilitary) {
-                return TimeFormat.MILITARY;
+                return TimeFormat.TIME_TWENTY_FOUR_HOUR;
             }
         }
         // default is 12-hour time format. USA!
-        return TimeFormat.CIVILIAN;
+        return TimeFormat.TIME_TWELVE_HOUR;
     }
 
     /**

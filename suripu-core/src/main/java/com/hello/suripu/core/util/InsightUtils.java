@@ -15,7 +15,7 @@ public class InsightUtils {
         final int minutes = (minuteOfDay + DateTimeConstants.MINUTES_PER_DAY) % 60;
 
         final String timeString;
-        if (timeFormat.equals(TimeFormat.MILITARY)) {
+        if (timeFormat.equals(TimeFormat.TIME_TWENTY_FOUR_HOUR)) {
             timeString = DateTimeFormat.forPattern("HH:mm").print(new DateTime(0).withHourOfDay(hours).withMinuteOfHour(minutes));
         } else {
             timeString = DateTimeFormat.forPattern("h:mm aa").print(new DateTime(0).withHourOfDay(hours).withMinuteOfHour(minutes));
@@ -44,7 +44,7 @@ public class InsightUtils {
         final int hoursRound = hours + hourAdd;
 
         final String timeString;
-        if (timeFormat.equals(TimeFormat.MILITARY)) {
+        if (timeFormat.equals(TimeFormat.TIME_TWENTY_FOUR_HOUR)) {
             timeString = DateTimeFormat.forPattern("HH:mm").print(new DateTime(0).withHourOfDay(hoursRound).withMinuteOfHour(minutesRound));
         } else {
             timeString = DateTimeFormat.forPattern("h:mm aa").print(new DateTime(0).withHourOfDay(hoursRound).withMinuteOfHour(minutesRound));
