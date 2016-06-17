@@ -92,6 +92,22 @@ public class SleepScoreUtilsTest {
         }
     }
 
+    @Test
+    public void testScoresV4(){
+        final int age = 23;
+        final List<Integer> durThreshold = Lists.newArrayList(480, 495, 440, 529, 491);
+        final List<Integer> sleepDurationMinutes = Lists.newArrayList(424, 495, 458, 507, 462);
+
+        final List<Float> motionFrequency = Lists.newArrayList(0.1108f, 0.0343f, 0.0786f, 0.0532f, 0.1429f);
+        final List<Integer> timesAwake = Lists.newArrayList(2, 1, 2, 0, 4);
+        final List<Integer> agitatedSleepDuration = Lists.newArrayList(9, 0, 4, 0, 17);
+        final List<Integer> correct = Lists.newArrayList(67, 91, 82, 95, 61);
+        for (int i = 0; i < sleepDurationMinutes.size(); i++) {
+            final int durScoreV3 = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold.get(i), sleepDurationMinutes.get(i));
+            final int score = SleepScoreUtils.getSleepScoreDurationV4(1001L, durScoreV3, motionFrequency.get(i), timesAwake.get(i), agitatedSleepDuration.get(i));
+            assertThat(score, is(correct.get(i)));
+        }
+    }
 
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
         final URL fixtureCSVFile = Resources.getResource(fixturePath);
@@ -147,6 +163,12 @@ public class SleepScoreUtilsTest {
         assertThat(score.isPresent(), is(Boolean.TRUE));
     }
 
+    @Test
+    public void testAgitatedSleep(){
+        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
+        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, 1431114980000L, 1431188031000L);
+        assertThat(agitatedSleep , is(22));
+    }
 
 
     @Test

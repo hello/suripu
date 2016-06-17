@@ -1027,7 +1027,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
             final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
             final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, sleepStats.sleepDurationInMinutes, sleepStats.numberOfMotionEvents, agitatedSleepDuration, numMotions);
+            final float motionFrequency = numMotions / sleepStats.sleepDurationInMinutes;
+            return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, agitatedSleepDuration, numMotions);
         }
 
         else if (useSleepScoreV3(accountId)){
