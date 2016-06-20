@@ -29,6 +29,7 @@ public class AccessToken implements Principal {
     @JsonProperty("expires_in")
     public final Long expiresIn;
 
+    @JsonIgnore
     @JsonProperty("refresh_expires_in")
     public final Long refreshExpiresIn;
 
