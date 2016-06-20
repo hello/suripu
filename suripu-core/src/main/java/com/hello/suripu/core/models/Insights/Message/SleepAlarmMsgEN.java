@@ -21,8 +21,4 @@ public class SleepAlarmMsgEN {
         return new Text("Bed Time", messageBody);
     }
 
-    public static Text getSleepAlarmFallBackMessage() {
-        final String messageBody = String.format("If you typically wake up at 7 AM and want to get 8.5 hours of sleep, you should start preparing for bed at 10 PM, and plan to sleep by 10:30 PM.");
-        return new Text("Bed Time", messageBody);
-    }
 }
