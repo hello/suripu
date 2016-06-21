@@ -95,10 +95,10 @@ public class SleepScoreUtilsTest {
     @Test
     public void testScoresV4(){
         final int age = 23;
-        final List<Integer> durThreshold = Lists.newArrayList(480, 495, 440, 529, 491);
-        final List<Integer> sleepDurationMinutes = Lists.newArrayList(424, 495, 458, 507, 462);
+        final List<Integer> durThreshold = Lists.newArrayList(480, 495, 440, 480, 491);
+        final List<Integer> sleepDurationMinutes = Lists.newArrayList(424, 495, 458, 560, 462);
 
-        final List<Float> motionFrequency = Lists.newArrayList(0.1108f, 0.0343f, 0.0786f, 0.0532f, 0.1429f);
+        final List<Float> motionFrequency = Lists.newArrayList(0.1108f, 0.0343f, 0.0786f, 0f, 0.1429f);
         final List<Integer> timesAwake = Lists.newArrayList(2, 1, 2, 0, 4);
         final List<Integer> agitatedSleepDuration = Lists.newArrayList(9, 0, 4, 0, 17);
         final List<Integer> correct = Lists.newArrayList(67, 91, 82, 95, 61);
@@ -141,6 +141,14 @@ public class SleepScoreUtilsTest {
     }
 
     @Test
+    public void testAgitatedSleep(){
+        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
+        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, 1431089780000L, 1431188031000L);
+        assertThat(agitatedSleep , is(22));
+    }
+
+
+    @Test
     public void testNoNegativeScores() {
 //        final List<Integer> sleepDurationMinutes = ContiguousSet.create(Range.closed(1, 2000), DiscreteDomain.integers()).asList();
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
@@ -162,14 +170,6 @@ public class SleepScoreUtilsTest {
         final Optional<MotionScore> score = SleepScoreUtils.getSleepMotionScoreMaybe(new DateTime(2015, 5, 8, 20, 0, 0),trackerMotionList.subList(0,2), 0L, 0L);
         assertThat(score.isPresent(), is(Boolean.TRUE));
     }
-
-    @Test
-    public void testAgitatedSleep(){
-        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
-        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, 1431114980000L, 1431188031000L);
-        assertThat(agitatedSleep , is(22));
-    }
-
 
     @Test
     public void testCalculateSoundScore() {

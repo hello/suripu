@@ -1064,7 +1064,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     private SleepScore.Weighting sleepScoreWeighting(final Long accountId) {
         final SleepScore.Weighting weighting;
-        if (hasSleepScoreDurationWeightingV2(accountId)) {
+        if (useSleepScoreV4(accountId)) {
+            weighting = new SleepScore.DurationWeightingV4();
+        }else if (hasSleepScoreDurationWeightingV2(accountId)) {
             weighting = new SleepScore.DurationHeavyWeightingV2();
         } else if (hasSleepScoreDurationWeighting(accountId)) {
             weighting = new SleepScore.DurationHeavyWeighting();

@@ -76,6 +76,14 @@ public class SleepScore {
         }
     }
 
+    public static class DurationWeightingV4 extends Weighting {
+
+        public DurationWeightingV4() {
+            this.motion = 0.0f;
+            this.duration = 0.9f;
+        }
+    }
+
     /**
      * We want to use a builder for the Sleep Score because the components of the sleep
      * score will likely increase based on https://github.com/hello/bugs/issues/253

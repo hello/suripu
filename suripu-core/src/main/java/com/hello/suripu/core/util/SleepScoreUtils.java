@@ -194,7 +194,7 @@ public class SleepScoreUtils {
         final int maxTimesAwake = 6;
         final int maxAgitatedSleep = 45;
         final float rawScore = Math.round(100 - 100/(1 + Math.exp(DURATION_WEIGHTS_V4[0] + DURATION_WEIGHTS_V4[1] * sleepDurationScoreV3 + DURATION_WEIGHTS_V4[2] *  Math.min(motionFrequency, maxMotionFreq) + DURATION_WEIGHTS_V4[3] * Math.min(timesAwake, maxTimesAwake) + DURATION_WEIGHTS_V4[4]*Math.min(agitatedSleepDuration, maxAgitatedSleep))));
-        final int durationScorev4 = (int) Math.min(rawScore * .7 + 40, 950);
+        final int durationScorev4 = (int) Math.min(rawScore * .7 + 40, 95);
         LOGGER.info("action=calculated-durationscore-v4 account_id={} sleep_duration_score_v3={} motion_frequency={} awake_times={} agitated_sleep_duration={} durationscore_v4={}", accountId, sleepDurationScoreV3, motionFrequency, timesAwake, agitatedSleepDuration, durationScorev4);
         return durationScorev4;
     }
@@ -276,11 +276,11 @@ public class SleepScoreUtils {
     public static int getAgitatedSleep(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         // computes periods of agitated sleep  3 or more minutes in length with a mean motion amplitude above the median motion amplitude and at least one motion above the mean motion amplitude
         final int motionMinThreshold = 0;
-        final int motionMaxThreshold = 2500; // mean motion amplitude - capture s
-        final int motionMeanThreshold = 1000; //median motion amplitude
-        final int consecutiveMotionMinThreshold = 3;
-        final long confineTimeWindow = 900000L;
-        final long rollingTimeWindow = 120000L;
+        final int motionMaxThreshold = 2500;
+        final int motionMeanThreshold = 1000;
+        final int consecutiveMotionMinThreshold = 3; //
+        final long confineTimeWindow = 900000L; //15 mins
+        final long rollingTimeWindow = 120000L; // 2 mins
         boolean sufficientMotionAmplitude = false;
         int consecutiveMotionMins = 0;
         long motionMean = 0;
