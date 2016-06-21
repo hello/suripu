@@ -56,4 +56,8 @@ public abstract class FileInfoDAO {
     @SingleValueResult(FileInfo.class)
     public abstract Optional<FileInfo> getByFilePath(@Bind("file_path") final String filePath);
 
+    @SqlQuery("SELECT * FROM file_info WHERE name=:name LIMIT 1;")
+    @SingleValueResult(FileInfo.class)
+    public abstract Optional<FileInfo> getByFileName(@Bind("name") final String fileName);
+
 }
