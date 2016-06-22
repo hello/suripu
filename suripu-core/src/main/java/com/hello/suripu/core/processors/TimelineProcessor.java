@@ -592,6 +592,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> lightEvents = Lists.newArrayList();
 
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
+        final ImmutableList<TrackerMotion> originalTrackerMotions = sensorData.originalTrackerMotions;
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
@@ -740,7 +741,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
