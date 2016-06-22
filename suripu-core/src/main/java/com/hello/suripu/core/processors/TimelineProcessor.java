@@ -592,7 +592,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> lightEvents = Lists.newArrayList();
 
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
-        final ImmutableList<TrackerMotion> originalTrackerMotions = sensorData.originalTrackerMotions;
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
@@ -741,7 +740,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
@@ -1028,7 +1027,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
             final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
             final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            final float motionFrequency = numMotions / sleepStats.sleepDurationInMinutes;
+            float motionFrequency = 0;
+            if (sleepStats.sleepDurationInMinutes > 0) {
+                motionFrequency = numMotions / sleepStats.sleepDurationInMinutes;
+            }
             return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, agitatedSleepDuration, numMotions);
         }
 

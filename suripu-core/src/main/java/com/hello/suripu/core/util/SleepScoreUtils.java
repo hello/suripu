@@ -294,7 +294,7 @@ public class SleepScoreUtils {
                break;
             }
             //condition 1: Satisfactory motion event with either no previous satisfactory motion event or a satisfactory motion event within the last 2 minutes
-            if (trackerMotion.motionRange > motionMinThreshold & (consecutiveMotionMins == 0 || trackerMotion.timestamp <= previousMotionTime + rollingTimeWindow)) {
+            if (trackerMotion.motionRange > motionMinThreshold && (consecutiveMotionMins == 0 || trackerMotion.timestamp <= previousMotionTime + rollingTimeWindow)) {
                 if (trackerMotion.motionRange >= motionMaxThreshold) {
                     sufficientMotionAmplitude = true;
                 }
