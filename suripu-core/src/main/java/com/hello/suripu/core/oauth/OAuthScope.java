@@ -2,6 +2,9 @@ package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -47,6 +50,7 @@ public enum OAuthScope {
     PROFILE_PHOTO_UPLOAD(36);
 
     private int value;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuthScope.class);
 
     private OAuthScope(int value) {
         this.value = value;
@@ -65,6 +69,7 @@ public enum OAuthScope {
         try{
             return Optional.of(OAuthScope.valueOf(value));
         }catch (ArrayIndexOutOfBoundsException ex){
+            LOGGER.error("error=invalid-oauth-scope-value value={}", value);
             return Optional.absent();
         }
     }
