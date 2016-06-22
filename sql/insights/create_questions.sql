@@ -653,6 +653,15 @@ UPDATE questions SET category='daily' WHERE question_text='How was your sleep la
 -- jyfan 2016-06-08 copy editing
 UPDATE questions SET question_text='Did you consume any of these within 3 hours of going to bed?' WHERE question_text='Did you consume any of these within 3 hours of going to bed? (Check all that applies)';
 
+-- jyfan 2016-06-20 fix survey response
+UPDATE questions SET responses='{"Never", "Occasionally", "Somewhat often", "Often", "Very often"}' WHERE question_text='How often do you find yourself waking earlier than you should?';
+UPDATE response_choices SET response_text='Never' WHERE response_text='None' AND question_id = (SELECT id FROM questions WHERE question_text='How often do you find yourself waking earlier than you should?');
+UPDATE response_choices SET response_text='Occasionally' WHERE response_text='Mild' AND question_id = (SELECT id FROM questions WHERE question_text='How often do you find yourself waking earlier than you should?');
+UPDATE response_choices SET response_text='Somewhat often' WHERE response_text='Moderate' AND question_id = (SELECT id FROM questions WHERE question_text='How often do you find yourself waking earlier than you should?');
+UPDATE response_choices SET response_text='Often' WHERE response_text='Severe' AND question_id = (SELECT id FROM questions WHERE question_text='How often do you find yourself waking earlier than you should?');
+UPDATE response_choices SET response_text='Very often' WHERE response_text='Very Severe' AND question_id = (SELECT id FROM questions WHERE question_text='How often do you find yourself waking earlier than you should?');
+
+
 
 
 
