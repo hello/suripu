@@ -401,3 +401,21 @@ ALTER TABLE file_info ADD COLUMN size_bytes INTEGER;
 -- Added May 16h 2016
 ALTER TABLE accounts ADD COLUMN firstname VARCHAR(255);
 ALTER TABLE accounts ADD COLUMN lastname VARCHAR(255);
+
+-- Added June 20th 2016
+CREATE TABLE oauth_codes(
+    id BIGSERIAL PRIMARY KEY,
+    auth_code UUID,
+    expires_in INTEGER,
+    created_at TIMESTAMP default current_timestamp,
+    app_id INTEGER,
+    account_id INTEGER,
+    scopes int[]
+);
+
+CREATE UNIQUE INDEX uniq_auth_code on oauth_codes(auth_code);
+
+GRANT ALL PRIVILEGES ON oauth_codes TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE oauth_codes_id_seq TO ingress_user;
+
+ALTER TABLE oauth_tokens ADD COLUMN refresh_expires_in INTEGER;
