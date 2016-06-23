@@ -2,6 +2,9 @@ package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -47,6 +50,7 @@ public enum OAuthScope {
     PROFILE_PHOTO_UPLOAD(36);
 
     private int value;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuthScope.class);
 
     private OAuthScope(int value) {
         this.value = value;
@@ -61,12 +65,36 @@ public enum OAuthScope {
         }
     }
 
+    public static Optional<OAuthScope> fromString(String value){
+        try{
+            return Optional.of(OAuthScope.valueOf(value));
+        }catch (ArrayIndexOutOfBoundsException ex){
+            LOGGER.error("error=invalid-oauth-scope-value value={}", value);
+            return Optional.absent();
+        }
+    }
+
     public static OAuthScope[] fromIntegerArray(Integer[] array){
         checkNotNull(array, "Cannot convert null to OAuthScope array.");
 
         final ArrayList<OAuthScope> scopeArrayList = new ArrayList<OAuthScope>();
         for(int i = 0; i < array.length; i ++) {
             final Optional<OAuthScope> oAuthScopeOptional = OAuthScope.fromInteger(array[i]);
+            if(oAuthScopeOptional.isPresent()){
+                scopeArrayList.add(oAuthScopeOptional.get());
+            }
+        }
+
+        final OAuthScope[] scopeArray = scopeArrayList.toArray(new OAuthScope[0]);
+        return scopeArray;
+    }
+
+    public static OAuthScope[] fromStringArray(String[] array){
+        checkNotNull(array, "Cannot convert null to OAuthScope array.");
+
+        final ArrayList<OAuthScope> scopeArrayList = new ArrayList<OAuthScope>();
+        for (final String value : array) {
+            final Optional<OAuthScope> oAuthScopeOptional = OAuthScope.fromString(value);
             if(oAuthScopeOptional.isPresent()){
                 scopeArrayList.add(oAuthScopeOptional.get());
             }

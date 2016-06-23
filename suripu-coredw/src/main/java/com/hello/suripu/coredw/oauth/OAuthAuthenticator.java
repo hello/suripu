@@ -39,7 +39,7 @@ public class OAuthAuthenticator implements Authenticator<ClientCredentials, Acce
      */
         final Optional<AccessToken> token;
         try {
-            token = tokenStore.getClientDetailsByToken(credentials, DateTime.now());
+            token = tokenStore.getTokenByClientCredentials(credentials, DateTime.now());
             if(!token.isPresent()) {
                 LOGGER.warn("Token {} was not present in OAuthAuthenticator", credentials.tokenOrCode);
             }

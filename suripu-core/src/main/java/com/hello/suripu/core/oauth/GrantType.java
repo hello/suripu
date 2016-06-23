@@ -1,9 +1,10 @@
 package com.hello.suripu.core.oauth;
 
 public enum GrantType {
-    AUTH_CODE("code", 0),
+    AUTHORIZATION_CODE("authorization_code", 0),
     IMPLICIT("implicit", 1),
-    PASSWORD("password", 2);
+    PASSWORD("password", 2),
+    REFRESH_TOKEN("refresh_token", 3);
 
 //        Support application refresh details?
 //        CLIENT_CREDENTIALS("credentials")

@@ -123,7 +123,18 @@ public class SleepSoundsProcessor implements SoundMap {
     public Optional<Sound> getSoundByFilePath(final String filePath) {
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(filePath);
         if (!fileInfoOptional.isPresent() || !fileInfoOptional.get().fileType.equals(FileInfo.FileType.SLEEP_SOUND)) {
-            LOGGER.warn("dao=fileInfoDAO error=path-not-found file-path={}", filePath);
+            LOGGER.warn("dao=fileInfoDAO error=path-not-found file_path={}", filePath);
+            return Optional.absent();
+        }
+
+        final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
+        return Optional.of(sound);
+    }
+
+    public Optional<Sound> getSoundByFileName(final String fileName) {
+        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFileName(fileName);
+        if (!fileInfoOptional.isPresent() || !fileInfoOptional.get().fileType.equals(FileInfo.FileType.SLEEP_SOUND)) {
+            LOGGER.warn("dao=fileInfoDAO error=path-not-found file_name={}", fileName);
             return Optional.absent();
         }
 

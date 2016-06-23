@@ -30,6 +30,10 @@ public class AccessToken implements Principal {
     public final Long expiresIn;
 
     @JsonIgnore
+    @JsonProperty("refresh_expires_in")
+    public final Long refreshExpiresIn;
+
+    @JsonIgnore
     public final DateTime createdAt;
 
     @JsonProperty("account_id")
@@ -56,6 +60,7 @@ public class AccessToken implements Principal {
             final UUID token,
             final UUID refreshToken,
             final Long expiresIn,
+            final Long refreshExpiresIn,
             final DateTime createdAt,
             final Long accountId,
             final Long appId,
@@ -64,6 +69,7 @@ public class AccessToken implements Principal {
         checkNotNull(token, "token can not be null");
         checkNotNull(refreshToken, "refreshToken can not be null");
         checkNotNull(expiresIn, "expiresIn can not be null");
+        checkNotNull(refreshExpiresIn, "refreshExpiresIn can not be null");
         checkNotNull(createdAt, "createdAt can not be null");
         checkNotNull(accountId, "accountId can not be null");
         checkNotNull(appId, "appId can not be null");
@@ -72,6 +78,7 @@ public class AccessToken implements Principal {
         this.token = token;
         this.refreshToken = refreshToken;
         this.expiresIn = expiresIn;
+        this.refreshExpiresIn = refreshExpiresIn;
         this.createdAt = createdAt;
         this.accountId = accountId;
         this.appId = appId;
@@ -83,6 +90,7 @@ public class AccessToken implements Principal {
         private UUID token;
         private UUID refreshToken;
         private Long expiresIn;
+        private Long refreshExpiresIn;
         private DateTime createdAt;
         private Long accountId;
         private Long appId;
@@ -107,6 +115,11 @@ public class AccessToken implements Principal {
             return this;
         }
 
+        public Builder withRefreshExpiresIn(Long refreshExpiresIn) {
+            this.refreshExpiresIn = refreshExpiresIn;
+            return this;
+        }
+
         public Builder withCreatedAt(final DateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -128,14 +141,14 @@ public class AccessToken implements Principal {
         }
 
         public AccessToken build() {
-            return new AccessToken(token, refreshToken, expiresIn, createdAt, accountId, appId, scopes);
+            return new AccessToken(token, refreshToken, expiresIn, refreshExpiresIn, createdAt, accountId, appId, scopes);
         }
     }
 
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(token, refreshToken, tokenType, expiresIn, accountId, appId, Arrays.hashCode(scopes));
+        return Objects.hashCode(token, refreshToken, tokenType, expiresIn, refreshExpiresIn, accountId, appId, Arrays.hashCode(scopes));
     }
 
     @Override
@@ -149,6 +162,7 @@ public class AccessToken implements Principal {
                 && Objects.equal(this.refreshToken, that.refreshToken)
                 && Objects.equal(this.tokenType, that.tokenType)
                 && Objects.equal(this.expiresIn, that.expiresIn)
+                && Objects.equal(this.refreshExpiresIn, that.refreshExpiresIn)
                 && Objects.equal(this.createdAt, that.createdAt)
                 && Objects.equal(this.accountId, that.accountId)
                 && Objects.equal(this.appId, that.appId)
@@ -162,6 +176,7 @@ public class AccessToken implements Principal {
                 .add("refresh", refreshToken)
                 .add("token_type", tokenType)
                 .add("expires_in", expiresIn)
+                .add("refresh_expires_in", refreshExpiresIn)
                 .add("created_at", createdAt)
                 .add("account_id", accountId)
                 .add("app_id", appId)
@@ -183,5 +198,10 @@ public class AccessToken implements Principal {
             }
         }
         return Boolean.FALSE;
+    }
+
+    public Boolean hasExpired(DateTime now) {
+        long diffInSeconds= (now.getMillis() - this.createdAt.getMillis()) / 1000;
+        return (diffInSeconds > this.expiresIn);
     }
 }
