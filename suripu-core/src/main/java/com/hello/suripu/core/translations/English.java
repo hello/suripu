@@ -70,11 +70,11 @@ public class English {
 
     // Sensor Conditions
     // Temperature
-    public final static String LOW_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty cold** in here.";
-    public final static String HIGH_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty hot** in here.";
+    public final static String LOW_TEMPERATURE_WARNING_MESSAGE = "It's **pretty cold** in here.";
+    public final static String HIGH_TEMPERATURE_WARNING_MESSAGE = "It's **pretty hot** in here.";
 
-    public final static String LOW_TEMPERATURE_ALERT_MESSAGE = "It’s far **too cold** in here.";
-    public final static String HIGH_TEMPERATURE_ALERT_MESSAGE = "It’s far **too hot** in here.";
+    public final static String LOW_TEMPERATURE_ALERT_MESSAGE = "It's far **too cold** in here.";
+    public final static String HIGH_TEMPERATURE_ALERT_MESSAGE = "It's far **too hot** in here.";
 
     public final static String IDEAL_TEMPERATURE_MESSAGE = "The temperature is **just right**.";
 
@@ -87,7 +87,7 @@ public class English {
 
     public final static String IDEAL_HUMIDITY_MESSAGE = "The humidity is **just right**.";
 
-    // Particulates (Air Quality)
+    // Particulates (Air Quality) 
     public final static String VERY_HIGH_PARTICULATES_MESSAGE = "The air quality is **poor**.";
     public final static String HIGH_PARTICULATES_MESSAGE = "The air quality is **not ideal**.";
     public final static String IDEAL_PARTICULATES_MESSAGE = "The air quality is **just right**.";
