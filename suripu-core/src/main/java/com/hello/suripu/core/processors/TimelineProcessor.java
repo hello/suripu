@@ -740,7 +740,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
@@ -959,6 +959,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
      * @return
      */
     private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions,
+                                             final List<TrackerMotion> originalTrackerMotions,
                                              final int numberSoundEvents,
                                              final AllSensorSampleList sensors,
                                              final DateTime targetDate,
@@ -988,7 +989,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats, targetDate);
+        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats, targetDate, originalTrackerMotions, motionScore.numMotions);
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
         final Integer timesAwakePenalty;
@@ -1019,11 +1020,22 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return sleepScore.value;
     }
 
-    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats, final DateTime targetDateLocalUTC) {
+    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats, final DateTime targetDateLocalUTC, final List <TrackerMotion> originalTrackerMotions, final int numMotions) {
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
 
-        if (useSleepScoreV3(accountId)){
+        if (useSleepScoreV4(accountId)){
+            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
+            final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
+            final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+            float motionFrequency = 0;
+            if (sleepStats.sleepDurationInMinutes > 0) {
+                motionFrequency = numMotions / sleepStats.sleepDurationInMinutes;
+            }
+            return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, agitatedSleepDuration, numMotions);
+        }
+
+        else if (useSleepScoreV3(accountId)){
             final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
             return SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
         }
@@ -1056,7 +1068,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     private SleepScore.Weighting sleepScoreWeighting(final Long accountId) {
         final SleepScore.Weighting weighting;
-        if (hasSleepScoreDurationWeightingV2(accountId)) {
+        if (useSleepScoreV4(accountId)) {
+            weighting = new SleepScore.DurationWeightingV4();
+        }else if (hasSleepScoreDurationWeightingV2(accountId)) {
             weighting = new SleepScore.DurationHeavyWeightingV2();
         } else if (hasSleepScoreDurationWeighting(accountId)) {
             weighting = new SleepScore.DurationHeavyWeighting();
