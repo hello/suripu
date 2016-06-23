@@ -316,7 +316,7 @@ public class SleepScoreUtils {
             // condition 3: Satisfactory motion event more than 2 minutes after previous satisfactory motion event
             }else if (trackerMotion.motionRange > motionMinThreshold & trackerMotion.timestamp > previousMotionTime + rollingTimeWindow ) {
                 if (sufficientMotionAmplitude & motionMean > motionMeanThreshold & consecutiveMotionMins > consecutiveMotionMinThreshold) {
-                    agitateSleepMins = agitateSleepMins + consecutiveMotionMins;
+                    agitateSleepMins += consecutiveMotionMins;
                 }
                 consecutiveMotionMins = 1;
                 motionMean = trackerMotion.motionRange;
