@@ -273,6 +273,16 @@ public class SleepScoreUtils {
 
         return motionScore;
     }
+
+    public static float getMotionFrequency(int numMotions, int sleepDurationMinutes){
+        if (sleepDurationMinutes == 0){
+            return 0.0f;
+        } else {
+
+            final float motionFrequency = (float) numMotions / sleepDurationMinutes;
+            return motionFrequency;
+        }
+    }
     public static int getAgitatedSleep(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         // computes periods of agitated sleep  3 or more minutes in length with a mean motion amplitude above the median motion amplitude and at least one motion above the mean motion amplitude
         final int motionMinThreshold = 0;

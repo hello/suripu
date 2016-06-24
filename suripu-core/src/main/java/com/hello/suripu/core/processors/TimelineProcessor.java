@@ -989,14 +989,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats, targetDate, originalTrackerMotions, motionScore.numMotions);
+        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats, targetDate, originalTrackerMotions, motionScore.numMotions, sleepStats.numberOfMotionEvents);
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
         final Integer timesAwakePenalty;
-        if (this.hasTimesAwakeSleepScorePenalty(accountId)) {
-            timesAwakePenalty = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
-        } else {
+        //sleep score v4 duration score incorporates agitatedSleep/'awakeTimes' and accounts for this penalty
+        if (this.useSleepScoreV4(accountId)) {
             timesAwakePenalty = 0;
+        } else {
+            timesAwakePenalty = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
         }
 
         // Calculate the sleep score based on the sub scores and weighting
@@ -1020,7 +1021,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return sleepScore.value;
     }
 
-    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats, final DateTime targetDateLocalUTC, final List <TrackerMotion> originalTrackerMotions, final int numMotions) {
+    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats, final DateTime targetDateLocalUTC, final List <TrackerMotion> originalTrackerMotions, final int numMotions, final int timesAwake) {
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
 
@@ -1028,11 +1029,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
             final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
             final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            float motionFrequency = 0;
-            if (sleepStats.sleepDurationInMinutes > 0) {
-                motionFrequency = numMotions / sleepStats.sleepDurationInMinutes;
-            }
-            return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, agitatedSleepDuration, numMotions);
+            final float motionFrequency = SleepScoreUtils.getMotionFrequency(numMotions, sleepStats.sleepDurationInMinutes);
+            return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, timesAwake, agitatedSleepDuration);
         }
 
         else if (useSleepScoreV3(accountId)){
