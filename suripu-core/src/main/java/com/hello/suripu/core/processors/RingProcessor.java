@@ -1,8 +1,9 @@
 package com.hello.suripu.core.processors;
 
-import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import com.amazonaws.AmazonServiceException;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
@@ -18,6 +19,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.librato.rollout.RolloutClient;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -205,7 +207,7 @@ public class RingProcessor {
 
         Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
         if (feature != null && feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM_TEST_VALUES, accountId, Collections.EMPTY_LIST)) {
-            progressiveWindow = 6;
+            progressiveWindow = 7;
         }
 
         final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(progressiveWindow);
