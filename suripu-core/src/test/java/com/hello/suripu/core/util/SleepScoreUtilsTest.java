@@ -141,6 +141,15 @@ public class SleepScoreUtilsTest {
     }
 
     @Test
+    public void testMotionFrequency(){
+        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
+        MotionScore score = SleepScoreUtils.getSleepMotionScore(new DateTime(2015, 5, 8, 20, 0,0), trackerMotionList, 1431089780000L, 1431188031000L);
+        final int sleepDurationMinutes = 900;
+        final float motionFrequency = SleepScoreUtils.getMotionFrequency(score.numMotions, sleepDurationMinutes );
+        assertThat(motionFrequency, is((float)60 / 900 ));
+    }
+
+    @Test
     public void testAgitatedSleep(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
         int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, 1431089780000L, 1431188031000L);

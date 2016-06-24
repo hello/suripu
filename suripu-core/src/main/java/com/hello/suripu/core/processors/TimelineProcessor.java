@@ -993,10 +993,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
         final Integer timesAwakePenalty;
-        if (this.hasTimesAwakeSleepScorePenalty(accountId) & !this.useSleepScoreV4(accountId)) {
-            timesAwakePenalty = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
-        } else {
+        //sleep score v4 duration score incorporates agitatedSleep/'awakeTimes' and accounts for this penalty
+        if (this.useSleepScoreV4(accountId)) {
             timesAwakePenalty = 0;
+        } else {
+            timesAwakePenalty = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
         }
 
         // Calculate the sleep score based on the sub scores and weighting
@@ -1028,10 +1029,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
             final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
             final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            float motionFrequency = 0.00f;
-            if (sleepStats.sleepDurationInMinutes > 0) {
-                motionFrequency = (float) numMotions / sleepStats.sleepDurationInMinutes;
-            }
+            final float motionFrequency = SleepScoreUtils.getMotionFrequency(numMotions, sleepStats.sleepDurationInMinutes);
             return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, timesAwake, agitatedSleepDuration);
         }
 
