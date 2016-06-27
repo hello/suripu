@@ -5,26 +5,28 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import com.hello.suripu.core.oauth.GrantType;
-import com.hello.suripu.coredw8.db.AuthorizationCodeDAO;
 import com.hello.suripu.core.oauth.AccessTokenUtils;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
-import com.hello.suripu.coredw8.oauth.AuthorizationCode;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.GrantType;
 import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.coredw8.db.AccessTokenDAO;
+import com.hello.suripu.coredw8.db.AuthorizationCodeDAO;
 import com.hello.suripu.coredw8.oauth.AccessToken;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import com.hello.suripu.coredw8.oauth.AuthorizationCode;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * PersistentAccessTokenStore keeps track of assigned access tokens
@@ -38,6 +40,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
     private static final Long REFRESH_EXPIRATION_TIME_IN_SECONDS = 86400L * 365; // 365 days
     private static final Long ACCESS_EXPIRATION_TIME_IN_SECONDS = 86400L; // 1 day
+    private static final Long PASSWORD_GRANT_ACCESS_EXPIRATION_TIME_IN_SECONDS = 86400L * 365; // 365 days
     private static final Logger LOGGER = LoggerFactory.getLogger(com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore.class);
 
     final LoadingCache<String, Optional<AccessToken>> cache;
@@ -85,17 +88,19 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @throws com.hello.suripu.core.oauth.ClientAuthenticationException
      */
     @Override
-    public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
+    public AccessToken storeAccessToken(final ClientDetails clientDetails, final GrantType grantType) throws ClientAuthenticationException {
 
         if(!clientDetails.application.isPresent()) {
             LOGGER.error("ClientDetails should have application for storing access token");
             throw new ClientAuthenticationException();
         }
 
+        final Long expiration =  (grantType.equals(GrantType.PASSWORD)) ? PASSWORD_GRANT_ACCESS_EXPIRATION_TIME_IN_SECONDS : expirationTimeInSeconds;
+
         final AccessToken accessToken = generateAccessToken(
-                clientDetails,
-                DateTime.now(DateTimeZone.UTC), // this is not sent to the client. We store it to expire tokens
-                expirationTimeInSeconds
+            clientDetails,
+            DateTime.now(DateTimeZone.UTC), // this is not sent to the client. We store it to expire tokens
+            expiration
         );
 
         accessTokenDAO.storeAccessToken(accessToken);
@@ -269,7 +274,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         final AccessToken accessToken = new AccessToken.Builder()
                 .withToken(accessTokenUUID)
                 .withRefreshToken(refreshTokenUUID)
-                .withExpiresIn(ACCESS_EXPIRATION_TIME_IN_SECONDS)
+                .withExpiresIn(expirationTimeInSeconds)
                 .withRefreshExpiresIn(REFRESH_EXPIRATION_TIME_IN_SECONDS)
                 .withCreatedAt(createdAt)
                 .withAccountId(clientDetails.accountId)

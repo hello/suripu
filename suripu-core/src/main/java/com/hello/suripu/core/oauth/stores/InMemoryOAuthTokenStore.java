@@ -23,7 +23,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryOAuthTokenStore.class);
 
     @Override
-    public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
+    public AccessToken storeAccessToken(final ClientDetails clientDetails, final GrantType grantType) throws ClientAuthenticationException {
 
         if(!clientDetails.application.isPresent()) {
             LOGGER.error("Application was not present");

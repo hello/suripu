@@ -6,6 +6,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.AccessTokenUtils;
@@ -14,8 +15,10 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.GrantType;
 import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.OAuthScope;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -80,7 +83,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @throws com.hello.suripu.core.oauth.ClientAuthenticationException
      */
     @Override
-    public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
+    public AccessToken storeAccessToken(final ClientDetails clientDetails, final GrantType grantType) throws ClientAuthenticationException {
 
         if(!clientDetails.application.isPresent()) {
             LOGGER.error("ClientDetails should have application for storing access token");
@@ -181,7 +184,6 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
                 .withToken(accessTokenUUID)
                 .withRefreshToken(refreshTokenUUID)
                 .withExpiresIn(expirationTimeInSeconds)
-
                 .withCreatedAt(createdAt)
                 .withAccountId(clientDetails.accountId)
                 .withAppId(clientDetails.application.get().id)
