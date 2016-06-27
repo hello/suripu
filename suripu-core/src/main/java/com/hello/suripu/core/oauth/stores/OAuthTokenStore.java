@@ -1,8 +1,11 @@
 package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
+
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
+import com.hello.suripu.core.oauth.GrantType;
 import com.hello.suripu.core.oauth.MissingRequiredScopeException;
+
 import org.joda.time.DateTime;
 
 import java.util.UUID;
@@ -21,7 +24,7 @@ import java.util.UUID;
  */
 public interface OAuthTokenStore<T, I, C> {
 
-    T storeAccessToken(I clientDetails) throws ClientAuthenticationException;
+    T storeAccessToken(I clientDetails, GrantType grantType) throws ClientAuthenticationException;
 
     Optional<T> getTokenByClientCredentials(C creds, DateTime now) throws MissingRequiredScopeException;
 
