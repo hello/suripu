@@ -88,14 +88,14 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @throws com.hello.suripu.core.oauth.ClientAuthenticationException
      */
     @Override
-    public AccessToken storeAccessToken(final ClientDetails clientDetails, final GrantType grantType) throws ClientAuthenticationException {
+    public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
 
         if(!clientDetails.application.isPresent()) {
             LOGGER.error("ClientDetails should have application for storing access token");
             throw new ClientAuthenticationException();
         }
 
-        final Long expiration =  (grantType.equals(GrantType.PASSWORD)) ? PASSWORD_GRANT_ACCESS_EXPIRATION_TIME_IN_SECONDS : expirationTimeInSeconds;
+        final Long expiration = (clientDetails.responseType.equals(GrantType.PASSWORD)) ? PASSWORD_GRANT_ACCESS_EXPIRATION_TIME_IN_SECONDS : expirationTimeInSeconds;
 
         final AccessToken accessToken = generateAccessToken(
             clientDetails,
