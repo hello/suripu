@@ -15,7 +15,6 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.GrantType;
 import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.OAuthScope;
 
@@ -83,7 +82,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @throws com.hello.suripu.core.oauth.ClientAuthenticationException
      */
     @Override
-    public AccessToken storeAccessToken(final ClientDetails clientDetails, final GrantType grantType) throws ClientAuthenticationException {
+    public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
 
         if(!clientDetails.application.isPresent()) {
             LOGGER.error("ClientDetails should have application for storing access token");
