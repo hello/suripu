@@ -78,7 +78,11 @@ public class Particulates {
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         //Grab all night-time data for past week
-        final Optional<Calibration> calibrationOptional = calibrationDAO.getStrict(deviceId.toString());
+        if (!deviceId.externalDeviceId.isPresent()) {
+            LOGGER.debug("action=insight-absent insight=particulates reason=missing-external-device-id-and-calibration account_id={}", accountId);
+            return Lists.newArrayList();
+        }
+        final Optional<Calibration> calibrationOptional = calibrationDAO.getStrict(deviceId.externalDeviceId.get());
         return getAirQualityList(deviceDataDAO, accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, calibrationOptional);
     }
 
