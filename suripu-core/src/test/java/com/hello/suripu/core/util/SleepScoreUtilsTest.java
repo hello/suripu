@@ -270,5 +270,11 @@ public class SleepScoreUtilsTest {
         assertThat(envScore < Collections.min(asList(temperatureScore, humdityScore, soundScore, lightScore, particulateScore)), is(false));
         assertThat(envScore <= 100 && envScore >=0, is(true));
     }
+    @Test
+    public void testGetSleepScoreV2V4Weighting(){
+        final long targetDate = 1470528000000L;
+        final float testV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDate, true);
+        assertThat(testV2V4Weighting, is(6*0.0333f));
+    }
 
 }

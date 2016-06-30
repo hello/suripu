@@ -80,7 +80,8 @@ public class SleepScore {
 
         public DurationWeightingV4() {
             this.motion = 0.0f;
-            this.duration = 0.9f;
+            this.duration = 0.8f;
+            this.environmental = 0.2f;
         }
     }
 
@@ -145,4 +146,92 @@ public class SleepScore {
         }
     }
 
+    public static class BuilderTransition {
+
+        private MotionScore motionScoreOld;
+        private Integer sleepDurationScoreOld;
+        private Integer environmentalScoreOld;
+        private Integer timesAwakePenaltyScoreOld;
+        private Weighting weightingOld;
+        private MotionScore motionScoreNew;
+        private Integer sleepDurationScoreNew;
+        private Integer environmentalScoreNew;
+        private Integer timesAwakePenaltyScoreNew;
+        private Weighting weightingNew;
+        private float transitionWeight;
+
+
+        public BuilderTransition withMotionScoreOld(final MotionScore motionScoreOld) {
+            this.motionScoreOld = motionScoreOld;
+            return this;
+        }
+
+        public BuilderTransition withSleepDurationScoreOld(final Integer sleepDurationScoreOld) {
+            this.sleepDurationScoreOld = sleepDurationScoreOld;
+            return this;
+        }
+
+        public BuilderTransition withEnvironmentalScoreOld(final Integer environmentalScoreOld) {
+            this.environmentalScoreOld = environmentalScoreOld;
+            return this;
+        }
+
+        public BuilderTransition withTimesAwakePenaltyScoreOld(final Integer timesAwakePenaltyScoreOld) {
+            this.timesAwakePenaltyScoreOld = timesAwakePenaltyScoreOld;
+            return this;
+        }
+
+        public BuilderTransition withWeightingOld(final Weighting weightingOld) {
+            this.weightingOld = weightingOld;
+            return this;
+        }
+        public BuilderTransition withMotionScoreNew(final MotionScore motionScoreNew) {
+            this.motionScoreNew = motionScoreNew;
+            return this;
+        }
+
+        public BuilderTransition withSleepDurationScoreNew(final Integer sleepDurationScoreNew) {
+            this.sleepDurationScoreNew = sleepDurationScoreNew;
+            return this;
+        }
+
+        public BuilderTransition withEnvironmentalScoreNew(final Integer environmentalScoreNew) {
+            this.environmentalScoreNew = environmentalScoreNew;
+            return this;
+        }
+
+        public BuilderTransition withTimesAwakePenaltyScoreNew(final Integer timesAwakePenaltyScoreNew) {
+            this.timesAwakePenaltyScoreNew = timesAwakePenaltyScoreNew;
+            return this;
+        }
+        public BuilderTransition withWeightingNew(final Weighting weightingNew) {
+            this.weightingNew = weightingNew;
+            return this;
+        }
+        public BuilderTransition withTransitionWeight ( final float  transitionWeight){
+            this.transitionWeight = transitionWeight;
+            return this;
+        }
+
+        public SleepScore build() {
+            Integer value = Math.round(((weightingNew.motion * motionScoreNew.score)
+                    + (weightingNew.duration * sleepDurationScoreNew)
+                    + (weightingNew.environmental * environmentalScoreNew)
+                    + timesAwakePenaltyScoreNew ) * (transitionWeight)
+                    + ((weightingOld.motion * motionScoreOld.score)
+                    + (weightingOld.duration * sleepDurationScoreOld)
+                    + (weightingOld.environmental * environmentalScoreOld)
+                    + timesAwakePenaltyScoreOld) * (1 - transitionWeight));
+
+            if (value < MIN_SCORE) {
+                value = MIN_SCORE;
+            }
+            // sub scores updated in sleepstatsDAO will reflect new sleepscore version
+            return new SleepScore(value,
+                    motionScoreNew,
+                    sleepDurationScoreNew,
+                    environmentalScoreNew,
+                    timesAwakePenaltyScoreNew);
+        }
+    }
 }

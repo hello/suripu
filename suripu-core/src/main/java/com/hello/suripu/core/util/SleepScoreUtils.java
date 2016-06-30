@@ -50,6 +50,9 @@ public class SleepScoreUtils {
     public static final float[] DURATION_WEIGHTS_V3 = new float[]{14.8027f, 4.3001e-01f, -2.7177e-03f, 8.2262e-06f, -1.1033e-08f, 5.333e-12f};
     public static final float[] DURATION_WEIGHTS_V4 = new float[]{-4.81959612f, .0672299058f, -1.32390599f, -0.36022573f, -0.01500759f};
 
+    public static final long SLEEP_SCORE_V2_V4_TRANSITION_EPOCH = 1470009600000L;
+    public static final float SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING = 0.0333f;
+
 
     /**
      * compute a score based on sleep duration.
@@ -436,4 +439,19 @@ public class SleepScoreUtils {
         final int penalty = timesAwake * AWAKE_PENALTY_SCORE;
         return (penalty < MAX_TIMES_AWAKE_PENALTY_SCORE) ? MAX_TIMES_AWAKE_PENALTY_SCORE : penalty;
     }
+
+
+    public static float getSleepScoreV2V4Weighting(final long targetDateEpoch, final boolean hasSleepScoreDurationV2){
+        if (!hasSleepScoreDurationV2){
+            return 1.0f;
+        } else if (targetDateEpoch < SLEEP_SCORE_V2_V4_TRANSITION_EPOCH){
+            return 0.0f;
+
+        } else {
+            return Math.min((targetDateEpoch - SLEEP_SCORE_V2_V4_TRANSITION_EPOCH) / 82400000 * SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING , 1.0f);
+
+        }
+
+    }
+
 }
