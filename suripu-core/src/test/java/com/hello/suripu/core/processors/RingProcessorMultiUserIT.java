@@ -1,15 +1,16 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
+
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -18,11 +19,13 @@ import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
+import com.hello.suripu.core.models.AlarmSource;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.DateTimeUtil;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -150,7 +153,7 @@ public class RingProcessorMultiUserIT {
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), ""));
+                new AlarmSound(100, "The Star Spangled Banner"), "", AlarmSource.MOBILE_APP));
 
         RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
@@ -169,7 +172,7 @@ public class RingProcessorMultiUserIT {
         dayOfWeek2.add(DateTimeConstants.TUESDAY);
         alarmList2.add(new Alarm(2014, 9, 23, 8, 30, dayOfWeek2,
                 false, true, true, true,
-                new AlarmSound(101, "God Save the Queen"), ""));
+                new AlarmSound(101, "God Save the Queen"), "", AlarmSource.MOBILE_APP));
 
         final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList2,
                 new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
@@ -335,7 +338,7 @@ public class RingProcessorMultiUserIT {
         // 1st alarm, smart, 2014-09-23 8:20
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 true, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), ""));
+                new AlarmSound(100, "The Star Spangled Banner"), "", AlarmSource.MOBILE_APP));
 
         RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
@@ -356,7 +359,7 @@ public class RingProcessorMultiUserIT {
         // 1st alarm, smart, 2014-09-23 8:30
         alarmList2.add(new Alarm(2014, 9, 23, 8, 30, dayOfWeek2,
                 true, true, true, true,
-                new AlarmSound(101, "God Save the Queen"), ""));
+                new AlarmSound(101, "God Save the Queen"), "", AlarmSource.MOBILE_APP));
 
         final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList2,
                 new DateTime(2014, 9, 23, 8, 30, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
@@ -558,7 +561,7 @@ public class RingProcessorMultiUserIT {
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 true, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), ""));
+                new AlarmSound(100, "The Star Spangled Banner"), "", AlarmSource.MOBILE_APP));
 
         RingTime ringTime1 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
@@ -576,7 +579,7 @@ public class RingProcessorMultiUserIT {
         dayOfWeek2.add(DateTimeConstants.TUESDAY);
         alarmList2.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek2,
                 true, true, true, true,
-                new AlarmSound(101, "God Save the Queen"), ""));
+                new AlarmSound(101, "God Save the Queen"), "", AlarmSource.MOBILE_APP));
 
         RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList2,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
