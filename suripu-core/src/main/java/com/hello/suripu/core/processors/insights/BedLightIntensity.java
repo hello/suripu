@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -32,7 +33,7 @@ public class BedLightIntensity {
     private static final int MORNING_START_HOUR_LOCAL = 5; //5am
     private static final int MORNING_END_HOUR_LOCAL = 11; //11am
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         //get timezone offset
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
@@ -43,7 +44,7 @@ public class BedLightIntensity {
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         //integrate night light for week
-        final List<DeviceData> nightData = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        final List<DeviceData> nightData = getDeviceData(accountId, deviceAccountPair, deviceDataDAO, timeZoneOffset, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
         if (nightData.isEmpty()) {
             LOGGER.debug("action=insight-absent insight=bed-light-intensity reason=no-night-data account_id={}", accountId);
             return Optional.absent();
@@ -51,7 +52,7 @@ public class BedLightIntensity {
         final Integer nightIntegral = integrateLight(nightData);
 
         //integrate morning light for week
-        final List<DeviceData> morningData =getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset, MORNING_START_HOUR_LOCAL, MORNING_END_HOUR_LOCAL);
+        final List<DeviceData> morningData =getDeviceData(accountId, deviceAccountPair, deviceDataDAO, timeZoneOffset, MORNING_START_HOUR_LOCAL, MORNING_END_HOUR_LOCAL);
         if (morningData.isEmpty()) {
             LOGGER.debug("action=insight-absent insight=bed-light-intensity reason=no-morning-data account_id={}", accountId);
             return Optional.absent();
@@ -114,7 +115,7 @@ public class BedLightIntensity {
         return totalLight;
     }
 
-    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final Integer timeZoneOffset, final Integer startHour, final Integer endHour) {
+    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataDAO, final Integer timeZoneOffset, final Integer startHour, final Integer endHour) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(0);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
@@ -123,6 +124,7 @@ public class BedLightIntensity {
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
 //        TODO: add safeguard for patchy missing data
+        final DeviceId deviceId = DeviceId.create(deviceAccountPair.externalDeviceId);
         final Response<ImmutableList<DeviceData>> response = deviceDataDAO.getBetweenHourDateByTSSameDay(
                 accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, startHour, endHour);
         if (response.status == Response.Status.SUCCESS) {

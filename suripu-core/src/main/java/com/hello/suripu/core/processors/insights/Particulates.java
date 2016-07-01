@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.ParticulatesAnomalyMsgEN;
@@ -37,7 +38,7 @@ public class Particulates {
 
     private static final Integer NUM_DAYS = 7;
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
@@ -46,7 +47,7 @@ public class Particulates {
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
-        final List<Float> dustList = getAvgAirQualityList(accountId, deviceId, NUM_DAYS, timeZoneOffset, deviceDataDAO, calibrationDAO);
+        final List<Float> dustList = getAvgAirQualityList(accountId, deviceAccountPair, NUM_DAYS, timeZoneOffset, deviceDataDAO, calibrationDAO);
         if (dustList.isEmpty()) {
             LOGGER.debug("action=insight-absent insight=particulates reason=dust-list-empty account_id={}", accountId);
             return Optional.absent();
@@ -69,7 +70,7 @@ public class Particulates {
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
-    private static List<Float> getAvgAirQualityList(final Long accountId, final DeviceId deviceId, final Integer num_days, final Integer timeZoneOffset, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
+    private static List<Float> getAvgAirQualityList(final Long accountId, final DeviceAccountPair deviceAccountPair, final Integer num_days, final Integer timeZoneOffset, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay(); //start of day time?
         final DateTime queryStartTime = queryEndTime.minusDays(num_days);
@@ -78,12 +79,8 @@ public class Particulates {
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         //Grab all night-time data for past week
-        if (!deviceId.externalDeviceId.isPresent()) {
-            LOGGER.debug("action=insight-absent insight=particulates reason=missing-external-device-id-and-calibration account_id={}", accountId);
-            return Lists.newArrayList();
-        }
-        final Optional<Calibration> calibrationOptional = calibrationDAO.getStrict(deviceId.externalDeviceId.get());
-        return getAirQualityList(deviceDataDAO, accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, calibrationOptional);
+        final Optional<Calibration> calibrationOptional = calibrationDAO.getStrict(deviceAccountPair.externalDeviceId);
+        return getAirQualityList(deviceDataDAO, accountId, deviceAccountPair, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, calibrationOptional);
     }
 
     @VisibleForTesting
@@ -136,13 +133,14 @@ public class Particulates {
 
     public static ImmutableList<Float> getAirQualityList(final DeviceDataInsightQueryDAO deviceDataDAO,
                                                          final Long accountId,
-                                                         final DeviceId deviceId,
+                                                         final DeviceAccountPair deviceAccountPair,
                                                          final DateTime startTimestamp,
                                                          final DateTime endTimestamp,
                                                          final DateTime startLocalTimestamp,
                                                          final DateTime endLocalTimestamp,
                                                          final Optional<Calibration> calibrationOptional) {
 
+        final DeviceId deviceId = DeviceId.create(deviceAccountPair.externalDeviceId);
         final Response<ImmutableList<Integer>> response = deviceDataDAO.getAirQualityRawList(accountId, deviceId, startTimestamp, endTimestamp, startLocalTimestamp, endLocalTimestamp);
 
         final List<Float> airQualityList = Lists.newArrayList();
