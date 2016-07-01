@@ -4,9 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hello.suripu.core.models.MotionScore;
-import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.*;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
@@ -71,9 +69,9 @@ public class SleepScoreUtilsTest {
         final int age = 23;
         final int durThreshold = 540;
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
-        final List<Integer> correct = Lists.newArrayList(26, 45, 56, 92, 83);
+        final List<Float> correct = Lists.newArrayList(39.32f, 43.685326f, 46.401653f, 55.010803f, 52.866f);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
-            final int score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
+            final float score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);
             assertThat(score, is(correct.get(i)));
         }
@@ -84,30 +82,14 @@ public class SleepScoreUtilsTest {
         final int age = 23;
         final int durThreshold = 0;
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
-        final List<Integer> correct = Lists.newArrayList(26, 49, 63, 96, 83);
+        final List<Float> correct = Lists.newArrayList(39.32f, 44.867283f, 48.128555f, 56.04506f, 52.866f);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
-            final int score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
+            final float score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);
             assertThat(score, is(correct.get(i)));
         }
     }
 
-    @Test
-    public void testScoresV4(){
-        final int age = 23;
-        final List<Integer> durThreshold = Lists.newArrayList(480, 495, 440, 480, 491);
-        final List<Integer> sleepDurationMinutes = Lists.newArrayList(424, 495, 458, 560, 462);
-
-        final List<Float> motionFrequency = Lists.newArrayList(0.1108f, 0.0343f, 0.0786f, 0f, 0.1429f);
-        final List<Integer> timesAwake = Lists.newArrayList(2, 1, 2, 0, 4);
-        final List<Integer> agitatedSleepDuration = Lists.newArrayList(9, 0, 4, 0, 17);
-        final List<Integer> correct = Lists.newArrayList(67, 91, 82, 95, 61);
-        for (int i = 0; i < sleepDurationMinutes.size(); i++) {
-            final int durScoreV3 = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold.get(i), sleepDurationMinutes.get(i));
-            final int score = SleepScoreUtils.getSleepScoreDurationV4(1001L, durScoreV3, motionFrequency.get(i), timesAwake.get(i), agitatedSleepDuration.get(i));
-            assertThat(score, is(correct.get(i)));
-        }
-    }
 
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
         final URL fixtureCSVFile = Resources.getResource(fixturePath);
@@ -143,10 +125,11 @@ public class SleepScoreUtilsTest {
     @Test
     public void testMotionFrequency(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
-        MotionScore score = SleepScoreUtils.getSleepMotionScore(new DateTime(2015, 5, 8, 20, 0,0), trackerMotionList, 1431089780000L, 1431188031000L);
+        final long sleepTime = 1431089780000L;
+        final long wakeTime = 1431188031000L;
         final int sleepDurationMinutes = 900;
-        final float motionFrequency = SleepScoreUtils.getMotionFrequency(score.numMotions, sleepDurationMinutes );
-        assertThat(motionFrequency, is((float)60 / 900 ));
+        final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
+        assertThat(motionFrequency, is(new MotionFrequency((float)60 / 900 , (float)60 / 900 , (float)60 / 900 , (float)60 / 900 )));
     }
 
     @Test
