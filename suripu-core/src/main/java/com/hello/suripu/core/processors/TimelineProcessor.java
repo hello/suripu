@@ -110,7 +110,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public final static int MIN_MOTION_AMPLITUDE = 1000;
     final static long OUTLIER_GUARD_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
     final static long DOMINANT_GROUP_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
-    final static long SLEEP_SCORE_V2_V4_EPOCH = 1467331200000L;
 
 
     static public TimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,

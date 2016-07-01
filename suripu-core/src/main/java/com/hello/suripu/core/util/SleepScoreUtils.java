@@ -50,8 +50,8 @@ public class SleepScoreUtils {
     public static final float[] DURATION_WEIGHTS_V3 = new float[]{14.8027f, 4.3001e-01f, -2.7177e-03f, 8.2262e-06f, -1.1033e-08f, 5.333e-12f};
     public static final float[] DURATION_WEIGHTS_V4 = new float[]{-4.81959612f, .0672299058f, -1.32390599f, -0.36022573f, -0.01500759f};
 
-    public static final long SLEEP_SCORE_V2_V4_TRANSITION_EPOCH = 1470009600000L;
-    public static final float SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING = 0.0333f;
+    public static final long SLEEP_SCORE_V2_V4_TRANSITION_EPOCH = 1470009600000L; //August 1, 2016 - will move forward
+    public static final float SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING = 0.0333f; // full transition in 30 days
 
 
     /**
