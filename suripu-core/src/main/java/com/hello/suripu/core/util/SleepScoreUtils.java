@@ -48,7 +48,7 @@ public class SleepScoreUtils {
     public static final float RAW_SCORE_MIN_V3 = 39.32f;
     public static final float RAW_SCORE_MAX_DUR_V3 = 52.866f;//raw score if sleep > 12 hours
     public static final float[] DURATION_WEIGHTS_V3 = new float[]{14.8027f, 4.3001e-01f, -2.7177e-03f, 8.2262e-06f, -1.1033e-08f, 5.333e-12f};
-    public static final float[] DURATION_WEIGHTS_V4 = new float[]{ -109.6424f, 3.2147f, -0.2920f, -11.4374f, -41.4888f, 35.1652f, -3.9127f};
+    public static final float[] DURATION_WEIGHTS_V4 = new float[]{ -112.81f, 3.30f, -0.19f, -19.40f, -54.14f, 37.71f,-3.77f};
 
     public static final long SLEEP_SCORE_V2_V4_TRANSITION_EPOCH = 1470009600000L; //2016-08-01 utc
     public static final float SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING = 0.0333f; // full transition in 30 days
@@ -195,8 +195,8 @@ public class SleepScoreUtils {
         final float maxMotionFreq = 0.25f;
         final int maxTimesAwake = 6;
         final int maxAgitatedSleep = 45;
-        final float rawScore = DURATION_WEIGHTS_V4[0] + DURATION_WEIGHTS_V4[0] * sleepDurationScoreV3 + DURATION_WEIGHTS_V4[0] * Math.min(agitatedSleepDuration, maxAgitatedSleep) + DURATION_WEIGHTS_V4[0] * Math.min(motionFrequency.motionFrequencyFirstPeriod, maxMotionFreq)  + DURATION_WEIGHTS_V4[0] * Math.min( motionFrequency.motionFrequencyMiddlePeriod, maxMotionFreq) + DURATION_WEIGHTS_V4[0] * Math.min(motionFrequency.motionFrequencyLastPeriod, maxMotionFreq) + DURATION_WEIGHTS_V4[0] * Math.min(timesAwake, maxTimesAwake);
-        final int durationScorev4 = (int) Math.max(Math.min(rawScore * .9 + 23, 90), 50);
+        final float rawScore = DURATION_WEIGHTS_V4[0] + DURATION_WEIGHTS_V4[1] * sleepDurationScoreV3 + DURATION_WEIGHTS_V4[2] * Math.min(agitatedSleepDuration, maxAgitatedSleep) + DURATION_WEIGHTS_V4[3] * Math.min(motionFrequency.motionFrequencyFirstPeriod, maxMotionFreq)  + DURATION_WEIGHTS_V4[4] * Math.min( motionFrequency.motionFrequencyMiddlePeriod, maxMotionFreq) + DURATION_WEIGHTS_V4[5] * Math.min(motionFrequency.motionFrequencyLastPeriod, maxMotionFreq) + DURATION_WEIGHTS_V4[6] * Math.min(timesAwake, maxTimesAwake);
+        final int durationScorev4 = (int) Math.max(Math.min(rawScore * .95 + 21, 90), 50);
         LOGGER.info("action=calculated-durationscore-v4 account_id={} sleep_duration_score_v3={} motion_frequency={} awake_times={} agitated_sleep_duration={} durationscore_v4={}", accountId, sleepDurationScoreV3, motionFrequency, timesAwake, agitatedSleepDuration, durationScorev4);
         return durationScorev4;
     }
@@ -317,10 +317,9 @@ public class SleepScoreUtils {
 
     public static int getAgitatedSleep(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         // computes periods of agitated sleep  3 or more minutes in length with a mean motion amplitude above the median motion amplitude and at least one motion above the mean motion amplitude
-        final int motionMinThreshold = 0;
+        final int motionMinThreshold = 250;
         final int motionMaxThreshold = 1250;
         final int consecutiveMotionMinsThreshold = 3;
-        final int sufficientMotionPenalty = 5;
         final long noMotionThreshold = 180000L; //3 mins (total 5 minute window of no motion)
         final long confineTimeWindowStart = 900000L; //15 mins
         final long confineTimeWindowEnd = 7200000L; //2 hrs
@@ -339,8 +338,8 @@ public class SleepScoreUtils {
                 break;
             }
             //condition 1: Satisfactory motion event with either no previous satisfactory motion event or a satisfactory motion event within the last 2 minutes
-            if (trackerMotion.motionRange > motionMinThreshold && (consecutiveMotionMins == 0 || trackerMotion.timestamp <= previousMotionTime + rollingTimeWindow + noMotionTime )) {
-                if (trackerMotion.motionRange >= motionMaxThreshold) {
+            if (trackerMotion.motionRange > motionMinThreshold && (consecutiveMotionMins == 0 || trackerMotion.timestamp < previousMotionTime + rollingTimeWindow + noMotionTime )) {
+                if (trackerMotion.motionRange > motionMaxThreshold) {
                     sufficientMotionAmplitude = true;
                 }
                 if (consecutiveMotionMins == 0){
@@ -351,14 +350,13 @@ public class SleepScoreUtils {
                 if (consecutiveMotionMins >=consecutiveMotionMinsThreshold & sufficientMotionAmplitude){
                     sufficientMotion = true;
                     noMotionTime = noMotionThreshold;
-
                 }
                 previousMotionTime = trackerMotion.timestamp;
 
                 // condition 2: Unsatisfactory motion event  more than 2 minutes after previous satisfactory motion event
-            } else if (trackerMotion.motionRange <= motionMinThreshold & trackerMotion.timestamp > previousMotionTime + rollingTimeWindow + noMotionTime ) {
+            } else if (trackerMotion.motionRange <= motionMinThreshold & trackerMotion.timestamp >= previousMotionTime + rollingTimeWindow + noMotionTime ) {
                 if (sufficientMotion) {
-                    agitatedSleepMins += consecutiveMotionMins + sufficientMotionPenalty;
+                    agitatedSleepMins += consecutiveMotionMins;
                 }
                 consecutiveMotionMins = 0;
                 sufficientMotionAmplitude = false;
@@ -366,24 +364,23 @@ public class SleepScoreUtils {
                 noMotionTime = 0L;
 
                 // condition 3: Satisfactory motion event more than 2 minutes after previous satisfactory motion event
-            }else if (trackerMotion.motionRange > motionMinThreshold & trackerMotion.timestamp > previousMotionTime + rollingTimeWindow + noMotionTime) {
+            }else if (trackerMotion.motionRange > motionMinThreshold & trackerMotion.timestamp >= previousMotionTime + rollingTimeWindow + noMotionTime) {
                 if (sufficientMotion) {
-                    agitatedSleepMins += consecutiveMotionMins + sufficientMotionPenalty;
-                    sufficientMotion = false;
-                    noMotionTime = 0L;
+                    agitatedSleepMins += consecutiveMotionMins;
                 }
                 consecutiveMotionMins = 1;
                 previousMotionTime = trackerMotion.timestamp;
-                if (trackerMotion.motionRange >= motionMaxThreshold){
+                sufficientMotion = false;
+                noMotionTime = 0L;
+
+                if (trackerMotion.motionRange > motionMaxThreshold){
                     sufficientMotionAmplitude = true;
-                }else{
-                    sufficientMotionAmplitude = false;
                 }
             }
         }
         // condition 4: final agitated sleep event not followed by additional motion event before wake time - 15 minutes
         if (sufficientMotionAmplitude & consecutiveMotionMins > consecutiveMotionMinsThreshold) {
-            agitatedSleepMins +=  consecutiveMotionMins + sufficientMotionPenalty;
+            agitatedSleepMins +=  consecutiveMotionMins;
         }
 
         return agitatedSleepMins;

@@ -90,6 +90,16 @@ public class SleepScoreUtilsTest {
         }
     }
 
+    @Test
+    public void testScoresV4(){
+        final float testDurScoreV3 = 54.1889f;
+        final MotionFrequency testMotionFreq = new MotionFrequency(0.025f,  0.1667f, 0.0673f, 0.1833f);
+        final int testTimesAwake = 1;
+        final int testAgitatedSleepDuration = 16;
+        final int testDurScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(1001L, testDurScoreV3, testMotionFreq, testTimesAwake, testAgitatedSleepDuration);
+        assertThat(testDurScoreV4, is(77));
+    }
+
 
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
         final URL fixtureCSVFile = Resources.getResource(fixturePath);
@@ -103,7 +113,7 @@ public class SleepScoreUtilsTest {
                         Long.parseLong(columns[0].trim()), // id
                         Long.parseLong(columns[1].trim()), // account_id
                         Long.parseLong(columns[2].trim()), // tracker_id
-                        DateTime.parse(columns[4].trim(), DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT)).getMillis(), // ts
+                        DateTime.parse(columns[4].trim(), DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT)).getMillis(), // ts utc
                         Integer.valueOf(columns[3].trim()), // svm_no_gravity
                         Integer.valueOf(columns[5].trim()), // tz offset
                         // skipping local_utc
@@ -125,8 +135,8 @@ public class SleepScoreUtilsTest {
     @Test
     public void testMotionFrequency(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
-        final long sleepTime = 1431114980000L;
-        final long wakeTime =  1431138980000L;
+        final long sleepTime = trackerMotionList.get(0).timestamp;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
         final int sleepDurationMinutes = 400;
         final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
         final MotionFrequency correctFrequency = new MotionFrequency(0.0725f, 0.016666668f, 0.13125f, 0.05f);
@@ -140,10 +150,11 @@ public class SleepScoreUtilsTest {
     @Test
     public void testAgitatedSleep(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
-        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, 1431114980000L, 1431138980000L);
-        assertThat(agitatedSleep , is(22));
+        final long sleepTime = trackerMotionList.get(0).timestamp;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
+        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, sleepTime, wakeTime);
+        assertThat(agitatedSleep , is(18));
     }
-
 
     @Test
     public void testNoNegativeScores() {
