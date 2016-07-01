@@ -1,15 +1,24 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
+
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.*;
-import com.google.common.base.Optional;
+import com.amazonaws.services.dynamodbv2.model.AttributeAction;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
+import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.PillColorUtil;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;

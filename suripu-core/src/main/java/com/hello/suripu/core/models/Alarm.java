@@ -1,10 +1,12 @@
 package com.hello.suripu.core.models;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -59,6 +61,9 @@ public class Alarm {
     @JsonProperty("smart")
     public final boolean isSmart;
 
+    @JsonProperty("source")
+    public final AlarmSource alarmSource;
+
     /*
     @JsonCreator
     public Alarm(@JsonProperty("year") int year,
@@ -99,6 +104,34 @@ public class Alarm {
     }
     */
 
+
+    public Alarm(@JsonProperty("year") int year,
+                 @JsonProperty("month") int month,
+                 @JsonProperty("day_of_month") int day,
+                 @JsonProperty("hour")int hourOfDay,
+                 @JsonProperty("minute") int minuteOfHour,
+                 @JsonProperty("day_of_week") final Set<Integer> dayOfWeek,
+                 @JsonProperty("repeated") boolean isRepeated,
+                 @JsonProperty("enabled") boolean isEnabled,
+                 @JsonProperty("editable") boolean isEditable,
+                 @JsonProperty("smart") boolean isSmart,
+                 @JsonProperty("sound") final AlarmSound sound,
+                 @JsonProperty("id") final String id) {
+        this(year,
+            month,
+            day,
+            hourOfDay,
+            minuteOfHour,
+            dayOfWeek,
+            isRepeated,
+            isEnabled,
+            isEditable,
+            isSmart,
+            sound,
+            id,
+            AlarmSource.MOBILE_APP);
+    }
+
     @JsonCreator
     public Alarm(@JsonProperty("year") int year,
                  @JsonProperty("month") int month,
@@ -111,7 +144,8 @@ public class Alarm {
                  @JsonProperty("editable") boolean isEditable,
                  @JsonProperty("smart") boolean isSmart,
                  @JsonProperty("sound") final AlarmSound sound,
-                 @JsonProperty("id") final String id){
+                 @JsonProperty("id") final String id,
+                 @JsonProperty("source") final AlarmSource alarmSource){
         this.dayOfWeek = dayOfWeek;
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
@@ -138,6 +172,13 @@ public class Alarm {
                 throw new IllegalArgumentException("Invalid day of week.");
             }
         }
+
+        if(alarmSource == null) {
+            this.alarmSource = AlarmSource.MOBILE_APP;
+        } else {
+            this.alarmSource = alarmSource;
+        }
+
     }
 
     @Override
@@ -194,6 +235,7 @@ public class Alarm {
         private boolean isSmart;
         private Set<Integer> dayOfWeek;
         private AlarmSound sound;
+        private AlarmSource alarmSource;
 
         public Builder(){
             id = "";
@@ -275,13 +317,27 @@ public class Alarm {
             return this;
         }
 
+        @JsonProperty("source")
+        public Builder withSource(AlarmSource source){
+            this.alarmSource = source;
+            return this;
+        }
+
         public Alarm build(){
-            return new Alarm(this.year, this.month, this.day, this.hourOfDay, this.minuteOfHour, this.dayOfWeek,
-                    this.isRepeated,
-                    this.isEnabled,
-                    this.isEditable,
-                    this.isSmart,
-                    this.sound, this.id);
+            return new Alarm(
+                this.year,
+                this.month,
+                this.day,
+                this.hourOfDay,
+                this.minuteOfHour,
+                this.dayOfWeek,
+                this.isRepeated,
+                this.isEnabled,
+                this.isEditable,
+                this.isSmart,
+                this.sound,
+                this.id,
+                this.alarmSource);
         }
 
 
@@ -382,7 +438,9 @@ public class Alarm {
                             alarm.isEditable,
                             alarm.isSmart,
                             alarm.sound,
-                            alarm.id);
+                            alarm.id,
+                            alarm.alarmSource
+                    );
                     newAlarmList.add(disabledAlarm);
                 }else{
                     newAlarmList.add(alarm);
