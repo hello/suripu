@@ -984,7 +984,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
         final long targetDateEpoch = targetDate.getMillis();
-        final float sleepScoreV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDateEpoch, hasSleepScoreDurationV2(accountId));
+        final float sleepScoreV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDateEpoch);
         SleepScore sleepScore;
 
         //calculates sleep duration score v4 and sleep score

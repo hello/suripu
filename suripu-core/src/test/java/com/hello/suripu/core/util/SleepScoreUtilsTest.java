@@ -273,7 +273,7 @@ public class SleepScoreUtilsTest {
     @Test
     public void testGetSleepScoreV2V4Weighting(){
         final long targetDate = 1470528000000L;
-        final float testV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDate, true);
+        final float testV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDate);
         assertThat(testV2V4Weighting, is(6*0.0333f));
     }
 

@@ -441,17 +441,14 @@ public class SleepScoreUtils {
     }
 
 
-    public static float getSleepScoreV2V4Weighting(final long targetDateEpoch, final boolean hasSleepScoreDurationV2){
-        if (!hasSleepScoreDurationV2){
-            return 1.0f;
-        } else if (targetDateEpoch < SLEEP_SCORE_V2_V4_TRANSITION_EPOCH){
+    public static float getSleepScoreV2V4Weighting(final long targetDateEpoch){
+        if (targetDateEpoch < SLEEP_SCORE_V2_V4_TRANSITION_EPOCH){
             return 0.0f;
 
         } else {
             return Math.min((targetDateEpoch - SLEEP_SCORE_V2_V4_TRANSITION_EPOCH) / 82400000 * SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING , 1.0f);
 
         }
-
     }
 
 }
