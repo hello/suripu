@@ -104,6 +104,34 @@ public class Alarm {
     }
     */
 
+
+    public Alarm(@JsonProperty("year") int year,
+                 @JsonProperty("month") int month,
+                 @JsonProperty("day_of_month") int day,
+                 @JsonProperty("hour")int hourOfDay,
+                 @JsonProperty("minute") int minuteOfHour,
+                 @JsonProperty("day_of_week") final Set<Integer> dayOfWeek,
+                 @JsonProperty("repeated") boolean isRepeated,
+                 @JsonProperty("enabled") boolean isEnabled,
+                 @JsonProperty("editable") boolean isEditable,
+                 @JsonProperty("smart") boolean isSmart,
+                 @JsonProperty("sound") final AlarmSound sound,
+                 @JsonProperty("id") final String id) {
+        this(year,
+            month,
+            day,
+            hourOfDay,
+            minuteOfHour,
+            dayOfWeek,
+            isRepeated,
+            isEnabled,
+            isEditable,
+            isSmart,
+            sound,
+            id,
+            AlarmSource.MOBILE_APP);
+    }
+
     @JsonCreator
     public Alarm(@JsonProperty("year") int year,
                  @JsonProperty("month") int month,

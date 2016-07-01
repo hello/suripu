@@ -18,7 +18,6 @@ import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
-import com.hello.suripu.core.models.AlarmSource;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
@@ -73,7 +72,7 @@ public class RingProcessorSingleUserIT {
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 isRepeated, true, true, isSmart,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, alarmList,
@@ -119,7 +118,7 @@ public class RingProcessorSingleUserIT {
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 true, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
@@ -210,7 +209,7 @@ public class RingProcessorSingleUserIT {
         // 1st alarm: 2014-09-23 08:20, repeated on TUE and WED
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 true, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
 
         UserInfo userInfo1 = this.userInfoList1.get(0);
@@ -353,7 +352,7 @@ public class RingProcessorSingleUserIT {
         // 1st alarm: 2014-09-23 08:20, repeated on TUE and WED
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 true, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
 
         UserInfo userInfo1 = this.userInfoList1.get(0);
@@ -527,7 +526,7 @@ public class RingProcessorSingleUserIT {
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, alarmList,
@@ -556,7 +555,7 @@ public class RingProcessorSingleUserIT {
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
@@ -593,7 +592,7 @@ public class RingProcessorSingleUserIT {
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 true, false, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final UserInfo userInfo1 = this.userInfoList1.get(0);
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -736,7 +735,7 @@ public class RingProcessorSingleUserIT {
 
         alarmList.add(new Alarm(2014, 9, 22, 8, 20, dayOfWeek,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final UserInfo userInfo1 = this.userInfoList1.get(0);
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -765,7 +764,7 @@ public class RingProcessorSingleUserIT {
 
         alarmList.add(new Alarm(2014, 9, 22, 8, 20, dayOfWeek,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final UserInfo userInfo1 = this.userInfoList1.get(0);
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -794,7 +793,7 @@ public class RingProcessorSingleUserIT {
         // 1st alarm: 2014-09-23 08:20
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.WEDNESDAY);
@@ -802,7 +801,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         alarmList.add(new Alarm(2014, 9, 24, 9, 20, dayOfWeek2,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
 
         UserInfo userInfo1 = this.userInfoList1.get(0);
@@ -887,7 +886,7 @@ public class RingProcessorSingleUserIT {
         // 1st alarm: 2014-09-23 08:20
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.WEDNESDAY);
@@ -895,7 +894,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         alarmList.add(new Alarm(2014, 9, 24, 9, 20, dayOfWeek2,
                 false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id", AlarmSource.MOBILE_APP));
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
 
         UserInfo userInfo1 = this.userInfoList1.get(0);
@@ -957,7 +956,7 @@ public class RingProcessorSingleUserIT {
 
         // And now, the user update his/her alarms!!!
         userInfo1 = this.userInfoList1.get(0);
-        userInfo1.alarmList.add(new Alarm(2014, 9, 23, 10, 0, new HashSet<Integer>(), false, true, true, false, null, "id", AlarmSource.MOBILE_APP));
+        userInfo1.alarmList.add(new Alarm(2014, 9, 23, 10, 0, new HashSet<Integer>(), false, true, true, false, null, "id"));
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
                 userInfo1.alarmList,
                 userInfo1.ringTime,  // Here we simulate no writing the temporary empty alarm into user info table.

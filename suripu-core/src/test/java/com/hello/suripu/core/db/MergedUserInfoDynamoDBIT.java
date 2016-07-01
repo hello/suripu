@@ -15,7 +15,6 @@ import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
-import com.hello.suripu.core.models.AlarmSource;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.PillColorUtil;
@@ -226,7 +225,7 @@ public class MergedUserInfoDynamoDBIT {
                 ringTime.getDayOfMonth(),
                 ringTime.getHourOfDay(),
                 ringTime.getMinuteOfHour(),
-                new HashSet<Integer>(), false, true, true, smart, new AlarmSound(0, "Pluse"), "id", AlarmSource.MOBILE_APP);
+                new HashSet<Integer>(), false, true, true, smart, new AlarmSound(0, "Pluse"), "id");
     }
 
     @Test
