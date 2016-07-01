@@ -1,7 +1,10 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.*;
+import com.hello.suripu.core.models.MotionFrequency;
+import com.hello.suripu.core.models.MotionScore;
+import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.SleepDuration;
