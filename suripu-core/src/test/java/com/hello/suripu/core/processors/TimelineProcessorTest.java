@@ -391,7 +391,7 @@ public class TimelineProcessorTest {
 
         @Override
         public SleepScoreParameters getSleepScoreParametersByDate(Long accountId, DateTime nightDate) {
-            return null;
+            return new SleepScoreParameters(accountId, nightDate, 480);
         }
 
         @Override

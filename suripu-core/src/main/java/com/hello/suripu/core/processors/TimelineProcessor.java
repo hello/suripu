@@ -946,10 +946,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-
-
-
-
     /**
      * Sleep score - always compute and update dynamo
      * @param trackerMotions
@@ -970,10 +966,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
                 trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
-
-
-
-
         if (this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
             if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
                 LOGGER.warn("enforced minimum motion score for {} on {}", accountId, targetDate);
@@ -989,61 +981,93 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats, targetDate, originalTrackerMotions, motionScore.numMotions, sleepStats.numberOfMotionEvents);
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
-        final Integer timesAwakePenalty;
-        //sleep score v4 duration score incorporates agitatedSleep/'awakeTimes' and accounts for this penalty
-        if (this.useSleepScoreV4(accountId)) {
-            timesAwakePenalty = 0;
-        } else {
-            timesAwakePenalty = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
-        }
+        final long targetDateEpoch = targetDate.getMillis();
+        final float sleepScoreV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDateEpoch);
+        SleepScore sleepScore;
 
-        // Calculate the sleep score based on the sub scores and weighting
-        final SleepScore sleepScore = new SleepScore.Builder()
-                .withMotionScore(motionScore)
-                .withSleepDurationScore(durationScore)
-                .withEnvironmentalScore(environmentScore)
-                .withWeighting(sleepScoreWeighting(accountId))
-                .withTimesAwakePenaltyScore(timesAwakePenalty)
-                .build();
+        //calculates sleep duration score v4 and sleep score
+        if (sleepScoreV2V4Weighting == 1.0f || useSleepScoreV4(accountId)){
+            //timesAwakePenalty accounted for in durv4 score
+            final Integer timesAwakePenalty = 0;
+            final SleepScore.Weighting sleepScoreWeightingV4 =  new SleepScore.DurationWeightingV4();
+            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+            final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+
+            // Calculate the sleep score based on the sub scores and weighting
+            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
+            final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
+            final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+            final float motionFrequency = SleepScoreUtils.getMotionFrequency(motionScore.numMotions, sleepStats.sleepDurationInMinutes);
+            final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleepDuration);
+
+            sleepScore = new SleepScore.Builder()
+                    .withMotionScore(motionScore)
+                    .withSleepDurationScore(durationScoreV4)
+                    .withEnvironmentalScore(environmentScore)
+                    .withWeighting(sleepScoreWeightingV4)
+                    .withTimesAwakePenaltyScore(timesAwakePenalty)
+                    .build();
+
+        //calculates sleep score v4 and v2 linear blend score
+        } else if (sleepScoreV2V4Weighting > 0.0f){
+
+            final Integer timesAwakePenaltyOld = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
+            final Integer timesAwakePenaltyNew = 0;
+
+            final SleepScore.Weighting sleepScoreWeightingV2 = new SleepScore.DurationHeavyWeightingV2();
+            final SleepScore.Weighting sleepScoreWeightingV4 =  new SleepScore.DurationWeightingV4();
+
+            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+            final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+            final Integer durationScoreV2 = SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
+
+            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
+            final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
+            final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+            final float motionFrequency = SleepScoreUtils.getMotionFrequency(motionScore.numMotions, sleepStats.sleepDurationInMinutes);
+            final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleepDuration);
+
+            sleepScore = new SleepScore.BuilderTransition()
+                    .withMotionScoreOld(motionScore)
+                    .withSleepDurationScoreOld(durationScoreV2)
+                    .withEnvironmentalScoreOld(environmentScore)
+                    .withWeightingOld(sleepScoreWeightingV2)
+                    .withTimesAwakePenaltyScoreOld(timesAwakePenaltyOld)
+                    .withMotionScoreNew(motionScore)
+                    .withSleepDurationScoreNew(durationScoreV4)
+                    .withEnvironmentalScoreNew(environmentScore)
+                    .withWeightingNew(sleepScoreWeightingV4)
+                    .withTimesAwakePenaltyScoreNew(timesAwakePenaltyNew)
+                    .build();
+        //calculates sleep score v2
+        } else{
+            final Integer timesAwakePenalty= SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
+            final SleepScore.Weighting sleepScoreWeightingV2 = new SleepScore.DurationHeavyWeightingV2();
+            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+            final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+            final Integer durationScoreV2 = SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
+
+            sleepScore = new SleepScore.Builder()
+                    .withMotionScore(motionScore)
+                    .withSleepDurationScore(durationScoreV2)
+                    .withEnvironmentalScore(environmentScore)
+                    .withWeighting(sleepScoreWeightingV2)
+                    .withTimesAwakePenaltyScore(timesAwakePenalty)
+                    .build();
+        }
 
         // Always update stats and scores to Dynamo
         final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
                 targetDate.withTimeAtStartOfDay(), sleepScore.value, sleepScore, sleepStats, userOffsetMillis);
 
-
         LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}",
                 updatedStats, accountId, sleepScore, sleepStats);
-
         return sleepScore.value;
     }
 
-    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats, final DateTime targetDateLocalUTC, final List <TrackerMotion> originalTrackerMotions, final int numMotions, final int timesAwake) {
-        final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-        final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-
-        if (useSleepScoreV4(accountId)){
-            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
-            final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
-            final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            final float motionFrequency = SleepScoreUtils.getMotionFrequency(numMotions, sleepStats.sleepDurationInMinutes);
-            return SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, timesAwake, agitatedSleepDuration);
-        }
-
-        else if (useSleepScoreV3(accountId)){
-            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDateLocalUTC).durationThreshold;
-            return SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
-        }
-
-        else if (hasSleepScoreDurationV2(accountId)) {
-            return SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
-        }
-
-        return SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
-    }
 
     private Integer computeEnvironmentScore(final Long accountId,
                                             final SleepStats sleepStats,
@@ -1064,19 +1088,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return environmentScore;
     }
 
-    private SleepScore.Weighting sleepScoreWeighting(final Long accountId) {
-        final SleepScore.Weighting weighting;
-        if (useSleepScoreV4(accountId)) {
-            weighting = new SleepScore.DurationWeightingV4();
-        }else if (hasSleepScoreDurationWeightingV2(accountId)) {
-            weighting = new SleepScore.DurationHeavyWeightingV2();
-        } else if (hasSleepScoreDurationWeighting(accountId)) {
-            weighting = new SleepScore.DurationHeavyWeighting();
-        } else {
-            weighting = new SleepScore.Weighting();
-        }
-        return weighting;
-    }
+
 
     private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
 
