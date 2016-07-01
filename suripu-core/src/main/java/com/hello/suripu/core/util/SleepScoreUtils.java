@@ -339,8 +339,6 @@ public class SleepScoreUtils {
             if (trackerMotion.motionRange > motionMinThreshold && (consecutiveMotionMins == 0 || trackerMotion.timestamp <= previousMotionTime + rollingTimeWindow + noMotionTime )) {
                 if (trackerMotion.motionRange >= motionMaxThreshold) {
                     sufficientMotionAmplitude = true;
-                    noMotionTime = noMotionThreshold;
-
                 }
                 if (consecutiveMotionMins == 0){
                     consecutiveMotionMins = 1;
@@ -349,6 +347,8 @@ public class SleepScoreUtils {
                 }
                 if (consecutiveMotionMins >=consecutiveMotionMinsThreshold & sufficientMotionAmplitude){
                     sufficientMotion = true;
+                    noMotionTime = noMotionThreshold;
+
                 }
                 previousMotionTime = trackerMotion.timestamp;
 
@@ -373,7 +373,6 @@ public class SleepScoreUtils {
                 previousMotionTime = trackerMotion.timestamp;
                 if (trackerMotion.motionRange >= motionMaxThreshold){
                     sufficientMotionAmplitude = true;
-                    noMotionTime = noMotionThreshold;
                 }else{
                     sufficientMotionAmplitude = false;
                 }

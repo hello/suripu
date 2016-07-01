@@ -125,17 +125,22 @@ public class SleepScoreUtilsTest {
     @Test
     public void testMotionFrequency(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
-        final long sleepTime = 1431089780000L;
-        final long wakeTime = 1431188031000L;
-        final int sleepDurationMinutes = 900;
+        final long sleepTime = 1431114980000L;
+        final long wakeTime =  1431138980000L;
+        final int sleepDurationMinutes = 400;
         final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
-        assertThat(motionFrequency, is(new MotionFrequency((float)60 / 900 , (float)60 / 900 , (float)60 / 900 , (float)60 / 900 )));
+        final MotionFrequency correctFrequency = new MotionFrequency(0.0725f, 0.016666668f, 0.13125f, 0.05f);
+        assertThat(motionFrequency.motionFrequency, is(correctFrequency.motionFrequency));
+        assertThat(motionFrequency.motionFrequencyFirstPeriod, is(correctFrequency.motionFrequencyFirstPeriod));
+        assertThat(motionFrequency.motionFrequencyMiddlePeriod, is(correctFrequency.motionFrequencyMiddlePeriod));
+        assertThat(motionFrequency.motionFrequencyLastPeriod, is(correctFrequency.motionFrequencyLastPeriod));
+
     }
 
     @Test
     public void testAgitatedSleep(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
-        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, 1431089780000L, 1431188031000L);
+        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, 1431114980000L, 1431138980000L);
         assertThat(agitatedSleep , is(22));
     }
 
