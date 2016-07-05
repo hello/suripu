@@ -6,6 +6,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.AccessTokenUtils;
@@ -16,6 +17,7 @@ import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.OAuthScope;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -114,7 +116,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @return
      */
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
+    public Optional<AccessToken> getTokenByClientCredentials(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
         final Optional<AccessToken> token = getToken(credentials);
 
         if(!token.isPresent()) {
@@ -127,6 +129,10 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return token;
     }
 
+    @Override
+    public Optional<ClientDetails> getClientDetailsByRefreshToken(String token, DateTime now) throws MissingRequiredScopeException {
+        return Optional.absent();
+    }
 
     @Override
     public ClientCredentials storeAuthorizationCode(final ClientDetails clientDetails) throws ClientAuthenticationException {
@@ -139,8 +145,22 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     }
 
     @Override
+    public void disableAuthCode(UUID authCodeUUID) {
+
+    }
+
+    @Override
     public void disable(final AccessToken accessToken) {
         accessTokenDAO.disable(accessToken.token);
+    }
+
+    @Override
+    public void disableByRefreshToken(final String dirtyToken) {
+        final Optional<UUID> optionalToken = AccessTokenUtils.cleanUUID(dirtyToken);
+        if(!optionalToken.isPresent()) {
+            LOGGER.error("error=invalid_refresh_token token={}", dirtyToken);
+        }
+        accessTokenDAO.disableByRefreshToken(optionalToken.get());
     }
 
 

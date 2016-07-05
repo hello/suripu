@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
 
 import java.util.List;
@@ -18,43 +19,46 @@ public class CaffeineAlarmInsightsTest {
     final Long FAKE_ACCOUNT_ID = 999L;
 
     @Test
-    public void test_CardGenerated_fallBack() {
+    public void test_CardGenerated_fail() {
         //no data
         final List<Integer> sleepTimeList = Lists.newArrayList();
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
-        final Optional<InsightCard> fallBackCard = CaffeineAlarm.processCaffeineAlarmFallBack(FAKE_ACCOUNT_ID);
-        assertThat(card.isPresent(), is(Boolean.TRUE));
-        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, DateTimeFormat.forPattern("h:mm aa"));
+        assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
     @Test
-    public void test_CardGenerated_fallBack_2() {
+    public void test_CardGenerated_fail_2() {
         //not enough data
         final List<Integer> sleepTimeList = Lists.newArrayList(1,2);
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
-        final Optional<InsightCard> fallBackCard = CaffeineAlarm.processCaffeineAlarmFallBack(FAKE_ACCOUNT_ID);
-        assertThat(card.isPresent(), is(Boolean.TRUE));
-        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, DateTimeFormat.forPattern("h:mm aa"));
+        assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
     @Test
-    public void test_CardGenerated_fallBack_3() {
+    public void test_CardGenerated_fail_3() {
         //range too large
         final List<Integer> sleepTimeList = Lists.newArrayList(0, 60, 60*10);
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
-        final Optional<InsightCard> fallBackCard = CaffeineAlarm.processCaffeineAlarmFallBack(FAKE_ACCOUNT_ID);
-        assertThat(card.isPresent(), is(Boolean.TRUE));
-        assertThat(card.get().message.equals(fallBackCard.get().message), is(Boolean.TRUE));
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, DateTimeFormat.forPattern("h:mm aa"));
+        assertThat(card.isPresent(), is(Boolean.FALSE));
     }
 
     @Test
     public void test_ProcessCaffeieneAlarm() {
         final List<Integer> sleepTimeList = Lists.newArrayList(1,2,3);
 
-        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList);
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, DateTimeFormat.forPattern("h:mm aa"));
+//        System.out.print(card.get().message);
+        assertThat(card.isPresent(), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void test_ProcessCaffeieneAlarm_2() {
+        final List<Integer> sleepTimeList = Lists.newArrayList(30,30,30);
+
+        final Optional<InsightCard> card = CaffeineAlarm.processCaffeineAlarm(FAKE_ACCOUNT_ID, sleepTimeList, DateTimeFormat.forPattern("HH:mm"));
 //        System.out.print(card.get().message);
         assertThat(card.isPresent(), is(Boolean.TRUE));
     }

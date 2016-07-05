@@ -80,7 +80,7 @@ public class Application {
                 registration.description,
                 Boolean.FALSE, // Application aren't published by default.
                 DateTime.now(),
-                GrantType.AUTH_CODE
+                GrantType.AUTHORIZATION_CODE
         );
     }
 

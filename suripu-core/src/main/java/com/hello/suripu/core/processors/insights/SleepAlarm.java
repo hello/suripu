@@ -16,6 +16,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Years;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +31,11 @@ public class SleepAlarm {
     public static final Integer PRE_SLEEP_TIME = 30;
 
     public static final Integer NUM_DAYS = 14;
-    public static final Integer MAX_ALLOWED_RANGE = 3 * 60; //3 hrs
+    public static final Integer MAX_ALLOWED_RANGE = 6 * 60; //6 hrs
     public static final Integer LATEST_ALLOWED_WAKE_TIME = (11) * 60; //11 AM
     public static final Integer EARLIEST_ALLOWED_WAKE_TIME = 4 * 60; //4 AM
 
-    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId) {
+    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTimeFormatter timeFormat) {
 
         //get sleep variance data for the past NUM_DAYS
         final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
@@ -71,20 +72,20 @@ public class SleepAlarm {
 
         final Integer userAge = Years.yearsBetween(dob, DateTime.now()).toPeriod().getYears();
 
-        final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge);
+        final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge, timeFormat);
         return card;
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard>  processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge) {
+    public static Optional<InsightCard>  processSleepAlarm(final Long accountId, final List<Integer> wakeTimeList, final Integer userAge, final DateTimeFormatter timeFormat) {
 
         if (wakeTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-empty", accountId);
-            return processSleepAlarmFallBack(accountId);
+            return Optional.absent();
         }
         else if (wakeTimeList.size() <= 2) {
             LOGGER.info("account_id={} insight=sleep-alarm action=wake-time-list-too-small", accountId);
-            return processSleepAlarmFallBack(accountId); //not big enough to calculate mean meaningfully har har
+            return Optional.absent(); //not big enough to calculate mean meaningfully har har
         }
 
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -95,29 +96,20 @@ public class SleepAlarm {
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
             LOGGER.info("insight=sleep-alarm account_id={} action=fail-safe-guard");
-            return processSleepAlarmFallBack(accountId);
+            return Optional.absent();
         }
 
-        final Double wakeAvgDouble = stats.getMean();
-        final int wakeAvg = (int) Math.round(wakeAvgDouble);
+        final Double wakeMedDouble = stats.getPercentile(50);
+        final int wakeMed = (int) Math.round(wakeMedDouble);
 
         final int recSleepDurationMins = getRecommendedSleepDurationMinutes(userAge);
-        final int recommendedSleepMinutesTime = wakeAvg - recSleepDurationMins;
+        final int recommendedSleepMinutesTime = wakeMed - recSleepDurationMins;
 
-        final String wakeTime = InsightUtils.timeConvertRound(wakeAvg);
-        final String preSleepTime = InsightUtils.timeConvertRound((recommendedSleepMinutesTime - PRE_SLEEP_TIME));
-        final String sleepTime = InsightUtils.timeConvertRound(recommendedSleepMinutesTime);
+        final String wakeTime = InsightUtils.timeConvertRound(wakeMed, timeFormat);
+        final String preSleepTime = InsightUtils.timeConvertRound((recommendedSleepMinutesTime - PRE_SLEEP_TIME), timeFormat);
+        final String sleepTime = InsightUtils.timeConvertRound(recommendedSleepMinutesTime, timeFormat);
 
         final Text text = SleepAlarmMsgEN.getSleepAlarmMessage(wakeTime, recSleepDurationMins, preSleepTime, sleepTime);
-
-        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
-                InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
-    }
-
-    @VisibleForTesting
-    public static Optional<InsightCard> processSleepAlarmFallBack(final Long accountId) {
-        final Text text = SleepAlarmMsgEN.getSleepAlarmFallBackMessage();
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_TIME, InsightCard.TimePeriod.MONTHLY,
@@ -136,11 +128,11 @@ public class SleepAlarm {
         }
 
         //Wake time sanity check, should be between 4AM and 11AM
-        final Double wakeAvg = stats.getMean();
-        if (wakeAvg > LATEST_ALLOWED_WAKE_TIME) {
+        final Double wakeMed = stats.getPercentile(50);
+        if (wakeMed > LATEST_ALLOWED_WAKE_TIME) {
             return Boolean.FALSE;
         }
-        if (wakeAvg < EARLIEST_ALLOWED_WAKE_TIME) {
+        if (wakeMed < EARLIEST_ALLOWED_WAKE_TIME) {
             return Boolean.FALSE;
         }
 

@@ -15,6 +15,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +32,11 @@ public class CaffeineAlarm {
     public static final Integer SIX_AM_MINUTES = 6 * 60;
 
     public static final Integer NUM_DAYS = 14;
-    public static final Integer MAX_ALLOWED_RANGE = 3 * 60; //3 hrs
+    public static final Integer MAX_ALLOWED_RANGE = 6 * 60; //6 hrs
     public static final Integer LATEST_ALLOWED_SLEEP_TIME = (4 + 24) * 60; //4AM
     public static final Integer EARLIEST_ALLOWED_SLEEP_TIME = 20 * 60; //8PM
 
-    public static Optional<InsightCard> getInsights(final AccountInfoProcessor accountInfoProcessor, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId) {
+    public static Optional<InsightCard> getInsights(final AccountInfoProcessor accountInfoProcessor, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTimeFormatter timeFormat) {
 
         final Boolean drinksCoffee = accountInfoProcessor.checkUserDrinksCaffeine(accountId);
         if (!drinksCoffee) {
@@ -67,20 +68,20 @@ public class CaffeineAlarm {
             sleepTimeList.add(sleepTime);
         }
 
-        final Optional<InsightCard> card = processCaffeineAlarm(accountId, sleepTimeList);
+        final Optional<InsightCard> card = processCaffeineAlarm(accountId, sleepTimeList, timeFormat);
         return card;
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard> processCaffeineAlarm(final Long accountId, final List<Integer> sleepTimeList) {
+    public static Optional<InsightCard> processCaffeineAlarm(final Long accountId, final List<Integer> sleepTimeList, final DateTimeFormatter timeFormat) {
 
         if (sleepTimeList.isEmpty()) {
             LOGGER.info("account_id={} insight=caffeine-alarm action=sleep-time-list-empty", accountId);
-            return processCaffeineAlarmFallBack(accountId);
+            return Optional.absent();
         }
         else if (sleepTimeList.size() <= 2) {
             LOGGER.info("account_id={} insight=caffeine-alarm action=sleep-time-list-too-small", accountId);
-            return processCaffeineAlarmFallBack(accountId); //not big enough to calculate mean meaningfully har har
+            return Optional.absent(); //not big enough to calculate mean meaningfully har har
         }
 
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -95,27 +96,18 @@ public class CaffeineAlarm {
         final Boolean passSafeGuards = checkSafeGuards(stats);
         if (!passSafeGuards) {
             LOGGER.info("insight=caffeine-alarm account_id={} action=fail-safe-guard");
-            return processCaffeineAlarmFallBack(accountId);
+            return Optional.absent();
         }
 
-        final Double sleepAvgDouble = stats.getMean();
-        final int sleepAvg = (int) Math.round(sleepAvgDouble);
+        final Double sleepMedDouble = stats.getPercentile(50);
+        final int sleepMed = (int) Math.round(sleepMedDouble);
 
-        final int recommendedCoffeeMinutesTime = getRecommendedCoffeeMinutesTime(sleepAvg);
+        final int recommendedCoffeeMinutesTime = getRecommendedCoffeeMinutesTime(sleepMed);
 
-        final String sleepTime = InsightUtils.timeConvertRound(sleepAvg);
-        final String coffeeTime = InsightUtils.timeConvertRound(recommendedCoffeeMinutesTime);
+        final String sleepTime = InsightUtils.timeConvertRound(sleepMed, timeFormat);
+        final String coffeeTime = InsightUtils.timeConvertRound(recommendedCoffeeMinutesTime, timeFormat);
 
         final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmMessage(sleepTime, coffeeTime);
-
-        return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
-                InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
-    }
-
-    @VisibleForTesting
-    public static Optional<InsightCard> processCaffeineAlarmFallBack(final Long accountId) {
-        final Text text = CaffeineAlarmMsgEN.getCaffeineAlarmFallBackMessage();
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.CAFFEINE, InsightCard.TimePeriod.MONTHLY,
@@ -134,11 +126,11 @@ public class CaffeineAlarm {
         }
 
         //Sleep time sanity check, should be between 8PM and 4AM
-        final Double sleepAvg = stats.getMean();
-        if (sleepAvg > LATEST_ALLOWED_SLEEP_TIME) {
+        final Double sleepMed = stats.getPercentile(50);
+        if (sleepMed > LATEST_ALLOWED_SLEEP_TIME) {
             return Boolean.FALSE;
         }
-        if (sleepAvg < EARLIEST_ALLOWED_SLEEP_TIME) {
+        if (sleepMed < EARLIEST_ALLOWED_SLEEP_TIME) {
             return Boolean.FALSE;
         }
 
