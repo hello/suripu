@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -34,7 +35,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by jnorgan on 4/21/15.
@@ -99,12 +99,14 @@ public class OTAHistoryDAODynamoDB {
                 .withAttributeValueList(new AttributeValue().withS(deviceId));
         queryConditions.put(DEVICE_ID_ATTRIBUTE_NAME, selectDeviceIdCondition);
 
-        final Set<String> targetAttributeSet = Sets.newHashSet(DEVICE_ID_ATTRIBUTE_NAME,
-                EVENT_TIME_ATTRIBUTE_NAME,
-                CURRENT_FW_VERSION_ATTRIBUTE_NAME,
-                NEW_FW_VERSION_ATTRIBUTE_NAME,
-                FILE_LIST_ATTRIBUTE_NAME,
-                STATUS_ATTRIBUTE_NAME);
+        final ImmutableSet<String> requiredAttributes = ImmutableSet.of(DEVICE_ID_ATTRIBUTE_NAME,
+            EVENT_TIME_ATTRIBUTE_NAME,
+            CURRENT_FW_VERSION_ATTRIBUTE_NAME,
+            NEW_FW_VERSION_ATTRIBUTE_NAME,
+            FILE_LIST_ATTRIBUTE_NAME);
+        final ImmutableSet<String> optionalAttributes = ImmutableSet.of(STATUS_ATTRIBUTE_NAME);
+
+        final ImmutableSet<String> targetAttributeSet = Sets.union(requiredAttributes, optionalAttributes).immutableCopy();
 
         final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributeSet)
@@ -130,12 +132,7 @@ public class OTAHistoryDAODynamoDB {
                 return Collections.EMPTY_LIST;
             }
 
-            if (item.containsKey(DEVICE_ID_ATTRIBUTE_NAME)
-                    && item.containsKey(EVENT_TIME_ATTRIBUTE_NAME)
-                    && item.containsKey(CURRENT_FW_VERSION_ATTRIBUTE_NAME)
-                    && item.containsKey(NEW_FW_VERSION_ATTRIBUTE_NAME)
-                    && item.containsKey(FILE_LIST_ATTRIBUTE_NAME)) {
-
+            if (item.keySet().containsAll(requiredAttributes)) {
                 final String itemDeviceId = item.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
                 final DateTime itemEventTime = stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
                 final String itemCurrentFW = item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN();
@@ -162,12 +159,14 @@ public class OTAHistoryDAODynamoDB {
             .withAttributeValueList(new AttributeValue().withS(deviceId));
         queryConditions.put(DEVICE_ID_ATTRIBUTE_NAME, selectDeviceIdCondition);
 
-        final Set<String> targetAttributeSet = Sets.newHashSet(DEVICE_ID_ATTRIBUTE_NAME,
+        final ImmutableSet<String> requiredAttributes = ImmutableSet.of(DEVICE_ID_ATTRIBUTE_NAME,
             EVENT_TIME_ATTRIBUTE_NAME,
             CURRENT_FW_VERSION_ATTRIBUTE_NAME,
             NEW_FW_VERSION_ATTRIBUTE_NAME,
-            FILE_LIST_ATTRIBUTE_NAME,
-            STATUS_ATTRIBUTE_NAME);
+            FILE_LIST_ATTRIBUTE_NAME);
+        final ImmutableSet<String> optionalAttributes = ImmutableSet.of(STATUS_ATTRIBUTE_NAME);
+
+        final ImmutableSet<String> targetAttributeSet = Sets.union(requiredAttributes, optionalAttributes).immutableCopy();
 
         final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
             .withAttributesToGet(targetAttributeSet)
@@ -187,11 +186,8 @@ public class OTAHistoryDAODynamoDB {
             if (item == null || item.isEmpty()) {
                 return Optional.absent();
             }
-            if (item.containsKey(DEVICE_ID_ATTRIBUTE_NAME)
-                && item.containsKey(EVENT_TIME_ATTRIBUTE_NAME)
-                && item.containsKey(CURRENT_FW_VERSION_ATTRIBUTE_NAME)
-                && item.containsKey(NEW_FW_VERSION_ATTRIBUTE_NAME)
-                && item.containsKey(FILE_LIST_ATTRIBUTE_NAME)) {
+
+            if (item.keySet().containsAll(requiredAttributes)) {
 
                 final String itemDeviceId = item.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
                 final DateTime itemEventTime = stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
