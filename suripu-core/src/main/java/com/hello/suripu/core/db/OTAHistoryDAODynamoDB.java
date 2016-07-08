@@ -25,6 +25,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.hello.suripu.core.models.OTAHistory;
+import com.hello.suripu.core.ota.Status;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -138,9 +139,9 @@ public class OTAHistoryDAODynamoDB {
                 final String itemCurrentFW = item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN();
                 final String itemNewFW = item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN();
                 final List<String> itemFileList = item.get(FILE_LIST_ATTRIBUTE_NAME).getSS();
-                final OTAHistory.OTAStatus status = item.containsKey(STATUS_ATTRIBUTE_NAME)
-                    ? OTAHistory.OTAStatus.fromString(item.get(STATUS_ATTRIBUTE_NAME).getS())
-                    : OTAHistory.OTAStatus.RESPONSE_SENT;
+                final Status status = item.containsKey(STATUS_ATTRIBUTE_NAME)
+                    ? Status.fromString(item.get(STATUS_ATTRIBUTE_NAME).getS())
+                    : Status.RESPONSE_SENT;
 
                 otaHistoryList.add(new OTAHistory(itemDeviceId, itemEventTime, itemCurrentFW, itemNewFW, itemFileList, status));
             }else {
@@ -194,9 +195,9 @@ public class OTAHistoryDAODynamoDB {
                 final String itemCurrentFW = item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN();
                 final String itemNewFW = item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN();
                 final List<String> itemFileList = item.get(FILE_LIST_ATTRIBUTE_NAME).getSS();
-                final OTAHistory.OTAStatus status = item.containsKey(STATUS_ATTRIBUTE_NAME)
-                    ? OTAHistory.OTAStatus.fromString(item.get(STATUS_ATTRIBUTE_NAME).getS())
-                    : OTAHistory.OTAStatus.UNKNOWN;
+                final Status status = item.containsKey(STATUS_ATTRIBUTE_NAME)
+                    ? Status.fromString(item.get(STATUS_ATTRIBUTE_NAME).getS())
+                    : Status.UNKNOWN;
 
                 return Optional.of(new OTAHistory(itemDeviceId, itemEventTime, itemCurrentFW, itemNewFW, itemFileList, status));
             }else {

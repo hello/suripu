@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import com.hello.suripu.core.ota.Status;
+
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -9,33 +11,12 @@ import java.util.List;
  */
 public class OTAHistory {
 
-    public enum OTAStatus {
-        UNKNOWN,
-        UPDATE_REQUIRED,
-        RESPONSE_SENT,
-        IN_PROGRESS,
-        COMPLETE;
-
-        public static OTAStatus fromString(final String text) {
-            if (text == null) {
-                return OTAStatus.UNKNOWN;
-            }
-
-            for (final OTAStatus status : OTAStatus.values()) {
-                if (text.equalsIgnoreCase(status.toString())) {
-                    return status;
-                }
-            }
-            throw new IllegalArgumentException();
-        }
-    }
-
     public final String deviceId;
     public final DateTime eventTime;
     public final String currentFWVersion;
     public final String newFWVersion;
     public final List<String> fileList;
-    public final OTAStatus otaStatus;
+    public final Status otaStatus;
 
     public OTAHistory(
         final String deviceId,
@@ -43,7 +24,7 @@ public class OTAHistory {
         final String currentFW,
         final String newFW,
         final List<String> urlList,
-        final OTAStatus otaStatus) {
+        final Status otaStatus) {
 
         this.deviceId = deviceId;
         this.eventTime = eventTime;

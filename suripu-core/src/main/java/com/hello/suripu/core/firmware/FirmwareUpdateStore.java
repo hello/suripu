@@ -26,6 +26,7 @@ import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.models.OTAHistory;
+import com.hello.suripu.core.ota.Status;
 import com.hello.suripu.core.util.FeatureUtils;
 
 import org.apache.commons.codec.DecoderException;
@@ -293,7 +294,7 @@ public class FirmwareUpdateStore {
                         urlList.add(fileDL.getHost() + fileDL.getUrl());
                     }
                     final DateTime eventTime = new DateTime().toDateTime(DateTimeZone.UTC);
-                    final OTAHistory newHistoryEntry = new OTAHistory(deviceId, eventTime, currentFirmwareVersion, fw_files.getKey(), urlList, OTAHistory.OTAStatus.RESPONSE_SENT);
+                    final OTAHistory newHistoryEntry = new OTAHistory(deviceId, eventTime, currentFirmwareVersion, fw_files.getKey(), urlList, Status.RESPONSE_SENT);
                     final Optional<OTAHistory> insertedEntry = otaHistoryDAO.insertOTAEvent(newHistoryEntry);
                     if (!insertedEntry.isPresent()) {
                         LOGGER.error("OTA History Insertion Failed: {} => {} for {} at {}", currentFirmwareVersion, fw_files.getKey(), deviceId, eventTime);
