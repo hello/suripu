@@ -166,14 +166,14 @@ public class SleepAlarmInsightsTest {
 
         //Fake sleepStatsDAO
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
-        final List<AggregateSleepStats> fakeAggSleepStats = Lists.newArrayList(new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
-                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now().minusDays(1), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
-                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now().minusDays(2), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
-                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now().minusDays(3), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
-                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now().minusDays(4), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
-                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now().minusDays(5), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*10L, 0)));
+        final List<AggregateSleepStats> fakeAggSleepStats = Lists.newArrayList(new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(DateTimeZone.UTC), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(DateTimeZone.UTC).minusDays(1), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(DateTimeZone.UTC).minusDays(2), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(DateTimeZone.UTC).minusDays(3), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(DateTimeZone.UTC).minusDays(4), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*9L, 0)),
+                new AggregateSleepStats(FAKE_ACCOUNT_ID, DateTime.now(DateTimeZone.UTC).minusDays(5), 0, 0, "v1", new MotionScore(0, 0, 0f, 0, 0), 0, 0, 0, new SleepStats(0, 0, 0, 0, Boolean.TRUE, 0, 0L, 60*60*1000*10L, 0)));
         final ImmutableList<AggregateSleepStats> immutableAggSleepStats = ImmutableList.copyOf(fakeAggSleepStats);
-        Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID, DateTimeUtil.dateToYmdString(DateTime.now().minusDays(14)), DateTimeUtil.dateToYmdString(DateTime.now()))).thenReturn(immutableAggSleepStats);
+        Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID, DateTimeUtil.dateToYmdString(DateTime.now(DateTimeZone.UTC).minusDays(14)), DateTimeUtil.dateToYmdString(DateTime.now(DateTimeZone.UTC)))).thenReturn(immutableAggSleepStats);
 
         //Fake accountReadDAO
         final AccountReadDAO accountReadDAO = Mockito.mock(AccountDAO.class);

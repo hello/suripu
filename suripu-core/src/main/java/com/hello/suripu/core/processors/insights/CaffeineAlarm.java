@@ -44,7 +44,7 @@ public class CaffeineAlarm {
         }
 
         //get sleep variance data for the past NUM_DAYS
-        final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
+        final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
         final DateTime queryStartDate = queryEndDate.minusDays(NUM_DAYS);
 
         final String queryEndDateString = DateTimeUtil.dateToYmdString(queryEndDate);

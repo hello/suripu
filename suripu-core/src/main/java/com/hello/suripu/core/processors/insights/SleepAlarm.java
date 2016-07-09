@@ -38,7 +38,7 @@ public class SleepAlarm {
     public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTimeFormatter timeFormat) {
 
         //get sleep variance data for the past NUM_DAYS
-        final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
+        final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
         final DateTime queryStartDate = queryEndDate.minusDays(NUM_DAYS);
 
         final String queryEndDateString = DateTimeUtil.dateToYmdString(queryEndDate);
@@ -67,10 +67,10 @@ public class SleepAlarm {
         if (account.isPresent()) {
             dob = account.get().DOB;
         } else {
-            dob = DateTime.now();
+            dob = DateTime.now(DateTimeZone.UTC);
         }
 
-        final Integer userAge = Years.yearsBetween(dob, DateTime.now()).toPeriod().getYears();
+        final Integer userAge = Years.yearsBetween(dob, DateTime.now(DateTimeZone.UTC)).toPeriod().getYears();
 
         final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge, timeFormat);
         return card;
