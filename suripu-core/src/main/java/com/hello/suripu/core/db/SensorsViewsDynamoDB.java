@@ -300,7 +300,7 @@ public class SensorsViewsDynamoDB {
             final String deviceId = item.get(SENSE_ID_ATTRIBUTE_NAME).getS();
             final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
             final String updatedAt = (item.containsKey(UPDATED_AT_UTC_ATTRIBUTE_NAME) ? item.get(UPDATED_AT_UTC_ATTRIBUTE_NAME).getS(): "");
-            final DateTime dateTime = DateTime.parse(updatedAt + "Z", DateTimeFormat.forPattern(DATETIME_FORMAT + "Z")).withZone(DateTimeZone.UTC);
+            final DateTime dateTime = DateTime.parse(updatedAt, DateTimeFormat.forPattern(DATETIME_FORMAT).withZoneUTC());
             final FirmwareInfo latestFWInfo = new FirmwareInfo(firmwareVersion.toString(), "0", deviceId, dateTime.getMillis());
             fwVersions.add(latestFWInfo);
         }
@@ -339,7 +339,7 @@ public class SensorsViewsDynamoDB {
                 ? Integer.toHexString(Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()))
             : "-";
 
-        final DateTime dateTime = DateTime.parse(dateTimeUTC + "Z", DateTimeFormat.forPattern(DATETIME_FORMAT + "Z")).withZone(DateTimeZone.UTC);
+        final DateTime dateTime = DateTime.parse(dateTimeUTC, DateTimeFormat.forPattern(DATETIME_FORMAT).withZoneUTC());
 
         final DeviceStatus deviceStatus = DeviceStatus.sense(internalSenseId, firmwareVersion, dateTime);
         return Optional.of(deviceStatus);
@@ -366,7 +366,7 @@ public class SensorsViewsDynamoDB {
         final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
         final Integer sound = (item.containsKey(SOUND_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(SOUND_ATTRIBUTE_NAME).getN()) : 0);
         final Integer offsetMillis = (item.containsKey(OFFSET_MILLIS_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN()) : 0);
-        final DateTime dateTime = DateTime.parse(dateTimeUTC + "Z", DateTimeFormat.forPattern(DATETIME_FORMAT + "Z")).withZone(DateTimeZone.UTC);
+        final DateTime dateTime = DateTime.parse(dateTimeUTC, DateTimeFormat.forPattern(DATETIME_FORMAT).withZoneUTC());
 
         final DeviceData deviceData = new DeviceData.Builder()
                 .withDeviceId(internalSenseId)
