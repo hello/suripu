@@ -20,6 +20,6 @@ public enum Status {
                 return status;
             }
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(String.format("Invalid ota status value='%s'", text));
     }
 }
