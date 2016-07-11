@@ -1,9 +1,10 @@
 package com.hello.suripu.core.processors.insights;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -14,6 +15,7 @@ import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FileUtils;
+
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

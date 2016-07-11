@@ -38,6 +38,7 @@ public class FeatureFlipper {
     public final static String FEEDBACK_IN_TIMELINE = "feedback_in_timeline";
     public final static String FORCE_EVT_OTA_UPDATE = "pang-fire-fighting";
     public final static String FORCE_HTTP_500 = "force_http_500";
+    public final static String FW_VERSIONS_REQUIRING_UPDATE = "fw_versions_requiring_update";
 
     public final static String HMM_ALGORITHM = "hmm_algorithm";
     public final static String HMM_PARTNER_FILTER = "hmm_partner_filter";

@@ -1,5 +1,11 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -18,11 +24,9 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.OTAHistory;
+import com.hello.suripu.core.ota.Status;
+
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
@@ -32,7 +36,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by jnorgan on 4/21/15.
@@ -46,6 +49,7 @@ public class OTAHistoryDAODynamoDB {
     public static final String CURRENT_FW_VERSION_ATTRIBUTE_NAME = "current_firmware_version";
     public static final String NEW_FW_VERSION_ATTRIBUTE_NAME = "new_firmware_version";
     public static final String FILE_LIST_ATTRIBUTE_NAME = "file_list";
+    public static final String STATUS_ATTRIBUTE_NAME = "ota_status";
     public final static String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ssZ";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(OTAHistoryDAODynamoDB.class);
@@ -62,6 +66,7 @@ public class OTAHistoryDAODynamoDB {
         item.put(CURRENT_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.currentFWVersion));
         item.put(NEW_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.newFWVersion));
         item.put(FILE_LIST_ATTRIBUTE_NAME, new AttributeValue().withSS(historyEntry.fileList));
+        item.put(STATUS_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.otaStatus.toString()));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
         try {
@@ -95,11 +100,14 @@ public class OTAHistoryDAODynamoDB {
                 .withAttributeValueList(new AttributeValue().withS(deviceId));
         queryConditions.put(DEVICE_ID_ATTRIBUTE_NAME, selectDeviceIdCondition);
 
-        final Set<String> targetAttributeSet = Sets.newHashSet(DEVICE_ID_ATTRIBUTE_NAME,
-                EVENT_TIME_ATTRIBUTE_NAME,
-                CURRENT_FW_VERSION_ATTRIBUTE_NAME,
-                NEW_FW_VERSION_ATTRIBUTE_NAME,
-                FILE_LIST_ATTRIBUTE_NAME);
+        final ImmutableSet<String> requiredAttributes = ImmutableSet.of(DEVICE_ID_ATTRIBUTE_NAME,
+            EVENT_TIME_ATTRIBUTE_NAME,
+            CURRENT_FW_VERSION_ATTRIBUTE_NAME,
+            NEW_FW_VERSION_ATTRIBUTE_NAME,
+            FILE_LIST_ATTRIBUTE_NAME);
+        final ImmutableSet<String> optionalAttributes = ImmutableSet.of(STATUS_ATTRIBUTE_NAME);
+
+        final ImmutableSet<String> targetAttributeSet = Sets.union(requiredAttributes, optionalAttributes).immutableCopy();
 
         final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributeSet)
@@ -125,25 +133,79 @@ public class OTAHistoryDAODynamoDB {
                 return Collections.EMPTY_LIST;
             }
 
-            if (item.containsKey(DEVICE_ID_ATTRIBUTE_NAME)
-                    && item.containsKey(EVENT_TIME_ATTRIBUTE_NAME)
-                    && item.containsKey(CURRENT_FW_VERSION_ATTRIBUTE_NAME)
-                    && item.containsKey(NEW_FW_VERSION_ATTRIBUTE_NAME)
-                    && item.containsKey(FILE_LIST_ATTRIBUTE_NAME)) {
-
+            if (item.keySet().containsAll(requiredAttributes)) {
                 final String itemDeviceId = item.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
                 final DateTime itemEventTime = stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
                 final String itemCurrentFW = item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN();
                 final String itemNewFW = item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN();
                 final List<String> itemFileList = item.get(FILE_LIST_ATTRIBUTE_NAME).getSS();
+                final Status status = item.containsKey(STATUS_ATTRIBUTE_NAME)
+                    ? Status.fromString(item.get(STATUS_ATTRIBUTE_NAME).getS())
+                    : Status.RESPONSE_SENT;
 
-                otaHistoryList.add(new OTAHistory(itemDeviceId, itemEventTime, itemCurrentFW, itemNewFW, itemFileList));
+                otaHistoryList.add(new OTAHistory(itemDeviceId, itemEventTime, itemCurrentFW, itemNewFW, itemFileList, status));
             }else {
                 LOGGER.error("OTA history query returned invalid result.");
                 return Collections.EMPTY_LIST;
             }
         }
         return otaHistoryList;
+    }
+
+    public Optional<OTAHistory> getLatest(final String deviceId) {
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+
+        final Condition selectDeviceIdCondition = new Condition()
+            .withComparisonOperator(ComparisonOperator.EQ)
+            .withAttributeValueList(new AttributeValue().withS(deviceId));
+        queryConditions.put(DEVICE_ID_ATTRIBUTE_NAME, selectDeviceIdCondition);
+
+        final ImmutableSet<String> requiredAttributes = ImmutableSet.of(DEVICE_ID_ATTRIBUTE_NAME,
+            EVENT_TIME_ATTRIBUTE_NAME,
+            CURRENT_FW_VERSION_ATTRIBUTE_NAME,
+            NEW_FW_VERSION_ATTRIBUTE_NAME,
+            FILE_LIST_ATTRIBUTE_NAME);
+        final ImmutableSet<String> optionalAttributes = ImmutableSet.of(STATUS_ATTRIBUTE_NAME);
+
+        final ImmutableSet<String> targetAttributeSet = Sets.union(requiredAttributes, optionalAttributes).immutableCopy();
+
+        final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
+            .withAttributesToGet(targetAttributeSet)
+            .withLimit(1)
+            .withScanIndexForward(false);
+
+        QueryResult queryResult;
+        try {
+            queryResult = this.dynamoDBClient.query(queryRequest);
+        } catch (AmazonServiceException ase){
+            LOGGER.error("OTA history query failed. Check parameters used.");
+            throw new RuntimeException(ase);
+        }
+
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+        for(final Map<String, AttributeValue> item: items) {
+            if (item == null || item.isEmpty()) {
+                return Optional.absent();
+            }
+
+            if (item.keySet().containsAll(requiredAttributes)) {
+
+                final String itemDeviceId = item.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
+                final DateTime itemEventTime = stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
+                final String itemCurrentFW = item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN();
+                final String itemNewFW = item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN();
+                final List<String> itemFileList = item.get(FILE_LIST_ATTRIBUTE_NAME).getSS();
+                final Status status = item.containsKey(STATUS_ATTRIBUTE_NAME)
+                    ? Status.fromString(item.get(STATUS_ATTRIBUTE_NAME).getS())
+                    : Status.UNKNOWN;
+
+                return Optional.of(new OTAHistory(itemDeviceId, itemEventTime, itemCurrentFW, itemNewFW, itemFileList, status));
+            }else {
+                LOGGER.error("OTA history query returned invalid result.");
+                return Optional.absent();
+            }
+        }
+        return Optional.absent();
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
