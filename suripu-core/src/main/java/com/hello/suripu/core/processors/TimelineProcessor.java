@@ -38,6 +38,7 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.MotionFrequency;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
@@ -997,9 +998,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             // Calculate the sleep score based on the sub scores and weighting
             final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
-            final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
+            final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
             final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            final float motionFrequency = SleepScoreUtils.getMotionFrequency(motionScore.numMotions, sleepStats.sleepDurationInMinutes);
+            final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
             final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleepDuration);
 
             sleepScore = new SleepScore.Builder()
@@ -1022,11 +1023,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final Optional<Account> optionalAccount = accountDAO.getById(accountId);
             final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
             final Integer durationScoreV2 = SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
-
-            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
-            final Integer sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
+                        final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
+            final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
             final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            final float motionFrequency = SleepScoreUtils.getMotionFrequency(motionScore.numMotions, sleepStats.sleepDurationInMinutes);
+            final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
             final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleepDuration);
 
             sleepScore = new SleepScore.BuilderTransition()
