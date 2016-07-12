@@ -1023,11 +1023,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final Optional<Account> optionalAccount = accountDAO.getById(accountId);
             final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
             final Integer durationScoreV2 = SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
-                        final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
+            final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
             final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(accountId, userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
             final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
             final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
             final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleepDuration);
+
+            final float sleepScoreV4 = sleepScoreWeightingV4.duration *  durationScoreV4 + sleepScoreWeightingV4.environmental * environmentScore;
+            final float sleepScoreV2 = sleepScoreWeightingV2.duration * durationScoreV2 + sleepScoreWeightingV2.motion * motionScore.score + sleepScoreWeightingV4.environmental * environmentScore - timesAwakePenaltyOld;
+            final float sleepScoreDiff = sleepScoreV4 - sleepScoreV2;
+            LOGGER.warn("action=sleep-score-v2-v4-difference accountid={} sleep-score-v2={} sleep-score-v4={} sleep-score-difference={}", accountId, sleepScoreV2, sleepScoreV4, sleepScoreDiff);
 
             sleepScore = new SleepScore.BuilderTransition()
                     .withMotionScoreOld(motionScore)
