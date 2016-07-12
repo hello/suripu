@@ -1,5 +1,7 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Joiner;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -17,7 +19,7 @@ import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
-import com.google.common.base.Joiner;
+
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
@@ -47,7 +49,8 @@ public class ResponseCommandsDAODynamoDB {
     public enum ResponseCommand {
         RESET_TO_FACTORY_FW("reset_to_factory_fw"),
         RESET_MCU("reset_mcu"),
-        SET_LOG_LEVEL("set_log_level");
+        SET_LOG_LEVEL("set_log_level"),
+        FORCE_OTA("force_ota");
 
         private String value;
         private ResponseCommand(final String value) {

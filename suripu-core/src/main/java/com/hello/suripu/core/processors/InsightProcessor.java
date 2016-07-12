@@ -188,7 +188,7 @@ public class InsightProcessor {
 
     private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final RolloutClient featureFlipper) {
         final Set<InsightCard.Category> recentCategories  = this.getRecentInsightsCategories(accountId);
-        final DateTime currentTime = DateTime.now();
+        final DateTime currentTime = DateTime.now(DateTimeZone.UTC);
         return generateGeneralInsights(accountId, deviceId, deviceDataInsightQueryDAO, recentCategories, currentTime, featureFlipper);
     }
 
@@ -512,7 +512,7 @@ public class InsightProcessor {
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
                 break;
             case WAKE_VARIANCE:
-                final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
+                final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
                 break;
             case WORK:

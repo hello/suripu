@@ -531,7 +531,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         questionsPool.addAll(this.availableQuestionIds.get(questionType));
         questionsPool.removeAll(seenIds);
 
-        //checks ask time if user is feature flipped
+        //checks ask time if feature flipped
         if (useQuestionAskTime(accountId)) {
             final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
             if (optionalTimeZone.isPresent()) {

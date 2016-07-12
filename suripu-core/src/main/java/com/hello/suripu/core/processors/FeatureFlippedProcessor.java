@@ -14,7 +14,7 @@ public class FeatureFlippedProcessor {
     @Inject
     protected RolloutClient featureFlipper;
 
-    protected FeatureFlippedProcessor()  {
+    protected FeatureFlippedProcessor() {
         ObjectGraphRoot.getInstance().inject(this);
     }
 
@@ -26,18 +26,23 @@ public class FeatureFlippedProcessor {
     protected Boolean hasAlarmInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.ALARM_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
+
     protected Boolean hasSoundInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
+
     protected Boolean hasEnvironmentInTimelineScore(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, Collections.EMPTY_LIST);
     }
+
     protected Boolean hasFeedbackInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.FEEDBACK_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
+
     protected Boolean hasInOrOutOfBedEvents(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.IN_OUT_BED_EVENTS, accountId, Collections.EMPTY_LIST);
     }
+
     protected Boolean hasHmmEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
@@ -51,15 +56,15 @@ public class FeatureFlippedProcessor {
     }
 
     protected Boolean hasOnlineHmmAlgorithmEnabled(final Long accountId) {
-        return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_ALGORITHM,accountId,Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasNeuralNetAlgorithmEnabled(final Long accountId) {
-        return  featureFlipper.userFeatureActive(FeatureFlipper.NEURAL_NET_ALGORITHM,accountId,Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.NEURAL_NET_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasOnlineHmmLearningEnabled(final Long accountId) {
-        return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_LEARNING,accountId,Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_LEARNING, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasPartnerFilterEnabled(final Long accountId) {
@@ -127,7 +132,7 @@ public class FeatureFlippedProcessor {
     }
 
     protected Boolean hasOutlierFilterEnabled(final long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.OUTLIER_FILTER,accountId,Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.OUTLIER_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasAnomalyLightQuestionEnabled(final long accountId) {
@@ -155,7 +160,7 @@ public class FeatureFlippedProcessor {
     }
 
     protected Boolean hasInBedSearchEnabled(final long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.IN_BED_SEARCH,accountId,Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.IN_BED_SEARCH, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasSleepSoundsEnabled(final Long accountId) {
@@ -182,12 +187,12 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V3, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean useQuestionAskTime(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ASK_TIME_ENABLED, accountId, Collections.EMPTY_LIST);
-    }
-
     protected Boolean useSleepScoreV4(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V4, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useQuestionAskTime(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ASK_TIME_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
 }
+

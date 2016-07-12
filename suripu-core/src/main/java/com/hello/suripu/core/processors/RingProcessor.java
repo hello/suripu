@@ -43,7 +43,7 @@ public class RingProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessor.class);
     private final static int SMART_ALARM_MIN_DELAY_MILLIS = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  // This must be >= 2 * max possible data upload interval
     public final static int PROGRESSIVE_SAFE_GAP_MIN = 2;
-    public final static int PROGRESSIVE_MOTION_WINDOW_MIN = 5;
+    public final static int PROGRESSIVE_MOTION_WINDOW_MIN = 7;
 
     public static class PipeDataSource implements DataSource<AmplitudeData> {
 
