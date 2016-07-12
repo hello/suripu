@@ -985,11 +985,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
         final long targetDateEpoch = targetDate.getMillis();
-        final float sleepScoreV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDateEpoch);
+        float sleepScoreV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDateEpoch);
         SleepScore sleepScore;
 
         //calculates sleep duration score v4 and sleep score
-        if (sleepScoreV2V4Weighting == 1.0f || useSleepScoreV4(accountId)){
+        if (sleepScoreV2V4Weighting == 1.0f ){
             //timesAwakePenalty accounted for in durv4 score
             final Integer timesAwakePenalty = 0;
             final SleepScore.Weighting sleepScoreWeightingV4 =  new SleepScore.DurationWeightingV4();
@@ -1012,8 +1012,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     .build();
 
         //calculates sleep score v4 and v2 linear blend score
-        } else if (sleepScoreV2V4Weighting > 0.0f){
-
+        } else if (sleepScoreV2V4Weighting > 0.0f || useSleepScoreV4(accountId)){
+            if (useSleepScoreV4(accountId)){
+                sleepScoreV2V4Weighting = 1.0f;
+            }
             final Integer timesAwakePenaltyOld = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
             final Integer timesAwakePenaltyNew = 0;
 
@@ -1045,6 +1047,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     .withEnvironmentalScoreNew(environmentScore)
                     .withWeightingNew(sleepScoreWeightingV4)
                     .withTimesAwakePenaltyScoreNew(timesAwakePenaltyNew)
+                    .withTransitionWeight(sleepScoreV2V4Weighting)
                     .build();
         //calculates sleep score v2
         } else{
