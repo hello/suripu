@@ -83,6 +83,7 @@ public class FeatureFlipper {
 
     public final static String QUESTION_ANOMALY_LIGHT_VISIBLE = "question_anomaly_light_enabled";
     public final static String QUESTION_SURVEY_PROCESSOR_ENABLED = "question_survey_processor_enabled";
+    public final static String QUESTION_ASK_TIME_ENABLED = "question_ask_time_enabled";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";

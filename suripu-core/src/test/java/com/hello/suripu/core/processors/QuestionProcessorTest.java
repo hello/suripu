@@ -1,3 +1,4 @@
+
 package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
@@ -36,6 +37,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 
 /**
  * Created by ksg on 09/19/14
@@ -117,11 +119,11 @@ public class QuestionProcessorTest {
         ObjectGraphRoot.getInstance().init(new RolloutLocalModule());
         features.clear();
 
+
         final List<Question> questions = this.getMockQuestions();
-
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
-
         when(questionResponseDAO.getAllQuestions()).thenReturn(ImmutableList.copyOf(questions));
+
 
         final Timestamp nextAskTimePass = new Timestamp(today.minusDays(2).getMillis());
         when(questionResponseDAO.getNextAskTime(ACCOUNT_ID_PASS)).thenReturn(Optional.fromNullable(nextAskTimePass));
@@ -134,9 +136,14 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 3, today, today.plusDays(1))).thenReturn(12L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 4, today, today.plusDays(1))).thenReturn(13L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 5, today, today.plusDays(1))).thenReturn(14L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 6, today, today.plusDays(1))).thenReturn(21L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 7, today, today.plusDays(1))).thenReturn(19L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 8, today, today.plusDays(1))).thenReturn(20L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10000, today, today.plusDays(1))).thenReturn(15L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 9, today, today.plusDays(1))).thenReturn(21L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10, today, today.plusDays(1))).thenReturn(22L);
 
         // anomaly question
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 20000, today, today.plusDays(1))).thenReturn(18L);
@@ -203,6 +210,7 @@ public class QuestionProcessorTest {
         return responses;
     }
 
+
     private List<Question> getMockQuestions() {
         final List<Question> questions = new ArrayList<>();
 
@@ -268,7 +276,7 @@ public class QuestionProcessorTest {
                 QuestionCategory.NONE, dependencyResponse));
 
         List<Choice> choices5 = new ArrayList<>();
-        qid =6;
+        qid = 6;
         choices5.add(new Choice(15, "everyday", qid));
         choices5.add(new Choice(16, ">4 times a week", qid));
         choices5.add(new Choice(17, ">2 times a week", qid));
@@ -303,8 +311,8 @@ public class QuestionProcessorTest {
                 "Did you workout today?", "EN",
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.ANYTIME,
-                5, parentId, now, choices7, AccountInfo.Type.NONE, now,
+                Question.ASK_TIME.EVENING,
+                dependency, parentId, now, choices7, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE, dependencyResponse));
 
         List<Choice> choices8 = new ArrayList<>();
@@ -315,16 +323,16 @@ public class QuestionProcessorTest {
         questions.add(new Question(qid, accountQId,
                 "How are you feeling?", "EN",
                 Question.Type.CHOICE,
-                Question.FREQUENCY.OCCASIONALLY,
-                Question.ASK_TIME.ANYTIME,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.AFTERNOON,
                 dependency, parentId, now, choices8, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE, dependencyResponse));
 
         List<Choice> choices9 = new ArrayList<>();
         qid = ANOMALY_QUESTION_ID;
-        choices9.add(new Choice(32, "Yep", qid));
-        choices9.add(new Choice(33, "No", qid));
-        choices9.add(new Choice(34, "wtf", qid));
+        choices9.add(new Choice(35, "Yep", qid));
+        choices9.add(new Choice(36, "No", qid));
+        choices9.add(new Choice(37, "wtf", qid));
         questions.add(new Question(qid, accountQId,
                 "Too much light huh?", "EN",
                 Question.Type.CHOICE,
@@ -335,9 +343,9 @@ public class QuestionProcessorTest {
 
         List<Choice> choices10 = new ArrayList<>();
         qid = 4;
-        choices10.add(new Choice(32, "try", qid));
-        choices10.add(new Choice(33, "try not", qid));
-        choices10.add(new Choice(34, "go away", qid));
+        choices10.add(new Choice(38, "try", qid));
+        choices10.add(new Choice(39, "try not", qid));
+        choices10.add(new Choice(40, "go away", qid));
         questions.add(new Question(qid, accountQId,
                 "Do you work on being a good person", "EN",
                 Question.Type.CHOICE,
@@ -345,6 +353,44 @@ public class QuestionProcessorTest {
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices10, AccountInfo.Type.NONE, now,
                 QuestionCategory.ONBOARDING, dependencyResponse));
+
+        List<Choice> choices11 = new ArrayList<>();
+        qid = 7;
+        choices11.add(new Choice(41, "Yes", qid));
+        choices11.add(new Choice(42, "No", qid));
+        questions.add(new Question(qid, accountQId,
+                "Did you take a nap today?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices11, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE, dependencyResponse));
+
+
+        List<Choice> choices12 = new ArrayList<>();
+        qid = 8;
+        choices12.add(new Choice(43, "Yes", qid));
+        choices12.add(new Choice(44, "No", qid));
+        questions.add(new Question(qid, accountQId,
+                "Did you take a nap today?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices12, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE, dependencyResponse));
+
+        List<Choice> choices13 = new ArrayList<>();
+        qid = 9;
+        choices13.add(new Choice(45, "great", qid));
+        choices13.add(new Choice(46, "normal", qid));
+        choices13.add(new Choice(47, "poor", qid));
+        questions.add(new Question(qid, accountQId,
+                "How was the weather?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.ANYTIME,
+                5, parentId, now, choices13, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE,dependencyResponse));
 
         return questions;
     }
@@ -400,8 +446,8 @@ public class QuestionProcessorTest {
         assertThat(countBaseQ, is(2));
         assertThat(foundCalibrationQ, is(true));
 
-        // get 7, should include one ongoing question
-        numQ = 7;
+        // get 9, should include one ongoing question
+        numQ = 9;
         questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         foundBaseQ = false;
         boolean foundOngoing = false;
@@ -423,23 +469,72 @@ public class QuestionProcessorTest {
 
     @Test
     public void testGetOldieQuestions() {
-        final int accountAge = 2;
-        int numQ = 2;
+        final int accountAge = 14;
+        int numQ = 4;
+
         List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
+
+        for (int i = 0; i < questions.size(); i++) {
+            LOGGER.debug("Questions {}", questions.get(i));
+        }
+
         assertThat(questions.size(), is(numQ));
 
         boolean foundBaseQ = false;
         boolean foundCalibrationQ = false;
+        boolean foundMorningQ = false;
+        boolean foundAfternoonQ = false;
+        boolean foundEveningQ = false;
+
         for (Question question : questions) {
             final Question.FREQUENCY questionFrequency = question.frequency;
+            final Question.ASK_TIME questionAskTime = question.askTime;
             if (questionFrequency == Question.FREQUENCY.ONE_TIME) {
                 foundBaseQ = true;
             } else if (questionFrequency == Question.FREQUENCY.DAILY) {
                 foundCalibrationQ = true;
             }
+            if (questionAskTime == Question.ASK_TIME.MORNING){
+                foundMorningQ = true;
+            }else if (questionAskTime == Question.ASK_TIME.AFTERNOON) {
+                foundAfternoonQ = true;
+            }else if (questionAskTime == Question.ASK_TIME.EVENING){
+                foundEveningQ = true;
+            }
         }
         assertThat(foundBaseQ, is(true));
         assertThat(foundCalibrationQ, is(true));
+        assertThat(foundMorningQ, is (true));
+        assertThat(foundAfternoonQ, is (false));
+        assertThat(foundEveningQ, is (false));
+
+    }
+
+    @Test
+    public void testGetQuestionsByAskTime() {
+        //checks getOldieQuestions w/out check ask time
+
+        final Integer morningQuestionId = 10000;
+        final Integer afternoonQuestionId = 10003;
+        final Integer eveningQuestionId = 10002;
+
+        //8 am
+        List<Integer> eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(8);
+        assertThat(eligibleQuestions.contains(morningQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(afternoonQuestionId), is(false));
+        assertThat(eligibleQuestions.contains(eveningQuestionId), is(false));
+
+        //2 pm
+        eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(14);
+        assertThat(eligibleQuestions.contains(morningQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(afternoonQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(eveningQuestionId), is(false));
+
+        //8 pm
+        eligibleQuestions =this.questionProcessor.getQuestionsByAskTime(20);
+        assertThat(eligibleQuestions.contains(morningQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(afternoonQuestionId), is(true));
+        assertThat(eligibleQuestions.contains(eveningQuestionId), is(true));
     }
 
     @Test
