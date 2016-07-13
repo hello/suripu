@@ -1,5 +1,7 @@
 package com.hello.suripu.core.processors;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -79,6 +81,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
+
 public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
@@ -102,6 +107,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final SleepScoreParametersDAO sleepScoreParametersDAO;
 
     private final AlgorithmFactory algorithmFactory;
+
+    protected Histogram scoreDiff;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -131,9 +138,34 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final NeuralNetEndpoint neuralNetEndpoint,
                                                             final AlgorithmConfiguration algorithmConfiguration) {
 
+        final MetricRegistry notConfigureMetricsRegistry = new MetricRegistry();
+        return createTimelineProcessorWithMetrics(pillDataDAODynamoDB, deviceDAO, deviceDataDAODynamoDB, ringTimeHistoryDAODynamoDB, feedbackDAO, sleepHmmDAO, accountDAO, sleepStatsDAODynamoDB, senseColorDAO, priorsDAO, featureExtractionModelsDAO, calibrationDAO, defaultModelEnsembleDAO, userTimelineTestGroupDAO,
+                sleepScoreParametersDAO, neuralNetEndpoint, algorithmConfiguration, notConfigureMetricsRegistry);
+    }
+
+    static public TimelineProcessor createTimelineProcessorWithMetrics(final PillDataReadDAO pillDataDAODynamoDB,
+                                                            final DeviceReadDAO deviceDAO,
+                                                            final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                                                            final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
+                                                            final FeedbackReadDAO feedbackDAO,
+                                                            final SleepHmmDAO sleepHmmDAO,
+                                                            final AccountReadDAO accountDAO,
+                                                            final SleepStatsDAO sleepStatsDAODynamoDB,
+                                                            final SenseColorDAO senseColorDAO,
+                                                            final OnlineHmmModelsDAO priorsDAO,
+                                                            final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                                                            final CalibrationDAO calibrationDAO,
+                                                            final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
+                                                            final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                                            final SleepScoreParametersDAO sleepScoreParametersDAO,
+                                                            final NeuralNetEndpoint neuralNetEndpoint,
+                                                            final AlgorithmConfiguration algorithmConfiguration,
+                                                            final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
         final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoint,algorithmConfiguration,Optional.<UUID>absent());
+
+        final Histogram scoreDiff = metrics.histogram(name(TimelineProcessor.class, "sleep-score-diff"));
 
         return new TimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
@@ -143,12 +175,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 calibrationDAO,
                 userTimelineTestGroupDAO,
                 sleepScoreParametersDAO,
-                algorithmFactory);
+                algorithmFactory,
+                scoreDiff);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)));
+        return new TimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
     }
 
     //private SessionLogDebug(final String)
@@ -166,7 +199,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                               final CalibrationDAO calibrationDAO,
                               final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                               final SleepScoreParametersDAO sleepScoreParametersDAO,
-                              final AlgorithmFactory algorithmFactory) {
+                              final AlgorithmFactory algorithmFactory,
+                              final Histogram scoreDiff) {
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -180,12 +214,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
         this.sleepScoreParametersDAO = sleepScoreParametersDAO;
         this.algorithmFactory = algorithmFactory;
-
         timelineUtils = new TimelineUtils(uuid);
         timelineSafeguards = new TimelineSafeguards(uuid);
         feedbackUtils = new FeedbackUtils(uuid);
         partnerDataUtils = new PartnerDataUtils(uuid);
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid);
+        this.scoreDiff = scoreDiff;
     }
 
     private Long getTestGroup(final Long accountId, final DateTime targetDateLocalUTC, final int timezoneOffsetMillis) {
@@ -1034,7 +1068,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final float sleepScoreV4 = sleepScoreWeightingV4.duration *  durationScoreV4 + sleepScoreWeightingV4.environmental * environmentScore;
             final float sleepScoreV2 = sleepScoreWeightingV2.duration * durationScoreV2 + sleepScoreWeightingV2.motion * motionScore.score + sleepScoreWeightingV4.environmental * environmentScore - timesAwakePenaltyOld;
             final float sleepScoreDiff = sleepScoreV4 - sleepScoreV2;
-            LOGGER.warn("action=sleep-score-v2-v4-difference accountid={} sleep-score-v2={} sleep-score-v4={} sleep-score-difference={}", accountId, sleepScoreV2, sleepScoreV4, sleepScoreDiff);
+            final String targetDateStr = DateTimeUtil.dateToYmdString(targetDate);
+
+
+            LOGGER.info("action=sleep-score-v2-v4-difference night_of={} account_id={} v2={} v4={} difference={}", targetDateStr, accountId, sleepScoreV2, sleepScoreV4, sleepScoreDiff);
+
+            scoreDiff.update((int) sleepScoreDiff);
 
             sleepScore = new SleepScore.BuilderTransition()
                     .withMotionScoreOld(motionScore)
