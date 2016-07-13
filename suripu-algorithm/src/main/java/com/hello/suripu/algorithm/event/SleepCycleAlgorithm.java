@@ -25,7 +25,7 @@ import java.util.Random;
  */
 public class SleepCycleAlgorithm {
     private final static Logger LOGGER = LoggerFactory.getLogger(SleepCycleAlgorithm.class);
-    public final static int AWAKE_AMPLITUDE_THRESHOLD_MILLIG = 5000;
+    public final static int AWAKE_AMPLITUDE_THRESHOLD_MILLIG = 4500;
     public final static int AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT = 2;
     public final static int AWAKE_KICKOFF_THRESHOLD = 5;
 
