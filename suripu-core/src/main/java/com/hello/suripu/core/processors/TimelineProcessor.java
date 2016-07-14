@@ -1011,7 +1011,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             //original behavior
             if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
                 // if motion score is zero, something is not quite right, don't save score
-                LOGGER.error("action=no-motion-score-generated: account_id{} night_of={}", accountId, targetDate);
+                LOGGER.error("action=no-motion-score-generated: account_id={} night_of={}", accountId, targetDate);
                 return 0;
             }
         }
@@ -1028,7 +1028,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         boolean usesV4 = sleepScoreV2V4Weighting==1.0f;
         boolean isInTransition = (sleepScoreV2V4Weighting > 0.0f) || useSleepScoreV4(accountId);
 
-        SleepScore sleepScoreV4, sleepScoreV2, sleepScore;
+        final SleepScore sleepScoreV4, sleepScoreV2, sleepScore;
         //calculates sleep duration score v4 and sleep score
         if (usesV4){
             sleepScore = computeSleepScoreV4(accountId, userAge, sleepDurationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
