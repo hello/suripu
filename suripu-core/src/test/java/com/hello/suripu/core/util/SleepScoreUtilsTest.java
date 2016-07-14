@@ -74,7 +74,7 @@ public class SleepScoreUtilsTest {
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
         final List<Float> correct = Lists.newArrayList(39.32f, 43.685326f, 46.401653f, 55.010803f, 52.866f);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
-            final float score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
+            final float score = SleepScoreUtils.getSleepScoreDurationV3(age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);
             assertThat(score, is(correct.get(i)));
         }
@@ -87,7 +87,7 @@ public class SleepScoreUtilsTest {
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
         final List<Float> correct = Lists.newArrayList(39.32f, 44.867283f, 48.128555f, 56.04506f, 52.866f);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
-            final float score = SleepScoreUtils.getSleepScoreDurationV3(1001L, age, durThreshold, sleepDurationMinutes.get(i));
+            final float score = SleepScoreUtils.getSleepScoreDurationV3(age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);
             assertThat(score, is(correct.get(i)));
         }

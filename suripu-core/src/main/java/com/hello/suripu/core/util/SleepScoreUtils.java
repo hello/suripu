@@ -150,7 +150,7 @@ public class SleepScoreUtils {
     }
 
 
-    public static float getSleepScoreDurationV3(final long accountId, final int userAgeInYears, final Integer sleepDurationThreshold, final Integer sleepDurationMinutes) {
+    public static float getSleepScoreDurationV3(final int userAgeInYears, final Integer sleepDurationThreshold, final Integer sleepDurationMinutes) {
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
         final float rawScoreV3;
         final long adjSleepDurationV3p2, adjSleepDurationV3p3, adjSleepDurationV3p4, adjSleepDurationV3p5;
@@ -188,8 +188,6 @@ public class SleepScoreUtils {
 
             rawScoreV3 = DURATION_WEIGHTS_V3[0]+ DURATION_WEIGHTS_V3[1] * adjSleepDurationV3 + DURATION_WEIGHTS_V3[2] * adjSleepDurationV3p2 + DURATION_WEIGHTS_V3[3] * adjSleepDurationV3p3 + DURATION_WEIGHTS_V3[4] * adjSleepDurationV3p4 + DURATION_WEIGHTS_V3[5] * adjSleepDurationV3p5;
         }
-
-        LOGGER.trace("action=calculated-durationscore-v3 account_id={} sleep_duration={} duration_threshold={} durationscore_v3={}", accountId, sleepDurationMinutes, sleepDurationTargetV3, rawScoreV3);
 
         return rawScoreV3;
     }

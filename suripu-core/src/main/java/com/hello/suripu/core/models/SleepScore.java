@@ -80,8 +80,8 @@ public class SleepScore {
 
         public DurationWeightingV4() {
             this.motion = 0.0f;
-            this.duration = 0.7f;
-            this.environmental = 0.3f;
+            this.duration = 0.8f;
+            this.environmental = 0.2f;
         }
     }
 
