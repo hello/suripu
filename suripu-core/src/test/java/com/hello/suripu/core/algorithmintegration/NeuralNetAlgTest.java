@@ -138,4 +138,25 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         TestCase.assertEquals(currentTime.getMillis(),resultOptional.get().mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp(),5*DateTimeConstants.MILLIS_PER_MINUTE);
 
     }
+
+
+    @Test
+    public void testDurationSafeguard() throws Exception {
+        DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
+        DateTime startTime = date.withHourOfDay(18);
+        DateTime endTime = startTime.plusHours(16);
+        DateTime currentTime = startTime.plusHours(2).plusMillis(30);
+
+
+        AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
+        ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
+        final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
+
+        final TimelineLog log = new TimelineLog(0L,0L);
+        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,log,0L,false, Sets.<String>newHashSet());
+
+        TestCase.assertFalse(resultOptional.isPresent());
+
+    }
 }
