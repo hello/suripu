@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -52,7 +53,7 @@ public class TemperatureHumidity {
     private static final int TEMP_START_HOUR = 23; // 11pm
     private static final int TEMP_END_HOUR = 6; // 6am
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId,
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceAccountPair deviceAccountPair,
                                                     final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final TemperatureUnit tempUnit, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
@@ -70,6 +71,7 @@ public class TemperatureHumidity {
 
         final int slotDuration = 30;
         final List<DeviceData> sensorData;
+        final DeviceId deviceId = DeviceId.create(deviceAccountPair.externalDeviceId);
         final Response<ImmutableList<DeviceData>> response = deviceDataDAO.getBetweenByLocalHourAggregateBySlotDuration(
                 accountId, deviceId, queryStartTime, queryEndTime,
                 queryStartTimeLocal, queryEndTimeLocal, TEMP_START_HOUR, TEMP_END_HOUR, slotDuration);

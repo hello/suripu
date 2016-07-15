@@ -6,6 +6,8 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
+import com.hello.suripu.core.models.Device;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -35,7 +37,7 @@ public class Lights {
     public static final float LIGHT_LEVEL_WARNING = 2.0f;  // in lux
     public static final float LIGHT_LEVEL_ALERT = 8.0f;  // in lux
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO,
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final LightData lightData, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
@@ -54,6 +56,7 @@ public class Lights {
 
         // get light data > 0 between the hour of 6pm to 1am
         final List<DeviceData> rows;
+        final DeviceId deviceId = DeviceId.create(deviceAccountPair.externalDeviceId);
         final Response<ImmutableList<DeviceData>> response = deviceDataDAO.getLightByBetweenHourDateByTS(
                 accountId, deviceId, LIGHT_LEVEL_ON_RAW, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
         if (response.status == Response.Status.SUCCESS) {

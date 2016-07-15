@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.AggregateSleepStats;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -36,7 +37,7 @@ public class SoundDisturbance {
     private static final Integer DATA_END_HOUR_LOCAL = 12;
 
     public static Optional<InsightCard> getInsights(final Long accountId,
-                                                    final DeviceId deviceId,
+                                                    final DeviceAccountPair deviceAccountPair,
                                                     final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
@@ -50,7 +51,7 @@ public class SoundDisturbance {
         final DateTime nowTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset));
         final DateTime queryEndTime = getDeviceDataQueryDate(nowTime);
 
-        final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, queryEndTime, timeZoneOffset);
+        final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceAccountPair, deviceDataDAO, queryEndTime, timeZoneOffset);
         if (deviceDatas.isEmpty()) {
             LOGGER.debug("action=insight-absent insight=bed-light-intensity reason=devicedata-empty account_id={}", accountId);
             return Optional.absent();
@@ -118,7 +119,7 @@ er
         return date.withHourOfDay(DATA_END_HOUR_LOCAL);
     }
 
-    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final DateTime queryEndTime, final Integer timeZoneOffset) {
+    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataDAO, final DateTime queryEndTime, final Integer timeZoneOffset) {
 
         final DateTime queryStartTime = queryEndTime.minusDays(1);
 
@@ -126,6 +127,7 @@ er
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         //Grab all pre-bed data for past week
+        final DeviceId deviceId = DeviceId.create(deviceAccountPair.externalDeviceId);
         Response<ImmutableList<DeviceData>> response = deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, DATA_START_HOUR_LOCAL, DATA_END_HOUR_LOCAL);
         if (response.status == Response.Status.SUCCESS) {
             return response.data;
