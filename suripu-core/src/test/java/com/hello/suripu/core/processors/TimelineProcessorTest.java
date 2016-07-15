@@ -32,6 +32,7 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
@@ -64,6 +65,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Created by benjo on 1/21/16.
@@ -533,5 +537,15 @@ public class TimelineProcessorTest {
             TestCase.assertTrue(logs.get(2).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
         }
 
+    }
+
+    @Test
+    public void testcomputeSleepScoreV2V4Transition(){
+        final MotionScore testMotionScore = new MotionScore(19, 20, 3500F, 25000, 75);
+        final SleepScore testSleepScoreV2 = new SleepScore(88, testMotionScore, 89, 100, 0);
+        final SleepScore testSleepScoreV4 = new SleepScore(92, testMotionScore, 89, 100, 0 );
+        final float testV2V4Weighting = 0.2f;
+        final SleepScore testSleepScoreTransition = TimelineProcessor.computeSleepScoreV2V4Transition(testSleepScoreV2, testSleepScoreV4, testV2V4Weighting);
+        assertThat(testSleepScoreTransition.value, is(89));
     }
 }
