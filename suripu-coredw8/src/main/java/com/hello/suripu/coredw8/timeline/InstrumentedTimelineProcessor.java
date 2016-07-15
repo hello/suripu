@@ -1,5 +1,7 @@
-package com.hello.suripu.core.processors;
+package com.hello.suripu.coredw8.timeline;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -40,6 +42,7 @@ import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.MotionFrequency;
 import com.hello.suripu.core.models.MotionScore;
+import com.hello.suripu.core.processors.PartnerMotion;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -51,6 +54,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
+import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -70,6 +74,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,11 +84,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Deprecated
-public class TimelineProcessor extends FeatureFlippedProcessor {
+import static com.codahale.metrics.MetricRegistry.name;
+
+
+public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
-    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessor.class);
     private final PillDataReadDAO pillDataDAODynamoDB;
     private final DeviceReadDAO deviceDAO;
     private final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB;
@@ -104,6 +111,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     private final AlgorithmFactory algorithmFactory;
 
+    protected Histogram scoreDiff;
+
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
@@ -114,29 +123,31 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     final static long DOMINANT_GROUP_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
 
 
-    static public TimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
-                                                            final DeviceReadDAO deviceDAO,
-                                                            final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
-                                                            final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
-                                                            final FeedbackReadDAO feedbackDAO,
-                                                            final SleepHmmDAO sleepHmmDAO,
-                                                            final AccountReadDAO accountDAO,
-                                                            final SleepStatsDAO sleepStatsDAODynamoDB,
-                                                            final SenseColorDAO senseColorDAO,
-                                                            final OnlineHmmModelsDAO priorsDAO,
-                                                            final FeatureExtractionModelsDAO featureExtractionModelsDAO,
-                                                            final CalibrationDAO calibrationDAO,
-                                                            final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
-                                                            final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
-                                                            final SleepScoreParametersDAO sleepScoreParametersDAO,
-                                                            final NeuralNetEndpoint neuralNetEndpoint,
-                                                            final AlgorithmConfiguration algorithmConfiguration) {
-
+    static public InstrumentedTimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
+                                                                       final DeviceReadDAO deviceDAO,
+                                                                       final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                                                                       final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
+                                                                       final FeedbackReadDAO feedbackDAO,
+                                                                       final SleepHmmDAO sleepHmmDAO,
+                                                                       final AccountReadDAO accountDAO,
+                                                                       final SleepStatsDAO sleepStatsDAODynamoDB,
+                                                                       final SenseColorDAO senseColorDAO,
+                                                                       final OnlineHmmModelsDAO priorsDAO,
+                                                                       final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                                                                       final CalibrationDAO calibrationDAO,
+                                                                       final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
+                                                                       final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                                                       final SleepScoreParametersDAO sleepScoreParametersDAO,
+                                                                       final NeuralNetEndpoint neuralNetEndpoint,
+                                                                       final AlgorithmConfiguration algorithmConfiguration,
+                                                                       final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
         final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoint,algorithmConfiguration,Optional.<UUID>absent());
 
-        return new TimelineProcessor(pillDataDAODynamoDB,
+        final Histogram scoreDiff = metrics.histogram(name(InstrumentedTimelineProcessor.class, "sleep-score-diff"));
+
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,
@@ -144,17 +155,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 calibrationDAO,
                 userTimelineTestGroupDAO,
                 sleepScoreParametersDAO,
-                algorithmFactory);
+                algorithmFactory,
+                scoreDiff);
     }
 
-    public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
+    public InstrumentedTimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)));
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
     }
 
     //private SessionLogDebug(final String)
 
-    private TimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
+    private InstrumentedTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
                               final DeviceReadDAO deviceDAO,
                               final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
                               final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
@@ -167,7 +179,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                               final CalibrationDAO calibrationDAO,
                               final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                               final SleepScoreParametersDAO sleepScoreParametersDAO,
-                              final AlgorithmFactory algorithmFactory) {
+                              final AlgorithmFactory algorithmFactory,
+                              final Histogram scoreDiff) {
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -181,12 +194,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
         this.sleepScoreParametersDAO = sleepScoreParametersDAO;
         this.algorithmFactory = algorithmFactory;
-
         timelineUtils = new TimelineUtils(uuid);
         timelineSafeguards = new TimelineSafeguards(uuid);
         feedbackUtils = new FeedbackUtils(uuid);
         partnerDataUtils = new PartnerDataUtils(uuid);
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid);
+        this.scoreDiff = scoreDiff;
     }
 
     private Long getTestGroup(final Long accountId, final DateTime targetDateLocalUTC, final int timezoneOffsetMillis) {
@@ -999,7 +1012,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         //calculates sleep duration score v4 and sleep score
         if (usesV4){
             sleepScore = computeSleepScoreV4(accountId, userAge, sleepDurationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
-        //calculates sleep score v4 and v2 linear blend score
+            //calculates sleep score v4 and v2 linear blend score
         } else if (isInTransition){
             //ensures sure that users who are feature flipped get full V4 score
             if (useSleepScoreV4(accountId)){
@@ -1011,8 +1024,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             //creates log and histogram differences between v2 and v4
             final int sleepScoreDiff = sleepScoreV4.value - sleepScoreV2.value;
             STATIC_LOGGER.info("action=sleep-score-v2-v4-difference night_of={} account_id={} v2={} v4={} difference={}", targetDateStr, accountId, sleepScoreV2, sleepScoreV4, sleepScoreDiff);
+            scoreDiff.update(sleepScoreDiff);
 
-        //calculates sleep score v2
+            //calculates sleep score v2
         } else {
             sleepScore = computeSleepScoreV2(userAge, sleepStats, environmentScore, motionScore);
         }
@@ -1068,6 +1082,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return sleepScoreV2V4;
     }
 
+
     private Integer computeEnvironmentScore(final Long accountId,
                                             final SleepStats sleepStats,
                                             final int numberSoundEvents,
@@ -1086,8 +1101,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
         return environmentScore;
     }
-
-
 
     private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
 

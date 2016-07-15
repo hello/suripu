@@ -14,7 +14,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.7</java.version>
-        <metrics.version>3.1.2</metrics.version>
         <slf4j.version>1.7.4</slf4j.version>
         <logback.version>1.0.10</logback.version>
         <jackson.version>2.5.3</jackson.version>
@@ -81,11 +80,6 @@
                         <artifactId>joda-time</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.dropwizard.metrics</groupId>
-                <artifactId>metrics-core</artifactId>
-                <version>${metrics.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.yammer.dropwizard</groupId>
