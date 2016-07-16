@@ -362,32 +362,30 @@ public class InsightProcessor {
 
         switch (dayOfMonth) {
             case 1:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_HUMIDITY, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
                 if (recentCategories.contains(InsightCard.Category.HUMIDITY)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.HUMIDITY);
             case 4:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
                 if (recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
             case 7:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_INTENSITY_RATIO, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
                 if (recentCategories.contains(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
             case 10:
-                if (recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.TEMPERATURE);
-
-            case 13:
-                if (recentCategories.contains(InsightCard.Category.LIGHT)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.LIGHT);
-            case 16:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_CAFFEINE, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
@@ -395,6 +393,16 @@ public class InsightProcessor {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.CAFFEINE);
+            case 13:
+                if (recentCategories.contains(InsightCard.Category.LIGHT)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.LIGHT);
+            case 16:
+                if (recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.TEMPERATURE);
             case 19:
                 if (recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
                     return Optional.absent();
