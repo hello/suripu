@@ -3,9 +3,7 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateSleepStats;
-import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.SleepMotionMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
@@ -32,7 +30,7 @@ public class SleepMotion {
 
     private static int MIN_DAYS_REQUIRED = 3;
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final TrendsInsightsDAO trendsInsightsDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Boolean isNewUser) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Boolean isNewUser) {
 
         int numDays = 14; // 2 weeks comparison
         if (isNewUser) {
