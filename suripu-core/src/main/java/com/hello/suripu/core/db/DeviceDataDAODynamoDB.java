@@ -87,7 +87,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         }
 
         /**
-         * Useful instead of item.get(DeviceDataAttribute.<DeviceDataAttribute>.name) to avoid NullPointerException
+         * Useful instead of item.get(DeviceDataAttribute.<DeviceDataAttribute>.name) to avoid NullPointerException //Wha?
          */
         private AttributeValue get(final Map<String, AttributeValue> item) {
             return item.get(this.name);
