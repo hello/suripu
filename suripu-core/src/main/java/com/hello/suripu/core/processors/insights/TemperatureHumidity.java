@@ -110,7 +110,6 @@ public class TemperatureHumidity {
         final int maxTempF = celsiusToFahrenheit(tmpMaxValue);
         LOGGER.debug("Temp for account {}: min {}, max {}", accountId, minTempF, maxTempF);
 
-        // TODO: edits
         // Units for passing into TemperatureMsgEN
         int minTemp = minTempC;
         int maxTemp = maxTempC;
@@ -126,37 +125,27 @@ public class TemperatureHumidity {
         /* Possible cases
                     min                       max
                     |------ ideal range ------|
-            |----|                              |-----|
+            |----|                               |-----|
             too cold                            too hot
 
-                |------|                  |-------|
-                a little cold               a little warm
+            |----------------|      |------------------|
+                too cold                   too hot
 
-                |-------- way out of range! -------|
+            |---------- too much fluctuation ---------|
          */
 
         Text text;
-        final String commonMsg = TemperatureMsgEN.getCommonMsg(minTemp, maxTemp, tempUnit.toString());
 
         //careful: comparisons are done in user's own units, TemperatureMsgEN also gets passed user's own units.
-        if (idealMin <= minTemp && maxTemp <= idealMax) {
-            text = TemperatureMsgEN.getTempMsgPerfect(commonMsg);
-
-        } else if (maxTemp < idealMin) {
-            text = TemperatureMsgEN.getTempMsgTooCold(commonMsg, idealMin, tempUnit.toString());
-
-        } else if (minTemp > idealMax) {
-            text = TemperatureMsgEN.getTempMsgTooHot(commonMsg, idealMax, tempUnit.toString());
-
+        if (minTemp >= idealMin && maxTemp <= idealMax) {
+            text = TemperatureMsgEN.getTempMsgPerfect(minTemp, maxTemp, tempUnit.toString());
         } else if (minTemp < idealMin && maxTemp <= idealMax) {
-            text = TemperatureMsgEN.getTempMsgCool(commonMsg);
-
-        } else if (minTemp > idealMin && maxTemp > idealMax) {
-            text = TemperatureMsgEN.getTempMsgWarm(commonMsg);
-
+            text = TemperatureMsgEN.getTempMsgTooCold(minTemp, maxTemp, tempUnit.toString(), idealMin);
+        } else if (maxTemp > idealMax && minTemp >= idealMin) {
+            text = TemperatureMsgEN.getTempMsgTooHot(minTemp, maxTemp, tempUnit.toString(), idealMax);
         } else {
             // both min and max are outside of ideal range
-            text = TemperatureMsgEN.getTempMsgBad(commonMsg, idealMin, idealMax, tempUnit.toString());
+            text = TemperatureMsgEN.getTempMsgFluctuate(minTemp, maxTemp, tempUnit.toString(), idealMin, idealMax);
         }
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
