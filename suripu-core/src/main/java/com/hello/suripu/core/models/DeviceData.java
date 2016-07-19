@@ -1,11 +1,15 @@
 package com.hello.suripu.core.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.util.DataUtils;
+
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -432,5 +436,11 @@ public class DeviceData {
                 .add(("audio_peak_disturbances_db"), audioPeakDisturbancesDB)
                 .add(("audio_peak_energy_db"), audioPeakEnergyDB)
                 .toString();
+    }
+
+    public Boolean isSecondsOld(final Long seconds) {
+        final DateTime secondsAgo = DateTime.now(DateTimeZone.UTC).withDurationAdded(Duration.standardSeconds(seconds), -1);
+        final DateTime dataDateTime = dateTimeUTC;
+        return dataDateTime.isBefore(secondsAgo);
     }
 }
