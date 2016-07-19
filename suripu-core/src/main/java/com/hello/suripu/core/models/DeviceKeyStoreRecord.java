@@ -1,53 +1,12 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.firmware.HardwareVersion;
+import com.hello.suripu.core.firmware.Product;
 
 import java.util.Arrays;
 
 public class DeviceKeyStoreRecord {
-
-    public enum Product {
-        SENSE(1),
-        PILL(2);
-
-        private int value;
-
-        Product(int value) {
-            this.value = value;
-        }
-
-        public static Product fromInt(int value) {
-            for(Product version : Product.values()) {
-                if (version.equals(value)) {
-                    return version;
-                }
-            }
-
-            throw new IllegalArgumentException(String.format("Unknown product: %d", value));
-        }
-    }
-
-    public enum HardwareVersion {
-        SENSE_ONE(1),
-        SENSE_ONE_FIVE(4);
-
-        private int value;
-
-        HardwareVersion(int value) {
-            this.value = value;
-        }
-
-        public static HardwareVersion fromInt(int value) {
-            for(HardwareVersion version : HardwareVersion.values()) {
-                if (version.equals(value)) {
-                    return version;
-                }
-            }
-
-            throw new IllegalArgumentException(String.format("Unknown hardware version: %d", value));
-        }
-    }
-
 
     @JsonProperty("device_id")
     public final String deviceId;
