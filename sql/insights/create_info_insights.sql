@@ -556,3 +556,16 @@ WHERE category='sleep_hygiene';
 UPDATE info_insight_cards SET text='Consuming caffeinated beverages late in the day can make it more difficult to fall asleep, and prevent you from getting deep, restorative sleep. The National Sleep Foundation recommends avoiding caffeine in any form at least 4 to 6 hours before bed to avoid caffeine-related sleep problems. Caffeine can stay in the body for up to 12 hours, though, so you may want have your last cup of coffee even earlier if you are particularly susceptible to its effects.
 
 You don''t need to swear off coffee completely. In fact, caffeine has benefits beyond a morning pick-me-up. Researchers at Johns Hopkins have found that consuming 200 mg of caffeine (roughly one cup of coffee) enhances long-term memory. Just make sure to limit your caffeine intake to before 2 pm, so that you reap the benefits while minimizing disruptions to your sleep.' WHERE category='caffeine';
+
+-- jyfan 2016-07-20 no bullet pts b/c web
+UPDATE info_insight_cards SET text=
+'Everyone''s sleep is different, but there are some general guidelines that can help anyone get better sleep.
+
+First, you may want to think twice before taking a midday nap. While this can be tempting, sleeping during the day can throw off your natural sleep cycle and make it much harder to fall asleep at night.
+
+Vigorous exercise too close to bedtime can also make falling asleep difficult. Regular exercise has been shown to promote good sleep, but if the only time you have to work out is right before bed, you may want to consider a more gentle exercise like yoga.
+
+And finally, consider staying away from stimulants such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, your sleep might be disrupted during the night after the effect has worn off.
+
+While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns.'
+WHERE category='sleep_hygiene';
