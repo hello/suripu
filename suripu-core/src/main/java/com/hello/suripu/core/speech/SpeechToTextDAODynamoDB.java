@@ -29,7 +29,8 @@ public class SpeechToTextDAODynamoDB {
         COMMAND("cmd", "S"),
         WAKE_ID("wake_id", "N"),        // wake-word ID
         WAKE_CONFIDENCE("wake_conf", "M"),  // confidence of all wake-words
-        RESULT("result", "S");          // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        RESULT("result", "S"),
+        RESPONSE_TEXT("resp_text", "S");          // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
 
         private final String name;
         private final String type;
@@ -72,4 +73,8 @@ public class SpeechToTextDAODynamoDB {
             .add(SpeechToTextAttribute.WAKE_CONFIDENCE)
             .add(SpeechToTextAttribute.RESULT)
             .build();
+
+    public boolean updateItem(final SpeechToTextResult speechToTextResult) {
+        return true;
+    }
 }
