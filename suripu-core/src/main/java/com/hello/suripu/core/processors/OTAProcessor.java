@@ -1,6 +1,5 @@
 package com.hello.suripu.core.processors;
 
-import com.google.common.net.InetAddresses;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.slf4j.Logger;
@@ -15,43 +14,9 @@ import java.util.Set;
  */
 public class OTAProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(OTAProcessor.class);
-    private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
-    private static final String ADDITIONAL_PCH_IPS_GROUP = "additional_pch_ips";
-
-    public static Boolean isHelloOffice(final String ipAddress) {
-        return LOCAL_OFFICE_IP_ADDRESS.equals(ipAddress);
-    }
-
-    public static Boolean isPCH(final String ipAddress, final List<String> ipGroups) {
-        try {
-            final Integer ipAdd = InetAddresses.coerceToInteger(InetAddresses.forString(ipAddress));
-            final Integer startRange1 = InetAddresses.coerceToInteger(InetAddresses.forString("203.166.220.233"));
-            final Integer endRange1 = InetAddresses.coerceToInteger(InetAddresses.forString("203.166.220.246"));
-            final Integer startRange2 = InetAddresses.coerceToInteger(InetAddresses.forString("116.204.105.25"));
-            final Integer endRange2 = InetAddresses.coerceToInteger(InetAddresses.forString("116.204.105.38"));
-
-            if ((startRange1 <= ipAdd && ipAdd <= endRange1) ||
-                    (startRange2 <= ipAdd && ipAdd <= endRange2)) {
-                LOGGER.debug("IP Address Found in PCH Range: {}.", ipAddress);
-                return true;
-            }
-
-            if (ipGroups.contains(ADDITIONAL_PCH_IPS_GROUP)) {
-                LOGGER.debug("IP Address Found in PCH Additional IPs Group: {}.", ipAddress);
-                return true;
-            }
-
-        } catch (IllegalArgumentException e) {
-            // if we fail we can't assume it's PCH
-            LOGGER.error("Invalid IP string used in PCH exclusion check. '{}'", ipAddress);
-        }
-        return false;
-    }
-
 
     public static Boolean canDeviceOTA(final String deviceID,
                                        final List<String> deviceGroups,
-                                       final List<String> ipGroups,
                                        final Set<String> overrideOTAGroups,
                                        final Integer deviceUptimeDelayMinutes,
                                        final Integer uptimeInSeconds,
@@ -62,11 +27,6 @@ public class OTAProcessor {
                                        final String ipAddress) {
 
         boolean canOTA;
-
-        if(OTAProcessor.isPCH(ipAddress, ipGroups)) {
-                LOGGER.warn("IP Address {} is from PCH, failing device canOTA check", ipAddress);
-                return false;
-        }
 
         if (bypassOTAChecks) {
             LOGGER.info("OTA checks are bypassed for device: {}", deviceID);

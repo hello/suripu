@@ -40,7 +40,7 @@ import java.util.Map;
 /**
  * Created by jnorgan on 4/21/15.
  */
-public class OTAHistoryDAODynamoDB {
+public class OTAHistoryDAODynamoDB implements OTAHistoryDAO {
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
@@ -59,6 +59,7 @@ public class OTAHistoryDAODynamoDB {
         this.tableName = tableName;
     }
 
+    @Override
     public Optional<OTAHistory> insertOTAEvent(final OTAHistory historyEntry) {
         final Map<String, AttributeValue> item = new HashMap<>();
         item.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.deviceId));
@@ -83,6 +84,7 @@ public class OTAHistoryDAODynamoDB {
         return Optional.absent();
     }
 
+    @Override
     public List<OTAHistory> getOTAEvents(final String deviceId, final DateTime startTime, final DateTime endTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();

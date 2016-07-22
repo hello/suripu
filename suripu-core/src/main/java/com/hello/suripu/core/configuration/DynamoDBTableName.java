@@ -22,6 +22,7 @@ public enum DynamoDBTableName {
     NOTIFICATIONS("notifications"),
     ONLINE_HMM_MODELS("online_hmm_models"),
     OTA_HISTORY("ota_history"),
+    OTA_FILE_SETTINGS("ota_file_settings"),
     PASSWORD_RESET("password_reset"),
     PILL_DATA("pill_data"),
     PILL_HEARTBEAT("pill_heartbeat"),
