@@ -178,14 +178,14 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
         final Optional<String> fwVersionText = helper.getTextForFirmwareVersion(summaryList);
 
         if(!fwVersionText.isPresent()) {
-            LOGGER.warn("action=return-empty-pair s3_key=key");
+            LOGGER.warn("action=return-empty-pair s3_key={}", objectKey);
             return FirmwareUpdate.missing();
         }
 
         final Optional<String> fwVersion = FirmwareBuildInfoParser.parse(fwVersionText.get());
         if(!fwVersion.isPresent()) {
             LOGGER.error("error=failed-to-parse-firmware-vesion-from-text s3_key={}", objectKey);
-            LOGGER.warn("action=return-empty-pair s3_key=key");
+            LOGGER.warn("action=return-empty-pair s3_key={}", objectKey);
             return FirmwareUpdate.missing();
         }
 
@@ -238,7 +238,11 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
 
-            if (isValidFirmwareUpdate(firmwareUpdate, query.firmwareVersion) && !firmwareUpdate.files.isEmpty()) {
+            if(firmwareUpdate.files.isEmpty()) {
+                return firmwareUpdate;
+            }
+
+            if (isValidFirmwareUpdate(firmwareUpdate, query.firmwareVersion)) {
 
                 if (!isExpiredPresignedUrl(firmwareUpdate.files.get(0).getUrl(), new Date())) {
                     //Store OTA Data
@@ -267,7 +271,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
             LOGGER.error("OTA attempt failed for Device Id: {} on FW version: {}. {}", senseQuery.senseId, senseQuery.currentFirmwareVersion, ex.getMessage());
         }
 
-        return FirmwareUpdate.missing();
+        return firmwareUpdate;
     }
 
 
