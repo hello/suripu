@@ -9,6 +9,7 @@ public enum DynamoDBTableName {
     ALARM_INFO("alarm_info"),
     ALARM_LOG("alarm_log"),
     ALGORITHM_TEST("algorithm_test"),
+    ANOMALY_INSIGHTS_LAST_SEEN("anomaly_insights_last_seen"),
     APP_STATS("app_stats"),
     CALIBRATION("calibration"),
     DEVICE_DATA("device_data"),
