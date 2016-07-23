@@ -43,4 +43,15 @@ public enum WakeWord {
         return WakeWord.ERROR;
     }
 
+    public static WakeWord fromWakeWordText(final String text) {
+        if (text != null) {
+            for (final WakeWord wakeWord : WakeWord.values()) {
+                if (text.equalsIgnoreCase(wakeWord.getWakeWordText()))
+                    return wakeWord;
+            }
+        }
+        return WakeWord.ERROR;
+
+    }
+
 }

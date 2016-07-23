@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Created by ksg on 7/20/16
  */
-public class SpeechToTextResult {
+public class SpeechResult {
 
     @JsonIgnore
     public final Long accountId;
@@ -62,22 +62,22 @@ public class SpeechToTextResult {
     public final Result result;
 
 
-    public SpeechToTextResult(final Long accountId,
-                              final DateTime dateTimeUTC,
-                              final DateTime updatedUTC,
-                              final String senseId,
-                              final String audioIdentifier,
-                              final String text,
-                              final String responseText,
-                              final SpeechToTextService service,
-                              final float confidence,
-                              final Intention.IntentType intent,
-                              final Intention.ActionType action,
-                              final Intention.IntentCategory intentCategory,
-                              final String command,
-                              final WakeWord wakeWord,
-                              final Map<String, Float> wakeWordsConfidence,
-                              final Result result) {
+    public SpeechResult(final Long accountId,
+                        final DateTime dateTimeUTC,
+                        final DateTime updatedUTC,
+                        final String senseId,
+                        final String audioIdentifier,
+                        final String text,
+                        final String responseText,
+                        final SpeechToTextService service,
+                        final float confidence,
+                        final Intention.IntentType intent,
+                        final Intention.ActionType action,
+                        final Intention.IntentCategory intentCategory,
+                        final String command,
+                        final WakeWord wakeWord,
+                        final Map<String, Float> wakeWordsConfidence,
+                        final Result result) {
         this.accountId = accountId;
         this.dateTimeUTC = dateTimeUTC;
         this.updatedUTC = updatedUTC;
@@ -195,7 +195,7 @@ public class SpeechToTextResult {
 
         public Builder withWakeWordsConfidence(final Map<String, Float> wakeWordsConfidence) {
             for (final Map.Entry<String, Float> entry: wakeWordsConfidence.entrySet()) {
-                final WakeWord wakeWord = WakeWord.fromString(entry.getKey());
+                final WakeWord wakeWord = WakeWord.fromWakeWordText(entry.getKey());
                 if (!wakeWord.equals(WakeWord.ERROR)) {
                     this.wakeWordsConfidence.put(entry.getKey(), entry.getValue());
                 }
@@ -208,8 +208,8 @@ public class SpeechToTextResult {
             return this;
         }
 
-        public SpeechToTextResult build() {
-            return new SpeechToTextResult(accountId,
+        public SpeechResult build() {
+            return new SpeechResult(accountId,
                     dateTimeUTC, updatedUTC, senseId,
                     audioIdentifier, text, responseText, service, confidence,
                     intent, action, intentCategory, command,
