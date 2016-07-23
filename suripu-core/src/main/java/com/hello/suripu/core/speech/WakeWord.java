@@ -34,4 +34,13 @@ public enum WakeWord {
         }
         return WakeWord.ERROR;
     }
+
+    public static WakeWord fromInteger(final int value) {
+        for (final WakeWord word : WakeWord.values()) {
+            if (value == word.id)
+                return word;
+        }
+        return WakeWord.ERROR;
+    }
+
 }

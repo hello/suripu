@@ -22,7 +22,7 @@ public class SpeechToTextResult {
     public final DateTime updatedUTC;
 
     @JsonIgnore
-    public final String externalDeviceId;
+    public final String senseId;
 
     @JsonIgnore
     public final String audioIdentifier;  // uuid string of audio file in S3
@@ -65,7 +65,7 @@ public class SpeechToTextResult {
     public SpeechToTextResult(final Long accountId,
                               final DateTime dateTimeUTC,
                               final DateTime updatedUTC,
-                              final String externalDeviceId,
+                              final String senseId,
                               final String audioIdentifier,
                               final String text,
                               final String responseText,
@@ -81,7 +81,7 @@ public class SpeechToTextResult {
         this.accountId = accountId;
         this.dateTimeUTC = dateTimeUTC;
         this.updatedUTC = updatedUTC;
-        this.externalDeviceId = externalDeviceId;
+        this.senseId = senseId;
         this.audioIdentifier = audioIdentifier;
         this.text = text;
         this.responseText = responseText;
@@ -102,7 +102,7 @@ public class SpeechToTextResult {
         private Long accountId;
         private DateTime dateTimeUTC;
         private DateTime updatedUTC;
-        private String externalDeviceId = "";
+        private String senseId = "";
         private String audioIdentifier = "";
         private String text = "";
         private String responseText = "";
@@ -122,38 +122,38 @@ public class SpeechToTextResult {
             return this;
         }
 
-        public Builder withDateTimeUTC(final DateTime dateTimeUTC) {
+        Builder withDateTimeUTC(final DateTime dateTimeUTC) {
             this.dateTimeUTC = dateTimeUTC;
             this.updatedUTC = dateTimeUTC;
             return this;
         }
 
-        public Builder withUpdatedUTC(final DateTime updatedUTC) {
+        Builder withUpdatedUTC(final DateTime updatedUTC) {
             this.updatedUTC = updatedUTC;
             return this;
         }
 
-        public Builder withExternalDeviceId (final String id) {
-            this.externalDeviceId = id;
+        Builder withSenseId (final String id) {
+            this.senseId = id;
             return this;
         }
 
-        public Builder withAudioIndentifier(final String audioIdentifier) {
+        Builder withAudioIndentifier(final String audioIdentifier) {
             this.audioIdentifier = audioIdentifier;
             return this;
         }
 
-        public Builder withText(final String text) {
+        Builder withText(final String text) {
             this.text = text;
             return this;
         }
 
-        public Builder withResponseText(final String text) {
+        Builder withResponseText(final String text) {
             this.responseText= text;
             return this;
         }
 
-        public Builder withService(final SpeechToTextService service) {
+        Builder withService(final SpeechToTextService service) {
             this.service = service;
             return this;
         }
@@ -210,7 +210,7 @@ public class SpeechToTextResult {
 
         public SpeechToTextResult build() {
             return new SpeechToTextResult(accountId,
-                    dateTimeUTC, updatedUTC, externalDeviceId,
+                    dateTimeUTC, updatedUTC, senseId,
                     audioIdentifier, text, responseText, service, confidence,
                     intent, action, intentCategory, command,
                     wakeWord, wakeWordsConfidence, result);

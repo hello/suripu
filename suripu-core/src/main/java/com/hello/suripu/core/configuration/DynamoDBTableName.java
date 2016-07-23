@@ -41,6 +41,7 @@ public enum DynamoDBTableName {
     SLEEP_SCORE_PARAMETERS("sleep_score_parameters"),
     SLEEP_STATS("sleep_stats"),
     SMART_ALARM_LOG("smart_alarm_log"),
+    SPEECH_RESULTS("speech_result"),
     SYNC_RESPONSE_COMMANDS("sync_response_commands"),
     TAGS("tags"),
     TEAMS("teams"),

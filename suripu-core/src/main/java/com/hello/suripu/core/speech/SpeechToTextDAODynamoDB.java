@@ -1,11 +1,30 @@
 package com.hello.suripu.core.speech;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
+import com.hello.suripu.core.db.dynamo.Util;
+import com.hello.suripu.core.util.DateTimeUtil;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,46 +35,60 @@ public class SpeechToTextDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SpeechToTextDAODynamoDB.class);
 
-    public enum SpeechToTextAttribute implements Attribute {
-        ACCOUNT_ID("aid", "N"),
-        RANGE_KEY("ts|dev", "S"),
-        AUDIO_FILE_ID("file_id", "S"),  // uuid of saved audio in S3
-        TEXT("text", "S"),              // transribed text
-        SERVICE("service", "N"),        // service used -- google
-        CONFIDENCE("conf", "N"),        // transcription confidence
-        INTENT("intent", "S"),          // the next 4 attributes describes the parsed command
-        ACTION("action", "S"),
-        INTENT_CATEGORY("intent_cat", "S"),
-        COMMAND("cmd", "S"),
-        WAKE_ID("wake_id", "N"),        // wake-word ID
-        WAKE_CONFIDENCE("wake_conf", "M"),  // confidence of all wake-words
-        RESULT("result", "S"),
-        RESPONSE_TEXT("resp_text", "S");          // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+
+    private enum SpeechToTextAttribute implements Attribute {
+        ACCOUNT_ID("aid", "N", ":aid"),
+        RANGE_KEY("ts|dev", "S", ":rk"),
+        AUDIO_FILE_ID("file_id", "S", ":aud"),  // uuid of saved audio in S3
+        TEXT("text", "S", ":t"),                // transcribed text
+        SERVICE("service", "N", ":s"),          // service used -- google
+        CONFIDENCE("conf", "N", ":c"),          // transcription confidence
+        INTENT("intent", "S", ":i"),            // the next 4 attributes describes the parsed command
+        ACTION("action", "S", ":act"),
+        INTENT_CATEGORY("cat", "S", ":cat"),
+        COMMAND("cmd", "S", ":cmd"),
+        WAKE_ID("wake_id", "N", "wid"),             // wake-word ID
+        WAKE_CONFIDENCE("wake_conf", "NS", "wc"),   // confidence of all wake-words
+        RESULT("result", "S", "res"),
+        RESPONSE_TEXT("resp_text", "S", ":rt"),     // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        UPDATED("updated", "S", ":up");
 
         private final String name;
         private final String type;
+        private final String placeholder;
 
-        SpeechToTextAttribute(String name, String type) {
+        SpeechToTextAttribute(String name, String type, String placeholder) {
             this.name = name;
             this.type = type;
+            this.placeholder = placeholder;
         }
 
         public String sanitizedName() {
             return toString();
         }
-
         public String shortName() {
             return name;
         }
+        public String getPlaceholder() { return placeholder; }
 
         @Override
         public String type() {
             return type;
         }
 
-        private AttributeValue get(final Map<String, AttributeValue> item) {
-            return item.get(this.name);
-        }
+    }
+
+
+    private final Table table;
+
+    private SpeechToTextDAODynamoDB(Table table) {
+        this.table = table;
+    }
+
+    public static SpeechToTextDAODynamoDB create (final AmazonDynamoDB amazonDynamoDB, final String tableName) {
+        final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
+        final Table table = dynamoDB.getTable(tableName);
+        return new SpeechToTextDAODynamoDB(table);
     }
 
     private static final Set<SpeechToTextAttribute> TARGET_ATTRIBUTES = new ImmutableSet.Builder<SpeechToTextAttribute>()
@@ -74,7 +107,119 @@ public class SpeechToTextDAODynamoDB {
             .add(SpeechToTextAttribute.RESULT)
             .build();
 
+    private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT);
+    private static final int DATE_TIME_STRING_LENGTH = DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT.length();
+
+    /**
+     * Get last speech results for account-id
+     * @param accountId user
+     * @param senseId sense external id
+     * @param lookBackMinutes how far back to query
+     * @return Optional SpeechToTextResult
+     */
+    public Optional<SpeechToTextResult> getLatest(final Long accountId, final String senseId, final int lookBackMinutes) {
+        final DateTime queryTime = DateTime.now(DateTimeZone.UTC).minusMinutes(lookBackMinutes);
+
+        //query condition: "aid = :val1 and ts|dev >= :val2"
+        final String keyCondition = getExpression(SpeechToTextAttribute.ACCOUNT_ID, "=") + " AND " +
+                getExpression(SpeechToTextAttribute.RANGE_KEY, ">=");
+
+        final AttributeValue rangeKey = getRangeKey(queryTime, senseId);
+        final ValueMap valueMap = new ValueMap()
+                .withString(SpeechToTextAttribute.ACCOUNT_ID.getPlaceholder(), Util.toAttributeValue(accountId).getS())
+                .withString(SpeechToTextAttribute.RANGE_KEY.getPlaceholder(), rangeKey.getS());
+
+        final QuerySpec querySpec = new QuerySpec()
+                .withKeyConditionExpression(keyCondition)
+                .withValueMap(valueMap)
+                .withAttributesToGet(TARGET_ATTRIBUTES.toString())
+                .withScanIndexForward(false)    // reverse chronological
+                .withMaxResultSize(1);          // only get one command
+
+        ItemCollection<QueryOutcome> items = table.query(querySpec);
+        LOGGER.debug("action=get-latest-speech-result query_result_size={}", items.getTotalCount());
+
+        final List<SpeechToTextResult> results = Lists.newArrayList();
+        for (Item item : items) {
+            results.add(DDBItemToSpeechResult(item));
+        }
+
+        if (!results.isEmpty()) {
+            return Optional.of(results.get(0)); // latest only
+        }
+        return Optional.absent();
+    }
+
+
+    // TODO
     public boolean updateItem(final SpeechToTextResult speechToTextResult) {
         return true;
     }
+
+
+
+    // All the helper functions
+    private static AttributeValue getRangeKey(final DateTime dateTime, final String senseId) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + senseId);
+    }
+
+    private String getExpression(final SpeechToTextAttribute attribute, final String comparator) {
+        return String.format("%s %s %s", attribute.shortName(), comparator, attribute.getPlaceholder());
+    }
+
+    // region DDBItemToObject
+    private  String senseIdFromDDBItem(final Item item) {
+        final String rangeKey = item.getString(SpeechToTextAttribute.RANGE_KEY.shortName());
+        return rangeKey.substring(DATE_TIME_STRING_LENGTH + 1);
+    }
+
+    private DateTime dateTimeFromDDBItem(final Item item) {
+        final String rangeKey = item.getString(SpeechToTextAttribute.RANGE_KEY.shortName());
+        final String dateString = rangeKey.substring(0, DATE_TIME_STRING_LENGTH);
+        return DateTimeUtil.datetimeStringToDateTime(dateString);
+    }
+
+    private Map<String, Float> wakeWordsConfidenceFromDDBItem(final Item item) {
+        final Set<BigDecimal> values = item.getNumberSet(SpeechToTextAttribute.WAKE_CONFIDENCE.shortName());
+        final Map<String, Float> confidences = Maps.newHashMap();
+
+        int setId = 1;
+        for (final BigDecimal value : values) {
+            final String wakeWord = WakeWord.fromInteger(setId).getWakeWordText();
+            confidences.put(wakeWord, Float.valueOf(value.toString()));
+        }
+        return confidences;
+    }
+
+    private SpeechToTextResult DDBItemToSpeechResult(final Item item) {
+        final String rangeKey = item.getString(SpeechToTextAttribute.RANGE_KEY.shortName());
+
+        final SpeechToTextService service = SpeechToTextService.fromString(item.getString(SpeechToTextAttribute.SERVICE.shortName()));
+        final Intention.IntentType intent = Intention.IntentType.fromString(item.getString(SpeechToTextAttribute.INTENT.shortName()));
+        final Intention.ActionType action = Intention.ActionType.fromString(item.getString(SpeechToTextAttribute.ACTION.shortName()));
+        final Intention.IntentCategory category = Intention.IntentCategory.fromString(item.getString(SpeechToTextAttribute.INTENT_CATEGORY.shortName()));
+
+        final WakeWord wakeWord = WakeWord.fromInteger(item.getInt(SpeechToTextAttribute.WAKE_ID.shortName()));
+        final Result result = Result.fromString(item.getString(SpeechToTextAttribute.RESULT.shortName()));
+
+        return new SpeechToTextResult.Builder()
+                .withAccountId(item.getLong(SpeechToTextAttribute.ACCOUNT_ID.shortName()))
+                .withDateTimeUTC(dateTimeFromDDBItem(item))
+                .withUpdatedUTC(DateTimeUtil.datetimeStringToDateTime(item.getString(SpeechToTextAttribute.UPDATED.shortName())))
+                .withSenseId(senseIdFromDDBItem(item))
+                .withAudioIndentifier(item.getString(SpeechToTextAttribute.AUDIO_FILE_ID.shortName()))
+                .withText(item.getString(SpeechToTextAttribute.TEXT.shortName()))
+                .withResponseText(item.getString(SpeechToTextAttribute.RESPONSE_TEXT.shortName()))
+                .withService(service)
+                .withConfidence(item.getFloat(SpeechToTextAttribute.CONFIDENCE.shortName()))
+                .withIntent(intent)
+                .withAction(action)
+                .withIntentCategory(category)
+                .withCommand(item.getString(SpeechToTextAttribute.COMMAND.shortName()))
+                .withWakeWordsConfidence(wakeWordsConfidenceFromDDBItem(item))
+                .withResult(result)
+                .build();
+    }
+    // endregion
+
 }

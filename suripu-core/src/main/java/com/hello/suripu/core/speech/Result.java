@@ -24,4 +24,15 @@ public enum Result {
     public String getName() { return this.name; }
 
     public int getValue() { return  this.value; }
+
+    public static Result fromString(final String text) {
+        if (text != null) {
+            for (final Result result : Result.values()) {
+                if (text.equalsIgnoreCase(result.toString()))
+                    return result;
+            }
+        }
+        return Result.NONE;
+    }
+
 }

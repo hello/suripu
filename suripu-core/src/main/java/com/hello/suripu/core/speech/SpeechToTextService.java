@@ -10,4 +10,15 @@ public enum SpeechToTextService {
 
     protected String value;
     SpeechToTextService(final String value) { this.value = value; }
+
+    public static SpeechToTextService fromString(final String text) {
+        if (text != null) {
+            for (final SpeechToTextService service : SpeechToTextService.values()) {
+                if (text.equalsIgnoreCase(service.toString()))
+                    return service;
+            }
+        }
+        throw new IllegalArgumentException("Invalid service string");
+    }
+
 }
