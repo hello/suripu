@@ -1,7 +1,5 @@
 package com.hello.suripu.core.firmware;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
@@ -9,6 +7,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.protobuf.ByteString;
+
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
@@ -18,6 +19,7 @@ import com.hello.suripu.core.firmware.db.OTAFileSettingsDAO;
 import com.hello.suripu.core.models.OTAHistory;
 import com.hello.suripu.core.ota.Status;
 import com.hello.suripu.core.util.FeatureUtils;
+
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.math3.util.Pair;
@@ -271,7 +273,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
             LOGGER.error("OTA attempt failed for Device Id: {} on FW version: {}. {}", senseQuery.senseId, senseQuery.currentFirmwareVersion, ex.getMessage());
         }
 
-        return firmwareUpdate;
+        return FirmwareUpdate.missing();
     }
 
 
