@@ -321,41 +321,43 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
             s3ObjectKeyCache.invalidateAll();
         }
 
-        final GenericFirmwareUpdateQuery genericFirmwareUpdateQuery = GenericFirmwareUpdateQuery.from(senseFirmwareUpdateQuery);
+        final GenericFirmwareUpdateQuery query = GenericFirmwareUpdateQuery.from(senseFirmwareUpdateQuery);
 
         final GroupNameRollout rollout;
 
         try {
-            rollout = s3ObjectKeyCache.get(genericFirmwareUpdateQuery, new Callable<GroupNameRollout>() {
+            rollout = s3ObjectKeyCache.get(query, new Callable<GroupNameRollout>() {
                 @Override
                 public GroupNameRollout call() throws Exception {
-                    LOGGER.info("Nothing in S3 Object cache for group: [{}] @ FW: [{}]. Fetching new value.", genericFirmwareUpdateQuery.groupName, genericFirmwareUpdateQuery.firmwareVersion);
-                    return getS3ObjectAndRolloutPercentForGroup(genericFirmwareUpdateQuery);
+                    LOGGER.info("msg=s3-empty group={} fw_version={} hw_version={} action=fetching-new-value.",
+                            query.groupName, query.firmwareVersion, query.hardwareVersion);
+                    return getS3ObjectAndRolloutPercentForGroup(query);
                 }
             });
 
         } catch (ExecutionException e) {
-            LOGGER.error("Exception while retrieving S3 file list.");
+            LOGGER.error("error=exception-retrieving-s3-file-list group={} fw_version={} hw_version={}",
+                    query.groupName, query.firmwareVersion, query.hardwareVersion);
             return Optional.absent();
         }
 
 
         if (!FeatureUtils.entityIdHashInPercentRange(senseFirmwareUpdateQuery.senseId, 0.0f, rollout.rolloutPercent)) {
-            LOGGER.debug("Upgrade Node exists, but device outside rollout percentage ({}%).", rollout.rolloutPercent);
+            LOGGER.debug("msg=device-outside-rollout-percentage sense_id={} pct={}.", senseFirmwareUpdateQuery.senseId, rollout.rolloutPercent);
             return Optional.absent();
         }
 
-        final FirmwareCacheKey cacheKey = FirmwareCacheKey.create(rollout.groupName, genericFirmwareUpdateQuery.hardwareVersion);
+        final FirmwareCacheKey cacheKey = FirmwareCacheKey.create(rollout.groupName, query.hardwareVersion);
         return Optional.of(cacheKey);
     }
 
-    private GroupNameRollout getS3ObjectAndRolloutPercentForGroup(final GenericFirmwareUpdateQuery genericFirmwareUpdateQuery) {
+    private GroupNameRollout getS3ObjectAndRolloutPercentForGroup(final GenericFirmwareUpdateQuery query) {
 
 
         //Retrieve destination fw version
         final Optional<Pair<String, Float>> nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(
-                genericFirmwareUpdateQuery.groupName,
-                genericFirmwareUpdateQuery.firmwareVersion
+                query.groupName,
+                query.firmwareVersion
         );
 
         final List<String> humanNames = new ArrayList<>();
@@ -366,16 +368,14 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
         }
 
         if (humanNames.isEmpty()) {
-            LOGGER.debug("No non-hashed fw version exists, defaulting to '{}'.", genericFirmwareUpdateQuery.groupName);
-            return GroupNameRollout.defaultValue(genericFirmwareUpdateQuery.groupName);
+            LOGGER.debug("No non-hashed fw version exists, defaulting to '{}'.", query.groupName);
+            return GroupNameRollout.defaultValue(query.groupName);
         }
 
         final Float rolloutPercent = nextFirmwareVersion.get().getValue();
-        final HardwareVersion version = genericFirmwareUpdateQuery.hardwareVersion;
-        final String hwGroup = String.format("%d/%s", version.value, humanNames.get(0));
         final GroupNameRollout rollout = GroupNameRollout.create(humanNames.get(0), rolloutPercent);
 
-        LOGGER.info("Found upgrade path {} => {}({}) for group: {}", genericFirmwareUpdateQuery.firmwareVersion, nextFirmwareVersion.get().getKey(), rollout.groupName, genericFirmwareUpdateQuery.groupName);
+        LOGGER.info("Found upgrade path {} => {}({}) for group: {}", query.firmwareVersion, nextFirmwareVersion.get().getKey(), rollout.groupName, query.groupName);
         return rollout;
     }
 
