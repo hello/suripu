@@ -41,7 +41,6 @@ public class SpeechResultDynamoDBDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SpeechResultDynamoDBDAO.class);
 
-
     private enum SpeechToTextAttribute implements Attribute {
         ACCOUNT_ID("aid", "N", ":aid"),
         RANGE_KEY("tsdev", "S", ":rk"),         // note, KeyConditionExpression doesn't like "|"
@@ -96,7 +95,6 @@ public class SpeechResultDynamoDBDAO {
         final Table table = dynamoDB.getTable(tableName);
         return new SpeechResultDynamoDBDAO(table);
     }
-
 
     private static final Set<SpeechToTextAttribute> TARGET_ATTRIBUTES = new ImmutableSet.Builder<SpeechToTextAttribute>()
             .add(SpeechToTextAttribute.ACCOUNT_ID)
@@ -200,6 +198,7 @@ public class SpeechResultDynamoDBDAO {
         return String.format("%s %s %s", attribute.shortName(), comparator, attribute.getPlaceholder());
     }
 
+
     // region DDBItemToObject
     private  String senseIdFromDDBItem(final Item item) {
         final String rangeKey = item.getString(SpeechToTextAttribute.RANGE_KEY.shortName());
@@ -224,14 +223,25 @@ public class SpeechResultDynamoDBDAO {
         return confidences;
     }
 
-    private SpeechResult DDBItemToSpeechResult(final Item item) {
-        final String rangeKey = item.getString(SpeechToTextAttribute.RANGE_KEY.shortName());
+    private Set<Number> wakewordsMapToDDBAttribute(final Map<String, Float> wakeWordsMaps) {
+        // get wake word confidence vector
+        final Set<Number> confidences = Sets.newHashSet();
+        for (final WakeWord word : WakeWord.values()) {
+            if (!word.equals(WakeWord.ERROR)) {
+                final String wakeWord = word.getWakeWordText();
+                if (wakeWordsMaps.containsKey(wakeWord)) {
+                    confidences.add(wakeWordsMaps.get(wakeWord));
+                }
+            }
+        }
+        return confidences;
+    }
 
+    private SpeechResult DDBItemToSpeechResult(final Item item) {
         final SpeechToTextService service = SpeechToTextService.fromString(item.getString(SpeechToTextAttribute.SERVICE.shortName()));
         final Intention.IntentType intent = Intention.IntentType.fromString(item.getString(SpeechToTextAttribute.INTENT.shortName()));
         final Intention.ActionType action = Intention.ActionType.fromString(item.getString(SpeechToTextAttribute.ACTION.shortName()));
         final Intention.IntentCategory category = Intention.IntentCategory.fromString(item.getString(SpeechToTextAttribute.INTENT_CATEGORY.shortName()));
-
         final WakeWord wakeWord = WakeWord.fromInteger(item.getInt(SpeechToTextAttribute.WAKE_ID.shortName()));
         final Result result = Result.fromString(item.getString(SpeechToTextAttribute.RESULT.shortName()));
 
@@ -249,28 +259,17 @@ public class SpeechResultDynamoDBDAO {
                 .withAction(action)
                 .withIntentCategory(category)
                 .withCommand(item.getString(SpeechToTextAttribute.COMMAND.shortName()))
+                .withWakeWord(wakeWord)
                 .withWakeWordsConfidence(wakeWordsConfidenceFromDDBItem(item))
                 .withResult(result)
                 .build();
     }
 
     private Item speechResultToDDBItem(final SpeechResult speechResult) {
-
-        // get wake word confidence vector
-        final Set<Number> confidences = Sets.newHashSet();
-        for (final WakeWord word : WakeWord.values()) {
-            if (word.equals(WakeWord.ERROR)) {
-                continue;
-            }
-
-            final String wakeWord = word.getWakeWordText();
-            if (speechResult.wakeWordsConfidence.containsKey(wakeWord)) {
-                confidences.add(speechResult.wakeWordsConfidence.get(wakeWord));
-            }
-        }
-
+        final Set<Number> confidences = wakewordsMapToDDBAttribute(speechResult.wakeWordsConfidence);
         final AttributeValue rangeKey = getRangeKey(speechResult.dateTimeUTC, speechResult.senseId);
-        final Item item = new Item()
+
+        return new Item()
                 .withPrimaryKey(SpeechToTextAttribute.ACCOUNT_ID.shortName(), speechResult.accountId)
                 .withString(SpeechToTextAttribute.RANGE_KEY.shortName(), rangeKey.getS())
                 .withString(SpeechToTextAttribute.AUDIO_FILE_ID.shortName(), speechResult.audioIdentifier)
@@ -286,10 +285,9 @@ public class SpeechResultDynamoDBDAO {
                 .withNumberSet(SpeechToTextAttribute.WAKE_CONFIDENCE.shortName(), confidences)
                 .withString(SpeechToTextAttribute.RESULT.shortName(), speechResult.result.toString())
                 .withString(SpeechToTextAttribute.UPDATED.shortName(), speechResult.updatedUTC.toString(DATE_TIME_WRITE_FORMATTER));
-
-        return item;
     }
     // endregion
+
 
     public static void createTable(final AmazonDynamoDB amazonDynamoDB, final String tableName) throws InterruptedException {
         final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
