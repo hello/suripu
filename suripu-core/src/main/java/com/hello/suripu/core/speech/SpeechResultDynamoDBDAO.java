@@ -42,8 +42,8 @@ public class SpeechResultDynamoDBDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(SpeechResultDynamoDBDAO.class);
 
     private enum SpeechToTextAttribute implements Attribute {
-        ACCOUNT_ID("aid", "N", ":aid"),
-        RANGE_KEY("tsdev", "S", ":rk"),         // note, KeyConditionExpression doesn't like "|"
+        ACCOUNT_ID("account_id", "N", ":aid"),
+        RANGE_KEY("ts_dev", "S", ":rk"),         // note, KeyConditionExpression doesn't like "|"
         AUDIO_FILE_ID("file_id", "S", ":aud"),  // uuid of saved audio in S3
         TEXT("text", "S", ":t"),                // transcribed text
         SERVICE("service", "S", ":s"),          // service used -- google
