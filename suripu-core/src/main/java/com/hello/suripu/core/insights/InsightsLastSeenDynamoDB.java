@@ -154,16 +154,15 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
             LOGGER.error("error=mark-last-seen-insights-fail-insight-missing account_id={}", insightLastSeen.accountId);
             return false;
         }
-        final long categoryUpdatedUTC = item.getLong(insightLastSeen.seenCategory.name());
-        final long accountUpdatedUTC = item.getLong(insightLastSeen.seenCategory.name());
+        final long updatedUTC = item.getLong(insightLastSeen.seenCategory.name());
 
         //check that lastSeen time is correct
-        if (categoryUpdatedUTC != insightLastSeen.updatedUTC.getMillis()) {
+        if (updatedUTC != insightLastSeen.updatedUTC.getMillis()) {
             LOGGER.error("error=mark-last-seen-insights-fail-wrong-timestamp account_id={}", insightLastSeen.accountId);
             return false;
         }
         //check that last updated time for account is correct
-        if (accountUpdatedUTC != insightLastSeen.updatedUTC.getMillis()) {
+        if (updatedUTC!= insightLastSeen.updatedUTC.getMillis()) {
             LOGGER.error("error=mark-last-seen-insights-fail-wrong-last-updated-timestamp account_id={}", insightLastSeen.accountId);
             return false;
         }
