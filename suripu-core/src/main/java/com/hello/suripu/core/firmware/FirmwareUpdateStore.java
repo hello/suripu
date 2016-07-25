@@ -52,13 +52,13 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
     private final static String S3_CACHE_CLEAR_GROUP_NAME = "clear_cache";
     private final static String S3_CACHE_CLEAR_VERSION_NUMBER = "666666";
 
-    final Cache<String, FirmwareUpdate> s3FWCache;
+    final Cache<FirmwareCacheKey, FirmwareUpdate> s3FWCache;
     final Cache<GenericFirmwareUpdateQuery, GroupNameRollout> s3ObjectKeyCache;
 
     public FirmwareUpdateStore(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                final OTAFileSettingsDAO fileSettingsDAO,
                                final FirmwareHelper helper,
-                               final Cache<String, FirmwareUpdate> s3FWCache,
+                               final Cache<FirmwareCacheKey, FirmwareUpdate> s3FWCache,
                                final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                final FirmwareUpgradePathDAO firmwareUpgradePathDAO,
                                final Cache<GenericFirmwareUpdateQuery, GroupNameRollout> s3ObjectKeyCache) {
@@ -76,7 +76,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
                                              final AmazonS3 s3,
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
-                                             final Cache<String, FirmwareUpdate> s3Cache,
+                                             final Cache<FirmwareCacheKey, FirmwareUpdate> s3Cache,
                                              final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                              final FirmwareUpgradePathDAO firmwareUpgradePathDAO,
                                              final Cache<GenericFirmwareUpdateQuery, GroupNameRollout> s3ObjectKeyCache) {
@@ -93,7 +93,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
                                              final Integer s3CacheExpireMinutes,
                                              final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                                              final FirmwareUpgradePathDAO firmwareUpgradePathDAO) {
-        final Cache<String, FirmwareUpdate> s3Cache = CacheBuilder.newBuilder()
+        final Cache<FirmwareCacheKey, FirmwareUpdate> s3Cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(s3CacheExpireMinutes, TimeUnit.MINUTES)
                 .build();
 
@@ -173,21 +173,21 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
     }
 
     @Override
-    public FirmwareUpdate getFirmwareFilesForS3ObjectKey(final String objectKey, final SenseFirmwareUpdateQuery query) {
+    public FirmwareUpdate getFirmwareFilesForS3ObjectKey(final FirmwareCacheKey cacheKey, final SenseFirmwareUpdateQuery query) {
 
         final int expiresInMinutes = 60;
-        final List<S3ObjectSummary> summaryList = helper.summaries(objectKey, query);
+        final List<S3ObjectSummary> summaryList = helper.summaries(cacheKey, query);
         final Optional<String> fwVersionText = helper.getTextForFirmwareVersion(summaryList);
 
         if(!fwVersionText.isPresent()) {
-            LOGGER.warn("action=return-empty-pair s3_key={}", objectKey);
+            LOGGER.warn("action=return-empty-pair s3_key={}", cacheKey.humanReadableGroupName);
             return FirmwareUpdate.missing();
         }
 
         final Optional<String> fwVersion = FirmwareBuildInfoParser.parse(fwVersionText.get());
         if(!fwVersion.isPresent()) {
-            LOGGER.error("error=failed-to-parse-firmware-vesion-from-text s3_key={}", objectKey);
-            LOGGER.warn("action=return-empty-pair s3_key={}", objectKey);
+            LOGGER.error("error=failed-to-parse-firmware-vesion-from-text s3_key={}", cacheKey.humanReadableGroupName);
+            LOGGER.warn("action=return-empty-pair s3_key={}", cacheKey.humanReadableGroupName);
             return FirmwareUpdate.missing();
         }
 
@@ -221,18 +221,20 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
         FirmwareUpdate firmwareUpdate = FirmwareUpdate.missing();
 
         try {
-            final Optional<String> s3ObjectKey = getCachedS3ObjectForDeviceInGroup(senseQuery);
-            if(!s3ObjectKey.isPresent()){
+            final Optional<FirmwareCacheKey> firmwareCacheKeyOptional = getCachedS3ObjectForDeviceInGroup(senseQuery);
+            if(!firmwareCacheKeyOptional.isPresent()){
                 return FirmwareUpdate.missing();
             }
 
+            final FirmwareCacheKey cacheKey = firmwareCacheKeyOptional.get();
+//            final GenericFirmwareUpdateQuery humanQuery = GenericFirmwareUpdateQuery.from(senseQuery);
             // This overrides value declared above.
             try {
-                firmwareUpdate = s3FWCache.get(s3ObjectKey.get(), new Callable<FirmwareUpdate>() {
+                firmwareUpdate = s3FWCache.get(cacheKey, new Callable<FirmwareUpdate>() {
                     @Override
                     public FirmwareUpdate call() throws Exception {
-                        LOGGER.info("Nothing in cache found for S3 Object Key: [{}]. Grabbing info from S3.", s3ObjectKey.get());
-                        return getFirmwareFilesForS3ObjectKey(s3ObjectKey.get(), senseQuery);
+                        LOGGER.info("Nothing in cache found for S3 Object Key: [{}]. Grabbing info from S3.", cacheKey.humanReadableGroupName);
+                        return getFirmwareFilesForS3ObjectKey(cacheKey, senseQuery);
                     }
                 });
 
@@ -260,7 +262,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
                         LOGGER.error("OTA History Insertion Failed: {} => {} for {} at {}", senseQuery.currentFirmwareVersion, query.firmwareVersion, senseQuery.senseId, eventTime);
                     }
                     // TODO refactor to key=value and update papertrail
-                    LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", firmwareUpdate.files.size(), s3ObjectKey.get(), senseQuery.senseId);
+                    LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", firmwareUpdate.files.size(), cacheKey, senseQuery.senseId);
                     return firmwareUpdate;
                 }
 
@@ -311,7 +313,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
         }
     }
 
-    private Optional<String> getCachedS3ObjectForDeviceInGroup(final SenseFirmwareUpdateQuery senseFirmwareUpdateQuery) {
+    private Optional<FirmwareCacheKey> getCachedS3ObjectForDeviceInGroup(final SenseFirmwareUpdateQuery senseFirmwareUpdateQuery) {
 
         //TODO: Refactor the way cache clearing is called. 
         if (senseFirmwareUpdateQuery.group.equals(S3_CACHE_CLEAR_GROUP_NAME) && senseFirmwareUpdateQuery.currentFirmwareVersion.equals(S3_CACHE_CLEAR_VERSION_NUMBER)) {
@@ -343,7 +345,8 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
             return Optional.absent();
         }
 
-        return Optional.of(rollout.groupName);
+        final FirmwareCacheKey cacheKey = FirmwareCacheKey.create(rollout.groupName, genericFirmwareUpdateQuery.hardwareVersion);
+        return Optional.of(cacheKey);
     }
 
     private GroupNameRollout getS3ObjectAndRolloutPercentForGroup(final GenericFirmwareUpdateQuery genericFirmwareUpdateQuery) {
@@ -368,7 +371,8 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
         }
 
         final Float rolloutPercent = nextFirmwareVersion.get().getValue();
-
+        final HardwareVersion version = genericFirmwareUpdateQuery.hardwareVersion;
+        final String hwGroup = String.format("%d/%s", version.value, humanNames.get(0));
         final GroupNameRollout rollout = GroupNameRollout.create(humanNames.get(0), rolloutPercent);
 
         LOGGER.info("Found upgrade path {} => {}({}) for group: {}", genericFirmwareUpdateQuery.firmwareVersion, nextFirmwareVersion.get().getKey(), rollout.groupName, genericFirmwareUpdateQuery.groupName);

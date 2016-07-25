@@ -19,10 +19,10 @@ public interface FirmwareHelper {
 
     /**
      * Lists all files inside a bucket for sense
-     * @param key
+     * @param cacheKey
      * @return
      */
-    List<S3ObjectSummary> summaries(final String key, final SenseFirmwareUpdateQuery query);
+    List<S3ObjectSummary> summaries(final FirmwareCacheKey cacheKey, final SenseFirmwareUpdateQuery query);
 
     /**
      * Parse text from file and return text to be parsed as fw version

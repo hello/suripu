@@ -57,14 +57,14 @@ public class FirmwareS3Helper implements FirmwareHelper {
     // Public methods
 
     @Override
-    public List<S3ObjectSummary> summaries(final String key, final SenseFirmwareUpdateQuery query) {
+    public List<S3ObjectSummary> summaries(final FirmwareCacheKey cacheKey, final SenseFirmwareUpdateQuery query) {
 
-        if (!s3Prefixes.containsKey(query.hwVersion)) {
-            LOGGER.warn("error=hw-version-not-configured hw_version={} sense_id={}", query.hwVersion, query.senseId);
+        if (!s3Prefixes.containsKey(cacheKey.hardwareVersion)) {
+            LOGGER.warn("error=hw-version-not-configured hw_version={} sense_id={}", cacheKey.hardwareVersion, query.senseId);
            return new ArrayList<>();
         }
 
-        return summaries(s3Prefixes.get(query.hwVersion), key);
+        return summaries(s3Prefixes.get(cacheKey.hardwareVersion), cacheKey.humanReadableGroupName);
     }
 
     @Override
