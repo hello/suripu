@@ -42,8 +42,9 @@ public class SpeechResultDynamoDBDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(SpeechResultDynamoDBDAO.class);
 
     private enum SpeechToTextAttribute implements Attribute {
+        SENSE_ID("sense_id", "S", ":sid"),      // Hash Key (external id)
+        RANGE_KEY("ts_aid", "S", ":rk"),        // Range Key (ts|account_id) Note, "|" not allowed in KeyConditionExpr
         ACCOUNT_ID("account_id", "N", ":aid"),
-        RANGE_KEY("ts_dev", "S", ":rk"),         // note, KeyConditionExpression doesn't like "|"
         AUDIO_FILE_ID("file_id", "S", ":aud"),  // uuid of saved audio in S3
         TEXT("text", "S", ":t"),                // transcribed text
         SERVICE("service", "S", ":s"),          // service used -- google
@@ -97,8 +98,9 @@ public class SpeechResultDynamoDBDAO {
     }
 
     private static final Set<SpeechToTextAttribute> TARGET_ATTRIBUTES = new ImmutableSet.Builder<SpeechToTextAttribute>()
-            .add(SpeechToTextAttribute.ACCOUNT_ID)
+            .add(SpeechToTextAttribute.SENSE_ID)
             .add(SpeechToTextAttribute.RANGE_KEY)
+            .add(SpeechToTextAttribute.ACCOUNT_ID)
             .add(SpeechToTextAttribute.AUDIO_FILE_ID)
             .add(SpeechToTextAttribute.TEXT)
             .add(SpeechToTextAttribute.SERVICE)
@@ -125,13 +127,13 @@ public class SpeechResultDynamoDBDAO {
     public Optional<SpeechResult> getLatest(final Long accountId, final String senseId, final int lookBackMinutes) {
         final DateTime queryTime = DateTime.now(DateTimeZone.UTC).minusMinutes(lookBackMinutes);
 
-        //query condition: "aid = :val1 and ts|dev >= :val2"
-        final String keyCondition = getExpression(SpeechToTextAttribute.ACCOUNT_ID, "=") + " AND " +
+        //query condition: "sense_id = :sid and ts_aid >= :rk"
+        final String keyCondition = getExpression(SpeechToTextAttribute.SENSE_ID, "=") + " AND " +
                 getExpression(SpeechToTextAttribute.RANGE_KEY, ">=");
 
-        final AttributeValue rangeKey = getRangeKey(queryTime, senseId);
+        final AttributeValue rangeKey = getRangeKey(queryTime, accountId);
         final ValueMap valueMap = new ValueMap()
-                .withLong(SpeechToTextAttribute.ACCOUNT_ID.getPlaceholder(), accountId)
+                .withString(SpeechToTextAttribute.SENSE_ID.getPlaceholder(), senseId)
                 .withString(SpeechToTextAttribute.RANGE_KEY.getPlaceholder(), rangeKey.getS());
 
         final QuerySpec querySpec = new QuerySpec()
@@ -170,9 +172,9 @@ public class SpeechResultDynamoDBDAO {
     }
 
     public Optional<SpeechResult> getItem(final Long accountId, final DateTime dateTime, final String senseId) {
-        final AttributeValue rangeKey = getRangeKey(dateTime, senseId);
+        final AttributeValue rangeKey = getRangeKey(dateTime, accountId);
         final Item item = table.getItem(
-                SpeechToTextAttribute.ACCOUNT_ID.shortName(), accountId,
+                SpeechToTextAttribute.SENSE_ID.shortName(), senseId,
                 SpeechToTextAttribute.RANGE_KEY.shortName(), rangeKey.getS());
 
         if (item == null) {
@@ -190,8 +192,8 @@ public class SpeechResultDynamoDBDAO {
 
 
     // All the helper functions
-    private static AttributeValue getRangeKey(final DateTime dateTime, final String senseId) {
-        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + senseId);
+    private static AttributeValue getRangeKey(final DateTime dateTime, final Long accountId) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + String.valueOf(accountId));
     }
 
     private String getExpression(final SpeechToTextAttribute attribute, final String comparator) {
@@ -200,11 +202,6 @@ public class SpeechResultDynamoDBDAO {
 
 
     // region DDBItemToObject
-    private  String senseIdFromDDBItem(final Item item) {
-        final String rangeKey = item.getString(SpeechToTextAttribute.RANGE_KEY.shortName());
-        return rangeKey.substring(DATE_TIME_STRING_LENGTH + 1);
-    }
-
     private DateTime dateTimeFromDDBItem(final Item item) {
         final String rangeKey = item.getString(SpeechToTextAttribute.RANGE_KEY.shortName());
         final String dateString = rangeKey.substring(0, DATE_TIME_STRING_LENGTH);
@@ -246,10 +243,10 @@ public class SpeechResultDynamoDBDAO {
         final Result result = Result.fromString(item.getString(SpeechToTextAttribute.RESULT.shortName()));
 
         return new SpeechResult.Builder()
+                .withSenseId(item.getString(SpeechToTextAttribute.SENSE_ID.shortName()))
                 .withAccountId(item.getLong(SpeechToTextAttribute.ACCOUNT_ID.shortName()))
                 .withDateTimeUTC(dateTimeFromDDBItem(item))
                 .withUpdatedUTC(DateTimeUtil.datetimeStringToDateTime(item.getString(SpeechToTextAttribute.UPDATED.shortName())))
-                .withSenseId(senseIdFromDDBItem(item))
                 .withAudioIndentifier(item.getString(SpeechToTextAttribute.AUDIO_FILE_ID.shortName()))
                 .withText(item.getString(SpeechToTextAttribute.TEXT.shortName()))
                 .withResponseText(item.getString(SpeechToTextAttribute.RESPONSE_TEXT.shortName()))
@@ -267,11 +264,12 @@ public class SpeechResultDynamoDBDAO {
 
     private Item speechResultToDDBItem(final SpeechResult speechResult) {
         final Set<Number> confidences = wakewordsMapToDDBAttribute(speechResult.wakeWordsConfidence);
-        final AttributeValue rangeKey = getRangeKey(speechResult.dateTimeUTC, speechResult.senseId);
+        final AttributeValue rangeKey = getRangeKey(speechResult.dateTimeUTC, speechResult.accountId);
 
         return new Item()
-                .withPrimaryKey(SpeechToTextAttribute.ACCOUNT_ID.shortName(), speechResult.accountId)
+                .withPrimaryKey(SpeechToTextAttribute.SENSE_ID.shortName(), speechResult.senseId)
                 .withString(SpeechToTextAttribute.RANGE_KEY.shortName(), rangeKey.getS())
+                .withLong(SpeechToTextAttribute.ACCOUNT_ID.shortName(), speechResult.accountId)
                 .withString(SpeechToTextAttribute.AUDIO_FILE_ID.shortName(), speechResult.audioIdentifier)
                 .withString(SpeechToTextAttribute.TEXT.shortName(), speechResult.text)
                 .withString(SpeechToTextAttribute.RESPONSE_TEXT.shortName(), speechResult.responseText)
@@ -294,11 +292,11 @@ public class SpeechResultDynamoDBDAO {
         final Table table = dynamoDB.createTable(
                 tableName,
                 Lists.newArrayList(
-                        new KeySchemaElement().withAttributeName(SpeechToTextAttribute.ACCOUNT_ID.shortName()).withKeyType(KeyType.HASH),
+                        new KeySchemaElement().withAttributeName(SpeechToTextAttribute.SENSE_ID.shortName()).withKeyType(KeyType.HASH),
                         new KeySchemaElement().withAttributeName(SpeechToTextAttribute.RANGE_KEY.shortName()).withKeyType(KeyType.RANGE)
                 ),
                 Lists.newArrayList(
-                        new AttributeDefinition().withAttributeName(SpeechToTextAttribute.ACCOUNT_ID.shortName()).withAttributeType(ScalarAttributeType.N),
+                        new AttributeDefinition().withAttributeName(SpeechToTextAttribute.SENSE_ID.shortName()).withAttributeType(ScalarAttributeType.S),
                         new AttributeDefinition().withAttributeName(SpeechToTextAttribute.RANGE_KEY.shortName()).withAttributeType(ScalarAttributeType.S)
                 ),
                 new ProvisionedThroughput()
