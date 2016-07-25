@@ -1,24 +1,32 @@
 package com.hello.suripu.core.insights;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.*;
-import com.amazonaws.services.dynamodbv2.document.spec.*;
-import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.dynamodbv2.document.AttributeUpdate;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Util;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.util.DateTimeUtil;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 
 
 /**
@@ -30,8 +38,8 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
     private final Table table;
 
     public static enum AttributeName implements Attribute {
-        ACCOUNT_ID("account_id", "N"); // hash-key
-
+        ACCOUNT_ID("account_id", "N"), // hash-key
+        LAST_UPDATED_UTC("last_updated_utc", "N");
         private final String name;
         private final String type;
 
@@ -87,10 +95,15 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
     public ImmutableList<InsightsLastSeen> getAll(final Long accountId) {
         final PrimaryKey key = new PrimaryKey(AttributeName.ACCOUNT_ID.shortName(), accountId);
         final Item item = table.getItem(key);
+        if (item == null) {
+            LOGGER.error("error=get-all-last-seen-insights-fail-insight-missing account_id={}", accountId);
+            final List<InsightsLastSeen> insightsLastSeen = new ArrayList<>();
+            return ImmutableList.copyOf(insightsLastSeen);
+        }
+        final ImmutableList<InsightsLastSeen> insightsLastSeen = fromItem(accountId, item);
+        return insightsLastSeen;
 
-        final ImmutableList<InsightsLastSeen> insightsLastSeens = fromItem(accountId, item);
 
-        return insightsLastSeens;
     }
 
     public Optional<InsightsLastSeen> getFor(final Long accountId, final InsightCard.Category category) {
@@ -124,10 +137,19 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
 
         final AttributeUpdate attribute = new AttributeUpdate(insightLastSeen.seenCategory.name());
         attribute.put(insightLastSeen.updatedUTC.getMillis());
-        final UpdateItemSpec itemSpec = new UpdateItemSpec().withPrimaryKey(key).addAttributeUpdate(attribute);
 
-        final UpdateItemOutcome updatedItem = table.updateItem(itemSpec);
+        final UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey("account_id", insightLastSeen.accountId)
+                .withReturnValues(ReturnValue.ALL_NEW)
+                .withUpdateExpression("set #p = :val1 ,  #q = :val1")
+                .withNameMap(new NameMap()
+                        .with("#p", insightLastSeen.seenCategory.name())
+                        .with("#q", AttributeName.LAST_UPDATED_UTC.shortName()))
+                .withValueMap(new ValueMap()
+                        .withNumber(":val1", insightLastSeen.updatedUTC.getMillis()));
 
+
+        final UpdateItemOutcome updatedItem = table.updateItem(updateItemSpec);
         final Item item = updatedItem.getItem();
 
         if (!item.hasAttribute(insightLastSeen.seenCategory.name())) {
@@ -136,8 +158,10 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
         }else if (item.getLong(insightLastSeen.seenCategory.name())!= insightLastSeen.updatedUTC.getMillis()) {
             LOGGER.error("error=mark-last-seen-insights-fail-wrong-timestamp account_id={}", insightLastSeen.accountId);
             return false;
+        }else if (item.getLong(AttributeName.LAST_UPDATED_UTC.shortName())!= insightLastSeen.updatedUTC.getMillis()) {
+            LOGGER.error("error=mark-last-seen-insights-fail-wrong-last-updated-timestamp account_id={}", insightLastSeen.accountId);
+            return false;
         }
-
         return true;
     }
 
