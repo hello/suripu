@@ -173,7 +173,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
     }
 
     @Override
-    public FirmwareUpdate getFirmwareFilesForS3ObjectKey(final FirmwareCacheKey cacheKey, final SenseFirmwareUpdateQuery query) {
+    public FirmwareUpdate getFirmwareFilesForCacheKey(final FirmwareCacheKey cacheKey, final SenseFirmwareUpdateQuery query) {
 
         final int expiresInMinutes = 60;
         final List<S3ObjectSummary> summaryList = helper.summaries(cacheKey, query);
@@ -234,7 +234,7 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
                     @Override
                     public FirmwareUpdate call() throws Exception {
                         LOGGER.info("Nothing in cache found for S3 Object Key: [{}]. Grabbing info from S3.", cacheKey.humanReadableGroupName);
-                        return getFirmwareFilesForS3ObjectKey(cacheKey, senseQuery);
+                        return getFirmwareFilesForCacheKey(cacheKey, senseQuery);
                     }
                 });
 
