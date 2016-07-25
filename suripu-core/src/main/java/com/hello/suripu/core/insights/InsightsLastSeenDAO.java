@@ -11,5 +11,5 @@ public interface InsightsLastSeenDAO {
 
     ImmutableList<InsightsLastSeen> getAll (final Long accountId);
     Optional<InsightsLastSeen> getFor (final Long accountId, final InsightCard.Category category);
-    Boolean markLastSeen (final InsightsLastSeen anomalyInsightsLastSeen);
+    Boolean markLastSeen (final InsightsLastSeen insightLastSeen);
 }

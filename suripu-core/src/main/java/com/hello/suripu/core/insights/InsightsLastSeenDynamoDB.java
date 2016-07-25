@@ -27,12 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-
-
 /**
  * Created by jarredheinrich on 7/21/16.
  */
 public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
+
     private final static Logger LOGGER = LoggerFactory.getLogger(InsightsLastSeenDynamoDB.class);
 
     private final Table table;
@@ -71,7 +70,6 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
             return attributes;
         }
     }
-
 
     private InsightsLastSeenDynamoDB(final Table table) {
         this.table = table;
@@ -118,7 +116,6 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
         return Optional.absent();
     }
 
-
     private ImmutableList<InsightsLastSeen> fromItem(final Long accountId, final Item item) {
         final List<InsightsLastSeen> insightsLastSeenList = new ArrayList<>();
 
@@ -132,7 +129,7 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
         return ImmutableList.copyOf(insightsLastSeenList);
     }
 
-    public Boolean markLastSeen(InsightsLastSeen insightLastSeen) {
+    public Boolean markLastSeen(final InsightsLastSeen insightLastSeen) {
         final PrimaryKey key = new PrimaryKey(AttributeName.ACCOUNT_ID.shortName(), insightLastSeen.accountId);
 
         final AttributeUpdate attribute = new AttributeUpdate(insightLastSeen.seenCategory.name());
@@ -141,10 +138,10 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
         final UpdateItemSpec updateItemSpec = new UpdateItemSpec()
                 .withPrimaryKey("account_id", insightLastSeen.accountId)
                 .withReturnValues(ReturnValue.ALL_NEW)
-                .withUpdateExpression("set #p = :val1 ,  #q = :val1")
+                .withUpdateExpression("set #category = :val1 ,  #account_last_updated = :val1")
                 .withNameMap(new NameMap()
-                        .with("#p", insightLastSeen.seenCategory.name())
-                        .with("#q", AttributeName.LAST_UPDATED_UTC.shortName()))
+                        .with("#category", insightLastSeen.seenCategory.name())
+                        .with("#account_last_updated", AttributeName.LAST_UPDATED_UTC.shortName()))
                 .withValueMap(new ValueMap()
                         .withNumber(":val1", insightLastSeen.updatedUTC.getMillis()));
 
@@ -152,18 +149,26 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
         final UpdateItemOutcome updatedItem = table.updateItem(updateItemSpec);
         final Item item = updatedItem.getItem();
 
+        //check for category
         if (!item.hasAttribute(insightLastSeen.seenCategory.name())) {
             LOGGER.error("error=mark-last-seen-insights-fail-insight-missing account_id={}", insightLastSeen.accountId);
             return false;
-        }else if (item.getLong(insightLastSeen.seenCategory.name())!= insightLastSeen.updatedUTC.getMillis()) {
+        }
+        final long categoryUpdatedUTC = item.getLong(insightLastSeen.seenCategory.name());
+        final long accountUpdatedUTC = item.getLong(insightLastSeen.seenCategory.name());
+
+        //check that lastSeen time is correct
+        if (categoryUpdatedUTC != insightLastSeen.updatedUTC.getMillis()) {
             LOGGER.error("error=mark-last-seen-insights-fail-wrong-timestamp account_id={}", insightLastSeen.accountId);
             return false;
-        }else if (item.getLong(AttributeName.LAST_UPDATED_UTC.shortName())!= insightLastSeen.updatedUTC.getMillis()) {
+        }
+        //check that last updated time for account is correct
+        if (accountUpdatedUTC != insightLastSeen.updatedUTC.getMillis()) {
             LOGGER.error("error=mark-last-seen-insights-fail-wrong-last-updated-timestamp account_id={}", insightLastSeen.accountId);
             return false;
         }
+
         return true;
     }
-
 
 }
