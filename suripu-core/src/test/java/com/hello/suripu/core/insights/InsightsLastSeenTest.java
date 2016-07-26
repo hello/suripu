@@ -3,6 +3,7 @@ package com.hello.suripu.core.insights;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class InsightsLastSeenTest {
     public void test_recentCategories() {
         final long fakeAccountId = 1L;
         //Turn on feature flip for marketing schedule
-        final InsightsLastSeen fakeInsightLastSeen1 = new InsightsLastSeen(fakeAccountId, InsightCard.Category.AIR_QUALITY, DateTime.now().minusDays(14));
-        final InsightsLastSeen fakeInsightLastSeen2 = new InsightsLastSeen(fakeAccountId, InsightCard.Category.ALCOHOL, DateTime.now().minusDays(1));
+        final InsightsLastSeen fakeInsightLastSeen1 = new InsightsLastSeen(fakeAccountId, InsightCard.Category.AIR_QUALITY, DateTime.now(DateTimeZone.UTC).minusDays(14));
+        final InsightsLastSeen fakeInsightLastSeen2 = new InsightsLastSeen(fakeAccountId, InsightCard.Category.ALCOHOL, DateTime.now(DateTimeZone.UTC).minusDays(1));
         final List<InsightsLastSeen> fakeInsightsLastSeen = Lists.newArrayList();;
         fakeInsightsLastSeen.add(fakeInsightLastSeen1);
         fakeInsightsLastSeen.add(fakeInsightLastSeen2);

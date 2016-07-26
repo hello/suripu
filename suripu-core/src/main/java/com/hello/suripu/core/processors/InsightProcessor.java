@@ -593,7 +593,7 @@ public class InsightProcessor {
         final Map<InsightCard.Category, DateTime> seenCategories = new HashMap<>();
         for (InsightCard card : cards) {
             // sets all datetime for categories in the time window to now
-            seenCategories.put(card.category, DateTime.now());
+            seenCategories.put(card.category, DateTime.now(DateTimeZone.UTC));
         }
 
         return seenCategories;
