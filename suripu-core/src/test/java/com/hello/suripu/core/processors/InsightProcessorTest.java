@@ -16,6 +16,8 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.insights.InsightsLastSeen;
+import com.hello.suripu.core.insights.InsightsLastSeenDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -38,7 +40,9 @@ import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -124,6 +128,7 @@ public class InsightProcessorTest {
         final TrendsInsightsDAO trendsInsightsDAO = Mockito.mock(TrendsInsightsDAO.class);
         final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB = Mockito.mock(AggregateSleepScoreDAODynamoDB.class);
         final InsightsDAODynamoDB insightsDAODynamoDB = Mockito.mock(InsightsDAODynamoDB.class);
+        final InsightsLastSeenDAO insightsLastSeenDAO = Mockito.mock(InsightsLastSeenDAO.class);
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
         final AccountPreferencesDAO preferencesDAO = Mockito.mock(AccountPreferencesDAO.class);
         final AccountDAO accountDAO = Mockito.mock(AccountDAO.class);
@@ -196,6 +201,7 @@ public class InsightProcessorTest {
                 trendsInsightsDAO,
                 scoreDAODynamoDB,
                 insightsDAODynamoDB,
+                insightsLastSeenDAO,
                 sleepStatsDAODynamoDB,
                 preferencesDAO,
                 accountInfoProcessor,
@@ -209,7 +215,6 @@ public class InsightProcessorTest {
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);
         final ImmutableList<InsightCard> insightCardMockList = ImmutableList.copyOf(Lists.newArrayList(insightCardMock));
         Mockito.when(insightsDAODynamoDB.getInsightsByDate(FAKE_ACCOUNT_ID, DateTime.now().minusDays(7), Boolean.TRUE, 7)).thenReturn(insightCardMockList);
-
         return insightProcessor;
     }
 
@@ -219,7 +224,7 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
 
         final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 1, recentCategories);
         assertThat(something.get(), is(InsightCard.Category.GENERIC));
@@ -231,8 +236,8 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.GENERIC);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now());
 
         final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 1, recentCategories);
         assertThat(something.isPresent(), is(Boolean.FALSE));
@@ -244,8 +249,8 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.GENERIC);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now());
 
         final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 2, recentCategories);
         assertThat(something.get(), is(InsightCard.Category.SLEEP_HYGIENE));
@@ -257,8 +262,8 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.GENERIC);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now());
 
         final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 3, recentCategories);
         assertThat(something.get(), is(InsightCard.Category.SLEEP_DURATION));
@@ -272,9 +277,9 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.LIGHT);
-        recentCategories.add(InsightCard.Category.TEMPERATURE);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
+        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now());
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
@@ -303,9 +308,9 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.LIGHT);
-        recentCategories.add(InsightCard.Category.WAKE_VARIANCE);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
+        recentCategories.put(InsightCard.Category.WAKE_VARIANCE, DateTime.now());
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
@@ -334,9 +339,9 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.TEMPERATURE);
-        recentCategories.add(InsightCard.Category.LIGHT);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now());
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
@@ -362,8 +367,8 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.GOAL_WAKE_VARIANCE);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.GOAL_WAKE_VARIANCE, DateTime.now());
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
@@ -391,8 +396,8 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.LIGHT);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
 
@@ -421,8 +426,8 @@ public class InsightProcessorTest {
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.TEMPERATURE);
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now());
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
 
@@ -506,7 +511,7 @@ public class InsightProcessorTest {
         Set<InsightCard.Category> marketingInsightsSeen = Sets.newHashSet();
 
         final Random random = new Random();
-        
+
         for (int i = 0; i < marketingInsightPool.size(); i ++) {
             final Optional<InsightCard.Category> randomInsightCategory = insightProcessor.pickRandomInsightCategory(marketingInsightPool, marketingInsightsSeen, random);
             assertThat(randomInsightCategory.isPresent(), is(Boolean.TRUE));
@@ -603,4 +608,38 @@ public class InsightProcessorTest {
         //no real data for wake variance, will not generate Insight
         assertThat(generatedInsight.isPresent(), is(Boolean.FALSE));
     }
+
+    @Test
+    public void test_recentCategories() {
+
+        //Turn on feature flip for marketing schedule
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+        final InsightsLastSeen fakeInsightLastSeen1 = new InsightsLastSeen(FAKE_ACCOUNT_ID, InsightCard.Category.AIR_QUALITY, DateTime.now().minusDays(14));
+        final InsightsLastSeen fakeInsightLastSeen2 = new InsightsLastSeen(FAKE_ACCOUNT_ID, InsightCard.Category.ALCOHOL, DateTime.now().minusDays(1));
+        final List<InsightsLastSeen> fakeInsightsLastSeen = Lists.newArrayList();;
+        fakeInsightsLastSeen.add(fakeInsightLastSeen1);
+        fakeInsightsLastSeen.add(fakeInsightLastSeen2);
+
+        Map<InsightCard.Category, DateTime> recentCategories = spyInsightProcessor.getLastSeenInsights(FAKE_ACCOUNT_ID, fakeInsightsLastSeen);
+
+        //TEST - Incorrect date for weekly insight - get nothing
+
+        //Look for marketing insight - can't spy on private random, so do assert
+        assertThat(recentCategories.containsKey(InsightCard.Category.AIR_QUALITY), is(true));
+        assertThat(recentCategories.containsKey(InsightCard.Category.ALCOHOL), is(true));
+        assertThat(recentCategories.containsKey(InsightCard.Category.BED_LIGHT_DURATION), is(false));
+
+        final Boolean checkBedLight = spyInsightProcessor.checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_DURATION, 13);
+        final Boolean checkAlcohol = spyInsightProcessor.checkQualifiedInsight(recentCategories, InsightCard.Category.ALCOHOL, 13);
+        final Boolean checkAirQuality = spyInsightProcessor.checkQualifiedInsight(recentCategories, InsightCard.Category.AIR_QUALITY, 13);
+        final int numRecentInsights = spyInsightProcessor.getNumRecentInsights(recentCategories, 13);
+
+        assertThat(checkBedLight, is(true));
+        assertThat(checkAirQuality, is(true));
+        assertThat(checkAlcohol, is(false));
+        assertThat(numRecentInsights, is(1));
+    }
+
 }
+

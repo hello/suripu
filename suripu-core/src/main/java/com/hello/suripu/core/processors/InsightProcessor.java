@@ -18,6 +18,8 @@ import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.insights.InsightsLastSeen;
+import com.hello.suripu.core.insights.InsightsLastSeenDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -53,8 +55,10 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -70,6 +74,7 @@ public class InsightProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
 
     private static final int RECENT_DAYS = 7; // last 7 days
+    private static final int LAST_TWO_WEEKS = 13; //last 2 weeks
     private static final int NEW_ACCOUNT_THRESHOLD = 4;
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK = 4;
@@ -81,6 +86,7 @@ public class InsightProcessor {
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final InsightsLastSeenDAO insightsLastSeenDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final AccountPreferencesDAO preferencesDAO;
     private final LightData lightData;
@@ -104,6 +110,7 @@ public class InsightProcessor {
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             @NotNull final InsightsDAODynamoDB insightsDAODynamoDB,
+                            @NotNull final InsightsLastSeenDAO insightsLastSeenDAO,
                             @NotNull final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
@@ -112,12 +119,13 @@ public class InsightProcessor {
                             @NotNull final WakeStdDevData wakeStdDevData,
                             @NotNull final CalibrationDAO calibrationDAO,
                             @NotNull final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB
-                            ) {
+    ) {
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceReadDAO = deviceReadDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.insightsLastSeenDAO = insightsLastSeenDAO;
         this.preferencesDAO = preferencesDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.lightData = lightData;
@@ -130,12 +138,13 @@ public class InsightProcessor {
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
         final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountCreated);
+        final boolean useLastSeen = featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_LAST_SEEN, accountId, Collections.EMPTY_LIST);
         if (accountAge < 1) {
             return; // not slept one night yet
         }
 
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
-            this.generateNewUserInsights(accountId, accountAge);
+            this.generateNewUserInsights(accountId, accountAge, useLastSeen);
             return;
         }
 
@@ -151,13 +160,19 @@ public class InsightProcessor {
     /**
      * for new users, first 4 days
      */
-    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge) {
-        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final boolean useLastSeen) {
+        Map<InsightCard.Category, DateTime> recentCategories;
+        if (useLastSeen) {
+            final List<InsightsLastSeen> insightsLastSeenList = this.insightsLastSeenDAO.getAll(accountId);
+            recentCategories = this.getLastSeenInsights(accountId, insightsLastSeenList);
+        }else {
+            recentCategories = this.getRecentInsightsCategories(accountId);
+        }
         return generateNewUserInsights(accountId, accountAge, recentCategories);
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final Set<InsightCard.Category> recentCategories) {
+    public Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final Map<InsightCard.Category, DateTime> recentCategories) {
 
         InsightCard card;
         switch (accountAge) {
@@ -174,18 +189,26 @@ public class InsightProcessor {
                 return Optional.absent();
         }
 
-        if (recentCategories.contains(card.category)) {
+        if (!checkQualifiedInsight(recentCategories, card.category, LAST_TWO_WEEKS)) {
             return Optional.absent();
         }
 
         //insert to DynamoDB
         LOGGER.debug("Inserting {} new user insight for accountId {}", card.category, accountId);
         this.insightsDAODynamoDB.insertInsight(card);
+        final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, card.category, DateTime.now());
+        this.insightsLastSeenDAO.markLastSeen(newInsight);
         return Optional.of(card.category);
     }
 
     private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final RolloutClient featureFlipper) {
-        final Set<InsightCard.Category> recentCategories  = this.getRecentInsightsCategories(accountId);
+        Map<InsightCard.Category, DateTime> recentCategories;
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_LAST_SEEN, accountId, Collections.EMPTY_LIST)) {
+            final List<InsightsLastSeen> insightsLastSeenList = this.insightsLastSeenDAO.getAll(accountId);
+            recentCategories  = this.getLastSeenInsights(accountId, insightsLastSeenList);
+        }else {
+            recentCategories = this.getRecentInsightsCategories(accountId);
+        }
         final DateTime currentTime = DateTime.now(DateTimeZone.UTC);
         return generateGeneralInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, recentCategories, currentTime, featureFlipper);
     }
@@ -195,7 +218,7 @@ public class InsightProcessor {
      */
     @VisibleForTesting
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
-                                                                  final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+                                                                  final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTime);
 
@@ -208,8 +231,7 @@ public class InsightProcessor {
             }
             //else try to generate an old Random Insight
         }
-
-        if (recentCategories.size() > NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK) {
+        if (getNumRecentInsights(recentCategories, 13) > NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK) {
             return Optional.absent();
         }
 
@@ -242,7 +264,7 @@ public class InsightProcessor {
         } else {
             toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTime);
         }
-        
+
         if (toGenerateOneTimeCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateOneTimeCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedRandomOneTimeInsight = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateOneTimeCategory.get());
@@ -257,7 +279,7 @@ public class InsightProcessor {
 
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime) {
 
         //Generate some Insights weekly
         final Integer dayOfWeek = currentTime.getDayOfWeek();
@@ -265,7 +287,7 @@ public class InsightProcessor {
 
         switch (dayOfWeek) {
             case 6:
-                if (recentCategories.contains(InsightCard.Category.WAKE_VARIANCE)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.WAKE_VARIANCE, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.WAKE_VARIANCE);
@@ -273,7 +295,7 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+    private Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         //TODO: Read category to generate off of an external file to allow for most flexibility
         return Optional.absent();
@@ -343,7 +365,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         /* randomly select a card that hasn't been generated recently - TODO when we have all categories
         final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
@@ -360,28 +382,28 @@ public class InsightProcessor {
 
         switch (dayOfMonth) {
             case 1:
-                if (recentCategories.contains(InsightCard.Category.HUMIDITY)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.HUMIDITY, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.HUMIDITY);
             case 4:
-                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_DURATION, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
             case 7:
-                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
             case 10:
-                if (recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.TEMPERATURE, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.TEMPERATURE);
 
             case 13:
-                if (recentCategories.contains(InsightCard.Category.LIGHT)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.LIGHT, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.LIGHT);
@@ -389,12 +411,12 @@ public class InsightProcessor {
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_CAFFEINE, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
-                if (recentCategories.contains(InsightCard.Category.CAFFEINE)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.CAFFEINE, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.CAFFEINE);
             case 19:
-                if (recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_QUALITY, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.SLEEP_QUALITY);
@@ -402,7 +424,7 @@ public class InsightProcessor {
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_TIME, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
-                if (recentCategories.contains(InsightCard.Category.SLEEP_TIME)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_TIME, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.SLEEP_TIME);
@@ -410,7 +432,7 @@ public class InsightProcessor {
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_AIR_QUALITY, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
-                if (recentCategories.contains(InsightCard.Category.AIR_QUALITY)) {
+                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.AIR_QUALITY, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.AIR_QUALITY);
@@ -518,6 +540,8 @@ public class InsightProcessor {
             // save to dynamo
             LOGGER.info("action=generated_insight_card category={} accountId={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+            final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now());
+            this.insightsLastSeenDAO.markLastSeen(newInsight);
             return Optional.of(category);
         }
 
@@ -559,18 +583,54 @@ public class InsightProcessor {
         return categoryNames(trendsInsightsDAO);
     }
 
-    private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
+    public Map<InsightCard.Category, DateTime> getLastSeenInsights(final Long accountId, final List<InsightsLastSeen> insightsLastSeenList) {
+        Map<InsightCard.Category, DateTime> insightsLastSeenMap = new HashMap<>();
+        for ( final InsightsLastSeen insightlastseen : insightsLastSeenList){
+            insightsLastSeenMap.put(insightlastseen.seenCategory, insightlastseen.updatedUTC);
+        }
+
+        return insightsLastSeenMap;
+    }
+
+    public Map<InsightCard.Category, DateTime> getRecentInsightsCategories(final Long accountId) {
         // get all insights from the two weeks
         final DateTime twoWeeksAgo = DateTime.now(DateTimeZone.UTC).minusDays(13);
         final Boolean chronological = true;
 
         final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, twoWeeksAgo, chronological, RECENT_DAYS);
 
-        final Set<InsightCard.Category> seenCategories = new HashSet<>();
+        final Map<InsightCard.Category, DateTime> seenCategories = new HashMap<>();
         for (InsightCard card : cards) {
-            seenCategories.add(card.category);
+            // sets all datetime for categories in the time window to now
+            seenCategories.put(card.category, DateTime.now());
         }
+
         return seenCategories;
+    }
+
+    public boolean checkQualifiedInsight(final Map<InsightCard.Category, DateTime> insightsLastSeenMap, InsightCard.Category category, final int timeWindowDays) {
+        //checks if user may be qualified for insight based on time window
+        final DateTime startDate = DateTime.now().minusDays(timeWindowDays);
+        if (insightsLastSeenMap.containsKey(category)){
+            if (insightsLastSeenMap.get(category).isAfter(startDate)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public int getNumRecentInsights(final Map<InsightCard.Category, DateTime> insightsLastSeenMap, final int timeWindowDays) {
+        Collection<DateTime> lastSeenDateTimes = insightsLastSeenMap.values();
+        final DateTime startDate = DateTime.now().minusDays(timeWindowDays);
+        int numInsights = 0;
+        for (final DateTime lastSeenDateTime : lastSeenDateTimes){
+            if(lastSeenDateTime.isAfter(startDate)){
+                numInsights +=1;
+            }
+        }
+        
+        return numInsights;
     }
 
     private TemperatureUnit getTemperatureUnitString(final Long accountId) {
@@ -606,6 +666,7 @@ public class InsightProcessor {
         private @Nullable TrendsInsightsDAO trendsInsightsDAO;
         private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
         private @Nullable InsightsDAODynamoDB insightsDAODynamoDB;
+        private @Nullable InsightsLastSeenDAO insightsLastSeenDAO;
         private @Nullable SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
         private @Nullable AccountPreferencesDAO preferencesDAO;
         private @Nullable AccountReadDAO accountReadDAO;
@@ -631,9 +692,10 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withDynamoDBDAOs(final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final InsightsDAODynamoDB insightsDAODynamoDB, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+        public Builder withDynamoDBDAOs(final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final InsightsDAODynamoDB insightsDAODynamoDB, final InsightsLastSeenDAO insightsLastSeenDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
             this.scoreDAODynamoDB = scoreDAODynamoDB;
             this.insightsDAODynamoDB = insightsDAODynamoDB;
+            this.insightsLastSeenDAO = insightsLastSeenDAO;
             this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
             return this;
         }
@@ -673,6 +735,7 @@ public class InsightProcessor {
             checkNotNull(trendsInsightsDAO, "trendsInsightsDAO can not be null");
             checkNotNull(scoreDAODynamoDB, "scoreDAODynamoDB can not be null");
             checkNotNull(insightsDAODynamoDB, "insightsDAODynamoDB can not be null");
+            checkNotNull(insightsLastSeenDAO, "insightsLastSeenDAO can not be null");
             checkNotNull(sleepStatsDAODynamoDB, "sleepStatsDAODynamoDB can not be null");
             checkNotNull(preferencesDAO, "preferencesDAO can not be null");
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
@@ -687,6 +750,7 @@ public class InsightProcessor {
                     trendsInsightsDAO,
                     scoreDAODynamoDB,
                     insightsDAODynamoDB,
+                    insightsLastSeenDAO,
                     sleepStatsDAODynamoDB,
                     preferencesDAO,
                     accountInfoProcessor,
@@ -698,3 +762,4 @@ public class InsightProcessor {
         }
     }
 }
+
