@@ -196,7 +196,7 @@ public class InsightProcessor {
         //insert to DynamoDB
         LOGGER.debug("Inserting {} new user insight for accountId {}", card.category, accountId);
         this.insightsDAODynamoDB.insertInsight(card);
-        final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, card.category, DateTime.now());
+        final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, card.category, DateTime.now(DateTimeZone.UTC));
         this.insightsLastSeenDAO.markLastSeen(newInsight);
         return Optional.of(card.category);
     }
@@ -231,7 +231,7 @@ public class InsightProcessor {
             }
             //else try to generate an old Random Insight
         }
-        if (getNumRecentInsights(recentCategories, 13) > NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK) {
+        if (getNumRecentInsights(recentCategories, LAST_TWO_WEEKS) > NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK) {
             return Optional.absent();
         }
 
@@ -540,7 +540,7 @@ public class InsightProcessor {
             // save to dynamo
             LOGGER.info("action=generated_insight_card category={} accountId={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
-            final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now());
+            final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now(DateTimeZone.UTC));
             this.insightsLastSeenDAO.markLastSeen(newInsight);
             return Optional.of(category);
         }
@@ -610,7 +610,7 @@ public class InsightProcessor {
 
     public boolean checkQualifiedInsight(final Map<InsightCard.Category, DateTime> insightsLastSeenMap, InsightCard.Category category, final int timeWindowDays) {
         //checks if user may be qualified for insight based on time window
-        final DateTime startDate = DateTime.now().minusDays(timeWindowDays);
+        final DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(timeWindowDays);
         if (insightsLastSeenMap.containsKey(category)){
             if (insightsLastSeenMap.get(category).isAfter(startDate)){
                 return false;
@@ -622,14 +622,14 @@ public class InsightProcessor {
 
     public int getNumRecentInsights(final Map<InsightCard.Category, DateTime> insightsLastSeenMap, final int timeWindowDays) {
         Collection<DateTime> lastSeenDateTimes = insightsLastSeenMap.values();
-        final DateTime startDate = DateTime.now().minusDays(timeWindowDays);
+        final DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(timeWindowDays);
         int numInsights = 0;
         for (final DateTime lastSeenDateTime : lastSeenDateTimes){
             if(lastSeenDateTime.isAfter(startDate)){
                 numInsights +=1;
             }
         }
-        
+
         return numInsights;
     }
 

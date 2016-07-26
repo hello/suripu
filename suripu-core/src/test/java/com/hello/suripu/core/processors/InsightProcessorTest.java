@@ -215,6 +215,7 @@ public class InsightProcessorTest {
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);
         final ImmutableList<InsightCard> insightCardMockList = ImmutableList.copyOf(Lists.newArrayList(insightCardMock));
         Mockito.when(insightsDAODynamoDB.getInsightsByDate(FAKE_ACCOUNT_ID, DateTime.now().minusDays(7), Boolean.TRUE, 7)).thenReturn(insightCardMockList);
+        
         return insightProcessor;
     }
 
