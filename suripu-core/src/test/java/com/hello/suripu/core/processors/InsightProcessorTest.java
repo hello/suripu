@@ -237,7 +237,7 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now());
+        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now(DateTimeZone.UTC));
 
         final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 1, recentCategories);
         assertThat(something.isPresent(), is(Boolean.FALSE));
@@ -250,7 +250,7 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now());
+        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now(DateTimeZone.UTC));
 
         final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 2, recentCategories);
         assertThat(something.get(), is(InsightCard.Category.SLEEP_HYGIENE));
@@ -263,7 +263,7 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now());
+        recentCategories.put(InsightCard.Category.GENERIC, DateTime.now(DateTimeZone.UTC));
 
         final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 3, recentCategories);
         assertThat(something.get(), is(InsightCard.Category.SLEEP_DURATION));
@@ -278,8 +278,8 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
-        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now());
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now(DateTimeZone.UTC));
+        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now(DateTimeZone.UTC));
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
@@ -309,8 +309,8 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
-        recentCategories.put(InsightCard.Category.WAKE_VARIANCE, DateTime.now());
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now(DateTimeZone.UTC));
+        recentCategories.put(InsightCard.Category.WAKE_VARIANCE, DateTime.now(DateTimeZone.UTC));
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
@@ -340,8 +340,8 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now());
-        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
+        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now(DateTimeZone.UTC));
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now(DateTimeZone.UTC));
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
@@ -368,7 +368,7 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.GOAL_WAKE_VARIANCE, DateTime.now());
+        recentCategories.put(InsightCard.Category.GOAL_WAKE_VARIANCE, DateTime.now(DateTimeZone.UTC));
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
@@ -397,7 +397,7 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now());
+        recentCategories.put(InsightCard.Category.LIGHT, DateTime.now(DateTimeZone.UTC));
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
 
@@ -427,7 +427,7 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now());
+        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now(DateTimeZone.UTC));
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
 
