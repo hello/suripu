@@ -6,6 +6,7 @@ import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
+import com.hello.suripu.core.models.Insights.AggStatsInputs;
 import com.hello.suripu.core.models.Insights.SumLengthData;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -20,7 +21,7 @@ public class AggStatsComputer {
 
     public static final int TO_MICRO_CONVERSION = 1000000;
 
-    public static AggStats computeAggStats(final Long accountId, final DeviceId deviceId, final DateTime dateLocal, final List<DeviceData> deviceDatas, final List<TrackerMotion> trackerMotions, final Optional<Device.Color> colorOptional, final Optional<Calibration> airQualityCalibrationOptional) {
+    public static AggStats computeAggStats(final Long accountId, final DeviceId deviceId, final DateTime dateLocal, final AggStatsInputs aggStatsInputs) {
 
         final DescriptiveStatistics tempRawStats = new DescriptiveStatistics();
         final DescriptiveStatistics humidRawStats = new DescriptiveStatistics();
@@ -35,7 +36,7 @@ public class AggStatsComputer {
         final DescriptiveStatistics lightRawHr4Stats = new DescriptiveStatistics();
         final DescriptiveStatistics lightRawHr5Stats = new DescriptiveStatistics();
 
-        for (DeviceData deviceData : deviceDatas) {
+        for (DeviceData deviceData : aggStatsInputs.deviceDataList) {
             tempRawStats.addValue(deviceData.ambientTemperature);
             humidRawStats.addValue(deviceData.ambientHumidity);
             dustRawStats.addValue(deviceData.ambientAirQualityRaw);
@@ -61,12 +62,12 @@ public class AggStatsComputer {
             }
         }
 
-        final int deviceDataSize = deviceDatas.size();
-        final int trackerMotionSize = trackerMotions.size();
+        final int deviceDataSize = aggStatsInputs.deviceDataList.size();
+        final int trackerMotionSize = aggStatsInputs.pillDataList.size();
 
-        final int avg_daily_temp_raw = ((int) tempRawStats.getMean());
-        final int max_daily_temp_raw = ((int) tempRawStats.getMax());
-        final int min_daily_temp_raw = ((int) tempRawStats.getMin());
+        final int avg_daily_temp_raw = (int) tempRawStats.getMean();
+        final int max_daily_temp_raw = (int) tempRawStats.getMax();
+        final int min_daily_temp_raw = (int) tempRawStats.getMin();
         final int avg_daily_temp = floatToMicroInt(DataUtils.calibrateTemperature(avg_daily_temp_raw));
         final int max_daily_temp = floatToMicroInt(DataUtils.calibrateTemperature(max_daily_temp_raw));
         final int min_daily_temp = floatToMicroInt(DataUtils.calibrateTemperature(min_daily_temp_raw));
@@ -75,11 +76,11 @@ public class AggStatsComputer {
         final int avg_daily_humidity = floatToMicroInt(DataUtils.calibrateHumidity(avg_daily_temp_raw, avg_daily_humidity_raw));
 
         final int avg_daily_dust_raw = ((int) dustRawStats.getMean());
-        final int avg_daily_dust = floatToMicroInt(DataUtils.convertRawDustCountsToDensity(avg_daily_dust_raw, airQualityCalibrationOptional));
+        final int avg_daily_dust = floatToMicroInt(DataUtils.convertRawDustCountsToDensity(avg_daily_dust_raw, aggStatsInputs.calibrationOptional));
 
         final Device.Color color;
-        if (colorOptional.isPresent()) {
-            color = colorOptional.get();
+        if (aggStatsInputs.senseColorOptional.isPresent()) {
+            color = aggStatsInputs.senseColorOptional.get();
         } else {
             color = Device.Color.WHITE; //default color, nothing is done in calibration
         }

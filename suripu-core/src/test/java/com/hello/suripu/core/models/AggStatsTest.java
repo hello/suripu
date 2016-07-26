@@ -12,7 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class AggStatsTest {
     final long FAKE_ACCOUNT_ID = 9999L;
-    final String FAKE_EXTERNAL_DEVICE_ID = "BLARGH";
+    final String FAKE_EXTERNAL_DEVICE_ID = "fakeit";
 
     @Test
     public void test_builder() {

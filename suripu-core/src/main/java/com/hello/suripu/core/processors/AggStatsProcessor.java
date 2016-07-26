@@ -15,9 +15,11 @@ import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
+import com.hello.suripu.core.models.Insights.AggStatsInputs;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.AggStatsComputer;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +41,10 @@ public class AggStatsProcessor {
 
 //    Start computation 1 hr after end of aggStats day. (Compute between 1PM and 6PM)
     private final int MIN_ALLOWED_LOCAL_HOUR = AggStats.DAY_START_END_HOUR + 1; //Perform computations between 1PM and 7PM
-    private final int MAX_ALLOWED_LOCAL_HOUR = MIN_ALLOWED_LOCAL_HOUR + 6;
+    private final int NUM_HOURS_WORKER_ON = 6;
+    private final int MAX_ALLOWED_LOCAL_HOUR = MIN_ALLOWED_LOCAL_HOUR + NUM_HOURS_WORKER_ON;
 
-    public AggStatsProcessor(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+    private AggStatsProcessor(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                              final PillDataDAODynamoDB pillDataDAODynamoDB,
                              final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                              final SenseColorDAO senseColorDAO,
@@ -128,7 +131,7 @@ public class AggStatsProcessor {
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
-        final DateTime utcNow = DateTime.now();
+        final DateTime utcNow = DateTime.now(DateTimeZone.UTC);
         final DateTime localNow = utcNow.plusMillis(timeZoneOffset);
 
         //Limit computations to period where data collection for previous day is completed
@@ -153,7 +156,10 @@ public class AggStatsProcessor {
 
         //Save aggregate statistics
         final Boolean successInsert = saveAggStat(aggStats);
-        LOGGER.info("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.accountId);
+        if (!successInsert) {
+            LOGGER.warn("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.accountId);
+        }
+
         return successInsert;
     }
 
@@ -225,7 +231,8 @@ public class AggStatsProcessor {
         final Optional<Calibration> calibrationOptional = getCalibrationOptional(calibrationDAO, deviceId);
 
         //Compute aggregate stats
-        final AggStats aggStats = AggStatsComputer.computeAggStats(accountId, deviceId, targetDateLocal, deviceDataListResponse.data, pillDataList, senseColorOptional, calibrationOptional);
+        final AggStatsInputs aggStatsInputs = AggStatsInputs.create(senseColorOptional, calibrationOptional, deviceDataListResponse, pillDataList);
+        final AggStats aggStats = AggStatsComputer.computeAggStats(accountId, deviceId, targetDateLocal, aggStatsInputs);
         return aggStats;
     }
 
