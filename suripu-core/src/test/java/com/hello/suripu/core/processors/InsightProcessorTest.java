@@ -16,7 +16,6 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.flipper.FeatureFlipper;
-import com.hello.suripu.core.insights.InsightsLastSeen;
 import com.hello.suripu.core.insights.InsightsLastSeenDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
@@ -215,7 +214,7 @@ public class InsightProcessorTest {
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);
         final ImmutableList<InsightCard> insightCardMockList = ImmutableList.copyOf(Lists.newArrayList(insightCardMock));
         Mockito.when(insightsDAODynamoDB.getInsightsByDate(FAKE_ACCOUNT_ID, DateTime.now().minusDays(7), Boolean.TRUE, 7)).thenReturn(insightCardMockList);
-        
+
         return insightProcessor;
     }
 
@@ -608,38 +607,6 @@ public class InsightProcessorTest {
 
         //no real data for wake variance, will not generate Insight
         assertThat(generatedInsight.isPresent(), is(Boolean.FALSE));
-    }
-
-    @Test
-    public void test_recentCategories() {
-
-        //Turn on feature flip for marketing schedule
-        final InsightProcessor insightProcessor = setUp();
-        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
-        final InsightsLastSeen fakeInsightLastSeen1 = new InsightsLastSeen(FAKE_ACCOUNT_ID, InsightCard.Category.AIR_QUALITY, DateTime.now().minusDays(14));
-        final InsightsLastSeen fakeInsightLastSeen2 = new InsightsLastSeen(FAKE_ACCOUNT_ID, InsightCard.Category.ALCOHOL, DateTime.now().minusDays(1));
-        final List<InsightsLastSeen> fakeInsightsLastSeen = Lists.newArrayList();;
-        fakeInsightsLastSeen.add(fakeInsightLastSeen1);
-        fakeInsightsLastSeen.add(fakeInsightLastSeen2);
-
-        Map<InsightCard.Category, DateTime> recentCategories = spyInsightProcessor.getLastSeenInsights(FAKE_ACCOUNT_ID, fakeInsightsLastSeen);
-
-        //TEST - Incorrect date for weekly insight - get nothing
-
-        //Look for marketing insight - can't spy on private random, so do assert
-        assertThat(recentCategories.containsKey(InsightCard.Category.AIR_QUALITY), is(true));
-        assertThat(recentCategories.containsKey(InsightCard.Category.ALCOHOL), is(true));
-        assertThat(recentCategories.containsKey(InsightCard.Category.BED_LIGHT_DURATION), is(false));
-
-        final Boolean checkBedLight = spyInsightProcessor.checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_DURATION, 13);
-        final Boolean checkAlcohol = spyInsightProcessor.checkQualifiedInsight(recentCategories, InsightCard.Category.ALCOHOL, 13);
-        final Boolean checkAirQuality = spyInsightProcessor.checkQualifiedInsight(recentCategories, InsightCard.Category.AIR_QUALITY, 13);
-        final int numRecentInsights = spyInsightProcessor.getNumRecentInsights(recentCategories, 13);
-
-        assertThat(checkBedLight, is(true));
-        assertThat(checkAirQuality, is(true));
-        assertThat(checkAlcohol, is(false));
-        assertThat(numRecentInsights, is(1));
     }
 
 }

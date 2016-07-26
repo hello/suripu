@@ -55,7 +55,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -65,6 +64,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
 
 /**
  * Created by kingshy on 10/24/14
@@ -138,13 +138,13 @@ public class InsightProcessor {
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
         final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountCreated);
-        final boolean useLastSeen = featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_LAST_SEEN, accountId, Collections.EMPTY_LIST);
+
         if (accountAge < 1) {
             return; // not slept one night yet
         }
 
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
-            this.generateNewUserInsights(accountId, accountAge, useLastSeen);
+            this.generateNewUserInsights(accountId, accountAge, featureFlipper);
             return;
         }
 
@@ -160,11 +160,11 @@ public class InsightProcessor {
     /**
      * for new users, first 4 days
      */
-    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final boolean useLastSeen) {
+    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge,  final RolloutClient featureFlipper) {
         Map<InsightCard.Category, DateTime> recentCategories;
-        if (useLastSeen) {
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_LAST_SEEN, accountId, Collections.EMPTY_LIST)) {
             final List<InsightsLastSeen> insightsLastSeenList = this.insightsLastSeenDAO.getAll(accountId);
-            recentCategories = this.getLastSeenInsights(accountId, insightsLastSeenList);
+            recentCategories = InsightsLastSeen.getLastSeenInsights(insightsLastSeenList);
         }else {
             recentCategories = this.getRecentInsightsCategories(accountId);
         }
@@ -189,7 +189,7 @@ public class InsightProcessor {
                 return Optional.absent();
         }
 
-        if (!checkQualifiedInsight(recentCategories, card.category, LAST_TWO_WEEKS)) {
+        if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, card.category, LAST_TWO_WEEKS)) {
             return Optional.absent();
         }
 
@@ -205,7 +205,7 @@ public class InsightProcessor {
         Map<InsightCard.Category, DateTime> recentCategories;
         if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_LAST_SEEN, accountId, Collections.EMPTY_LIST)) {
             final List<InsightsLastSeen> insightsLastSeenList = this.insightsLastSeenDAO.getAll(accountId);
-            recentCategories  = this.getLastSeenInsights(accountId, insightsLastSeenList);
+            recentCategories  = InsightsLastSeen.getLastSeenInsights(insightsLastSeenList);
         }else {
             recentCategories = this.getRecentInsightsCategories(accountId);
         }
@@ -231,7 +231,7 @@ public class InsightProcessor {
             }
             //else try to generate an old Random Insight
         }
-        if (getNumRecentInsights(recentCategories, LAST_TWO_WEEKS) > NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK) {
+        if (InsightsLastSeen.getNumRecentInsights(recentCategories, LAST_TWO_WEEKS) > NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK) {
             return Optional.absent();
         }
 
@@ -287,7 +287,7 @@ public class InsightProcessor {
 
         switch (dayOfWeek) {
             case 6:
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.WAKE_VARIANCE, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.WAKE_VARIANCE, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.WAKE_VARIANCE);
@@ -382,28 +382,28 @@ public class InsightProcessor {
 
         switch (dayOfMonth) {
             case 1:
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.HUMIDITY, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.HUMIDITY, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.HUMIDITY);
             case 4:
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_DURATION, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_DURATION, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
             case 7:
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
             case 10:
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.TEMPERATURE, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.TEMPERATURE, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.TEMPERATURE);
 
             case 13:
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.LIGHT, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.LIGHT, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.LIGHT);
@@ -411,12 +411,12 @@ public class InsightProcessor {
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_CAFFEINE, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.CAFFEINE, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.CAFFEINE, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.CAFFEINE);
             case 19:
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_QUALITY, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_QUALITY, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.SLEEP_QUALITY);
@@ -424,7 +424,7 @@ public class InsightProcessor {
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_TIME, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_TIME, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_TIME, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.SLEEP_TIME);
@@ -432,7 +432,7 @@ public class InsightProcessor {
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_AIR_QUALITY, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
                 }
-                if (!checkQualifiedInsight(recentCategories, InsightCard.Category.AIR_QUALITY, LAST_TWO_WEEKS)) {
+                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.AIR_QUALITY, LAST_TWO_WEEKS)) {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.AIR_QUALITY);
@@ -583,18 +583,9 @@ public class InsightProcessor {
         return categoryNames(trendsInsightsDAO);
     }
 
-    public Map<InsightCard.Category, DateTime> getLastSeenInsights(final Long accountId, final List<InsightsLastSeen> insightsLastSeenList) {
-        Map<InsightCard.Category, DateTime> insightsLastSeenMap = new HashMap<>();
-        for ( final InsightsLastSeen insightlastseen : insightsLastSeenList){
-            insightsLastSeenMap.put(insightlastseen.seenCategory, insightlastseen.updatedUTC);
-        }
-
-        return insightsLastSeenMap;
-    }
-
     public Map<InsightCard.Category, DateTime> getRecentInsightsCategories(final Long accountId) {
         // get all insights from the two weeks
-        final DateTime twoWeeksAgo = DateTime.now(DateTimeZone.UTC).minusDays(13);
+        final DateTime twoWeeksAgo = DateTime.now(DateTimeZone.UTC).minusDays(LAST_TWO_WEEKS);
         final Boolean chronological = true;
 
         final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, twoWeeksAgo, chronological, RECENT_DAYS);
@@ -608,30 +599,6 @@ public class InsightProcessor {
         return seenCategories;
     }
 
-    public boolean checkQualifiedInsight(final Map<InsightCard.Category, DateTime> insightsLastSeenMap, InsightCard.Category category, final int timeWindowDays) {
-        //checks if user may be qualified for insight based on time window
-        final DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(timeWindowDays);
-        if (insightsLastSeenMap.containsKey(category)){
-            if (insightsLastSeenMap.get(category).isAfter(startDate)){
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public int getNumRecentInsights(final Map<InsightCard.Category, DateTime> insightsLastSeenMap, final int timeWindowDays) {
-        Collection<DateTime> lastSeenDateTimes = insightsLastSeenMap.values();
-        final DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(timeWindowDays);
-        int numInsights = 0;
-        for (final DateTime lastSeenDateTime : lastSeenDateTimes){
-            if(lastSeenDateTime.isAfter(startDate)){
-                numInsights +=1;
-            }
-        }
-
-        return numInsights;
-    }
 
     private TemperatureUnit getTemperatureUnitString(final Long accountId) {
         final Map<PreferenceName, Boolean> preferences = this.preferencesDAO.get(accountId);
