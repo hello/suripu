@@ -1,18 +1,16 @@
 package com.hello.suripu.core.util;
 
-import com.google.common.base.Optional;
 import com.hello.suripu.core.models.AggStats;
-import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.AggStatsInputs;
 import com.hello.suripu.core.models.Insights.SumLengthData;
-import com.hello.suripu.core.models.TrackerMotion;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by jyfan on 7/5/16.
@@ -23,45 +21,29 @@ public class AggStatsComputer {
 
     public static AggStats computeAggStats(final Long accountId, final DeviceId deviceId, final DateTime dateLocal, final AggStatsInputs aggStatsInputs) {
 
+        //Initialize descriptive stats
         final DescriptiveStatistics tempRawStats = new DescriptiveStatistics();
         final DescriptiveStatistics humidRawStats = new DescriptiveStatistics();
         final DescriptiveStatistics dustRawStats = new DescriptiveStatistics();
 
-        final DescriptiveStatistics lightRawHr22Stats = new DescriptiveStatistics();
-        final DescriptiveStatistics lightRawHr23Stats = new DescriptiveStatistics();
-        final DescriptiveStatistics lightRawHr0Stats = new DescriptiveStatistics();
-        final DescriptiveStatistics lightRawHr1Stats = new DescriptiveStatistics();
-        final DescriptiveStatistics lightRawHr2Stats = new DescriptiveStatistics();
-        final DescriptiveStatistics lightRawHr3Stats = new DescriptiveStatistics();
-        final DescriptiveStatistics lightRawHr4Stats = new DescriptiveStatistics();
-        final DescriptiveStatistics lightRawHr5Stats = new DescriptiveStatistics();
+        final Map<Integer, DescriptiveStatistics> lightHourDescriptiveStatistics = new HashMap<>();
+        for (Integer hour : AggStats.LIGHT_HOUR_BUCKETS) {
+            lightHourDescriptiveStatistics.put(hour, new DescriptiveStatistics());
+        }
 
+        //Add data to descriptive stats
         for (DeviceData deviceData : aggStatsInputs.deviceDataList) {
             tempRawStats.addValue(deviceData.ambientTemperature);
             humidRawStats.addValue(deviceData.ambientHumidity);
             dustRawStats.addValue(deviceData.ambientAirQualityRaw);
 
             final int hour = deviceData.localTime().hourOfDay().get();
-
-            if (hour == 22) {
-                lightRawHr22Stats.addValue(deviceData.ambientLightFloat);
-            } else if (hour == 23) {
-                lightRawHr23Stats.addValue(deviceData.ambientLightFloat);
-            } else if (hour == 0) {
-                lightRawHr0Stats.addValue(deviceData.ambientLightFloat);
-            } else if (hour == 1) {
-                lightRawHr1Stats.addValue(deviceData.ambientLightFloat);
-            } else if (hour == 2) {
-                lightRawHr2Stats.addValue(deviceData.ambientLightFloat);
-            } else if (hour == 3) {
-                lightRawHr3Stats.addValue(deviceData.ambientLightFloat);
-            } else if (hour == 4) {
-                lightRawHr4Stats.addValue(deviceData.ambientLightFloat);
-            } else if (hour == 5) {
-                lightRawHr5Stats.addValue(deviceData.ambientLightFloat);
+            if (lightHourDescriptiveStatistics.containsKey(hour)) {
+                lightHourDescriptiveStatistics.get(hour).addValue(deviceData.ambientLightFloat);
             }
         }
 
+        //Compute relevant stats
         final int deviceDataSize = aggStatsInputs.deviceDataList.size();
         final int trackerMotionSize = aggStatsInputs.pillDataList.size();
 
@@ -78,22 +60,18 @@ public class AggStatsComputer {
         final int avg_daily_dust_raw = ((int) dustRawStats.getMean());
         final int avg_daily_dust = floatToMicroInt(DataUtils.convertRawDustCountsToDensity(avg_daily_dust_raw, aggStatsInputs.calibrationOptional));
 
-        final Device.Color color;
-        if (aggStatsInputs.senseColorOptional.isPresent()) {
-            color = aggStatsInputs.senseColorOptional.get();
-        } else {
-            color = Device.Color.WHITE; //default color, nothing is done in calibration
+        final Device.Color color = aggStatsInputs.senseColorOptional.or(Device.Color.WHITE); //default color white, nothing is done in calibration
+
+        final Map<Integer, SumLengthData> microLuxSumLengthHourMap = new HashMap<>();
+        for (Map.Entry<Integer, DescriptiveStatistics> entry : lightHourDescriptiveStatistics.entrySet()) {
+
+            final float sumHourLightRaw = (float) entry.getValue().getSum();
+            final int sumMicroLux = floatToMicroInt(DataUtils.calibrateLight(sumHourLightRaw, color));
+            final int lengthMicroLux = (int) entry.getValue().getN();
+            microLuxSumLengthHourMap.put(entry.getKey(), new SumLengthData(sumMicroLux, lengthMicroLux));
         }
 
-        final SumLengthData sum_len_light_22 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr22Stats.getSum(), color)), (int) lightRawHr22Stats.getN());
-        final SumLengthData sum_len_light_23 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr23Stats.getSum(), color)), (int) lightRawHr23Stats.getN());
-        final SumLengthData sum_len_light_0 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr0Stats.getSum(), color)), (int) lightRawHr0Stats.getN());
-        final SumLengthData sum_len_light_1 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr1Stats.getSum(), color)), (int) lightRawHr1Stats.getN());
-        final SumLengthData sum_len_light_2 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr2Stats.getSum(), color)), (int) lightRawHr2Stats.getN());
-        final SumLengthData sum_len_light_3 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr3Stats.getSum(), color)), (int) lightRawHr3Stats.getN());
-        final SumLengthData sum_len_light_4 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr4Stats.getSum(), color)), (int) lightRawHr4Stats.getN());
-        final SumLengthData sum_len_light_5 = new SumLengthData( floatToMicroInt(DataUtils.calibrateLight((float) lightRawHr5Stats.getSum(), color)), (int) lightRawHr5Stats.getN());
-
+        //Build
         final AggStats.Builder aggStatsBuilder = new AggStats.Builder()
                 .withAccountId(accountId)
                 .withDateLocal(dateLocal)
@@ -108,14 +86,7 @@ public class AggStatsComputer {
                 .withAvgDailyHumidity(avg_daily_humidity)
                 .withAvgDailyDustDensity(avg_daily_dust)
 
-                .withSumLenMicroLux22(sum_len_light_22)
-                .withSumLenMicroLux23(sum_len_light_23)
-                .withSumLenMicroLux0(sum_len_light_0)
-                .withSumLenMicroLux1(sum_len_light_1)
-                .withSumLenMicroLux2(sum_len_light_2)
-                .withSumLenMicroLux3(sum_len_light_3)
-                .withSumLenMicroLux4(sum_len_light_4)
-                .withSumLenMicroLux5(sum_len_light_5);
+                .withSumLenMicroLuxHourMap(microLuxSumLengthHourMap);
 
         return aggStatsBuilder.build();
     }

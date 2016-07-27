@@ -1,8 +1,11 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Insights.SumLengthData;
 import org.joda.time.DateTime;
 import org.junit.Test;
+
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,14 +30,10 @@ public class AggStatsTest {
         final int avg_humid = 1005;
         final int avg_dust = 1006;
 
-        final SumLengthData sumLen22 = new SumLengthData(0,0);
-        final SumLengthData sumLen23 = new SumLengthData(0,0);
-        final SumLengthData sumLen0 = new SumLengthData(0,0);
-        final SumLengthData sumLen1 = new SumLengthData(0,0);
-        final SumLengthData sumLen2 = new SumLengthData(0,0);
-        final SumLengthData sumLen3 = new SumLengthData(0,0);
-        final SumLengthData sumLen4 = new SumLengthData(0,0);
-        final SumLengthData sumLen5 = new SumLengthData(0,0);
+        final Map<Integer, SumLengthData> sumLengthMicroLuxHourMap = Maps.newHashMap();
+        sumLengthMicroLuxHourMap.put(22, new SumLengthData(0, 0));
+        sumLengthMicroLuxHourMap.put(23, new SumLengthData(0, 0));
+        sumLengthMicroLuxHourMap.put(0, new SumLengthData(0, 0));
 
         final AggStats.Builder builder = new AggStats.Builder()
                 .withAccountId(FAKE_ACCOUNT_ID)
@@ -50,14 +49,7 @@ public class AggStatsTest {
                 .withAvgDailyHumidity(avg_humid)
                 .withAvgDailyDustDensity(avg_dust)
 
-                .withSumLenMicroLux22(sumLen22)
-                .withSumLenMicroLux23(sumLen23)
-                .withSumLenMicroLux0(sumLen0)
-                .withSumLenMicroLux1(sumLen1)
-                .withSumLenMicroLux2(sumLen2)
-                .withSumLenMicroLux3(sumLen3)
-                .withSumLenMicroLux4(sumLen4)
-                .withSumLenMicroLux5(sumLen5);
+                .withSumLenMicroLuxHourMap(sumLengthMicroLuxHourMap);
 
         final AggStats aggStats = builder.build();
 

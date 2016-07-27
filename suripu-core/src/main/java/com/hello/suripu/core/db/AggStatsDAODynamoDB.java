@@ -53,8 +53,6 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
     private final String tableName;
     private final String version;
 
-//    private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:00Z");
-//    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
     private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
     private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd";
     private static final String RANGE_KEY_DATE_TEMPLATE = "yyyy-MM-dd";
@@ -74,23 +72,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         AVG_DAILY_HUMID ("avg_day_humid", "N"),
         AVG_DAILY_DUST_DENSITY ("avg_day_dust_density", "N"),
 
-        SUM_MLUX_HR_22 ("sum_mlux_22", "N"),
-        SUM_MLUX_HR_23 ("sum_mlux_23", "N"),
-        SUM_MLUX_HR_0 ("sum_mlux_0", "N"),
-        SUM_MLUX_HR_1 ("sum_mlux_1", "N"),
-        SUM_MLUX_HR_2 ("sum_mlux_2", "N"),
-        SUM_MLUX_HR_3 ("sum_mlux_3", "N"),
-        SUM_MLUX_HR_4 ("sum_mlux_4", "N"),
-        SUM_MLUX_HR_5 ("sum_mlux_5", "N"),
-
-        LEN_MLUX_HR_22 ("len_mlux_22", "N"),
-        LEN_MLUX_HR_23 ("len_mlux_23", "N"),
-        LEN_MLUX_HR_0 ("len_mlux_0", "N"),
-        LEN_MLUX_HR_1 ("len_mlux_1", "N"),
-        LEN_MLUX_HR_2 ("len_mlux_2", "N"),
-        LEN_MLUX_HR_3 ("len_mlux_3", "N"),
-        LEN_MLUX_HR_4 ("len_mlux_4", "N"),
-        LEN_MLUX_HR_5 ("len_mlux_5", "N");
+        SUM_LENGTH_MLUX_HRS_MAP ("sum_len_mlux_hrs_map", "S");
 
         private final String name;
         private final String type;
@@ -125,6 +107,31 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
                 return Integer.valueOf(getAttributeFromDDBIItem(item).getN());
             }
             return -999; //Default "null value" for when we change structure of dynamo table
+        }
+
+        private Map<Integer, SumLengthData> getSumLengthMapFromDDBIItem(final Map<String, AttributeValue> item) {
+            //AttributeValue: "{3=[0; 0], 2=[0; 0], 1=[0; 0], 0=[0; 0], 5=[0; 0], 4=[0; 0], 22=[0; 0], 23=[0; 0]}"
+
+            final Map<Integer, SumLengthData> sumLengthDataMap = Maps.newHashMap();
+
+            try {
+                if (item.containsKey(this.name)) {
+                    final String stringToProcess = String.valueOf(getAttributeFromDDBIItem(item).getS());
+                    final String[] pairs = stringToProcess.replaceAll("[\\{\\}\\s+]", "").split(",");
+                    for (String pair : pairs) {
+                        final String[] keyVal = pair.split("=");
+                        final int key = Integer.parseInt(keyVal[0]);
+                        final int sum = Integer.parseInt(keyVal[1].split(";")[0].replaceAll("[\\[\\]]", ""));
+                        final int length = Integer.parseInt(keyVal[1].split(";")[1].replaceAll("[\\[\\]]", ""));
+                        final SumLengthData sumLengthData = new SumLengthData(sum, length);
+                        sumLengthDataMap.put(key, sumLengthData);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.warn("exception={} action=received-malformed-attribute item={}", e.getMessage(), item.toString());
+            }
+
+            return sumLengthDataMap;
         }
 
         public String sanitizedName() {
@@ -196,23 +203,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         item.put(AggStatsAttribute.AVG_DAILY_HUMID.name, toAttributeValue(aggStats.avgDailyHumidity));
         item.put(AggStatsAttribute.AVG_DAILY_DUST_DENSITY.name, toAttributeValue(aggStats.avgDailyDustDensity));
 
-        item.put(AggStatsAttribute.SUM_MLUX_HR_22.name, toAttributeValue(aggStats.sumMicroLux22));
-        item.put(AggStatsAttribute.SUM_MLUX_HR_23.name, toAttributeValue(aggStats.sumMicroLux23));
-        item.put(AggStatsAttribute.SUM_MLUX_HR_0.name, toAttributeValue(aggStats.sumMicroLux0));
-        item.put(AggStatsAttribute.SUM_MLUX_HR_1.name, toAttributeValue(aggStats.sumMicroLux1));
-        item.put(AggStatsAttribute.SUM_MLUX_HR_2.name, toAttributeValue(aggStats.sumMicroLux2));
-        item.put(AggStatsAttribute.SUM_MLUX_HR_3.name, toAttributeValue(aggStats.sumMicroLux3));
-        item.put(AggStatsAttribute.SUM_MLUX_HR_4.name, toAttributeValue(aggStats.sumMicroLux4));
-        item.put(AggStatsAttribute.SUM_MLUX_HR_5.name, toAttributeValue(aggStats.sumMicroLux5));
-
-        item.put(AggStatsAttribute.LEN_MLUX_HR_22.name, toAttributeValue(aggStats.lenMicroLux22));
-        item.put(AggStatsAttribute.LEN_MLUX_HR_23.name, toAttributeValue(aggStats.lenMicroLux23));
-        item.put(AggStatsAttribute.LEN_MLUX_HR_0.name, toAttributeValue(aggStats.lenMicroLux0));
-        item.put(AggStatsAttribute.LEN_MLUX_HR_1.name, toAttributeValue(aggStats.lenMicroLux1));
-        item.put(AggStatsAttribute.LEN_MLUX_HR_2.name, toAttributeValue(aggStats.lenMicroLux2));
-        item.put(AggStatsAttribute.LEN_MLUX_HR_3.name, toAttributeValue(aggStats.lenMicroLux3));
-        item.put(AggStatsAttribute.LEN_MLUX_HR_4.name, toAttributeValue(aggStats.lenMicroLux4));
-        item.put(AggStatsAttribute.LEN_MLUX_HR_5.name, toAttributeValue(aggStats.lenMicroLux5));
+        item.put(AggStatsAttribute.SUM_LENGTH_MLUX_HRS_MAP.name, toAttributeValue(aggStats.sumLengthMicroLuxHourMap));
         return item;
     }
 
@@ -240,8 +231,18 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         return new AttributeValue().withN(String.valueOf(value));
     }
 
-    private static AttributeValue toAttributeValue(final Float value) {
-        return new AttributeValue().withN(String.valueOf(value));
+    private static AttributeValue toAttributeValue(final Map<Integer, SumLengthData> sumLengthDataMap) {
+        //Result {S: {3=[0; 0], 2=[0; 0], 1=[0; 0], 0=[0; 0], 5=[0; 0], 4=[0; 0], 22=[0; 0], 23=[0; 0]},}
+
+        final Map<String, String> sumLengthStringMap = Maps.newHashMap();
+        for (Map.Entry<Integer, SumLengthData> entry : sumLengthDataMap.entrySet()) {
+            final int sum = entry.getValue().sum;
+            final int length = entry.getValue().length;
+            final String sumLengthString = String.format("[%d; %d]", sum, length);
+            sumLengthStringMap.put(entry.getKey().toString(), sumLengthString);
+        }
+
+        return new AttributeValue().withS(sumLengthStringMap.toString()); //TODO: sort by key?
     }
 
     final AggStats attributeMapToAggStats(final Map<String, AttributeValue> item) {
@@ -259,14 +260,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
                 .withAvgDailyHumidity(AggStatsAttribute.AVG_DAILY_HUMID.getIntegerFromDDBIItem(item))
                 .withAvgDailyDustDensity(AggStatsAttribute.AVG_DAILY_DUST_DENSITY.getIntegerFromDDBIItem(item))
 
-                .withSumLenMicroLux22(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_22.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_22.getIntegerFromDDBIItem(item)))
-                .withSumLenMicroLux23(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_23.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_23.getIntegerFromDDBIItem(item)))
-                .withSumLenMicroLux0(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_0.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_0.getIntegerFromDDBIItem(item)))
-                .withSumLenMicroLux1(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_1.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_1.getIntegerFromDDBIItem(item)))
-                .withSumLenMicroLux2(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_2.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_2.getIntegerFromDDBIItem(item)))
-                .withSumLenMicroLux3(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_3.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_3.getIntegerFromDDBIItem(item)))
-                .withSumLenMicroLux4(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_4.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_4.getIntegerFromDDBIItem(item)))
-                .withSumLenMicroLux5(new SumLengthData(AggStatsAttribute.SUM_MLUX_HR_5.getIntegerFromDDBIItem(item), AggStatsAttribute.LEN_MLUX_HR_5.getIntegerFromDDBIItem(item)))
+                .withSumLenMicroLuxHourMap(AggStatsAttribute.SUM_LENGTH_MLUX_HRS_MAP.getSumLengthMapFromDDBIItem(item))
                 
                 .build();
     }
