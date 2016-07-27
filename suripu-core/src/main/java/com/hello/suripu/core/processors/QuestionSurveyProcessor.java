@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.models.AccountQuestion;
+import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
@@ -22,7 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by jyfan on 5/3/16.
  */
-public class QuestionSurveyProcessor {
+public class QuestionSurveyProcessor extends FeatureFlippedProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionSurveyProcessor.class);
 
@@ -30,13 +31,16 @@ public class QuestionSurveyProcessor {
     private final QuestionResponseDAO questionResponseDAO;
 
     private final List<Question> surveyQuestions;
+    private final List<Question> spursDailyQuestions;
 
     public QuestionSurveyProcessor(final QuestionResponseReadDAO questionResponseReadDAO,
                                    final QuestionResponseDAO questionResponseDAO,
-                                   final List<Question> surveyQuestions) {
+                                   final List<Question> surveyQuestions,
+                                   final List<Question> spursDailyQuestions) {
         this.questionResponseReadDAO = questionResponseReadDAO;
         this.questionResponseDAO = questionResponseDAO;
         this.surveyQuestions = surveyQuestions;
+        this.spursDailyQuestions = spursDailyQuestions;
     }
 
     /*
@@ -46,6 +50,7 @@ public class QuestionSurveyProcessor {
         private QuestionResponseReadDAO questionResponseReadDAO;
         private QuestionResponseDAO questionResponseDAO;
         private List<Question> surveyQuestions;
+        private List<Question> spursDailyQuestions;
 
         public Builder withQuestionResponseDAO(final QuestionResponseReadDAO questionResponseReadDAO,
                                                final QuestionResponseDAO questionResponseDAO) {
@@ -56,13 +61,17 @@ public class QuestionSurveyProcessor {
 
         public Builder withQuestions(final QuestionResponseReadDAO questionResponseReadDAO) {
             this.surveyQuestions = Lists.newArrayList();
+            this.spursDailyQuestions = Lists.newArrayList();
 
             final List<Question> allQuestions = questionResponseReadDAO.getAllQuestions();
             for (final Question question : allQuestions) {
-                if (question.category != QuestionCategory.SURVEY) {
-                    continue;
+                if (question.category == QuestionCategory.SURVEY) {
+                    this.surveyQuestions.add(question);
                 }
-                this.surveyQuestions.add(question);
+                if (question.category == QuestionCategory.SPURS_DAILY) {
+                    this.spursDailyQuestions.add(question);
+                }
+
             }
 
             return this;
@@ -72,8 +81,12 @@ public class QuestionSurveyProcessor {
             checkNotNull(questionResponseReadDAO, "questionResponseRead can not be null");
             checkNotNull(questionResponseDAO, "questionResponse can not be null");
             checkNotNull(surveyQuestions, "surveyQuestions can not be null");
+            checkNotNull(spursDailyQuestions, "spursDailyQuestions can not be null");
 
-            return new QuestionSurveyProcessor(this.questionResponseReadDAO, this.questionResponseDAO, this.surveyQuestions);
+            return new QuestionSurveyProcessor(this.questionResponseReadDAO,
+                    this.questionResponseDAO,
+                    this.surveyQuestions,
+                    this.spursDailyQuestions);
         }
     }
 
@@ -81,6 +94,12 @@ public class QuestionSurveyProcessor {
     Pick question, combine with output of questionProcessor and sort by question priority
      */
     public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime todayLocal, final List<Question> questionProcessorQuestions, final int timeZoneOffset) {
+
+        //Custom logic for Spurs
+        if (hasSpursQuestionsEnabled(accountId)) {
+            //TODO: ask product, suppress other questions?
+            return getSpursQuestions(accountId, todayLocal);
+        }
 
         final List<Question> surveyQuestions = getSurveyQuestions(accountId, todayLocal, timeZoneOffset);
         final List<Question> allQuestions = ListUtils.union(surveyQuestions, questionProcessorQuestions);
@@ -120,6 +139,30 @@ public class QuestionSurveyProcessor {
     }
 
     /*
+    Custom logic for spurs
+     */
+    public List<Question> getSpursQuestions(final Long accountId, final DateTime todayLocal) {
+
+        final DateTime expiration = todayLocal.plusDays(1);
+
+        //TODO: specify ask time?
+        //Did user already response to questions today?
+        final List<AccountQuestionResponses> todaysResponses = questionResponseReadDAO.getQuestionsResponsesByDate(accountId, expiration); //TODO: test local/utc date shenanigans
+        final List<Question> availableQuestions = QuestionSurveyUtils.getDailySurveyXQuestion(todaysResponses, spursDailyQuestions);
+
+        //Save availableQuestions to database if not already in db
+        for (Question availableQuestion : availableQuestions) {
+            final Boolean savedQuestion = savedAccountQuestion(accountId, availableQuestion, todayLocal);
+            if (!savedQuestion) {
+                saveQuestion(accountId, availableQuestion, todayLocal, expiration);
+            }
+        }
+
+        //TODO: Order available questions?
+        return availableQuestions;
+    }
+
+    /*
     Insert questions
      */
 
@@ -132,4 +175,7 @@ public class QuestionSurveyProcessor {
         final List<AccountQuestion> questions = questionResponseReadDAO.getAskedQuestionByQuestionIdCreatedDate(accountId, question.id, created);
         return !questions.isEmpty();
     }
+
+    //TODO: batch savedAccountQuestion
+    //TODO: batch saveQUestion
 }

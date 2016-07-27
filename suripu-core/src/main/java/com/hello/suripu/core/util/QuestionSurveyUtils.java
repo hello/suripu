@@ -1,7 +1,10 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.models.AccountQuestion;
+import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
 
@@ -45,12 +48,46 @@ public class QuestionSurveyUtils {
         return availableQuestions;
     }
 
+    /*
+    Requirements for being available:
+    1. User has not responded to this question today (local date)
+     */
+    public static List<Question> getDailySurveyXQuestion(final List<AccountQuestionResponses> todaysQuestionResponses, final List<Question> surveyXQuestions) {
+
+        final ImmutableList<AccountQuestionResponses> todaysQuestionResponsesImmutable = ImmutableList.copyOf(todaysQuestionResponses); // http://stackoverflow.com/questions/1998544/method-has-the-same-erasure-as-another-method-in-type
+        final List<Integer> responded_question_ids = getRespondedQuestionIds(todaysQuestionResponsesImmutable);
+
+        final List<Question> availableQuestions = Lists.newArrayList();
+        for (final Question question : surveyXQuestions) {
+
+            if (!Collections.disjoint(responded_question_ids, Lists.newArrayList(question.id))) {
+                //User already responded to this question today
+                continue;
+            }
+
+            availableQuestions.add(question);
+        }
+
+        return availableQuestions;
+    }
+
     @VisibleForTesting
     public static List<Integer> getRespondedQuestionIds(final List<Response> responses) {
         final List<Integer> respondedQuestions = Lists.newArrayList();
 
         for (final Response response : responses) {
             respondedQuestions.add(response.questionId);
+        }
+
+        return respondedQuestions;
+    }
+
+    @VisibleForTesting
+    public static List<Integer> getRespondedQuestionIds(final ImmutableList<AccountQuestionResponses> accountQuestionResponsesList) {
+        final List<Integer> respondedQuestions = Lists.newArrayList();
+
+        for (final AccountQuestionResponses accountQuestionResponses : accountQuestionResponsesList) {
+            respondedQuestions.add(accountQuestionResponses.questionId);
         }
 
         return respondedQuestions;
@@ -66,6 +103,5 @@ public class QuestionSurveyUtils {
 
         return respondedResponses;
     }
-
 
 }
