@@ -27,12 +27,12 @@ public class AggStatsComputer {
         final DescriptiveStatistics dustRawStats = new DescriptiveStatistics();
 
         final Map<Integer, DescriptiveStatistics> lightHourDescriptiveStatistics = new HashMap<>();
-        for (Integer hour : AggStats.LIGHT_HOUR_BUCKETS) {
+        for (final Integer hour : AggStats.LIGHT_HOUR_BUCKETS) {
             lightHourDescriptiveStatistics.put(hour, new DescriptiveStatistics());
         }
 
         //Add data to descriptive stats
-        for (DeviceData deviceData : aggStatsInputs.deviceDataList) {
+        for (final DeviceData deviceData : aggStatsInputs.deviceDataList) {
             tempRawStats.addValue(deviceData.ambientTemperature);
             humidRawStats.addValue(deviceData.ambientHumidity);
             dustRawStats.addValue(deviceData.ambientAirQualityRaw);
@@ -63,7 +63,7 @@ public class AggStatsComputer {
         final Device.Color color = aggStatsInputs.senseColorOptional.or(Device.Color.WHITE); //default color white, nothing is done in calibration
 
         final Map<Integer, SumLengthData> microLuxSumLengthHourMap = new HashMap<>();
-        for (Map.Entry<Integer, DescriptiveStatistics> entry : lightHourDescriptiveStatistics.entrySet()) {
+        for (final Map.Entry<Integer, DescriptiveStatistics> entry : lightHourDescriptiveStatistics.entrySet()) {
 
             final float sumHourLightRaw = (float) entry.getValue().getSum();
             final int sumMicroLux = floatToMicroInt(DataUtils.calibrateLight(sumHourLightRaw, color));

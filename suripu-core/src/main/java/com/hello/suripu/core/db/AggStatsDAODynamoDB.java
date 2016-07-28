@@ -60,7 +60,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
 
     public enum AggStatsAttribute implements Attribute {
         ACCOUNT_ID ("aid", "N"),
-        RANGE_KEY ("datel|dev", "S"),  // <local_date>|<external_device_id>
+        RANGE_KEY ("date_local|sense_id", "S"),  // <date_local>|<external_device_id>
         DAY_OF_WEEK ("dow", "N"),
 
         DEVICE_DATA_LENGTH ("device_data_len", "N"),
@@ -118,7 +118,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
                 if (item.containsKey(this.name)) {
                     final String stringToProcess = String.valueOf(getAttributeFromDDBIItem(item).getS());
                     final String[] pairs = stringToProcess.replaceAll("[\\{\\}\\s+]", "").split(",");
-                    for (String pair : pairs) {
+                    for (final String pair : pairs) {
                         final String[] keyVal = pair.split("=");
                         final int key = Integer.parseInt(keyVal[0]);
                         final int sum = Integer.parseInt(keyVal[1].split(";")[0].replaceAll("[\\[\\]]", ""));
@@ -235,7 +235,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         //Result {S: {3=[0; 0], 2=[0; 0], 1=[0; 0], 0=[0; 0], 5=[0; 0], 4=[0; 0], 22=[0; 0], 23=[0; 0]},}
 
         final Map<String, String> sumLengthStringMap = Maps.newHashMap();
-        for (Map.Entry<Integer, SumLengthData> entry : sumLengthDataMap.entrySet()) {
+        for (final Map.Entry<Integer, SumLengthData> entry : sumLengthDataMap.entrySet()) {
             final int sum = entry.getValue().sum;
             final int length = entry.getValue().length;
             final String sumLengthString = String.format("[%d; %d]", sum, length);
@@ -274,12 +274,12 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
             final List<AggStats> aggStatsList = Lists.newArrayList(aggStats);
             final int numSuccess = batchInsert(aggStatsList);
             if (numSuccess > 0) {
-                LOGGER.debug("");
+                LOGGER.debug("action=success-aggstat-insert");
                 return Boolean.TRUE;
             }
 
         } catch (AmazonServiceException ase) {
-            LOGGER.error("");
+            LOGGER.error("action=fail-aggstat-insert exception={} agg_stats={}", ase.getMessage(), aggStats.toString());
         }
 
         return Boolean.FALSE;
@@ -287,7 +287,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
 
     //TODO: test response status when no data present, dynamo off, etc.
     public Optional<AggStats> getSingleStat(final Long accountId, final DeviceId deviceId, final DateTime dateLocal) {
-        Response<ImmutableList<AggStats>> response = getBatchStatsBetweenLocalDate(accountId, deviceId, dateLocal, dateLocal);
+        final Response<ImmutableList<AggStats>> response = getBatchStatsBetweenLocalDate(accountId, deviceId, dateLocal, dateLocal);
         if (response.status != Response.Status.SUCCESS || response.exception.isPresent()) {
             LOGGER.debug("action=get-single-stat response_stats={} response_exception={} accountId={} senseId={} dateLocal={}", response.status.toString(), response.exception.toString(), accountId, deviceId.externalDeviceId, dateLocal.toString());
             return Optional.absent();
@@ -297,7 +297,8 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
             LOGGER.trace("action=get-single-stat response_data=empty accountId={} senseId={} dateLocal={}", accountId, deviceId.externalDeviceId, dateLocal.toString());
             return Optional.absent();
         }
-        Optional<AggStats> aggStatsOptional = Optional.of(response.data.get(0));
+
+        final Optional<AggStats> aggStatsOptional = Optional.of(response.data.get(0));
 
         return aggStatsOptional;
     }
