@@ -4,6 +4,9 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
+import com.amazonaws.util.json.JSONArray;
+import com.amazonaws.util.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -26,6 +29,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -110,21 +114,24 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         }
 
         private Map<Integer, SumLengthData> getSumLengthMapFromDDBIItem(final Map<String, AttributeValue> item) {
-            //AttributeValue: "{3=[0; 0], 2=[0; 0], 1=[0; 0], 0=[0; 0], 5=[0; 0], 4=[0; 0], 22=[0; 0], 23=[0; 0]}"
+            //AttributeValue: "{3=[0, 0], 2=[0, 0], 1=[0, 0], 0=[0, 0], 5=[0, 0], 4=[0, 0], 22=[0, 0], 23=[0, 0]}"
 
             final Map<Integer, SumLengthData> sumLengthDataMap = Maps.newHashMap();
 
             try {
                 if (item.containsKey(this.name)) {
                     final String stringToProcess = String.valueOf(getAttributeFromDDBIItem(item).getS());
-                    final String[] pairs = stringToProcess.replaceAll("[\\{\\}\\s+]", "").split(",");
-                    for (final String pair : pairs) {
-                        final String[] keyVal = pair.split("=");
-                        final int key = Integer.parseInt(keyVal[0]);
-                        final int sum = Integer.parseInt(keyVal[1].split(";")[0].replaceAll("[\\[\\]]", ""));
-                        final int length = Integer.parseInt(keyVal[1].split(";")[1].replaceAll("[\\[\\]]", ""));
+
+                    final JSONObject jsonObject = new JSONObject(stringToProcess);
+                    final Iterator<String> keys = jsonObject.keys();
+                    while (keys.hasNext()) {
+                        final String key = keys.next();
+                        final Integer keyInteger = Integer.parseInt(key);
+                        final JSONArray jsonArray = jsonObject.getJSONArray(key);
+                        final int sum = Integer.parseInt(jsonArray.getString(0));
+                        final int length = Integer.parseInt(jsonArray.getString(1));
                         final SumLengthData sumLengthData = new SumLengthData(sum, length);
-                        sumLengthDataMap.put(key, sumLengthData);
+                        sumLengthDataMap.put(keyInteger, sumLengthData);
                     }
                 }
             } catch (Exception e) {
@@ -232,15 +239,20 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
     }
 
     private static AttributeValue toAttributeValue(final Map<Integer, SumLengthData> sumLengthDataMap) {
-        //Result {S: {3=[0; 0], 2=[0; 0], 1=[0; 0], 0=[0; 0], 5=[0; 0], 4=[0; 0], 22=[0; 0], 23=[0; 0]},}
+        //Result {S: {3=[0, 0], 2=[0, 0], 1=[0, 0], 0=[0, 0], 5=[0, 0], 4=[0, 0], 22=[0, 0], 23=[0, 0]},}
 
         final Map<String, String> sumLengthStringMap = Maps.newHashMap();
         for (final Map.Entry<Integer, SumLengthData> entry : sumLengthDataMap.entrySet()) {
-            final int sum = entry.getValue().sum;
-            final int length = entry.getValue().length;
-            final String sumLengthString = String.format("[%d; %d]", sum, length);
+            JSONArray list = new JSONArray();
+            list.put(entry.getValue().sum);
+            list.put(entry.getValue().length);
+            final String sumLengthString = list.toString();
+
             sumLengthStringMap.put(entry.getKey().toString(), sumLengthString);
         }
+
+        final JSONObject jsonMap = new JSONObject(sumLengthStringMap);
+        final String string = jsonMap.toString();
 
         return new AttributeValue().withS(sumLengthStringMap.toString()); //TODO: sort by key?
     }
