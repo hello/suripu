@@ -20,6 +20,7 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.insights.InsightsLastSeen;
 import com.hello.suripu.core.insights.InsightsLastSeenDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -39,6 +40,7 @@ import com.hello.suripu.core.processors.insights.MarketingInsights;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.PartnerMotionInsight;
 import com.hello.suripu.core.processors.insights.SleepAlarm;
+import com.hello.suripu.core.processors.insights.SleepDeprivation;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.SoundDisturbance;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
@@ -78,6 +80,9 @@ public class InsightProcessor {
     private static final int NEW_ACCOUNT_THRESHOLD = 4;
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK = 4;
+    private static final int HIGH_PRIORITY_START_TIME = 13; //1 pm local time
+    private static final int HIGH_PRIORITY_END_TIME = 19; //6 pm local time
+    private static final int INSIGHT_FREQ_SLEEP_DEPRIVATION = 83; // Max frequency: once every 12 weeks
 
     private static final Random RANDOM = new Random();
 
@@ -209,8 +214,8 @@ public class InsightProcessor {
         }else {
             recentCategories = this.getRecentInsightsCategories(accountId);
         }
-        final DateTime currentTime = DateTime.now(DateTimeZone.UTC);
-        return generateGeneralInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, recentCategories, currentTime, featureFlipper);
+        final DateTime currentTimeUTC = DateTime.now(DateTimeZone.UTC);
+        return generateGeneralInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, recentCategories, currentTimeUTC, featureFlipper);
     }
 
     /**
@@ -218,9 +223,9 @@ public class InsightProcessor {
      */
     @VisibleForTesting
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
-                                                                  final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+                                                                  final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeUTC, final RolloutClient featureFlipper) {
 
-        final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTime);
+        final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTimeUTC);
 
         if (toGenerateWeeklyCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory.get(), accountId);
@@ -236,7 +241,10 @@ public class InsightProcessor {
         }
 
         //logic for generating current high-priority Insight
-        final Optional<InsightCard.Category> toGenerateHighPriorityCategory = selectHighPriorityInsightToGenerate(accountId, recentCategories, currentTime, featureFlipper);
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        final Integer timeZoneOffset = (timeZoneOffsetOptional.isPresent()) ? timeZoneOffsetOptional.get() : 0; //defaults to utc if no timezone present
+        final DateTime currentTimeLocal = currentTimeUTC.plusMillis(timeZoneOffset);
+        final Optional<InsightCard.Category> toGenerateHighPriorityCategory = selectHighPriorityInsightToGenerate(accountId, recentCategories, currentTimeLocal, featureFlipper);
         if (toGenerateHighPriorityCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateHighPriorityCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedHighPriorityCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateHighPriorityCategory.get());
@@ -247,7 +255,7 @@ public class InsightProcessor {
         }
 
         //logic for generating old random insight
-        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime, featureFlipper);
+        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTimeUTC, featureFlipper);
         if (toGenerateRandomCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateRandomCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateRandomCategory.get());
@@ -262,7 +270,7 @@ public class InsightProcessor {
         if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_MARKETING_SCHEDULE, accountId, Collections.EMPTY_LIST)) {
             toGenerateOneTimeCategory = Optional.absent();
         } else {
-            toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTime);
+            toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTimeUTC);
         }
 
         if (toGenerateOneTimeCategory.isPresent()) {
@@ -279,10 +287,10 @@ public class InsightProcessor {
 
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime) {
+    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeUTC) {
 
         //Generate some Insights weekly
-        final Integer dayOfWeek = currentTime.getDayOfWeek();
+        final Integer dayOfWeek = currentTimeUTC.getDayOfWeek();
         LOGGER.debug("The day of week is {}", dayOfWeek);
 
         switch (dayOfWeek) {
@@ -295,25 +303,44 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+    public Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeLocal, final RolloutClient featureFlipper) {
+        //Limit insight check time window
+        //optional insightcard to allow for daily concurrent high priority insights in order of list
+        Optional<InsightCard> insightCardOptional;
+        if (currentTimeLocal.getHourOfDay() >= HIGH_PRIORITY_START_TIME && currentTimeLocal.getHourOfDay() <= HIGH_PRIORITY_END_TIME ){
+            //SLEEP_DEPRIVATION
+            //check if account eligible
+            if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST)){
+                //check if Insight delivered recent
+                if(InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_DEPRIVATION, INSIGHT_FREQ_SLEEP_DEPRIVATION)){
+                    //check if insight is deliverable - avoid
+                    final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
+                    final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+                    insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountId, userAge, currentTimeLocal);
+                    if (insightCardOptional.isPresent()){
+                        return Optional.of(InsightCard.Category.SLEEP_DEPRIVATION);
+                    }
+                }
+            }
+        }
 
         //TODO: Read category to generate off of an external file to allow for most flexibility
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTime) {
+    private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTimeUTC) {
         //Get all historical insight categories
         final Optional<MarketingInsightsSeen> marketingInsightsSeenOptional = marketingInsightsSeenDAODynamoDB.getSeenCategories(accountId);
         if (!marketingInsightsSeenOptional.isPresent()) {
-            return selectMarketingInsightToGenerate(currentTime, new HashSet<InsightCard.Category>(), RANDOM, currentTime.minusDays(1));
+            return selectMarketingInsightToGenerate(currentTimeUTC, new HashSet<InsightCard.Category>(), RANDOM, currentTimeUTC.minusDays(1));
         }
 
-        return selectMarketingInsightToGenerate(currentTime, marketingInsightsSeenOptional.get().seenCategories, RANDOM, marketingInsightsSeenOptional.get().updated);
+        return selectMarketingInsightToGenerate(currentTimeUTC, marketingInsightsSeenOptional.get().seenCategories, RANDOM, marketingInsightsSeenOptional.get().updated);
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTime, final Set<InsightCard.Category> marketingSeenCategories, final Random random, final DateTime lastUpdate) {
-        final DateTime today = currentTime.withTimeAtStartOfDay(); //currentTime is DateTime.now() - UTC
+    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTimeUTC, final Set<InsightCard.Category> marketingSeenCategories, final Random random, final DateTime lastUpdate) {
+        final DateTime today = currentTimeUTC.withTimeAtStartOfDay(); //currentTime is DateTime.now() - UTC
         final DateTime lastMarketingUpdate = lastUpdate.withTimeAtStartOfDay(); //parameter is updated_utc
 
         //Already generated marketing insight today. skip
@@ -321,7 +348,7 @@ public class InsightProcessor {
             return Optional.absent();
         }
 
-        final Integer dayOfMonth = currentTime.getDayOfMonth();
+        final Integer dayOfMonth = currentTimeUTC.getDayOfMonth();
         LOGGER.debug("The day of the month is {}", dayOfMonth);
 
         //Check date condition
@@ -365,7 +392,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeUTC, final RolloutClient featureFlipper) {
 
         /* randomly select a card that hasn't been generated recently - TODO when we have all categories
         final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
@@ -377,7 +404,7 @@ public class InsightProcessor {
         */
 
         //Generate some Insights based on day of month - once every 9 days TODO: randomly generate old Insight on day of week if has not been generated in a while
-        final Integer dayOfMonth = currentTime.getDayOfMonth();
+        final Integer dayOfMonth = currentTimeUTC.getDayOfMonth();
         LOGGER.debug("The day of the month is {}", dayOfMonth);
 
         switch (dayOfMonth) {
@@ -502,6 +529,12 @@ public class InsightProcessor {
                 break;
             case RUN:
                 insightCardOptional = MarketingInsights.getRunInsight(accountId);
+                break;
+            case SLEEP_DEPRIVATION:
+                final DateTime queryDate = DateTime.now().withTimeAtStartOfDay();
+                final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
+                final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+                insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountId, userAge, queryDate);
                 break;
             case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, sleepStatsDAODynamoDB, false);

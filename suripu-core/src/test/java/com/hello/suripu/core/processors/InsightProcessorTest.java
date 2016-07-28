@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -17,6 +18,7 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.insights.InsightsLastSeenDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -31,6 +33,7 @@ import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -67,6 +70,7 @@ public class InsightProcessorTest {
 
     private final DateTime FAKE_DATE_1 = DateTime.parse("2015-09-01").withTimeAtStartOfDay();
     private final DateTime FAKE_DATE_10 = DateTime.parse("2015-09-10").withTimeAtStartOfDay();
+    private final DateTime FAKE_DATE_11 = DateTime.parse("2015-09-11").withHourOfDay(14);
     private final DateTime FAKE_DATE_13 = DateTime.parse("2015-09-13").withTimeAtStartOfDay();
     private final DateTime FAKE_DATE_NONE = DateTime.parse("2015-09-11").withTimeAtStartOfDay();
 
@@ -98,7 +102,14 @@ public class InsightProcessorTest {
 
         RolloutClient mockFeatureFlipper = Mockito.mock(RolloutClient.class);
         Mockito.when(mockFeatureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_MARKETING_SCHEDULE, FAKE_ACCOUNT_ID, Collections.EMPTY_LIST)).thenReturn(Boolean.TRUE);
+        return mockFeatureFlipper;
+    }
 
+    private static RolloutClient featureFlipSleepDeprivationOn() {
+        final Long FAKE_ACCOUNT_ID = 9999L;
+
+        RolloutClient mockFeatureFlipper = Mockito.mock(RolloutClient.class);
+        Mockito.when(mockFeatureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, FAKE_ACCOUNT_ID, Collections.EMPTY_LIST)).thenReturn(Boolean.TRUE);
         return mockFeatureFlipper;
     }
 
@@ -131,6 +142,7 @@ public class InsightProcessorTest {
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
         final AccountPreferencesDAO preferencesDAO = Mockito.mock(AccountPreferencesDAO.class);
         final AccountDAO accountDAO = Mockito.mock(AccountDAO.class);
+        final AccountReadDAO accountReadDAO = Mockito.mock(AccountReadDAO.class);
         final LightData lightData = Mockito.mock(LightData.class);
         final WakeStdDevData wakeStdDevData = Mockito.mock(WakeStdDevData.class);
         final CalibrationDAO calibrationDAO = Mockito.mock(CalibrationDAO.class);
@@ -156,8 +168,28 @@ public class InsightProcessorTest {
 
         final MotionScore fakeMotionScore = Mockito.mock(MotionScore.class);
         final SleepStats fakeSleepStat = Mockito.mock(SleepStats.class);
+        final SleepStats fakeSleepStat290 = new SleepStats(0,0,0,290,false, 1,0L,0L,5);
+        final SleepStats fakeSleepStat480 = new SleepStats(0,0,0, 480,false, 1,0L,0L,5);
+
         final List<AggregateSleepStats> fakeAggregateSleepStatsList = Lists.newArrayList();
         fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat));
+
+        final List<AggregateSleepStats> fakeAggregateSleepStatsSleepDebtList1 = Lists.newArrayList();
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(3), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(2), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(1), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(0), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+
+        final List<AggregateSleepStats> fakeAggregateSleepStatsSleepDebtList2 = Lists.newArrayList();
+        int i = 20;
+        while(i >= 6 ) {
+            fakeAggregateSleepStatsSleepDebtList2.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(i), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat480));
+            i -= 1;
+        }
+        final String testQueryStartDate1 = DateTimeUtil.dateToYmdString(FAKE_DATE_11.minusDays(3));
+        final String testQueryEndDate1 = DateTimeUtil.dateToYmdString(FAKE_DATE_11);
+        final String testQueryStartDate2 = DateTimeUtil.dateToYmdString(FAKE_DATE_11.minusDays(31));
+        final String testQueryEndDate2 = DateTimeUtil.dateToYmdString(FAKE_DATE_11.minusDays(4));
 
         //Taking care of @NotNull check for light
         final Response<ImmutableList<DeviceData>> successfulResponse = Response.success(ImmutableList.copyOf(data));
@@ -169,6 +201,9 @@ public class InsightProcessorTest {
         Mockito.when(scoreDAODynamoDB.getSingleScore(FAKE_ACCOUNT_ID, "2015-09-14")).thenReturn(mockAggregateScore);
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.LIGHT, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(Mockito.any(Long.class), Mockito.any(String.class), Mockito.any(String.class))).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList));
+        Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID, testQueryStartDate1,testQueryEndDate1)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsSleepDebtList1));
+        Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID,testQueryStartDate2, testQueryEndDate2)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsSleepDebtList2));
+        Mockito.when(accountReadDAO.getById(FAKE_ACCOUNT_ID)).thenReturn(Optional.<Account>absent());
 
         Mockito.when(preferencesDAO.toString()).thenReturn("someString");
         Mockito.when(accountInfoProcessor.toString()).thenReturn("someString");
@@ -204,7 +239,7 @@ public class InsightProcessorTest {
                 sleepStatsDAODynamoDB,
                 preferencesDAO,
                 accountInfoProcessor,
-                accountDAO,
+                accountReadDAO,
                 lightData,
                 wakeStdDevData,
                 calibrationDAO,
@@ -607,6 +642,22 @@ public class InsightProcessorTest {
 
         //no real data for wake variance, will not generate Insight
         assertThat(generatedInsight.isPresent(), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void test_generateCategory_sleepDeprivation() {
+
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+        final RolloutClient mockFeatureFlipper = featureFlipSleepDeprivationOn();
+        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
+
+        Optional<InsightCard.Category> generatedInsight = spyInsightProcessor.selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_10, mockFeatureFlipper);
+        //outside time window
+        assertThat(generatedInsight.isPresent(), is(Boolean.FALSE));
+
+        generatedInsight = spyInsightProcessor.selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_11, mockFeatureFlipper);
+        assertThat(generatedInsight.isPresent(), is(Boolean.TRUE));
     }
 
 }

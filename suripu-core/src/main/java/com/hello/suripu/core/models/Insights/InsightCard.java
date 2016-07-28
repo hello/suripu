@@ -50,7 +50,8 @@ public class InsightCard implements Comparable<InsightCard> {
         GOAL_COFFEE(32),
         GOAL_SCHEDULE_THOUGHTS(33),
         GOAL_SCREENS(34),
-        GOAL_WAKE_VARIANCE(35);
+        GOAL_WAKE_VARIANCE(35),
+        SLEEP_DEPRIVATION(36);
 
         private int value;
 

@@ -88,7 +88,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 '),
 ----
 ('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
-'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but it is unique to the individual.''
+'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but it is unique to the individual.'
 ),
 ----
 ('time_to_sleep', '', 'Sleep Onset',
@@ -244,6 +244,7 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 
 **Associate your bedroom with sleep**. Avoid non-sleep activities such as watching TV, working, or using the computer when in the bedroom.'
 
+WHERE category ='sleep_hygiene';
 
 --jyfan 9/22/2015 Update text for humidity card.
 
@@ -569,3 +570,13 @@ And finally, consider staying away from stimulants such as nicotine and alcohol.
 
 While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns.'
 WHERE category='sleep_hygiene';
+
+--jarred-h 2016-07-14
+--sleep deprivation
+ALTER TYPE insight_category ADD VALUE 'sleep_deprivation';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('sleep_deprivation', 'The importance of sleep', 'Sleep Needs',
+ 'Depriving yourself of adequate sleep can impair both neurological and psychological functions. Researches have shown that routine sleep deprivation can result in cognitive dysfunction (impaired alertness, cognitive speed, and memory), increased blood pressure, and an increased risk of diabetes. Over time, it can increase the risk of other serious health issues as well, such as obesity and heart disease.
+
+  While maintaining a consistent sleep schedule and with sufficient sleep each night should be your goal, sometimes it isn''t always possible to get a full night''s sleep. In that case, you can catch up by getting a bit of extra sleep within a few days — just don''t make it habit. Keeping a consistent sleep schedule helps keep your circadian rhythm strong. If you''re feeling a bit sleep deprived, try getting some extra sleep tonight.');
