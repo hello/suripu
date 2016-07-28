@@ -190,4 +190,13 @@ public class Util {
         }
         return Joiner.on(" ").join(parts);
     }
+
+    public static AttributeValue toAttributeValue(final Integer value) {
+        return new AttributeValue().withN(String.valueOf(value));
+    }
+
+    public static AttributeValue toAttributeValue(final Long value) {
+        return new AttributeValue().withN(String.valueOf(value));
+    }
+
 }
