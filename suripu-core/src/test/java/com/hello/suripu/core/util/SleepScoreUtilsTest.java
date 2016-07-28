@@ -72,7 +72,7 @@ public class SleepScoreUtilsTest {
         final int age = 23;
         final int durThreshold = 540;
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
-        final List<Float> correct = Lists.newArrayList(39.32f, 43.685326f, 46.401653f, 55.010803f, 52.866f);
+        final List<Float> correct = Lists.newArrayList(30.469934F, 43.685326f, 46.401653f, 55.010803f, 52.866f);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
             final float score = SleepScoreUtils.getSleepScoreDurationV3(age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);
@@ -85,7 +85,7 @@ public class SleepScoreUtilsTest {
         final int age = 23;
         final int durThreshold = 0;
         final List<Integer> sleepDurationMinutes = Lists.newArrayList(80, 299, 360, 510, 780);
-        final List<Float> correct = Lists.newArrayList(39.32f, 44.867283f, 48.128555f, 56.04506f, 52.866f);
+        final List<Float> correct = Lists.newArrayList(35.587597F, 44.867283f, 48.128555f, 56.04506f, 52.866f);
         for (int i = 0; i < sleepDurationMinutes.size(); i++) {
             final float score = SleepScoreUtils.getSleepScoreDurationV3(age, durThreshold, sleepDurationMinutes.get(i));
             LOGGER.info("value {} -> {}", sleepDurationMinutes.get(i), score);
@@ -103,6 +103,15 @@ public class SleepScoreUtilsTest {
         assertThat(testDurScoreV4, is(77));
     }
 
+    @Test
+    public void testScoresV4MinScore(){
+        final float testDurScoreV3 = 25;
+        final MotionFrequency testMotionFreq = new MotionFrequency(0.673f,  0.673f, 0.0f, 0.673f);
+        final int testTimesAwake = 1;
+        final int testAgitatedSleepDuration = 0;
+        final int testDurScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(1001L, testDurScoreV3, testMotionFreq, testTimesAwake, testAgitatedSleepDuration);
+        assertThat(testDurScoreV4, is(0));
+    }
 
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
         final URL fixtureCSVFile = Resources.getResource(fixturePath);
