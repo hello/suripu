@@ -175,9 +175,7 @@ public class SleepScoreUtils {
         //Adjusted sleep duration based on deviations from population mean, reduced magnitude of delta
         adjSleepDurationV3 = sleepDurationMinutes + (DURATION_POP_IDEAL - sleepDurationTargetV3)/2;
 
-        if (adjSleepDurationV3 < DURATION_MIN_V3) {
-            rawScoreV3 = RAW_SCORE_MIN_V3;
-        }else if (adjSleepDurationV3 > DURATION_MAX_V3) {
+        if (adjSleepDurationV3 > DURATION_MAX_V3) {
             rawScoreV3 = RAW_SCORE_MAX_DUR_V3;
         }else{
             //rawScore calculated using 5th degree polynomial model to extrapolate change in sleep quality with sleep duration
@@ -197,7 +195,7 @@ public class SleepScoreUtils {
         final int maxTimesAwake = 6;
         final int maxAgitatedSleep = 45;
         final float rawScore = DURATION_WEIGHTS_V4[0] + DURATION_WEIGHTS_V4[1] * sleepDurationScoreV3 + DURATION_WEIGHTS_V4[2] * Math.min(agitatedSleepDuration, maxAgitatedSleep) + DURATION_WEIGHTS_V4[3] * Math.min(motionFrequency.motionFrequencyFirstPeriod, maxMotionFreq)  + DURATION_WEIGHTS_V4[4] * Math.min( motionFrequency.motionFrequencyMiddlePeriod, maxMotionFreq) + DURATION_WEIGHTS_V4[5] * Math.min(motionFrequency.motionFrequencyLastPeriod, maxMotionFreq) + DURATION_WEIGHTS_V4[6] * Math.min(timesAwake, maxTimesAwake);
-        final int durationScorev4 = (int) Math.max(Math.min(rawScore * .95 + 21, 90), 40);
+        final int durationScorev4 = (int) Math.max(Math.min(rawScore * .95 + 21, 90), 0);
         LOGGER.trace("action=calculated-durationscore-v4 account_id={} sleep_duration_score_v3={} motion_frequency={} awake_times={} agitated_sleep_duration={} durationscore_v4={}", accountId, sleepDurationScoreV3, motionFrequency.motionFrequency, timesAwake, agitatedSleepDuration, durationScorev4);
         return durationScorev4;
     }
