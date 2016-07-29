@@ -4,9 +4,11 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
-import com.amazonaws.util.json.JSONArray;
-import com.amazonaws.util.json.JSONObject;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -20,7 +22,7 @@ import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.AggStats;
 import com.hello.suripu.core.models.DeviceId;
 
-import com.hello.suripu.core.models.Insights.SumLengthData;
+import com.hello.suripu.core.models.Insights.SumCountData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -29,7 +31,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -67,8 +69,8 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         RANGE_KEY ("date_local|sense_id", "S"),  // <date_local>|<external_device_id>
         DAY_OF_WEEK ("dow", "N"),
 
-        DEVICE_DATA_LENGTH ("device_data_len", "N"),
-        TRACKER_MOTION_LENGTH ("tracker_motion_len", "N"),
+        DEVICE_DATA_COUNT ("device_data_count", "N"),
+        TRACKER_MOTION_COUNT ("tracker_motion_count", "N"),
 
         AVG_DAILY_TEMP ("avg_day_temp", "N"),
         MAX_DAILY_TEMP ("max_day_temp", "N"),
@@ -76,7 +78,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         AVG_DAILY_HUMID ("avg_day_humid", "N"),
         AVG_DAILY_DUST_DENSITY ("avg_day_dust_density", "N"),
 
-        SUM_LENGTH_MLUX_HRS_MAP ("sum_len_mlux_hrs_map", "S");
+        SUM_COUNT_MLUX_HRS_MAP ("sum_count_mlux_hrs_map", "S");
 
         private final String name;
         private final String type;
@@ -89,56 +91,49 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         /**
          * Useful instead of item.get(AggStatsAttribute.<AggStatsAttribute>.name) to avoid NullPointerException
          */
-        private AttributeValue getAttributeFromDDBIItem(final Map<String, AttributeValue> item) {
+        private AttributeValue getAttributeFromDDBItem(final Map<String, AttributeValue> item) {
             return item.get(this.name);
         }
 
-        private Long getAccountIdFromDDBIItem(final Map<String, AttributeValue> item) {
-            return Long.valueOf(AggStatsAttribute.ACCOUNT_ID.getAttributeFromDDBIItem(item).getN());
+        private Long getAccountIdFromDDBItem(final Map<String, AttributeValue> item) {
+            return Long.valueOf(AggStatsAttribute.ACCOUNT_ID.getAttributeFromDDBItem(item).getN());
         }
 
-        private DateTime getLocalDateFromDDBIItem(final Map<String, AttributeValue> item) {
-            final String dateString = AggStatsDAODynamoDB.AggStatsAttribute.RANGE_KEY.getAttributeFromDDBIItem(item).getS().substring(0, DATE_TIME_STRING_TEMPLATE.length());
+        private DateTime getLocalDateFromDDBItem(final Map<String, AttributeValue> item) {
+            final String dateString = AggStatsDAODynamoDB.AggStatsAttribute.RANGE_KEY.getAttributeFromDDBItem(item).getS().substring(0, DATE_TIME_STRING_TEMPLATE.length());
             return DateTime.parse(dateString, DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
         }
 
-        private String getExtDeviceIdFromDDBIItem(final Map<String, AttributeValue> item) {
+        private String getExtDeviceIdFromDDBItem(final Map<String, AttributeValue> item) {
             return item.get(AggStatsDAODynamoDB.AggStatsAttribute.RANGE_KEY.name).getS().substring(DATE_TIME_STRING_TEMPLATE.length() + 1);
         }
 
-        private Integer getIntegerFromDDBIItem(final Map<String, AttributeValue> item) {
+        private Integer getIntegerFromDDBItem(final Map<String, AttributeValue> item) {
             if (item.containsKey(this.name)) {
-                return Integer.valueOf(getAttributeFromDDBIItem(item).getN());
+                return Integer.valueOf(getAttributeFromDDBItem(item).getN());
             }
             return -999; //Default "null value" for when we change structure of dynamo table
         }
 
-        private Map<Integer, SumLengthData> getSumLengthMapFromDDBIItem(final Map<String, AttributeValue> item) {
+        private Map<Integer, SumCountData> getSumCountMapFromDDBItem(final Map<String, AttributeValue> item) {
             //AttributeValue: "{3=[0, 0], 2=[0, 0], 1=[0, 0], 0=[0, 0], 5=[0, 0], 4=[0, 0], 22=[0, 0], 23=[0, 0]}"
 
-            final Map<Integer, SumLengthData> sumLengthDataMap = Maps.newHashMap();
+            if (item.containsKey(this.name)) {
+                final ObjectMapper mapper = new ObjectMapper();
+                final TypeFactory typeFactory = mapper.getTypeFactory();
+                final MapType mapType = typeFactory.constructMapType(Map.class, Integer.class, SumCountData.class);
 
-            try {
-                if (item.containsKey(this.name)) {
-                    final String stringToProcess = String.valueOf(getAttributeFromDDBIItem(item).getS());
-
-                    final JSONObject jsonObject = new JSONObject(stringToProcess);
-                    final Iterator<String> keys = jsonObject.keys();
-                    while (keys.hasNext()) {
-                        final String key = keys.next();
-                        final Integer keyInteger = Integer.parseInt(key);
-                        final JSONArray jsonArray = jsonObject.getJSONArray(key);
-                        final int sum = Integer.parseInt(jsonArray.getString(0));
-                        final int length = Integer.parseInt(jsonArray.getString(1));
-                        final SumLengthData sumLengthData = new SumLengthData(sum, length);
-                        sumLengthDataMap.put(keyInteger, sumLengthData);
-                    }
+                try {
+                    final String stringToProcess = getAttributeFromDDBItem(item).getS();
+                    return mapper.readValue(stringToProcess, mapType);
+                } catch (JsonMappingException e) {
+                    LOGGER.warn("exception={} action=received-malformed-attribute item={}", e.getMessage(), item.toString());
+                } catch (IOException e) {
+                    LOGGER.warn("exception={} action=received-io-exception item={}", e.getMessage(), item.toString());
                 }
-            } catch (Exception e) {
-                LOGGER.warn("exception={} action=received-malformed-attribute item={}", e.getMessage(), item.toString());
             }
 
-            return sumLengthDataMap;
+            return Maps.newHashMap();
         }
 
         public String sanitizedName() {
@@ -201,8 +196,8 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         item.put(AggStatsAttribute.RANGE_KEY.name, getRangeKey(aggStats.dateLocal, aggStats.externalDeviceId.toString() ));
         item.put(AggStatsAttribute.DAY_OF_WEEK.name, toAttributeValue(aggStats.dateLocal.getDayOfWeek()));
 
-        item.put(AggStatsAttribute.DEVICE_DATA_LENGTH.name, toAttributeValue(aggStats.deviceDataLength));
-        item.put(AggStatsAttribute.TRACKER_MOTION_LENGTH.name, toAttributeValue(aggStats.trackerMotionLength));
+        item.put(AggStatsAttribute.DEVICE_DATA_COUNT.name, toAttributeValue(aggStats.deviceDataCount));
+        item.put(AggStatsAttribute.TRACKER_MOTION_COUNT.name, toAttributeValue(aggStats.trackerMotionCount));
 
         item.put(AggStatsAttribute.AVG_DAILY_TEMP.name, toAttributeValue(aggStats.avgDailyTemp));
         item.put(AggStatsAttribute.MAX_DAILY_TEMP.name, toAttributeValue(aggStats.maxDailyTemp));
@@ -210,7 +205,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         item.put(AggStatsAttribute.AVG_DAILY_HUMID.name, toAttributeValue(aggStats.avgDailyHumidity));
         item.put(AggStatsAttribute.AVG_DAILY_DUST_DENSITY.name, toAttributeValue(aggStats.avgDailyDustDensity));
 
-        item.put(AggStatsAttribute.SUM_LENGTH_MLUX_HRS_MAP.name, toAttributeValue(aggStats.sumLengthMicroLuxHourMap));
+        item.put(AggStatsAttribute.SUM_COUNT_MLUX_HRS_MAP.name, toAttributeValue(aggStats.sumCountMicroLuxHourMap));
         return item;
     }
 
@@ -238,41 +233,40 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         return new AttributeValue().withN(String.valueOf(value));
     }
 
-    private static AttributeValue toAttributeValue(final Map<Integer, SumLengthData> sumLengthDataMap) {
+    private static AttributeValue toAttributeValue(final Map<Integer, SumCountData> sumCountDataMap) {
         //Result {S: {3=[0, 0], 2=[0, 0], 1=[0, 0], 0=[0, 0], 5=[0, 0], 4=[0, 0], 22=[0, 0], 23=[0, 0]},}
 
-        final Map<String, String> sumLengthStringMap = Maps.newHashMap();
-        for (final Map.Entry<Integer, SumLengthData> entry : sumLengthDataMap.entrySet()) {
-            JSONArray list = new JSONArray();
-            list.put(entry.getValue().sum);
-            list.put(entry.getValue().length);
-            final String sumLengthString = list.toString();
-
-            sumLengthStringMap.put(entry.getKey().toString(), sumLengthString);
+        try {
+            final ObjectMapper mapper = new ObjectMapper();
+            final String jsonString = mapper.writeValueAsString(sumCountDataMap);
+            return new AttributeValue().withS(jsonString);
+        } catch (JsonGenerationException e) {
+            LOGGER.warn("");
+        } catch (JsonMappingException e) {
+            LOGGER.warn("");
+        } catch (IOException e) {
+            LOGGER.warn("");
         }
 
-        final JSONObject jsonMap = new JSONObject(sumLengthStringMap);
-        final String string = jsonMap.toString();
-
-        return new AttributeValue().withS(sumLengthStringMap.toString()); //TODO: sort by key?
+        return new AttributeValue().withS(""); //TODO: sort by key?
     }
 
     final AggStats attributeMapToAggStats(final Map<String, AttributeValue> item) {
         return new AggStats.Builder()
-                .withAccountId(AggStatsAttribute.ACCOUNT_ID.getAccountIdFromDDBIItem(item))
-                .withDateLocal(AggStatsAttribute.RANGE_KEY.getLocalDateFromDDBIItem(item))
-                .withExternalDeviceId(AggStatsAttribute.RANGE_KEY.getExtDeviceIdFromDDBIItem(item))
+                .withAccountId(AggStatsAttribute.ACCOUNT_ID.getAccountIdFromDDBItem(item))
+                .withDateLocal(AggStatsAttribute.RANGE_KEY.getLocalDateFromDDBItem(item))
+                .withExternalDeviceId(AggStatsAttribute.RANGE_KEY.getExtDeviceIdFromDDBItem(item))
 
-                .withDeviceDataLength(AggStatsAttribute.DEVICE_DATA_LENGTH.getIntegerFromDDBIItem(item))
-                .withTrackerMotionLength(AggStatsAttribute.TRACKER_MOTION_LENGTH.getIntegerFromDDBIItem(item))
+                .withDeviceDataCount(AggStatsAttribute.DEVICE_DATA_COUNT.getIntegerFromDDBItem(item))
+                .withTrackerMotionCount(AggStatsAttribute.TRACKER_MOTION_COUNT.getIntegerFromDDBItem(item))
 
-                .withAvgDailyTemp(AggStatsAttribute.AVG_DAILY_TEMP.getIntegerFromDDBIItem(item))
-                .withMaxDailyTemp(AggStatsAttribute.MAX_DAILY_TEMP.getIntegerFromDDBIItem(item))
-                .withMinDailyTemp(AggStatsAttribute.MIN_DAILY_TEMP.getIntegerFromDDBIItem(item))
-                .withAvgDailyHumidity(AggStatsAttribute.AVG_DAILY_HUMID.getIntegerFromDDBIItem(item))
-                .withAvgDailyDustDensity(AggStatsAttribute.AVG_DAILY_DUST_DENSITY.getIntegerFromDDBIItem(item))
+                .withAvgDailyTemp(AggStatsAttribute.AVG_DAILY_TEMP.getIntegerFromDDBItem(item))
+                .withMaxDailyTemp(AggStatsAttribute.MAX_DAILY_TEMP.getIntegerFromDDBItem(item))
+                .withMinDailyTemp(AggStatsAttribute.MIN_DAILY_TEMP.getIntegerFromDDBItem(item))
+                .withAvgDailyHumidity(AggStatsAttribute.AVG_DAILY_HUMID.getIntegerFromDDBItem(item))
+                .withAvgDailyDustDensity(AggStatsAttribute.AVG_DAILY_DUST_DENSITY.getIntegerFromDDBItem(item))
 
-                .withSumLenMicroLuxHourMap(AggStatsAttribute.SUM_LENGTH_MLUX_HRS_MAP.getSumLengthMapFromDDBIItem(item))
+                .withSumCountMicroLuxHourMap(AggStatsAttribute.SUM_COUNT_MLUX_HRS_MAP.getSumCountMapFromDDBItem(item))
                 
                 .build();
     }

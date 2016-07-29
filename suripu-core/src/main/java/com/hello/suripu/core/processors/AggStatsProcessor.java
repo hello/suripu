@@ -40,7 +40,8 @@ public class AggStatsProcessor {
     private final AggStatsDAODynamoDB aggStatsDAODynamoDB;
 
 //    Start computation 1 hr after end of aggStats day. (Compute between 1PM and 6PM)
-    private final int MIN_ALLOWED_LOCAL_HOUR = AggStats.DAY_START_END_HOUR + 1; //Perform computations between 1PM and 7PM
+    private final int MIN_ALLOWED_LOCAL_HOUR = 11; //Perform computations between 1PM and 7PM
+//    private final int MIN_ALLOWED_LOCAL_HOUR = AggStats.DAY_START_END_HOUR + 1; //Perform computations between 1PM and 7PM
     private final int NUM_HOURS_WORKER_ON = 6;
     private final int MAX_ALLOWED_LOCAL_HOUR = MIN_ALLOWED_LOCAL_HOUR + NUM_HOURS_WORKER_ON;
 

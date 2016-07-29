@@ -1,7 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.collect.Maps;
-import com.hello.suripu.core.models.Insights.SumLengthData;
+import com.hello.suripu.core.models.Insights.SumCountData;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -30,18 +30,18 @@ public class AggStatsTest {
         final int avg_humid = 1005;
         final int avg_dust = 1006;
 
-        final Map<Integer, SumLengthData> sumLengthMicroLuxHourMap = Maps.newHashMap();
-        sumLengthMicroLuxHourMap.put(22, new SumLengthData(0, 0));
-        sumLengthMicroLuxHourMap.put(23, new SumLengthData(0, 0));
-        sumLengthMicroLuxHourMap.put(0, new SumLengthData(0, 0));
+        final Map<Integer, SumCountData> sumCountMicroLuxHourMap = Maps.newHashMap();
+        sumCountMicroLuxHourMap.put(22, new SumCountData(0, 0));
+        sumCountMicroLuxHourMap.put(23, new SumCountData(0, 0));
+        sumCountMicroLuxHourMap.put(0, new SumCountData(0, 0));
 
         final AggStats.Builder builder = new AggStats.Builder()
                 .withAccountId(FAKE_ACCOUNT_ID)
                 .withDateLocal(dateLocal)
                 .withExternalDeviceId(FAKE_EXTERNAL_DEVICE_ID)
 
-                .withDeviceDataLength(device_data_length)
-                .withTrackerMotionLength(tracker_motion_length)
+                .withDeviceDataCount(device_data_length)
+                .withTrackerMotionCount(tracker_motion_length)
 
                 .withAvgDailyTemp(avg_temp)
                 .withMaxDailyTemp(max_temp)
@@ -49,7 +49,7 @@ public class AggStatsTest {
                 .withAvgDailyHumidity(avg_humid)
                 .withAvgDailyDustDensity(avg_dust)
 
-                .withSumLenMicroLuxHourMap(sumLengthMicroLuxHourMap);
+                .withSumCountMicroLuxHourMap(sumCountMicroLuxHourMap);
 
         final AggStats aggStats = builder.build();
 
@@ -57,8 +57,8 @@ public class AggStatsTest {
         assertThat(aggStats.dateLocal, is(dateLocal));
         assertThat(aggStats.externalDeviceId, is(FAKE_EXTERNAL_DEVICE_ID));
 
-        assertThat(aggStats.deviceDataLength, is(device_data_length));
-        assertThat(aggStats.trackerMotionLength, is(tracker_motion_length));
+        assertThat(aggStats.deviceDataCount, is(device_data_length));
+        assertThat(aggStats.trackerMotionCount, is(tracker_motion_length));
 
         assertThat(aggStats.avgDailyTemp, is(avg_temp));
         assertThat(aggStats.maxDailyTemp, is(max_temp));

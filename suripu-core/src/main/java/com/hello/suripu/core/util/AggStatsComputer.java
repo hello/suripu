@@ -1,15 +1,18 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AggStats;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.AggStatsInputs;
-import com.hello.suripu.core.models.Insights.SumLengthData;
+import com.hello.suripu.core.models.Insights.SumCountData;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,6 +21,7 @@ import java.util.Map;
 public class AggStatsComputer {
 
     public static final int TO_MICRO_CONVERSION = 1000000;
+    public static final List<Integer> LIGHT_HOUR_BUCKETS_LIST = ImmutableList.copyOf(Lists.newArrayList(22, 23, 0, 1, 2, 3, 4, 5));
 
     public static AggStats computeAggStats(final Long accountId, final DeviceId deviceId, final DateTime dateLocal, final AggStatsInputs aggStatsInputs) {
 
@@ -27,7 +31,7 @@ public class AggStatsComputer {
         final DescriptiveStatistics dustRawStats = new DescriptiveStatistics();
 
         final Map<Integer, DescriptiveStatistics> lightHourDescriptiveStatistics = new HashMap<>();
-        for (final Integer hour : AggStats.LIGHT_HOUR_BUCKETS) {
+        for (final Integer hour : LIGHT_HOUR_BUCKETS_LIST) {
             lightHourDescriptiveStatistics.put(hour, new DescriptiveStatistics());
         }
 
@@ -62,13 +66,13 @@ public class AggStatsComputer {
 
         final Device.Color color = aggStatsInputs.senseColorOptional.or(Device.Color.WHITE); //default color white, nothing is done in calibration
 
-        final Map<Integer, SumLengthData> microLuxSumLengthHourMap = new HashMap<>();
+        final Map<Integer, SumCountData> microLuxSumCountHourMap = new HashMap<>();
         for (final Map.Entry<Integer, DescriptiveStatistics> entry : lightHourDescriptiveStatistics.entrySet()) {
 
             final float sumHourLightRaw = (float) entry.getValue().getSum();
             final int sumMicroLux = floatToMicroInt(DataUtils.calibrateLight(sumHourLightRaw, color));
-            final int lengthMicroLux = (int) entry.getValue().getN();
-            microLuxSumLengthHourMap.put(entry.getKey(), new SumLengthData(sumMicroLux, lengthMicroLux));
+            final int countMicroLux = (int) entry.getValue().getN();
+            microLuxSumCountHourMap.put(entry.getKey(), new SumCountData(sumMicroLux, countMicroLux));
         }
 
         //Build
@@ -77,8 +81,8 @@ public class AggStatsComputer {
                 .withDateLocal(dateLocal)
                 .withExternalDeviceId(deviceId.externalDeviceId.get())
 
-                .withDeviceDataLength(deviceDataSize)
-                .withTrackerMotionLength(trackerMotionSize)
+                .withDeviceDataCount(deviceDataSize)
+                .withTrackerMotionCount(trackerMotionSize)
 
                 .withAvgDailyTemp(avg_daily_temp)
                 .withMaxDailyTemp(max_daily_temp)
@@ -86,7 +90,7 @@ public class AggStatsComputer {
                 .withAvgDailyHumidity(avg_daily_humidity)
                 .withAvgDailyDustDensity(avg_daily_dust)
 
-                .withSumLenMicroLuxHourMap(microLuxSumLengthHourMap);
+                .withSumCountMicroLuxHourMap(microLuxSumCountHourMap);
 
         return aggStatsBuilder.build();
     }
