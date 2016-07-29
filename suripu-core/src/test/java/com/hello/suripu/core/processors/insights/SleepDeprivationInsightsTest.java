@@ -34,6 +34,7 @@ public class SleepDeprivationInsightsTest {
         final Long testAccountId = 9999L;
 
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
+        final AccountReadDAO accountReadDAO= Mockito.mock(AccountReadDAO.class);
 
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(12).withMinuteOfHour(0);
         final int offsetMillis = -28800000;
@@ -61,10 +62,12 @@ public class SleepDeprivationInsightsTest {
         final String testQueryEndDate2 = DateTimeUtil.dateToYmdString(timestamp.minusDays(4));
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(testAccountId, testQueryStartDate1,testQueryEndDate1)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList1));
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(testAccountId,testQueryStartDate2, testQueryEndDate2)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList2));
+        Mockito.when(accountReadDAO.getById(testAccountId)).thenReturn(Optional.<Account>absent());
+
         final int testMeanSleepDebt = 190;
         final int userAge = 30;
 
-        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, testAccountId, userAge, timestamp);
+        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, testAccountId, timestamp);
         assertThat(insightGenerated.isPresent(), is(Boolean.TRUE));
         assertThat(insightGenerated.get().message, is(SleepDeprivationMsgEN.getSleepDeprivationMessage(8,testMeanSleepDebt).message) );
     }
@@ -74,6 +77,8 @@ public class SleepDeprivationInsightsTest {
         final Long testAccountId = 9999L;
 
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
+        final AccountReadDAO accountReadDAO= Mockito.mock(AccountReadDAO.class);
+
 
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(12).withMinuteOfHour(0);
         final int offsetMillis = -28800000;
@@ -101,11 +106,13 @@ public class SleepDeprivationInsightsTest {
         final String testQueryEndDate2 = DateTimeUtil.dateToYmdString(timestamp.minusDays(4));
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(testAccountId, testQueryStartDate1,testQueryEndDate1)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList1));
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(testAccountId,testQueryStartDate2, testQueryEndDate2)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList2));
+        Mockito.when(accountReadDAO.getById(testAccountId)).thenReturn(Optional.<Account>absent());
+
         final int testMeanDuration = 290;
         final int testTotalSleepDur = 1160;
         final int userAge = 30;
 
-        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, testAccountId, userAge, timestamp);
+        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, testAccountId, timestamp);
         assertThat(insightGenerated.isPresent(), is(Boolean.FALSE));
     }
 

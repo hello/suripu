@@ -225,7 +225,11 @@ public class InsightProcessor {
     public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                   final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeUTC, final RolloutClient featureFlipper) {
 
-        final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTimeUTC);
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        final Integer timeZoneOffset = (timeZoneOffsetOptional.isPresent()) ? timeZoneOffsetOptional.get() : 0; //defaults to utc if no timezone present
+        final DateTime currentTimeLocal = currentTimeUTC.plusMillis(timeZoneOffset);
+
+        final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(recentCategories, currentTimeLocal);
 
         if (toGenerateWeeklyCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory.get(), accountId);
@@ -241,9 +245,6 @@ public class InsightProcessor {
         }
 
         //logic for generating current high-priority Insight
-        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
-        final Integer timeZoneOffset = (timeZoneOffsetOptional.isPresent()) ? timeZoneOffsetOptional.get() : 0; //defaults to utc if no timezone present
-        final DateTime currentTimeLocal = currentTimeUTC.plusMillis(timeZoneOffset);
         final Optional<InsightCard.Category> toGenerateHighPriorityCategory = selectHighPriorityInsightToGenerate(accountId, recentCategories, currentTimeLocal, featureFlipper);
         if (toGenerateHighPriorityCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateHighPriorityCategory.get(), accountId);
@@ -287,10 +288,10 @@ public class InsightProcessor {
 
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeUTC) {
+    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeLocal) {
 
         //Generate some Insights weekly
-        final Integer dayOfWeek = currentTimeUTC.getDayOfWeek();
+        final Integer dayOfWeek = currentTimeLocal.getDayOfWeek();
         LOGGER.debug("The day of week is {}", dayOfWeek);
 
         switch (dayOfWeek) {
@@ -316,7 +317,7 @@ public class InsightProcessor {
                     //check if insight is deliverable - avoid
                     final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
                     final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-                    insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountId, userAge, currentTimeLocal);
+                    insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, currentTimeLocal);
                     if (insightCardOptional.isPresent()){
                         return Optional.of(InsightCard.Category.SLEEP_DEPRIVATION);
                     }
@@ -532,9 +533,7 @@ public class InsightProcessor {
                 break;
             case SLEEP_DEPRIVATION:
                 final DateTime queryDate = DateTime.now().withTimeAtStartOfDay();
-                final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
-                final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-                insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountId, userAge, queryDate);
+                insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, queryDate);
                 break;
             case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, sleepStatsDAODynamoDB, false);

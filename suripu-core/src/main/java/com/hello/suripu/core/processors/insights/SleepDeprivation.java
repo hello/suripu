@@ -25,8 +25,10 @@ public class SleepDeprivation {
     private static final int N_HISTORIC_NIGHTS_MIN = 14; //minimal number of nights to calculate avg sleep dur
     private static final int DURATION_DIFF_THRESHOLD = 60; //minimal difference between avg deprived sleep and avg sleep for user
 
-    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final int userAge, final DateTime queryEndDate) {
+    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTime queryEndDate) {
         //ideal sleep duration
+        final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
+        final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAge);
         final int minSleepDurationMins = idealHours.absoluteMinHours * 60;
         final int idealSleepDurationHours = (idealHours.minHours + idealHours.maxHours )/2;

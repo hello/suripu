@@ -65,14 +65,16 @@ public class InsightProcessorTest {
     private final DeviceAccountPair FAKE_DEVICE_ACCOUNT_PAIR = new DeviceAccountPair(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_INT.internalDeviceId.get(), FAKE_DEVICE_ID_EXT.externalDeviceId.get(), DateTime.parse("2015-01-01"));
 
 
-    private final DateTime FAKE_SATURDAY = DateTime.parse("2015-09-05").withTimeAtStartOfDay();
+    private final DateTime FAKE_SATURDAY = DateTime.parse("2015-09-05").withHourOfDay(16);
     private final DateTime FAKE_FRIDAY = DateTime.parse("2015-09-04").withTimeAtStartOfDay();
 
     private final DateTime FAKE_DATE_1 = DateTime.parse("2015-09-01").withTimeAtStartOfDay();
     private final DateTime FAKE_DATE_10 = DateTime.parse("2015-09-10").withTimeAtStartOfDay();
     private final DateTime FAKE_DATE_11 = DateTime.parse("2015-09-11").withHourOfDay(14);
-    private final DateTime FAKE_DATE_13 = DateTime.parse("2015-09-13").withTimeAtStartOfDay();
+    private final DateTime FAKE_DATE_13 = DateTime.parse("2015-09-13").withHourOfDay(16);
     private final DateTime FAKE_DATE_NONE = DateTime.parse("2015-09-11").withTimeAtStartOfDay();
+    private final int OFFSET_MILLIS = -28800000;
+
 
 
     private DeviceDataDAODynamoDB deviceDataDAODynamoDB;
@@ -152,14 +154,13 @@ public class InsightProcessorTest {
         //Prepping for taking care of @NotNull check for light
         final int light = 2;
         final int zeroLight = 0;
-        final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
-        final int offsetMillis = -28800000;
+        final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0).minusMillis(OFFSET_MILLIS);
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(10), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(10), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(30), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
 
         final List<InfoInsightCards> mockInfoInsightCardsList = Lists.newArrayList(Mockito.mock(InfoInsightCards.class));
         final DeviceStatus mockDeviceStatus = Mockito.mock(DeviceStatus.class);
@@ -172,18 +173,18 @@ public class InsightProcessorTest {
         final SleepStats fakeSleepStat480 = new SleepStats(0,0,0, 480,false, 1,0L,0L,5);
 
         final List<AggregateSleepStats> fakeAggregateSleepStatsList = Lists.newArrayList();
-        fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat));
+        fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, OFFSET_MILLIS, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat));
 
         final List<AggregateSleepStats> fakeAggregateSleepStatsSleepDebtList1 = Lists.newArrayList();
-        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(3), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
-        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(2), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
-        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(1), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
-        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(0), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(3), OFFSET_MILLIS, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(2), OFFSET_MILLIS, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(1), OFFSET_MILLIS, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
+        fakeAggregateSleepStatsSleepDebtList1.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(0), OFFSET_MILLIS, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat290));
 
         final List<AggregateSleepStats> fakeAggregateSleepStatsSleepDebtList2 = Lists.newArrayList();
         int i = 20;
         while(i >= 6 ) {
-            fakeAggregateSleepStatsSleepDebtList2.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(i), offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat480));
+            fakeAggregateSleepStatsSleepDebtList2.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, FAKE_DATE_11.minusDays(i), OFFSET_MILLIS, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat480));
             i -= 1;
         }
         final String testQueryStartDate1 = DateTimeUtil.dateToYmdString(FAKE_DATE_11.minusDays(3));
@@ -211,7 +212,7 @@ public class InsightProcessorTest {
         Mockito.when(wakeStdDevData.getWakeStdDevPercentile(Mockito.any(Integer.class))).thenReturn(1);
 
         //Taking care of @NotNull check for humidity
-        Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(offsetMillis));
+        Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(OFFSET_MILLIS));
         Mockito.when(deviceDataDAODynamoDB.getBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class),Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class)))
                 .thenReturn(successfulResponse);
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.HUMIDITY, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
@@ -319,7 +320,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
         //TEST - Look for weekly Insight, try to generate wake variance, get Optional.absent() b/c no data
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY.plusMillis(OFFSET_MILLIS));
         Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
 
         final Optional<InsightCard.Category> wakeCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
@@ -350,7 +351,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
         //TEST - Look for weekly Insight, do not try to generate b/c recent
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY.plusMillis(OFFSET_MILLIS));
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
 
         final Optional<InsightCard.Category> wakeCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
@@ -381,7 +382,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
         //TEST - Look for weekly Insight, do not try to generate b/c wrong date
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_1.plusMillis(OFFSET_MILLIS));
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
@@ -403,12 +404,12 @@ public class InsightProcessorTest {
 
         //actually simulating recent categories
         final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.GOAL_WAKE_VARIANCE, DateTime.now(DateTimeZone.UTC));
+        recentCategories.put(InsightCard.Category.GOAL_WAKE_VARIANCE, FAKE_SATURDAY);
 
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
         //TEST - Correct date for weekly insight, but Goal inserted does nothing, so generate wake variance, get Optional.absent() b/c no data
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_SATURDAY.plusMillis(OFFSET_MILLIS));
         Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
@@ -437,7 +438,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
 
         //TEST - Incorrect date for weekly insight - get nothing
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_13);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_13.plusMillis(OFFSET_MILLIS));
 
         //look for high priority Insight - get nothing
 
@@ -467,7 +468,7 @@ public class InsightProcessorTest {
         spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
 
         //TEST - Look for weekly Insight, do not try to generate b/c wrong date
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_13);
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_13.plusMillis(OFFSET_MILLIS));
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
