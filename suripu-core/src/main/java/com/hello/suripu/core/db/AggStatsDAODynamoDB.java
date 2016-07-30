@@ -241,11 +241,11 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
             final String jsonString = mapper.writeValueAsString(sumCountDataMap);
             return new AttributeValue().withS(jsonString);
         } catch (JsonGenerationException e) {
-            LOGGER.warn("");
+            LOGGER.warn("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
         } catch (JsonMappingException e) {
-            LOGGER.warn("");
+            LOGGER.warn("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
         } catch (IOException e) {
-            LOGGER.warn("");
+            LOGGER.warn("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
         }
 
         return new AttributeValue().withS(""); //TODO: sort by key?
@@ -279,10 +279,11 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         try {
             final List<AggStats> aggStatsList = Lists.newArrayList(aggStats);
             final int numSuccess = batchInsert(aggStatsList);
-            if (numSuccess > 0) {
-                LOGGER.debug("action=success-aggstat-insert");
-                return Boolean.TRUE;
+            if (numSuccess <= 0) {
+                LOGGER.error("action=fail-aggstat-insert agg_stats={}", aggStats.toString());
+                return Boolean.FALSE;
             }
+            return Boolean.TRUE;
 
         } catch (AmazonServiceException ase) {
             LOGGER.error("action=fail-aggstat-insert exception={} agg_stats={}", ase.getMessage(), aggStats.toString());
