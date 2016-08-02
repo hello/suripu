@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Insights.SumCountData;
 import org.joda.time.DateTime;
@@ -21,14 +22,14 @@ public class AggStatsTest {
     public void test_builder() {
         final DateTime dateLocal = DateTime.parse("2016-01-01");
 
-        final int device_data_length = 100;
-        final int tracker_motion_length = 50;
+        final Optional<Integer> device_data_length = Optional.of(100);
+        final Optional<Integer> tracker_motion_length = Optional.of(50);
 
-        final int avg_temp = 1002;
-        final int max_temp = 1001;
-        final int min_temp = 1000;
-        final int avg_humid = 1005;
-        final int avg_dust = 1006;
+        final Optional<Integer> avg_temp = Optional.of(1002);
+        final Optional<Integer> max_temp = Optional.of(1001);
+        final Optional<Integer> min_temp = Optional.of(1000);
+        final Optional<Integer> avg_humid = Optional.of(1005);
+        final Optional<Integer> avg_dust = Optional.of(1006);
 
         final Map<Integer, SumCountData> sumCountMicroLuxHourMap = Maps.newHashMap();
         sumCountMicroLuxHourMap.put(22, new SumCountData(0, 0));

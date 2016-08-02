@@ -108,11 +108,11 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
             return item.get(AggStatsDAODynamoDB.AggStatsAttribute.RANGE_KEY.name).getS().substring(DATE_TIME_STRING_TEMPLATE.length() + 1);
         }
 
-        private Integer getIntegerFromDDBItem(final Map<String, AttributeValue> item) {
+        private Optional<Integer> getIntegerFromDDBItem(final Map<String, AttributeValue> item) {
             if (item.containsKey(this.name)) {
-                return Integer.valueOf(getAttributeFromDDBItem(item).getN());
+                return Optional.of(Integer.valueOf(getAttributeFromDDBItem(item).getN()));
             }
-            return -999; //Default "null value" for when we change structure of dynamo table
+            return Optional.absent(); //Default "null value" for when we change structure of dynamo table
         }
 
         private Map<Integer, SumCountData> getSumCountMapFromDDBItem(final Map<String, AttributeValue> item) {
@@ -194,7 +194,7 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         final Map<String, AttributeValue> item = Maps.newHashMap();
         item.put(AggStatsAttribute.ACCOUNT_ID.name, toAttributeValue(aggStats.accountId));
         item.put(AggStatsAttribute.RANGE_KEY.name, getRangeKey(aggStats.dateLocal, aggStats.externalDeviceId.toString() ));
-        item.put(AggStatsAttribute.DAY_OF_WEEK.name, toAttributeValue(aggStats.dateLocal.getDayOfWeek()));
+        item.put(AggStatsAttribute.DAY_OF_WEEK.name, toAttributeValue(Optional.of(aggStats.dateLocal.getDayOfWeek())));
 
         item.put(AggStatsAttribute.DEVICE_DATA_COUNT.name, toAttributeValue(aggStats.deviceDataCount));
         item.put(AggStatsAttribute.TRACKER_MOTION_COUNT.name, toAttributeValue(aggStats.trackerMotionCount));
@@ -225,8 +225,11 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
         return new AttributeValue(dateTime.toString(RANGE_KEY_DATE_FORMATTER) + "|" + senseId);
     }
 
-    private static AttributeValue toAttributeValue(final Integer value) {
-        return new AttributeValue().withN(String.valueOf(value));
+    private static AttributeValue toAttributeValue(final Optional<Integer> value) {
+        if (!value.isPresent()) {
+            return new AttributeValue().withN("");
+        }
+        return new AttributeValue().withN(String.valueOf(value.get()));
     }
 
     private static AttributeValue toAttributeValue(final Long value) {

@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AggStats;
@@ -81,14 +82,14 @@ public class AggStatsComputer {
                 .withDateLocal(dateLocal)
                 .withExternalDeviceId(deviceId.externalDeviceId.get())
 
-                .withDeviceDataCount(deviceDataSize)
-                .withTrackerMotionCount(trackerMotionSize)
+                .withDeviceDataCount(Optional.of(deviceDataSize))
+                .withTrackerMotionCount(Optional.of(trackerMotionSize))
 
-                .withAvgDailyTemp(avg_daily_temp)
-                .withMaxDailyTemp(max_daily_temp)
-                .withMinDailyTemp(min_daily_temp)
-                .withAvgDailyHumidity(avg_daily_humidity)
-                .withAvgDailyDustDensity(avg_daily_dust)
+                .withAvgDailyTemp(Optional.of(avg_daily_temp))
+                .withMaxDailyTemp(Optional.of(max_daily_temp))
+                .withMinDailyTemp(Optional.of(min_daily_temp))
+                .withAvgDailyHumidity(Optional.of(avg_daily_humidity))
+                .withAvgDailyDustDensity(Optional.of(avg_daily_dust))
 
                 .withSumCountMicroLuxHourMap(microLuxSumCountHourMap);
 

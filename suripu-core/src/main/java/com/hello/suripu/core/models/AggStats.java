@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Insights.SumCountData;
 import org.joda.time.DateTime;
 
@@ -24,16 +26,16 @@ public class AggStats {
     public final DateTime dateLocal;
     public final String externalDeviceId;
 
-    public final int deviceDataCount;
-    public final int trackerMotionCount;
+    public final Optional<Integer> deviceDataCount;
+    public final Optional<Integer> trackerMotionCount;
 
     //all processed and calibrated values, multiplied by 10e6
     //Note: please do not add stats above 1st moment without first discussing with data science team
-    public final int avgDailyTemp; //micro-celsius
-    public final int maxDailyTemp; //micro-celsius
-    public final int minDailyTemp; //micro-celsius
-    public final int avgDailyHumidity; // percent relative humidity * 10e-6
-    public final int avgDailyDustDensity; //micro-micro-gram/m^3
+    public final Optional<Integer> avgDailyTemp; //micro-celsius
+    public final Optional<Integer> maxDailyTemp; //micro-celsius
+    public final Optional<Integer> minDailyTemp; //micro-celsius
+    public final Optional<Integer> avgDailyHumidity; // percent relative humidity * 10e-6
+    public final Optional<Integer> avgDailyDustDensity; //micro-micro-gram/m^3
 
     public final Map<Integer, SumCountData> sumCountMicroLuxHourMap; //micro-lux, calibrated by sense color, each hour
 
@@ -41,14 +43,14 @@ public class AggStats {
                      final DateTime dateLocal,
                      final String externalDeviceId,
 
-                     final int deviceDataCount,
-                     final int trackerMotionCount,
+                     final Optional<Integer> deviceDataCount,
+                     final Optional<Integer> trackerMotionCount,
 
-                     final int avgDailyTemp,
-                     final int maxDailyTemp,
-                     final int minDailyTemp,
-                     final int avgDailyHumidity,
-                     final int avgDailyDustDensity,
+                     final Optional<Integer> avgDailyTemp,
+                     final Optional<Integer> maxDailyTemp,
+                     final Optional<Integer> minDailyTemp,
+                     final Optional<Integer> avgDailyHumidity,
+                     final Optional<Integer> avgDailyDustDensity,
 
                      final Map<Integer, SumCountData> sumCountMicroLuxHourMap) {
 
@@ -73,16 +75,16 @@ public class AggStats {
         private DateTime dateLocal;
         private String externalDeviceId;
 
-        private int deviceDataCount;
-        private int trackerMotionCount;
+        private Optional<Integer> deviceDataCount;
+        private Optional<Integer> trackerMotionCount;
 
-        private int avgDailyTemp;
-        private int maxDailyTemp;
-        private int minDailyTemp;
-        private int avgDailyHumidity;
-        private int avgDailyDustDensity;
+        private Optional<Integer> avgDailyTemp;
+        private Optional<Integer> maxDailyTemp;
+        private Optional<Integer> minDailyTemp;
+        private Optional<Integer> avgDailyHumidity;
+        private Optional<Integer> avgDailyDustDensity;
 
-        private Map<Integer, SumCountData> sumCountMicroLuxHourMap;
+        private Map<Integer, SumCountData> sumCountMicroLuxHourMap = Maps.newHashMap();
 
         public AggStats.Builder withAccountId(final Long accountId) {
             this.accountId = accountId;
@@ -99,43 +101,43 @@ public class AggStats {
             return this;
         }
 
-        public AggStats.Builder withDeviceDataCount(final int deviceDataCount) {
+        public AggStats.Builder withDeviceDataCount(final Optional<Integer> deviceDataCount) {
             this.deviceDataCount = deviceDataCount;
             return this;
         }
 
-        public AggStats.Builder withTrackerMotionCount(final int trackerMotionCount) {
+        public AggStats.Builder withTrackerMotionCount(final Optional<Integer> trackerMotionCount) {
             this.trackerMotionCount = trackerMotionCount;
             return this;
         }
 
-        public AggStats.Builder withAvgDailyTemp(final int avgDailyTemp) {
+        public AggStats.Builder withAvgDailyTemp(final Optional<Integer> avgDailyTemp) {
             this.avgDailyTemp = avgDailyTemp;
             return this;
         }
 
-        public AggStats.Builder withMaxDailyTemp(final int maxDailyTemp) {
+        public AggStats.Builder withMaxDailyTemp(final Optional<Integer> maxDailyTemp) {
             this.maxDailyTemp = maxDailyTemp;
             return this;
         }
 
-        public AggStats.Builder withMinDailyTemp(final int minDailyTemp) {
+        public AggStats.Builder withMinDailyTemp(final Optional<Integer> minDailyTemp) {
             this.minDailyTemp = minDailyTemp;
             return this;
         }
 
-        public AggStats.Builder withAvgDailyHumidity(final int avgDailyHumidity) {
+        public AggStats.Builder withAvgDailyHumidity(final Optional<Integer> avgDailyHumidity) {
             this.avgDailyHumidity = avgDailyHumidity;
             return this;
         }
 
-        public AggStats.Builder withAvgDailyDustDensity(final int avgDailyDustDensity) {
+        public AggStats.Builder withAvgDailyDustDensity(final Optional<Integer> avgDailyDustDensity) {
             this.avgDailyDustDensity = avgDailyDustDensity;
             return this;
         }
 
         public AggStats.Builder withSumCountMicroLuxHourMap(final Map<Integer, SumCountData> sumCountMicroLuxHourMap) {
-            this.sumCountMicroLuxHourMap = sumCountMicroLuxHourMap;
+            this.sumCountMicroLuxHourMap.putAll(sumCountMicroLuxHourMap);
             return this;
         }
 
