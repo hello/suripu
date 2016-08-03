@@ -25,6 +25,10 @@ public class DateTimeUtil {
         return DateTimeFormat.forPattern(DYNAMO_DB_DATE_FORMAT).print(date);
     }
 
+    public static String datetimeToString(final DateTime dateTime) {
+        return DateTimeFormat.forPattern(DYNAMO_DB_DATETIME_FORMAT).print(dateTime);
+    }
+
     public static DateTime ymdStringToDateTime(final String dateString) {
         return DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
