@@ -22,7 +22,7 @@ public class SoundEventsDetector {
 
     private static final long MINUTE_IN_MILLIS = 60000L;
     public static final float PEAK_DISTURBANCE_THRESHOLD = 50.0f;
-    public static final float PEAK_ENERGY_THRESHOLD = 60.0f;
+    public static final float PEAK_ENERGY_THRESHOLD = 65.0f;
 
     private final int approxQuietTimeStart;
     private final int approxQuietTimeEnd;
