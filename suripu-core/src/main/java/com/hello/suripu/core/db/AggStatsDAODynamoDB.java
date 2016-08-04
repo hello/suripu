@@ -127,9 +127,9 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
                     final String stringToProcess = getAttributeFromDDBItem(item).getS();
                     return mapper.readValue(stringToProcess, mapType);
                 } catch (JsonMappingException e) {
-                    LOGGER.warn("exception={} action=received-malformed-attribute item={}", e.getMessage(), item.toString());
+                    LOGGER.error("exception={} action=received-malformed-attribute item={}", e.getMessage(), item.toString());
                 } catch (IOException e) {
-                    LOGGER.warn("exception={} action=received-io-exception item={}", e.getMessage(), item.toString());
+                    LOGGER.error("exception={} action=received-io-exception item={}", e.getMessage(), item.toString());
                 }
             }
 
@@ -244,11 +244,11 @@ public class AggStatsDAODynamoDB extends TimeSeriesDAODynamoDB<AggStats> {
             final String jsonString = mapper.writeValueAsString(sumCountDataMap);
             return new AttributeValue().withS(jsonString);
         } catch (JsonGenerationException e) {
-            LOGGER.warn("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
+            LOGGER.error("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
         } catch (JsonMappingException e) {
-            LOGGER.warn("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
+            LOGGER.error("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
         } catch (IOException e) {
-            LOGGER.warn("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
+            LOGGER.error("exception={} sum_count_data_map={}", e.getMessage(), sumCountDataMap.toString());
         }
 
         return new AttributeValue().withS(""); //TODO: sort by key?
