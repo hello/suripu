@@ -8,8 +8,8 @@ public class SleepDeprivationMsgEN {
     public static Text getSleepDeprivationMessage(final int idealDuration, final int avgSleepDebtDuration) {
 
         return new Text("The importance of sleep",
-                String.format("For the last four nights, you didn't get your ideal %d hours of sleep.  ", idealDuration)
-                        + String.format("During those nights, you have slept on average %d minutes less than your nightly average.", avgSleepDebtDuration));
+                String.format("For the last four nights, you got less than your ideal %d hours of sleep. ", idealDuration)
+                        + String.format("During those nights, you slept  %d minutes less than your nightly average.", avgSleepDebtDuration));
     }
 
 }
