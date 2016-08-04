@@ -314,7 +314,7 @@ public class Account {
 
         @JsonProperty("created")
         public Builder withCreated(final Long created) {
-            this.created = new DateTime(created);
+            this.created = new DateTime(created, DateTimeZone.UTC);
             return this;
         }
 

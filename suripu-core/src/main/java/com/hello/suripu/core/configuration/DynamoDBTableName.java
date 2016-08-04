@@ -17,6 +17,7 @@ public enum DynamoDBTableName {
     FILE_MANIFEST("file_manifest"),
     FIRMWARE_UPGRADE_PATH("firmware_upgrade_path"),
     FIRMWARE_VERSIONS("firmware_versions"),
+    ANALYTICS_TRACKING("analytics_tracking"),
     INSIGHTS("insights"),
     INSIGHTS_LAST_SEEN("insights_last_seen"),
     MARKETING_INSIGHTS_SEEN("marketing_insights_seen"),

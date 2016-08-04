@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.api.output.OutputProtos;
+import com.hello.suripu.core.analytics.AnalyticsTracker;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -106,7 +107,7 @@ public class DeviceProcessorTest {
                         Optional.of(pillSettings),
                         0L)
         ));
-
+        final AnalyticsTracker analyticsTracker = mock(AnalyticsTracker.class);
         final WifiInfoDAO wifiInfoDAO  = mock(WifiInfoDAO.class);
         when(wifiInfoDAO.getBatchStrict(Arrays.asList(senseAccountPairWifi.externalDeviceId))).thenReturn(ImmutableMap.of(senseAccountPairWifi.externalDeviceId, Optional.of(expectedWifiInfo)));
 
@@ -122,6 +123,7 @@ public class DeviceProcessorTest {
                 .withWifiInfoDAO(wifiInfoDAO)
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
                 .withPillDataDAODynamoDB(pillDataDAODynamoDB)
+                .withAnalyticsTracker(analyticsTracker)
                 .build();
     }
 

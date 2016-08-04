@@ -7,12 +7,14 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.output.OutputProtos;
+import com.hello.suripu.core.analytics.AnalyticsTracker;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PairingInfo;
@@ -24,6 +26,7 @@ import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.util.PillColorUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -31,8 +34,11 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DeviceProcessor {
 
@@ -45,14 +51,16 @@ public class DeviceProcessor {
     private final PillDataDAODynamoDB pillDataDAODynamoDB;
     private final WifiInfoDAO wifiInfoDAO;
     private final SenseColorDAO senseColorDAO;
+    private final AnalyticsTracker analyticsTracker;
 
-
+    private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 14; // days
 
     private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
                             final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB,
                             final PillDataDAODynamoDB pillDataDAODynamoDB,
-                            final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO) {
+                            final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO,
+                            final AnalyticsTracker analyticsTracker) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
@@ -60,6 +68,7 @@ public class DeviceProcessor {
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.wifiInfoDAO = wifiInfoDAO;
         this.senseColorDAO = senseColorDAO;
+        this.analyticsTracker = analyticsTracker;
     }
 
     /**
@@ -204,8 +213,13 @@ public class DeviceProcessor {
         final Optional<Pill.Color> pillColorOptional = retrievePillColor(deviceQueryInfo.accountId, senseAccountPairs);
 
         final List<Sense> senses = getSenses(senseAccountPairs, wifiInfoMap);
-        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
 
+        if(deviceQueryInfo.account.isPresent()) {
+            final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional, deviceQueryInfo.account.get(), DateTime.now(DateTimeZone.UTC));
+            return new Devices(senses, pills);
+        }
+
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
         return new Devices(senses, pills);
     }
 
@@ -225,11 +239,31 @@ public class DeviceProcessor {
         final List<Pill> pills = Lists.newArrayList();
         for (final DeviceAccountPair pillAccountPair : pillAccountPairs) {
             final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair);
-            pills.add(Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional));
+            final Pill pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional);
+            pills.add(pill);
         }
         return pills;
     }
 
+    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final Account account, final DateTime referenceTime) {
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+        final Days days = Days.daysBetween(referenceTime,account.created);
+        final int accountCreatedInDays = Math.abs(days.getDays());
+        if(accountCreatedInDays > MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING) {
+            return pills;
+        }
+        LOGGER.warn("message=low-battery-new-account account_id={}", account.id.get());
+        // Special case: we want to hide the low warning battery for new accounts
+        final List<Pill> pillsWithBatteryWarningHidden = new ArrayList<>();
+
+        for(final Pill pill : pills) {
+            final Pill updated = Pill.withState(pill, Pill.State.NORMAL);
+            pillsWithBatteryWarningHidden.add(updated);
+            analyticsTracker.trackLowBattery(pill, account);
+        }
+
+        return pillsWithBatteryWarningHidden;
+    }
 
     @VisibleForTesting
     public Optional<DeviceStatus> retrieveSenseStatus(final DeviceAccountPair senseAccountPair) {
@@ -302,6 +336,7 @@ public class DeviceProcessor {
         private WifiInfoDAO wifiInfoDAO;
         private SenseColorDAO senseColorDAO;
         private PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
+        private AnalyticsTracker analyticsTracker;
 
         public Builder withDeviceDAO(final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -338,10 +373,17 @@ public class DeviceProcessor {
             return this;
         }
 
+        public Builder withAnalyticsTracker(final AnalyticsTracker analyticsTracker) {
+            this.analyticsTracker = analyticsTracker;
+            return this;
+        }
+
         public DeviceProcessor build() {
+            checkNotNull(analyticsTracker, "analytics tracker can not be null");
+
             return new DeviceProcessor(deviceDAO, mergedUserInfoDynamoDB,
                     sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB,
-                    pillDataDAODynamoDB, wifiInfoDAO, senseColorDAO);
+                    pillDataDAODynamoDB, wifiInfoDAO, senseColorDAO, analyticsTracker);
         }
     }
 

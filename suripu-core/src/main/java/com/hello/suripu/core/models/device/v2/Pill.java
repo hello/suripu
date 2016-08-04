@@ -76,4 +76,9 @@ public class Pill {
         return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.of(String.valueOf(pillHeartBeat.firmwareVersion)), Optional.of(pillHeartBeat.batteryLevel), Optional.of(pillHeartBeat.createdAtUTC), state, color);
     }
 
+
+    public static Pill withState(final Pill pill, final State state) {
+        return new Pill(pill.internalId, pill.externalId, pill.firmwareVersionOptional, pill.batteryLevelOptional, pill.lastUpdatedOptional, state, pill.color);
+    }
+
 }
