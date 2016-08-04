@@ -66,5 +66,5 @@ public interface DeviceReadDAO {
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
-    Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") final String pillId);
+    Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") final String pillId); //TODO: rename to getMostRecentSensePairByPillId
 }
