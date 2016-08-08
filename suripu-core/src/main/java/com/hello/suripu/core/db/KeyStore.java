@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import org.joda.time.DateTime;
 
@@ -27,7 +28,7 @@ public interface KeyStore {
      */
     void put(String deviceId, String aesKey);
     void put(String deviceId, String aesKey, String serialNumber);
-    void put(String deviceId, String aesKey, String serialNumber, DateTime createdAt);
+    void put(String deviceId, String aesKey, String serialNumber, DateTime createdAt, HardwareVersion hardwareVersion);
     boolean putOnlyIfAbsent(String deviceId, String aesKey, String serialNumber, DateTime createdAt);
 
 
