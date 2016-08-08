@@ -24,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.apache.commons.codec.DecoderException;
@@ -50,6 +51,8 @@ public class KeyStoreDynamoDB implements KeyStore {
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
     private final static String CREATED_AT_ATTRIBUTE_NAME = "created_at";
+    private final static String HARDWARE_VERSION_ATTRIBUTE_NAME = "hw_version";
+
     public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
     private final static String METADATA = "metadata";
 
@@ -71,16 +74,6 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     @Override
     public Optional<byte[]> get(final String deviceId) {
-//        LOGGER.info("Calling get with {}", deviceId);
-//        try {
-//            return cache.get(deviceId);
-//        } catch (ExecutionException e) {
-//            LOGGER.error("Exception from cache {}", e.getMessage());
-//        } catch(UncheckedExecutionException e) {
-//            LOGGER.error("Unchecked Exception from cache {}", e.getMessage());
-//        }
-//
-//        return Optional.absent();
         return getRemotely(deviceId, false);
     }
 
@@ -110,28 +103,17 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     @Override
     public void put(final String deviceId, final String aesKey, final String metadata) {
-        final Map<String, AttributeValue> attributes = new HashMap<>();
-        attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()));
-        attributes.put(METADATA, new AttributeValue().withS(metadata));
-        attributes.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(DateTime.now(DateTimeZone.UTC).toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))));
-
-        final PutItemRequest putItemRequest = new PutItemRequest()
-                .withTableName(keyStoreTableName)
-                .withItem(attributes);
-
-        final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
-        // TODO: Log consumed capacity
+        put(deviceId,aesKey,metadata, DateTime.now(DateTimeZone.UTC), HardwareVersion.SENSE_ONE);
     }
 
     @Override
-    public void put(String deviceId, String aesKey, String serialNumber, DateTime createdAtUtc) {
+    public void put(final String deviceId, final String aesKey, final String serialNumber, final DateTime createdAtUtc, final HardwareVersion hardwareVersion) {
         final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()));
         attributes.put(METADATA, new AttributeValue().withS(serialNumber));
         attributes.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(createdAtUtc.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))));
-
+        attributes.put(HARDWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(hardwareVersion.value)));
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(keyStoreTableName)
