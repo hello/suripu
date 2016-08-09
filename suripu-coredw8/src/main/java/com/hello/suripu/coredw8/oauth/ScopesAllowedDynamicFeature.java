@@ -8,6 +8,11 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.model.AnnotatedMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.Set;
 
@@ -23,11 +28,6 @@ import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.model.AnnotatedMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by jnorgan on 8/21/15.
