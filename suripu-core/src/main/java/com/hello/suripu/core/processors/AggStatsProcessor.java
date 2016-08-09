@@ -229,10 +229,6 @@ public class AggStatsProcessor {
         //Query deviceData
         final Response<ImmutableList<DeviceData>> deviceDataListResponse = deviceDataDAODynamoDB.getBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, deviceDataDAODynamoDB.ALL_ATTRIBUTES);
         LOGGER.trace("processor=agg-stats action=queryed-device-data account_id={} targetDateLocal={} status={} len_data={}", accountId, targetDateLocal.toString(), deviceDataListResponse.status.toString(), deviceDataListResponse.data.size());
-        if (deviceDataListResponse.data.isEmpty()) {
-            LOGGER.trace("processor=agg-stats action=do nothing reason=empty-device-data account_id={} targetDateLocal={}", accountId, targetDateLocal.toString());
-            return Optional.absent();
-        }
 
         //Query pillData
         final ImmutableList<TrackerMotion> pillDataList = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, startLocalTime, endLocalTime);
@@ -244,8 +240,8 @@ public class AggStatsProcessor {
 
         //Compute aggregate stats
         final AggStatsInputs aggStatsInputs = AggStatsInputs.create(senseColorOptional, calibrationOptional, deviceDataListResponse, pillDataList);
-        final AggStats aggStats = AggStatsComputer.computeAggStats(accountId, deviceId, targetDateLocal, aggStatsInputs);
-        return Optional.of(aggStats);
+        final Optional<AggStats> aggStats = AggStatsComputer.computeAggStats(accountId, deviceId, targetDateLocal, aggStatsInputs);
+        return aggStats;
     }
 
     private Optional<Device.Color> getSenseColorOptional(final SenseColorDAO senseColorDAO, final DeviceId deviceId) {
