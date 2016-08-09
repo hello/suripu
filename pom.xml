@@ -24,7 +24,7 @@
         <module>suripu-api</module>
         <module>suripu-core</module>
         <module>suripu-algorithm</module>
-        <module>suripu-coredw8</module>
+        <module>suripu-core-dropwizard</module>
     </modules>
 
     <scm>
