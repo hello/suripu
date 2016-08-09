@@ -13,3 +13,4 @@ atlassian-ide-plugin.xml
 .*.swp
 *.releaseBackup
 *.pyc
+/release.properties

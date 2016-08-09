@@ -1,9 +1,0 @@
-[{
-  "description": "The lights went out in your room.",
-  "startTimestamp": 1425718020000,
-  "sleepDepth": 0,
-  "soundInfo": null,
-  "type": "LIGHTS_OUT",
-  "endTimestamp": 1425718620000,
-  "timezoneOffset": -28800000
-}]
