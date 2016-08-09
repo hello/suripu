@@ -26,6 +26,7 @@ public class LightEventsDetector {
     private final int approxSunriseHour;
     private final double noLightThreshold;
     private final int smoothingDegree;
+    private final int LIGHTS_OUT_CUTOFF = 4;
 
     public LightEventsDetector(final int approxSunriseHour, final int approxSunsetHour, final double noLightThreshold, final int smoothingDegree) {
         this.approxSunriseHour = approxSunriseHour;
@@ -114,8 +115,12 @@ public class LightEventsDetector {
             if ((endTimestamp - startTimestamp) < LIGHT_SPIKE_DURATION_THRESHOLD) {
                 // short light duration, consider it as an anomaly
                 segmentType = LightSegment.Type.LIGHT_SPIKE;
-            } else {
+            } else if ((startHour < LIGHTS_OUT_CUTOFF || startHour >= approxSunsetHour)  && (endHour > approxSunsetHour || endHour < LIGHTS_OUT_CUTOFF ) ) {
+                // between 1700 to 0400
                 segmentType = LightSegment.Type.LIGHTS_OUT;
+            } else{
+                segmentType = LightSegment.Type.NONE;
+                LOGGER.debug("event=lights-out-event-too-late event_end_time={}", endTimestamp);
             }
         } else if (startHour >= approxSunriseHour && endHour > approxSunriseHour) {
             // daytime
