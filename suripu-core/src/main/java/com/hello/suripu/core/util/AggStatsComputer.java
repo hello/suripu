@@ -25,6 +25,7 @@ public class AggStatsComputer {
     public static final List<Integer> LIGHT_HOUR_BUCKETS_LIST = ImmutableList.copyOf(Lists.newArrayList(22, 23, 0, 1, 2, 3, 4, 5));
 
     public static AggStats computeAggStats(final Long accountId, final DeviceId deviceId, final DateTime dateLocal, final AggStatsInputs aggStatsInputs) {
+        //Assumes we receive non-empty aggStatsInputs (empty deviceData case is taken care of within AggStatsProcessor)
 
         //Initialize descriptive stats
         final DescriptiveStatistics tempRawStats = new DescriptiveStatistics();
