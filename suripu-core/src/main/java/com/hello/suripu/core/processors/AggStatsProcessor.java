@@ -229,7 +229,7 @@ public class AggStatsProcessor {
         //Query deviceData
         final Response<ImmutableList<DeviceData>> deviceDataListResponse = deviceDataDAODynamoDB.getBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, deviceDataDAODynamoDB.ALL_ATTRIBUTES);
         LOGGER.trace("processor=agg-stats action=queryed-device-data account_id={} targetDateLocal={} status={} len_data={}", accountId, targetDateLocal.toString(), deviceDataListResponse.status.toString(), deviceDataListResponse.data.size());
-        if (deviceDataListResponse.data.size() == 0) {
+        if (deviceDataListResponse.data.isEmpty()) {
             LOGGER.trace("processor=agg-stats action=do nothing reason=empty-device-data account_id={} targetDateLocal={}", accountId, targetDateLocal.toString());
             return Optional.absent();
         }
