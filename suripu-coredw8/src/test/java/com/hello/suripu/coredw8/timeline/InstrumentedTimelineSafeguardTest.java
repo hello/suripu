@@ -6,15 +6,15 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineSafeguards;
-import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import junit.framework.TestCase;
 import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
