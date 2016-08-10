@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors.insights;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -85,6 +86,7 @@ public class TemperatureHumidity {
         return card;
     }
 
+    @VisibleForTesting
     public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data,
                                                     final TemperatureUnit tempUnit) {
 
@@ -103,11 +105,11 @@ public class TemperatureHumidity {
 
         final double tmpMinValue = stats.getMin();
         final int minTempC = (int) tmpMinValue;
-        final int minTempF = celsiusToFahrenheit(tmpMinValue);
+        final int minTempF = DataUtils.celsiusToFahrenheit(tmpMinValue);
 
         final double tmpMaxValue = stats.getMax();
         final int maxTempC = (int) tmpMaxValue;
-        final int maxTempF = celsiusToFahrenheit(tmpMaxValue);
+        final int maxTempF = DataUtils.celsiusToFahrenheit(tmpMaxValue);
         LOGGER.debug("Temp for account {}: min {}, max {}", accountId, minTempF, maxTempF);
 
         // Units for passing into TemperatureMsgEN
@@ -153,11 +155,5 @@ public class TemperatureHumidity {
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
-    private static int celsiusToFahrenheit(final double value) {
-        return (int) Math.round((value * 9.0) / 5.0) + 32;
-    }
 
-    private static int fahrenheitToCelsius(final double value) {
-        return (int) ((value - 32.0) * (5.0/9.0));
-    }
 }
