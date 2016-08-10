@@ -602,10 +602,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimelineAlgorithmResult result,
                                                final OneDaysSensorData sensorData) {
 
-        // compute lights-out and sound-disturbance events
-        Optional<DateTime> lightOutTimeOptional = Optional.absent();
-        final List<Event> lightEvents = Lists.newArrayList();
-
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
@@ -613,18 +609,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         final SensorDataTimezoneMap sensorDataTimezoneMap = SensorDataTimezoneMap.create(sensorData.allSensorSampleList.get(Sensor.LIGHT));
-
-
-        if (!allSensorSampleList.isEmpty()) {
-
-            // Light
-            lightEvents.addAll(timelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
-            if (lightEvents.size() > 0) {
-                lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
-            }
-
-        }
-
         //MOVE EVENTS BASED ON FEEDBACK
         FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
 
@@ -649,7 +633,26 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
 
+        Optional<Long> sleepTime = Optional.absent();
+        if (sleep.isPresent()){
+            sleepTime = Optional.of(sleep.get().getEndTimestamp());
+        }
+
         // LIGHT
+
+        // compute lights-out and sound-disturbance events
+        Optional<DateTime> lightOutTimeOptional = Optional.absent();
+        final List<Event> lightEvents = Lists.newArrayList();
+
+        if (!allSensorSampleList.isEmpty()) {
+            // Light
+            lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT)));
+            if (lightEvents.size() > 0) {
+                lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
+            }
+
+        }
+
         for(final Event event : lightEvents) {
             timelineEvents.put(event.getStartTimestamp(), event);
         }

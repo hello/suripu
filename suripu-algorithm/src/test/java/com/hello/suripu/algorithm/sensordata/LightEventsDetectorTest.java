@@ -1,5 +1,6 @@
 package com.hello.suripu.algorithm.sensordata;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
 
@@ -41,17 +42,48 @@ public class LightEventsDetectorTest {
     }
 
     @Test
+    public void testValidLightsOut(){
+        LinkedList<AmplitudeData> lightAmplitudeData = lightList("fixtures/light_amplitude_2016_08_07.csv");
+        final double darknessThreshold = 1.1; // DVT unit ALS is very sensitive
+        final int approxSunsetHour = 17;
+        final int approxSunriseHour = 6;
+        final int smoothingDegree = 5; // think of it as minutes
+        final Optional<Long> testSleepTime = Optional.of(1470639360000L);
+
+        final LightEventsDetector testDetector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
+        final LinkedList<LightSegment> lightSegments = testDetector.process(lightAmplitudeData, testSleepTime);
+        assertThat(lightSegments.size(), is(2));
+        assertThat(lightSegments.get(0).segmentType, is(LightSegment.Type.LIGHTS_OUT));
+    }
+
+    @Test
     public void testRemoveLightsOutAfterCutOff(){
-        LinkedList<AmplitudeData> lightAmplitudeData = lightList("fixtures/light_amplitude_2016_07_31.csv");
+        LinkedList<AmplitudeData> lightAmplitudeData = lightList("fixtures/light_amplitude_2016_07_26.csv");
+        final double darknessThreshold = 1.1; // DVT unit ALS is very sensitive
+        final int approxSunsetHour = 17;
+        final int approxSunriseHour = 6;
+        final int smoothingDegree = 5; // think of it as minutes
+        final Optional<Long> testSleepTime = Optional.of(1469503500000L);
+
+        final LightEventsDetector testDetector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
+        final LinkedList<LightSegment> lightSegments = testDetector.process(lightAmplitudeData, testSleepTime);
+        assertThat(lightSegments.size(), is(2));
+        assertThat(lightSegments.get(0).segmentType, is(LightSegment.Type.NONE));
+        assertThat(lightSegments.get(1).segmentType, is(LightSegment.Type.NONE));
+    }
+
+    @Test
+    public void testMissingSleepTime(){
+        LinkedList<AmplitudeData> lightAmplitudeData = lightList("fixtures/light_amplitude_2016_07_26.csv");
         final double darknessThreshold = 1.1; // DVT unit ALS is very sensitive
         final int approxSunsetHour = 17;
         final int approxSunriseHour = 6;
         final int smoothingDegree = 5; // think of it as minutes
 
         final LightEventsDetector testDetector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
-        final LinkedList<LightSegment> lightSegments = testDetector.process(lightAmplitudeData);
-        assertThat(lightSegments.size(), is(1));
-        assertThat(lightSegments.get(0).segmentType, is(LightSegment.Type.NONE));
+        final LinkedList<LightSegment> lightSegments = testDetector.process(lightAmplitudeData, Optional.<Long>absent());
+        assertThat(lightSegments.size(), is(2));
+        assertThat(lightSegments.get(1).segmentType, is(LightSegment.Type.LIGHTS_OUT));
     }
 
 }

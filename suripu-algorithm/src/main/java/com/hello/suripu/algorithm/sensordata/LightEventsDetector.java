@@ -1,11 +1,13 @@
 package com.hello.suripu.algorithm.sensordata;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
 import com.hello.suripu.algorithm.utils.GaussianSmoother;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +28,6 @@ public class LightEventsDetector {
     private final int approxSunriseHour;
     private final double noLightThreshold;
     private final int smoothingDegree;
-    private final int LIGHTS_OUT_CUTOFF = 4;
 
     public LightEventsDetector(final int approxSunriseHour, final int approxSunsetHour, final double noLightThreshold, final int smoothingDegree) {
         this.approxSunriseHour = approxSunriseHour;
@@ -50,7 +51,7 @@ public class LightEventsDetector {
      * @param rawDataMinutes raw light data, one value per minute
      * @return list of light segments
      */
-    public LinkedList<LightSegment> process(final LinkedList<AmplitudeData> rawDataMinutes) {
+    public LinkedList<LightSegment> process(final LinkedList<AmplitudeData> rawDataMinutes, final Optional<Long> sleepTime) {
 
         final GaussianSmoother smoother = new GaussianSmoother(smoothingDegree);
         final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawDataMinutes);
@@ -70,7 +71,7 @@ public class LightEventsDetector {
             if (datum.amplitude < noLightThreshold) {
                 if (startTimestamp > 0) {
                     // Lights off
-                    final LightSegment.Type segmentType = getLightSegmentType(startTimestamp, endTimestamp, offsetMillis, buffer);
+                    final LightSegment.Type segmentType = getLightSegmentType(startTimestamp, endTimestamp, offsetMillis, buffer, sleepTime);
                     final LightSegment segment = new LightSegment(startTimestamp, endTimestamp, offsetMillis, segmentType);
                     LOGGER.info("start {}, end {}", startTimestamp, endTimestamp);
                     
@@ -103,9 +104,17 @@ public class LightEventsDetector {
         return lightSegments;
     }
 
-    private LightSegment.Type getLightSegmentType(final long startTimestamp, final long endTimestamp, final int offsetMillis, final List<Double> segmentValues) {
-
+    private LightSegment.Type getLightSegmentType(final long startTimestamp, final long endTimestamp, final int offsetMillis, final List<Double> segmentValues, final Optional<Long> sleepTime) {
         LightSegment.Type segmentType = LightSegment.Type.NONE;
+        boolean qualifiedLightsOutTime = false;
+        boolean useSleepTime = false;
+
+        if (sleepTime.isPresent()){
+            useSleepTime = true;
+            if (sleepTime.get() > endTimestamp + DateTimeConstants.MILLIS_PER_MINUTE * 10) {
+                qualifiedLightsOutTime = true;
+            }
+        }
 
         final int startHour = getTimestampLocalHour(startTimestamp, offsetMillis);
         final int endHour = getTimestampLocalHour(endTimestamp, offsetMillis);
@@ -115,11 +124,10 @@ public class LightEventsDetector {
             if ((endTimestamp - startTimestamp) < LIGHT_SPIKE_DURATION_THRESHOLD) {
                 // short light duration, consider it as an anomaly
                 segmentType = LightSegment.Type.LIGHT_SPIKE;
-            } else if ((startHour < LIGHTS_OUT_CUTOFF || startHour >= approxSunsetHour)  && (endHour > approxSunsetHour || endHour < LIGHTS_OUT_CUTOFF ) ) {
-                // between 1700 to 0400
+            } else if (qualifiedLightsOutTime || !useSleepTime ) {
+                //if no user sleeptime available - defaults to previous behavior (for voting algorithm), else lights out event must be within 10 mins of sleep
                 segmentType = LightSegment.Type.LIGHTS_OUT;
             } else{
-                segmentType = LightSegment.Type.NONE;
                 LOGGER.debug("event=lights-out-event-too-late event_end_time={}", endTimestamp);
             }
         } else if (startHour >= approxSunriseHour && endHour > approxSunriseHour) {
