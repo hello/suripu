@@ -18,7 +18,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -220,20 +219,6 @@ public class SpeechResultDynamoDBDAO {
         return confidences;
     }
 
-    private Set<Number> wakewordsMapToDDBAttribute(final Map<String, Float> wakeWordsMaps) {
-        // get wake word confidence vector
-        final Set<Number> confidences = Sets.newHashSet();
-        for (final WakeWord word : WakeWord.values()) {
-            if (!word.equals(WakeWord.ERROR)) {
-                final String wakeWord = word.getWakeWordText();
-                if (wakeWordsMaps.containsKey(wakeWord)) {
-                    confidences.add(wakeWordsMaps.get(wakeWord));
-                }
-            }
-        }
-        return confidences;
-    }
-
     private SpeechResult DDBItemToSpeechResult(final Item item) {
         final SpeechToTextService service = SpeechToTextService.fromString(item.getString(SpeechToTextAttribute.SERVICE.shortName()));
         final Intention.IntentType intent = Intention.IntentType.fromString(item.getString(SpeechToTextAttribute.INTENT.shortName()));
@@ -263,7 +248,7 @@ public class SpeechResultDynamoDBDAO {
     }
 
     private Item speechResultToDDBItem(final SpeechResult speechResult) {
-        final Set<Number> confidences = wakewordsMapToDDBAttribute(speechResult.wakeWordsConfidence);
+        final Set<Number> confidences = SpeechUtils.wakewordsMapToDDBAttribute(speechResult.wakeWordsConfidence);
         final AttributeValue rangeKey = getRangeKey(speechResult.dateTimeUTC, speechResult.accountId);
 
         return new Item()
