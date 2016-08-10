@@ -1,12 +1,11 @@
 package com.hello.suripu.algorithm.sensordata;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
-
 import org.junit.Test;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 
 import java.io.IOException;
 import java.net.URL;

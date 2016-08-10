@@ -105,6 +105,7 @@ public class LightEventsDetector {
     }
 
     private LightSegment.Type getLightSegmentType(final long startTimestamp, final long endTimestamp, final int offsetMillis, final List<Double> segmentValues, final Optional<Long> sleepTime) {
+
         LightSegment.Type segmentType = LightSegment.Type.NONE;
         boolean qualifiedLightsOutTime = false;
         boolean useSleepTime = false;
