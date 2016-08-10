@@ -33,8 +33,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Created by benjo on 1/21/16.
  */
 public class InstrumentedTimelineProcessorTest {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessorTest.class);
-    // from onlineHmmtest getTypicalDayofPill
 
     public final Map<String,Boolean> features = Maps.newHashMap();
 

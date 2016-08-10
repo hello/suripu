@@ -63,7 +63,7 @@ public class InstrumentedTimelineProcessorHelpers {
     final public PillDataReadDAO pillDataReadDAO = new PillDataReadDAO() {
         @Override
         public ImmutableList<TrackerMotion> getBetweenLocalUTC(long accountId, DateTime startLocalTime, DateTime endLocalTime) {
-
+            // from onlineHmmtest getTypicalDayofPill
             final int tzOffset = 0;
             final List<TrackerMotion> trackerMotions = Lists.newArrayList();
             final long tstart = startLocalTime.withZone(DateTimeZone.UTC).getMillis();
