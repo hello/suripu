@@ -647,7 +647,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (!allSensorSampleList.isEmpty()) {
             // Light
             lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT)));
-            if (lightEvents.size() > 0) {
+            if (!lightEvents.isEmpty()){
                 lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
             }
 

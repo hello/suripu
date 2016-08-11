@@ -1,56 +1,31 @@
 package com.hello.suripu.core.models.Insights.Message;
 
-import com.hello.suripu.core.preferences.TemperatureUnit;
-
 /**
  * Created by kingshy on 1/12/15.
  */
 public class TemperatureMsgEN {
-
-    private static final String CELSIUS = TemperatureUnit.CELSIUS.toString();
     public static final String DEGREE = "\u00b0";
     public static final String DEGREE_C = "\u00b0C";
     public static final String DEGREE_F = "\u00b0F";
 
-    public static final String getCommonMsg(final int minTemp, final int maxTemp, final String unit) {
-        return String.format("Your bedroom's temperature during your sleep ranges from %d°%s to %d°%s. ", minTemp, unit, maxTemp, unit);
+    public static Text getTempMsgPerfect(final int minTemp, final int maxTemp, final String unit) {
+        return new Text("Perfect Temperature",
+                String.format("The temperature in your bedroom ranges from %d°%s to %d°%s, which is the **ideal temperature** for good sleep.", minTemp, unit, maxTemp, unit));
     }
 
-    public static Text getTempMsgPerfect(final String commonMsg) {
-        return new Text("Perfect Temperature", commonMsg +
-                "Your bedroom is the **perfect** temperature for a good night's sleep.\n\n" +
-                "Sense will continue to monitor your sleeping temperature and alert you of any changes.");
+    public static Text getTempMsgTooCold(final int minTemp, final int maxTemp, final String unit, final int idealTempMin) {
+        return new Text("It's Cold in Here",
+                String.format("The temperature in your bedroom ranges from %d°%s to %d°%s, which is **too cold** for good sleep. Try raising the temperature to at least %d°%s. Alternatively, consider using a thicker blanket or wearing warmer clothing while sleeping.", minTemp, unit, maxTemp, unit, idealTempMin, unit));
     }
 
-    public static Text getTempMsgTooCold(final String commonMsg, final int temperature, final String unit) {
-        return new Text("It's Cold in Here", commonMsg +
-                "It's **too cold** in your bedroom for ideal sleep conditions.\n\n" +
-                String.format("Try turning up the thermostat to a minimum of %d°%s. ", temperature, unit) +
-                "Alternatively, you could use a thicker blanket, or put on more layers before you go to bed.");
+    public static Text getTempMsgTooHot(final int minTemp, final int maxTemp, final String unit, final int idealTempMax) {
+        return new Text("It's Hot in Here",
+                String.format("The temperature in your bedroom ranges from %d°%s to %d°%s, which is **too warm** for good sleep. Try lowering the temperature to %d°%s, or turning on a fan. Weather permitting, you may also want to open a window to let in some cool air.", minTemp, unit, maxTemp, unit, idealTempMax, unit));
     }
 
-    public static Text getTempMsgTooHot(final String commonMsg, final int temperature, final String unit) {
-        return new Text("It's Hot in Here", commonMsg +
-                "It's **too warm** for ideal sleep.\n\n" +
-                String.format("Try lowering the thermostat to %d°%s, or use a fan. ", temperature, unit) +
-                "You can also open the windows to let in some cool air.");
-    }
-
-    public static Text getTempMsgCool(final String commonMsg) {
-        return new Text("It's a Bit Chilly", commonMsg +
-                "You might feel **a bit cold** in the early morning.\n\n" +
-                "Try programming the thermostat to a warmer temperature for the early morning.");
-    }
-
-    public static Text getTempMsgWarm(final String commonMsg) {
-        return new Text("It's a Bit Warm", commonMsg +
-                "Your bedroom is **a bit warmer** than the recommended ideal conditions.\n\n" +
-                "Try to cool the bedroom a little before going to bed.");
-    }
-
-    public static Text getTempMsgBad(final String commonMsg, final int minTemp, final int maxTemp, final String unit) {
-        return new Text("Hot and Cold", commonMsg +
-                "The **temperature swing** in your bedroom is too large. The ideal temperature for a good night's sleep is between " +
-                String.format("%d°%s to %d°%s.", minTemp, unit, maxTemp, unit));
+    public static Text getTempMsgFluctuate(final int minTemp, final int maxTemp, final String unit, final int idealTempMin, final int idealTempMax) {
+        return new Text("Hot and Cold",
+                String.format("The temperature in your bedroom ranges from %d°%s to %d°%s. That's **too much fluctuation** in temperature. The ideal temperature is consistently between %d°%s and %d°%s.",
+                        minTemp, unit, maxTemp, unit, idealTempMin, unit, idealTempMax, unit));
     }
 }

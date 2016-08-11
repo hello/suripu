@@ -26,8 +26,6 @@ public class SleepMotion {
     // computed 04/08/2015, 7632 scores, prod_sleep_stats_v_0_2 = 0.121882824828
     private static float AVERAGE_SLEEP_PERC = 12.0f;
 
-    private static float SIGNIFICANT_DIFF = 20.0f; // only differences greater than 30% is worth reporting (TODO)
-
     private static int MIN_DAYS_REQUIRED = 3;
 
     public static Optional<InsightCard> getInsights(final Long accountId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Boolean isNewUser) {
@@ -79,19 +77,12 @@ public class SleepMotion {
         final float overallDiff = (( averageMotionPercentage - AVERAGE_SLEEP_PERC) / AVERAGE_SLEEP_PERC ) * 100.0f;
 
         Text text;
-        if (Math.abs(overallDiff) >= SIGNIFICANT_DIFF) {
-            if (overallDiff > 0) {
-                text = SleepMotionMsgEN.moreMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
-            } else {
-                text = SleepMotionMsgEN.lessMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
-            }
+        if (overallDiff > 0) {
+            text = SleepMotionMsgEN.moreMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
+        } else if (overallDiff < 0){
+            text = SleepMotionMsgEN.lessMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
         } else {
-            if ((int) overallDiff != 0) {
-                text = SleepMotionMsgEN.equalMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
-            }
-            else {
-                text = SleepMotionMsgEN.reallyEqualMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
-            }
+            text = SleepMotionMsgEN.reallyEqualMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
         }
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,

@@ -39,9 +39,8 @@ public class AggStatsProcessor {
 
     private final AggStatsDAODynamoDB aggStatsDAODynamoDB;
 
-//    Start computation 1 hr after end of aggStats day. (Compute between 1PM and 6PM)
-    private final int MIN_ALLOWED_LOCAL_HOUR = 11; //Perform computations between 1PM and 7PM
-//    private final int MIN_ALLOWED_LOCAL_HOUR = AggStats.DAY_START_END_HOUR + 1; //Perform computations between 1PM and 7PM
+//    Start computation 1 hr after end of aggStats day. (Compute between 1PM and 7PM)
+    private final int MIN_ALLOWED_LOCAL_HOUR = AggStats.DAY_START_END_HOUR + 1; //Perform computations between 1PM and 7PM
     private final int NUM_HOURS_WORKER_ON = 6;
     private final int MAX_ALLOWED_LOCAL_HOUR = MIN_ALLOWED_LOCAL_HOUR + NUM_HOURS_WORKER_ON;
 
@@ -152,13 +151,17 @@ public class AggStatsProcessor {
             return Boolean.FALSE;
         }
 
-        final AggStats aggStats = computeAggStatsForDay(accountId, deviceId, targetDateLocal, timeZoneOffset);
-        LOGGER.debug("action=computed-agg-stats account_id={} target_date_local={}", accountId, targetDateLocal.toString());
+        final Optional<AggStats> aggStats = computeAggStatsForDay(accountId, deviceId, targetDateLocal, timeZoneOffset);
+        LOGGER.debug("action=computed-agg-stats account_id={} target_date_local={} present={}", accountId, targetDateLocal.toString(), aggStats.isPresent());
+        if (!aggStats.isPresent()) {
+            LOGGER.info("action=do-nothing reason=agg-stats-absent");
+            return Boolean.FALSE;
+        }
 
         //Save aggregate statistics
-        final Boolean successInsert = saveAggStat(aggStats);
+        final Boolean successInsert = saveAggStat(aggStats.get());
         if (!successInsert) {
-            LOGGER.warn("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.accountId);
+            LOGGER.warn("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.get().accountId);
         }
 
         return successInsert;
@@ -202,16 +205,20 @@ public class AggStatsProcessor {
             return Boolean.FALSE;
         }
 
-        final AggStats aggStats = computeAggStatsForDay(accountId, deviceId, targetDateLocal, timeZoneOffset);
-        LOGGER.debug("action=computed-agg-stats account_id={} target_date_local={}", accountId, targetDateLocal.toString());
+        final Optional<AggStats> aggStats = computeAggStatsForDay(accountId, deviceId, targetDateLocal, timeZoneOffset);
+        LOGGER.debug("action=computed-agg-stats account_id={} target_date_local={} present={}", accountId, targetDateLocal.toString(), aggStats.isPresent());
+        if (!aggStats.isPresent()) {
+            LOGGER.info("action=do-nothing reason=agg-stats-absent");
+            return Boolean.FALSE;
+        }
 
         //Save aggregate statistics
-        final Boolean successInsert = saveAggStat(aggStats);
-        LOGGER.info("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.accountId);
+        final Boolean successInsert = saveAggStat(aggStats.get());
+        LOGGER.info("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.get().accountId);
         return successInsert;
     }
 
-    private AggStats computeAggStatsForDay(final Long accountId, final DeviceId deviceId, final DateTime targetDateLocal, final Integer timeZoneOffset) {
+    private Optional<AggStats> computeAggStatsForDay(final Long accountId, final DeviceId deviceId, final DateTime targetDateLocal, final Integer timeZoneOffset) {
 
         final DateTime startLocalTime = targetDateLocal.withHourOfDay(AggStats.DAY_START_END_HOUR);
         final DateTime endLocalTime = targetDateLocal.plusDays(1).withHourOfDay(AggStats.DAY_START_END_HOUR);
@@ -233,7 +240,7 @@ public class AggStatsProcessor {
 
         //Compute aggregate stats
         final AggStatsInputs aggStatsInputs = AggStatsInputs.create(senseColorOptional, calibrationOptional, deviceDataListResponse, pillDataList);
-        final AggStats aggStats = AggStatsComputer.computeAggStats(accountId, deviceId, targetDateLocal, aggStatsInputs);
+        final Optional<AggStats> aggStats = AggStatsComputer.computeAggStats(accountId, deviceId, targetDateLocal, aggStatsInputs);
         return aggStats;
     }
 
