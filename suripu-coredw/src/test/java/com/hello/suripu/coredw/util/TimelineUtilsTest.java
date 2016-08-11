@@ -1377,4 +1377,18 @@ public class TimelineUtilsTest extends FixtureTest {
 
     }
 
+    @Test
+    public void testMotionDuringSleepCheck(){
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/millionaires_challenge_2015_02_20_raw.csv");
+        long fallAsleepTime = 1424505780000L;
+        final long wakeUpTime = 1424522100000L;
+                boolean testMotionDuringSleep = timelineUtils.motionDuringSleepCheck(trackerMotions, fallAsleepTime, wakeUpTime);
+        assertThat(testMotionDuringSleep, is(false));
+
+        fallAsleepTime = 1424496240000L;
+        testMotionDuringSleep = timelineUtils.motionDuringSleepCheck(trackerMotions, fallAsleepTime, wakeUpTime);
+        assertThat(testMotionDuringSleep, is(true));
+
+    }
+
 }

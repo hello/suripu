@@ -754,8 +754,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, lightSleepThreshold, hasSleepStatMediumSleep(accountId));
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
-        final boolean feedbackPresent = !feedbackList.isEmpty();
-        Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats, feedbackPresent);
+        Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
@@ -764,6 +763,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
+        //check to see if no motion during sleep for "natural" timeline
+        if (feedbackList.isEmpty() && this.useNoMotionEnforcement(accountId)) {
+            final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+            if (!motionDuringSleep) {
+                LOGGER.warn("action=zeroing-score  account_id={} reason=no-motion-during-sleeptime night_of={}", accountId, targetDate);
+                sleepScore =  0;
+            }
+        }
 
         boolean isValidSleepScore = sleepScore > 0;
 
@@ -975,26 +982,16 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                              final AllSensorSampleList sensors,
                                              final DateTime targetDate,
                                              final Long accountId,
-                                             final SleepStats sleepStats,
-                                             final boolean feedbackPresent) {
+                                             final SleepStats sleepStats) {
 
         // Movement score
         MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
                 trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
-        //if motion score is less than the min score - 
-
-        if (feedbackPresent || !this.useNoMotionEnforcement(accountId)) {
-            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
-                LOGGER.warn("action=enforced-minimum-motion-score: account_id={} night_of={}", accountId, targetDate);
-                motionScore = new MotionScore(motionScore.numMotions, motionScore.motionPeriodMinutes, motionScore.avgAmplitude, motionScore.maxAmplitude, (int) SleepScoreUtils.MOTION_SCORE_MIN);
-            }
-        } else {
-            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
-                // if motion score is zero, something is not quite right, don't save score
-                LOGGER.error("action=no-motion-score-generated: account_id={} night_of={}", accountId, targetDate);
-                return 0;
-            }
+        //if motion score is less than the min score - ff'd removed, at 100 percent deployement
+        if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
+            LOGGER.warn("action=enforced-minimum-motion-score: account_id={} night_of={}", accountId, targetDate);
+            motionScore = new MotionScore(motionScore.numMotions, motionScore.motionPeriodMinutes, motionScore.avgAmplitude, motionScore.maxAmplitude, (int) SleepScoreUtils.MOTION_SCORE_MIN);
         }
 
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);

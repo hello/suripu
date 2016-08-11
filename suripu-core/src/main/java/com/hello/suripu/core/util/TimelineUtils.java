@@ -1508,4 +1508,19 @@ public class TimelineUtils {
 
         return ImmutableList.copyOf(filteredMotions);
     }
+
+    //checks if there is any motion observed during during sleep.
+    public boolean motionDuringSleepCheck(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+        for (final TrackerMotion motion : trackerMotions) {
+            if (motion.timestamp >= wakeUpTimestamp) {
+                break;
+            }
+            if (motion.timestamp > fallAsleepTimestamp) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
 }
