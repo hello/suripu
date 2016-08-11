@@ -54,6 +54,7 @@ public class DeviceProcessor {
     private final AnalyticsTracker analyticsTracker;
 
     private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 14; // days
+    private final static Integer BATTERY_LEVEL_LOW_BATTERY_WARNING = 15;
 
     private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
@@ -258,7 +259,7 @@ public class DeviceProcessor {
         final List<Pill> pillsWithBatteryWarningHidden = new ArrayList<>();
 
         for(final Pill pill : pills) {
-            if(pill.batteryLevelOptional.isPresent() && pill.batteryLevelOptional.get() <= 15) {
+            if(pill.batteryLevelOptional.isPresent() && pill.batteryLevelOptional.get() <= BATTERY_LEVEL_LOW_BATTERY_WARNING) {
                 LOGGER.warn("message=low-battery-new-account account_id={}", account.id.get());
                 final Pill updated = Pill.withState(pill, Pill.State.NORMAL);
                 pillsWithBatteryWarningHidden.add(updated);
