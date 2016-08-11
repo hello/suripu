@@ -249,17 +249,21 @@ public class DeviceProcessor {
         final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
         final Days days = Days.daysBetween(referenceTime,account.created);
         final int accountCreatedInDays = Math.abs(days.getDays());
-        if(accountCreatedInDays > MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING) {
+        if(accountCreatedInDays > MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING ) {
             return pills;
         }
-        LOGGER.warn("message=low-battery-new-account account_id={}", account.id.get());
+
+
         // Special case: we want to hide the low warning battery for new accounts
         final List<Pill> pillsWithBatteryWarningHidden = new ArrayList<>();
 
         for(final Pill pill : pills) {
-            final Pill updated = Pill.withState(pill, Pill.State.NORMAL);
-            pillsWithBatteryWarningHidden.add(updated);
-            analyticsTracker.trackLowBattery(pill, account);
+            if(pill.batteryLevelOptional.isPresent() && pill.batteryLevelOptional.get() <= 15) {
+                LOGGER.warn("message=low-battery-new-account account_id={}", account.id.get());
+                final Pill updated = Pill.withState(pill, Pill.State.NORMAL);
+                pillsWithBatteryWarningHidden.add(updated);
+                analyticsTracker.trackLowBattery(pill, account);
+            }
         }
 
         return pillsWithBatteryWarningHidden;
