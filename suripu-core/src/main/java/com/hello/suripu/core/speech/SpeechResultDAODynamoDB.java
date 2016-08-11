@@ -36,9 +36,9 @@ import java.util.Set;
 /**
  * Created by ksg on 7/19/16
  */
-public class SpeechResultDynamoDBDAO {
+public class SpeechResultDAODynamoDB {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(SpeechResultDynamoDBDAO.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(SpeechResultDAODynamoDB.class);
 
     private enum SpeechToTextAttribute implements Attribute {
         SENSE_ID("sense_id", "S", ":sid"),      // Hash Key (external id)
@@ -86,14 +86,14 @@ public class SpeechResultDynamoDBDAO {
 
     private final Table table;
 
-    private SpeechResultDynamoDBDAO(Table table) {
+    private SpeechResultDAODynamoDB(Table table) {
         this.table = table;
     }
 
-    public static SpeechResultDynamoDBDAO create (final AmazonDynamoDB amazonDynamoDB, final String tableName) {
+    public static SpeechResultDAODynamoDB create (final AmazonDynamoDB amazonDynamoDB, final String tableName) {
         final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
         final Table table = dynamoDB.getTable(tableName);
-        return new SpeechResultDynamoDBDAO(table);
+        return new SpeechResultDAODynamoDB(table);
     }
 
     private static final Set<SpeechToTextAttribute> TARGET_ATTRIBUTES = new ImmutableSet.Builder<SpeechToTextAttribute>()
