@@ -20,7 +20,6 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.insights.InsightsLastSeen;
 import com.hello.suripu.core.insights.InsightsLastSeenDAO;
-import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -58,8 +57,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -306,21 +305,12 @@ public class InsightProcessor {
 
     public Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeLocal, final RolloutClient featureFlipper) {
         //Limit insight check time window
-        //optional insightcard to allow for daily concurrent high priority insights in order of list
-        Optional<InsightCard> insightCardOptional;
         if (currentTimeLocal.getHourOfDay() >= HIGH_PRIORITY_START_TIME && currentTimeLocal.getHourOfDay() <= HIGH_PRIORITY_END_TIME ){
             //SLEEP_DEPRIVATION
-            //check if account eligible
             if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST)){
-                //check if Insight delivered recent
-                if(InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_DEPRIVATION, INSIGHT_FREQ_SLEEP_DEPRIVATION)){
-                    //check if insight is deliverable - avoid
-                    final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
-                    final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-                    insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, currentTimeLocal);
-                    if (insightCardOptional.isPresent()){
-                        return Optional.of(InsightCard.Category.SLEEP_DEPRIVATION);
-                    }
+                //check for eligibility - insight not recently delivered and insight will be generated - avoids over-riding all other insights during window
+                if(SleepDeprivation.checkEligiblity(accountId,recentCategories, INSIGHT_FREQ_SLEEP_DEPRIVATION,sleepStatsDAODynamoDB, accountReadDAO, currentTimeLocal)){
+                    return Optional.of(InsightCard.Category.SLEEP_DEPRIVATION);
                 }
             }
         }

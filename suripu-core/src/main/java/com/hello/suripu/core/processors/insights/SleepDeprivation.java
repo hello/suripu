@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
+
 /**
  * Created by jarredheinrich on 7/8/16.
  */
@@ -103,4 +105,20 @@ public class SleepDeprivation {
 
         return card;
     }
+
+    public static boolean checkEligiblity(final Long accountId, final Map<InsightCard.Category, DateTime> insightsLastSeenMap, final int insightFrequency, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final DateTime queryEndDate) {
+        final DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(insightFrequency);
+        if (insightsLastSeenMap.containsKey(InsightCard.Category.SLEEP_DEPRIVATION)) {
+            if (insightsLastSeenMap.get(InsightCard.Category.SLEEP_DEPRIVATION).isAfter(startDate)) {
+                return false;
+            }
+        }
+        final Optional<InsightCard> insightCard = getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, queryEndDate);
+        if (insightCard.isPresent()) {
+            return true;
+        }
+
+        return false;
+    }
+
 }

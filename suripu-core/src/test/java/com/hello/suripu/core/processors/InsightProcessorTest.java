@@ -657,6 +657,10 @@ public class InsightProcessorTest {
         //outside time window
         assertThat(generatedInsight.isPresent(), is(Boolean.FALSE));
 
+        //in time window, not eligible
+        generatedInsight = spyInsightProcessor.selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
+        assertThat(generatedInsight.isPresent(), is(Boolean.FALSE));
+
         generatedInsight = spyInsightProcessor.selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_11, mockFeatureFlipper);
         assertThat(generatedInsight.isPresent(), is(Boolean.TRUE));
     }
