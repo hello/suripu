@@ -16,7 +16,7 @@ public class SleepAlarmMsgEN {
             sleepDurationHrString = String.format("%.1f", sleepDurationHr);
         }
 
-        final String messageBody = String.format("You typically wake up at around %s. If you want to get %s hours of sleep, you should start preparing for bed at %s, and plan to sleep by %s.", wakeTime, sleepDurationHrString, preSleepTime, sleepTime);
+        final String messageBody = String.format("You typically wake up around %s. If you want to get %s hours of sleep, you should start preparing for bed at %s, and plan to sleep by %s.", wakeTime, sleepDurationHrString, preSleepTime, sleepTime);
 
         return new Text("Bed Time", messageBody);
     }
