@@ -213,6 +213,70 @@ public final class DataInputProtos {
      * <code>optional int32 audio_peak_energy_db = 21;</code>
      */
     int getAudioPeakEnergyDb();
+
+    /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
+     * <pre>
+     * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+     * </pre>
+     */
+    boolean hasPressure();
+    /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
+     * <pre>
+     * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+     * </pre>
+     */
+    int getPressure();
+
+    /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
+     * <pre>
+     *from 0 - 1000 ppb
+     * </pre>
+     */
+    boolean hasTvoc();
+    /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
+     * <pre>
+     *from 0 - 1000 ppb
+     * </pre>
+     */
+    int getTvoc();
+
+    /**
+     * <code>optional int32 co2 = 24;</code>
+     *
+     * <pre>
+     *from 400 - 5000 ppm
+     * </pre>
+     */
+    boolean hasCo2();
+    /**
+     * <code>optional int32 co2 = 24;</code>
+     *
+     * <pre>
+     *from 400 - 5000 ppm
+     * </pre>
+     */
+    int getCo2();
+
+    /**
+     * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+     */
+    boolean hasLightSensor();
+    /**
+     * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+     */
+    com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getLightSensor();
+    /**
+     * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+     */
+    com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder getLightSensorOrBuilder();
   }
   /**
    * Protobuf type {@code periodic_data}
@@ -368,6 +432,34 @@ public final class DataInputProtos {
               audioPeakEnergyDb_ = input.readInt32();
               break;
             }
+            case 176: {
+              bitField0_ |= 0x00100000;
+              pressure_ = input.readUInt32();
+              break;
+            }
+            case 184: {
+              bitField0_ |= 0x00200000;
+              tvoc_ = input.readInt32();
+              break;
+            }
+            case 192: {
+              bitField0_ |= 0x00400000;
+              co2_ = input.readInt32();
+              break;
+            }
+            case 202: {
+              com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder subBuilder = null;
+              if (((bitField0_ & 0x00800000) == 0x00800000)) {
+                subBuilder = lightSensor_.toBuilder();
+              }
+              lightSensor_ = input.readMessage(com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(lightSensor_);
+                lightSensor_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00800000;
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -405,6 +497,895 @@ public final class DataInputProtos {
     @java.lang.Override
     public com.google.protobuf.Parser<periodic_data> getParserForType() {
       return PARSER;
+    }
+
+    public interface light_dataOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:periodic_data.light_data)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      boolean hasR();
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      int getR();
+
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      boolean hasG();
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      int getG();
+
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      boolean hasB();
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      int getB();
+
+      /**
+       * <code>optional int32 infrared = 4;</code>
+       */
+      boolean hasInfrared();
+      /**
+       * <code>optional int32 infrared = 4;</code>
+       */
+      int getInfrared();
+
+      /**
+       * <code>optional int32 clear = 5;</code>
+       */
+      boolean hasClear();
+      /**
+       * <code>optional int32 clear = 5;</code>
+       */
+      int getClear();
+
+      /**
+       * <code>optional int32 lux_count = 6;</code>
+       */
+      boolean hasLuxCount();
+      /**
+       * <code>optional int32 lux_count = 6;</code>
+       */
+      int getLuxCount();
+
+      /**
+       * <code>optional int32 uv_count = 7;</code>
+       */
+      boolean hasUvCount();
+      /**
+       * <code>optional int32 uv_count = 7;</code>
+       */
+      int getUvCount();
+    }
+    /**
+     * Protobuf type {@code periodic_data.light_data}
+     */
+    public static final class light_data extends
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:periodic_data.light_data)
+        light_dataOrBuilder {
+      // Use light_data.newBuilder() to construct.
+      private light_data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private light_data(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final light_data defaultInstance;
+      public static light_data getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public light_data getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private light_data(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 8: {
+                bitField0_ |= 0x00000001;
+                r_ = input.readInt32();
+                break;
+              }
+              case 16: {
+                bitField0_ |= 0x00000002;
+                g_ = input.readInt32();
+                break;
+              }
+              case 24: {
+                bitField0_ |= 0x00000004;
+                b_ = input.readInt32();
+                break;
+              }
+              case 32: {
+                bitField0_ |= 0x00000008;
+                infrared_ = input.readInt32();
+                break;
+              }
+              case 40: {
+                bitField0_ |= 0x00000010;
+                clear_ = input.readInt32();
+                break;
+              }
+              case 48: {
+                bitField0_ |= 0x00000020;
+                luxCount_ = input.readInt32();
+                break;
+              }
+              case 56: {
+                bitField0_ |= 0x00000040;
+                uvCount_ = input.readInt32();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.class, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<light_data> PARSER =
+          new com.google.protobuf.AbstractParser<light_data>() {
+        public light_data parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new light_data(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<light_data> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      public static final int R_FIELD_NUMBER = 1;
+      private int r_;
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      public boolean hasR() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      public int getR() {
+        return r_;
+      }
+
+      public static final int G_FIELD_NUMBER = 2;
+      private int g_;
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      public boolean hasG() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      public int getG() {
+        return g_;
+      }
+
+      public static final int B_FIELD_NUMBER = 3;
+      private int b_;
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      public boolean hasB() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      public int getB() {
+        return b_;
+      }
+
+      public static final int INFRARED_FIELD_NUMBER = 4;
+      private int infrared_;
+      /**
+       * <code>optional int32 infrared = 4;</code>
+       */
+      public boolean hasInfrared() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int32 infrared = 4;</code>
+       */
+      public int getInfrared() {
+        return infrared_;
+      }
+
+      public static final int CLEAR_FIELD_NUMBER = 5;
+      private int clear_;
+      /**
+       * <code>optional int32 clear = 5;</code>
+       */
+      public boolean hasClear() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 clear = 5;</code>
+       */
+      public int getClear() {
+        return clear_;
+      }
+
+      public static final int LUX_COUNT_FIELD_NUMBER = 6;
+      private int luxCount_;
+      /**
+       * <code>optional int32 lux_count = 6;</code>
+       */
+      public boolean hasLuxCount() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional int32 lux_count = 6;</code>
+       */
+      public int getLuxCount() {
+        return luxCount_;
+      }
+
+      public static final int UV_COUNT_FIELD_NUMBER = 7;
+      private int uvCount_;
+      /**
+       * <code>optional int32 uv_count = 7;</code>
+       */
+      public boolean hasUvCount() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 uv_count = 7;</code>
+       */
+      public int getUvCount() {
+        return uvCount_;
+      }
+
+      private void initFields() {
+        r_ = 0;
+        g_ = 0;
+        b_ = 0;
+        infrared_ = 0;
+        clear_ = 0;
+        luxCount_ = 0;
+        uvCount_ = 0;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        if (!hasR()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!hasG()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!hasB()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeInt32(1, r_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeInt32(2, g_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeInt32(3, b_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeInt32(4, infrared_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeInt32(5, clear_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeInt32(6, luxCount_);
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          output.writeInt32(7, uvCount_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(1, r_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(2, g_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(3, b_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(4, infrared_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(5, clear_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(6, luxCount_);
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(7, uvCount_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code periodic_data.light_data}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:periodic_data.light_data)
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.class, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          r_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          g_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          b_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          infrared_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          clear_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000010);
+          luxCount_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000020);
+          uvCount_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000040);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_descriptor;
+        }
+
+        public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getDefaultInstanceForType() {
+          return com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data build() {
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data buildPartial() {
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data result = new com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.r_ = r_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.g_ = g_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.b_ = b_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.infrared_ = infrared_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.clear_ = clear_;
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000020;
+          }
+          result.luxCount_ = luxCount_;
+          if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+            to_bitField0_ |= 0x00000040;
+          }
+          result.uvCount_ = uvCount_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data) {
+            return mergeFrom((com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data other) {
+          if (other == com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance()) return this;
+          if (other.hasR()) {
+            setR(other.getR());
+          }
+          if (other.hasG()) {
+            setG(other.getG());
+          }
+          if (other.hasB()) {
+            setB(other.getB());
+          }
+          if (other.hasInfrared()) {
+            setInfrared(other.getInfrared());
+          }
+          if (other.hasClear()) {
+            setClear(other.getClear());
+          }
+          if (other.hasLuxCount()) {
+            setLuxCount(other.getLuxCount());
+          }
+          if (other.hasUvCount()) {
+            setUvCount(other.getUvCount());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          if (!hasR()) {
+            
+            return false;
+          }
+          if (!hasG()) {
+            
+            return false;
+          }
+          if (!hasB()) {
+            
+            return false;
+          }
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        private int r_ ;
+        /**
+         * <code>required int32 r = 1;</code>
+         */
+        public boolean hasR() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>required int32 r = 1;</code>
+         */
+        public int getR() {
+          return r_;
+        }
+        /**
+         * <code>required int32 r = 1;</code>
+         */
+        public Builder setR(int value) {
+          bitField0_ |= 0x00000001;
+          r_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required int32 r = 1;</code>
+         */
+        public Builder clearR() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          r_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private int g_ ;
+        /**
+         * <code>required int32 g = 2;</code>
+         */
+        public boolean hasG() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>required int32 g = 2;</code>
+         */
+        public int getG() {
+          return g_;
+        }
+        /**
+         * <code>required int32 g = 2;</code>
+         */
+        public Builder setG(int value) {
+          bitField0_ |= 0x00000002;
+          g_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required int32 g = 2;</code>
+         */
+        public Builder clearG() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          g_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private int b_ ;
+        /**
+         * <code>required int32 b = 3;</code>
+         */
+        public boolean hasB() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>required int32 b = 3;</code>
+         */
+        public int getB() {
+          return b_;
+        }
+        /**
+         * <code>required int32 b = 3;</code>
+         */
+        public Builder setB(int value) {
+          bitField0_ |= 0x00000004;
+          b_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required int32 b = 3;</code>
+         */
+        public Builder clearB() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          b_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private int infrared_ ;
+        /**
+         * <code>optional int32 infrared = 4;</code>
+         */
+        public boolean hasInfrared() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional int32 infrared = 4;</code>
+         */
+        public int getInfrared() {
+          return infrared_;
+        }
+        /**
+         * <code>optional int32 infrared = 4;</code>
+         */
+        public Builder setInfrared(int value) {
+          bitField0_ |= 0x00000008;
+          infrared_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 infrared = 4;</code>
+         */
+        public Builder clearInfrared() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          infrared_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private int clear_ ;
+        /**
+         * <code>optional int32 clear = 5;</code>
+         */
+        public boolean hasClear() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional int32 clear = 5;</code>
+         */
+        public int getClear() {
+          return clear_;
+        }
+        /**
+         * <code>optional int32 clear = 5;</code>
+         */
+        public Builder setClear(int value) {
+          bitField0_ |= 0x00000010;
+          clear_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 clear = 5;</code>
+         */
+        public Builder clearClear() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          clear_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private int luxCount_ ;
+        /**
+         * <code>optional int32 lux_count = 6;</code>
+         */
+        public boolean hasLuxCount() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+        /**
+         * <code>optional int32 lux_count = 6;</code>
+         */
+        public int getLuxCount() {
+          return luxCount_;
+        }
+        /**
+         * <code>optional int32 lux_count = 6;</code>
+         */
+        public Builder setLuxCount(int value) {
+          bitField0_ |= 0x00000020;
+          luxCount_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 lux_count = 6;</code>
+         */
+        public Builder clearLuxCount() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          luxCount_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private int uvCount_ ;
+        /**
+         * <code>optional int32 uv_count = 7;</code>
+         */
+        public boolean hasUvCount() {
+          return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+        /**
+         * <code>optional int32 uv_count = 7;</code>
+         */
+        public int getUvCount() {
+          return uvCount_;
+        }
+        /**
+         * <code>optional int32 uv_count = 7;</code>
+         */
+        public Builder setUvCount(int value) {
+          bitField0_ |= 0x00000040;
+          uvCount_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 uv_count = 7;</code>
+         */
+        public Builder clearUvCount() {
+          bitField0_ = (bitField0_ & ~0x00000040);
+          uvCount_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:periodic_data.light_data)
+      }
+
+      static {
+        defaultInstance = new light_data(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:periodic_data.light_data)
     }
 
     private int bitField0_;
@@ -774,6 +1755,96 @@ public final class DataInputProtos {
       return audioPeakEnergyDb_;
     }
 
+    public static final int PRESSURE_FIELD_NUMBER = 22;
+    private int pressure_;
+    /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
+     * <pre>
+     * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+     * </pre>
+     */
+    public boolean hasPressure() {
+      return ((bitField0_ & 0x00100000) == 0x00100000);
+    }
+    /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
+     * <pre>
+     * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+     * </pre>
+     */
+    public int getPressure() {
+      return pressure_;
+    }
+
+    public static final int TVOC_FIELD_NUMBER = 23;
+    private int tvoc_;
+    /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
+     * <pre>
+     *from 0 - 1000 ppb
+     * </pre>
+     */
+    public boolean hasTvoc() {
+      return ((bitField0_ & 0x00200000) == 0x00200000);
+    }
+    /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
+     * <pre>
+     *from 0 - 1000 ppb
+     * </pre>
+     */
+    public int getTvoc() {
+      return tvoc_;
+    }
+
+    public static final int CO2_FIELD_NUMBER = 24;
+    private int co2_;
+    /**
+     * <code>optional int32 co2 = 24;</code>
+     *
+     * <pre>
+     *from 400 - 5000 ppm
+     * </pre>
+     */
+    public boolean hasCo2() {
+      return ((bitField0_ & 0x00400000) == 0x00400000);
+    }
+    /**
+     * <code>optional int32 co2 = 24;</code>
+     *
+     * <pre>
+     *from 400 - 5000 ppm
+     * </pre>
+     */
+    public int getCo2() {
+      return co2_;
+    }
+
+    public static final int LIGHT_SENSOR_FIELD_NUMBER = 25;
+    private com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data lightSensor_;
+    /**
+     * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+     */
+    public boolean hasLightSensor() {
+      return ((bitField0_ & 0x00800000) == 0x00800000);
+    }
+    /**
+     * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+     */
+    public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getLightSensor() {
+      return lightSensor_;
+    }
+    /**
+     * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+     */
+    public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder getLightSensorOrBuilder() {
+      return lightSensor_;
+    }
+
     private void initFields() {
       unixTime_ = 0;
       light_ = 0;
@@ -795,6 +1866,10 @@ public final class DataInputProtos {
       audioPeakDisturbanceEnergyDb_ = 0;
       audioPeakBackgroundEnergyDb_ = 0;
       audioPeakEnergyDb_ = 0;
+      pressure_ = 0;
+      tvoc_ = 0;
+      co2_ = 0;
+      lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -802,6 +1877,12 @@ public final class DataInputProtos {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
+      if (hasLightSensor()) {
+        if (!getLightSensor().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -868,6 +1949,18 @@ public final class DataInputProtos {
       }
       if (((bitField0_ & 0x00080000) == 0x00080000)) {
         output.writeInt32(21, audioPeakEnergyDb_);
+      }
+      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+        output.writeUInt32(22, pressure_);
+      }
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+        output.writeInt32(23, tvoc_);
+      }
+      if (((bitField0_ & 0x00400000) == 0x00400000)) {
+        output.writeInt32(24, co2_);
+      }
+      if (((bitField0_ & 0x00800000) == 0x00800000)) {
+        output.writeMessage(25, lightSensor_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -957,6 +2050,22 @@ public final class DataInputProtos {
       if (((bitField0_ & 0x00080000) == 0x00080000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(21, audioPeakEnergyDb_);
+      }
+      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(22, pressure_);
+      }
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(23, tvoc_);
+      }
+      if (((bitField0_ & 0x00400000) == 0x00400000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(24, co2_);
+      }
+      if (((bitField0_ & 0x00800000) == 0x00800000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(25, lightSensor_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1067,6 +2176,7 @@ public final class DataInputProtos {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getLightSensorFieldBuilder();
         }
       }
       private static Builder create() {
@@ -1115,6 +2225,18 @@ public final class DataInputProtos {
         bitField0_ = (bitField0_ & ~0x00040000);
         audioPeakEnergyDb_ = 0;
         bitField0_ = (bitField0_ & ~0x00080000);
+        pressure_ = 0;
+        bitField0_ = (bitField0_ & ~0x00100000);
+        tvoc_ = 0;
+        bitField0_ = (bitField0_ & ~0x00200000);
+        co2_ = 0;
+        bitField0_ = (bitField0_ & ~0x00400000);
+        if (lightSensorBuilder_ == null) {
+          lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
+        } else {
+          lightSensorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00800000);
         return this;
       }
 
@@ -1223,6 +2345,26 @@ public final class DataInputProtos {
           to_bitField0_ |= 0x00080000;
         }
         result.audioPeakEnergyDb_ = audioPeakEnergyDb_;
+        if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+          to_bitField0_ |= 0x00100000;
+        }
+        result.pressure_ = pressure_;
+        if (((from_bitField0_ & 0x00200000) == 0x00200000)) {
+          to_bitField0_ |= 0x00200000;
+        }
+        result.tvoc_ = tvoc_;
+        if (((from_bitField0_ & 0x00400000) == 0x00400000)) {
+          to_bitField0_ |= 0x00400000;
+        }
+        result.co2_ = co2_;
+        if (((from_bitField0_ & 0x00800000) == 0x00800000)) {
+          to_bitField0_ |= 0x00800000;
+        }
+        if (lightSensorBuilder_ == null) {
+          result.lightSensor_ = lightSensor_;
+        } else {
+          result.lightSensor_ = lightSensorBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1303,11 +2445,29 @@ public final class DataInputProtos {
         if (other.hasAudioPeakEnergyDb()) {
           setAudioPeakEnergyDb(other.getAudioPeakEnergyDb());
         }
+        if (other.hasPressure()) {
+          setPressure(other.getPressure());
+        }
+        if (other.hasTvoc()) {
+          setTvoc(other.getTvoc());
+        }
+        if (other.hasCo2()) {
+          setCo2(other.getCo2());
+        }
+        if (other.hasLightSensor()) {
+          mergeLightSensor(other.getLightSensor());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
+        if (hasLightSensor()) {
+          if (!getLightSensor().isInitialized()) {
+            
+            return false;
+          }
+        }
         return true;
       }
 
@@ -2083,6 +3243,266 @@ public final class DataInputProtos {
         audioPeakEnergyDb_ = 0;
         onChanged();
         return this;
+      }
+
+      private int pressure_ ;
+      /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
+       * <pre>
+       * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+       * </pre>
+       */
+      public boolean hasPressure() {
+        return ((bitField0_ & 0x00100000) == 0x00100000);
+      }
+      /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
+       * <pre>
+       * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+       * </pre>
+       */
+      public int getPressure() {
+        return pressure_;
+      }
+      /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
+       * <pre>
+       * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+       * </pre>
+       */
+      public Builder setPressure(int value) {
+        bitField0_ |= 0x00100000;
+        pressure_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
+       * <pre>
+       * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+       * </pre>
+       */
+      public Builder clearPressure() {
+        bitField0_ = (bitField0_ & ~0x00100000);
+        pressure_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int tvoc_ ;
+      /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
+       * <pre>
+       *from 0 - 1000 ppb
+       * </pre>
+       */
+      public boolean hasTvoc() {
+        return ((bitField0_ & 0x00200000) == 0x00200000);
+      }
+      /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
+       * <pre>
+       *from 0 - 1000 ppb
+       * </pre>
+       */
+      public int getTvoc() {
+        return tvoc_;
+      }
+      /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
+       * <pre>
+       *from 0 - 1000 ppb
+       * </pre>
+       */
+      public Builder setTvoc(int value) {
+        bitField0_ |= 0x00200000;
+        tvoc_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
+       * <pre>
+       *from 0 - 1000 ppb
+       * </pre>
+       */
+      public Builder clearTvoc() {
+        bitField0_ = (bitField0_ & ~0x00200000);
+        tvoc_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int co2_ ;
+      /**
+       * <code>optional int32 co2 = 24;</code>
+       *
+       * <pre>
+       *from 400 - 5000 ppm
+       * </pre>
+       */
+      public boolean hasCo2() {
+        return ((bitField0_ & 0x00400000) == 0x00400000);
+      }
+      /**
+       * <code>optional int32 co2 = 24;</code>
+       *
+       * <pre>
+       *from 400 - 5000 ppm
+       * </pre>
+       */
+      public int getCo2() {
+        return co2_;
+      }
+      /**
+       * <code>optional int32 co2 = 24;</code>
+       *
+       * <pre>
+       *from 400 - 5000 ppm
+       * </pre>
+       */
+      public Builder setCo2(int value) {
+        bitField0_ |= 0x00400000;
+        co2_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 co2 = 24;</code>
+       *
+       * <pre>
+       *from 400 - 5000 ppm
+       * </pre>
+       */
+      public Builder clearCo2() {
+        bitField0_ = (bitField0_ & ~0x00400000);
+        co2_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder> lightSensorBuilder_;
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public boolean hasLightSensor() {
+        return ((bitField0_ & 0x00800000) == 0x00800000);
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getLightSensor() {
+        if (lightSensorBuilder_ == null) {
+          return lightSensor_;
+        } else {
+          return lightSensorBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public Builder setLightSensor(com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data value) {
+        if (lightSensorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          lightSensor_ = value;
+          onChanged();
+        } else {
+          lightSensorBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00800000;
+        return this;
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public Builder setLightSensor(
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder builderForValue) {
+        if (lightSensorBuilder_ == null) {
+          lightSensor_ = builderForValue.build();
+          onChanged();
+        } else {
+          lightSensorBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00800000;
+        return this;
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public Builder mergeLightSensor(com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data value) {
+        if (lightSensorBuilder_ == null) {
+          if (((bitField0_ & 0x00800000) == 0x00800000) &&
+              lightSensor_ != com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance()) {
+            lightSensor_ =
+              com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.newBuilder(lightSensor_).mergeFrom(value).buildPartial();
+          } else {
+            lightSensor_ = value;
+          }
+          onChanged();
+        } else {
+          lightSensorBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00800000;
+        return this;
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public Builder clearLightSensor() {
+        if (lightSensorBuilder_ == null) {
+          lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
+          onChanged();
+        } else {
+          lightSensorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00800000);
+        return this;
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder getLightSensorBuilder() {
+        bitField0_ |= 0x00800000;
+        onChanged();
+        return getLightSensorFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder getLightSensorOrBuilder() {
+        if (lightSensorBuilder_ != null) {
+          return lightSensorBuilder_.getMessageOrBuilder();
+        } else {
+          return lightSensor_;
+        }
+      }
+      /**
+       * <code>optional .periodic_data.light_data light_sensor = 25;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder> 
+          getLightSensorFieldBuilder() {
+        if (lightSensorBuilder_ == null) {
+          lightSensorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder>(
+                  getLightSensor(),
+                  getParentForChildren(),
+                  isClean());
+          lightSensor_ = null;
+        }
+        return lightSensorBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:periodic_data)
@@ -3383,6 +4803,12 @@ public final class DataInputProtos {
         memoizedIsInitialized = 0;
         return false;
       }
+      for (int i = 0; i < getDataCount(); i++) {
+        if (!getData(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -3754,6 +5180,12 @@ public final class DataInputProtos {
         if (!hasFirmwareVersion()) {
           
           return false;
+        }
+        for (int i = 0; i < getDataCount(); i++) {
+          if (!getData(i).isInitialized()) {
+            
+            return false;
+          }
         }
         return true;
       }
@@ -6717,6 +8149,11 @@ public final class DataInputProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_periodic_data_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_periodic_data_light_data_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_periodic_data_light_data_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_batched_periodic_data_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -6745,7 +8182,7 @@ public final class DataInputProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\025periodic.server.proto\"\330\003\n\rperiodic_dat" +
+      "\n\025periodic.server.proto\"\253\005\n\rperiodic_dat" +
       "a\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013t" +
       "emperature\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004du" +
       "st\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021l" +
@@ -6757,25 +8194,30 @@ public final class DataInputProtos {
       "io_num_disturbances\030\022 \001(\005\022(\n audio_peak_",
       "disturbance_energy_db\030\023 \001(\005\022\'\n\037audio_pea" +
       "k_background_energy_db\030\024 \001(\005\022\034\n\024audio_pe" +
-      "ak_energy_db\030\025 \001(\005\"\201\003\n\025batched_periodic_" +
-      "data\022\034\n\004data\030\001 \003(\0132\016.periodic_data\022\021\n\tde" +
-      "vice_id\030\002 \002(\t\022\030\n\020firmware_version\030\003 \002(\005\022" +
-      "\030\n\020uptime_in_second\030\004 \001(\005\022\026\n\016connected_s" +
-      "sid\030\007 \001(\t\0226\n\004scan\030\n \003(\0132(.batched_period" +
-      "ic_data.wifi_access_point\022\031\n\021messages_in" +
-      "_queue\030\013 \001(\005\032\227\001\n\021wifi_access_point\022\014\n\004ss" +
-      "id\030\001 \001(\t\022\014\n\004rssi\030\002 \001(\005\022E\n\007antenna\030\003 \001(\0162",
-      "4.batched_periodic_data.wifi_access_poin" +
-      "t.AntennaType\"\037\n\013AntennaType\022\007\n\003IFA\020\001\022\007\n" +
-      "\003PCB\020\002\"7\n\017AccountMetadata\022\022\n\naccount_id\030" +
-      "\001 \001(\003\022\020\n\010timezone\030\002 \001(\t\"\346\001\n\027BatchPeriodi" +
-      "cDataWorker\022$\n\004data\030\001 \001(\0132\026.batched_peri" +
-      "odic_data\022\022\n\nip_address\030\002 \001(\t\022\023\n\013receive" +
-      "d_at\030\003 \001(\003\022\030\n\020uptime_in_second\030\004 \001(\005\022#\n\t" +
-      "timezones\030\005 \003(\0132\020.AccountMetadata\022\037\n\027fir" +
-      "mware_middle_version\030\006 \001(\t\022\034\n\024firmware_t" +
-      "op_version\030\007 \001(\tB-\n\032com.hello.suripu.api",
-      ".inputB\017DataInputProtos"
+      "ak_energy_db\030\025 \001(\005\022\020\n\010pressure\030\026 \001(\r\022\014\n\004" +
+      "tvoc\030\027 \001(\005\022\013\n\003co2\030\030 \001(\005\022/\n\014light_sensor\030" +
+      "\031 \001(\0132\031.periodic_data.light_data\032s\n\nligh" +
+      "t_data\022\t\n\001r\030\001 \002(\005\022\t\n\001g\030\002 \002(\005\022\t\n\001b\030\003 \002(\005\022" +
+      "\020\n\010infrared\030\004 \001(\005\022\r\n\005clear\030\005 \001(\005\022\021\n\tlux_" +
+      "count\030\006 \001(\005\022\020\n\010uv_count\030\007 \001(\005\"\201\003\n\025batche" +
+      "d_periodic_data\022\034\n\004data\030\001 \003(\0132\016.periodic" +
+      "_data\022\021\n\tdevice_id\030\002 \002(\t\022\030\n\020firmware_ver",
+      "sion\030\003 \002(\005\022\030\n\020uptime_in_second\030\004 \001(\005\022\026\n\016" +
+      "connected_ssid\030\007 \001(\t\0226\n\004scan\030\n \003(\0132(.bat" +
+      "ched_periodic_data.wifi_access_point\022\031\n\021" +
+      "messages_in_queue\030\013 \001(\005\032\227\001\n\021wifi_access_" +
+      "point\022\014\n\004ssid\030\001 \001(\t\022\014\n\004rssi\030\002 \001(\005\022E\n\007ant" +
+      "enna\030\003 \001(\01624.batched_periodic_data.wifi_" +
+      "access_point.AntennaType\"\037\n\013AntennaType\022" +
+      "\007\n\003IFA\020\001\022\007\n\003PCB\020\002\"7\n\017AccountMetadata\022\022\n\n" +
+      "account_id\030\001 \001(\003\022\020\n\010timezone\030\002 \001(\t\"\346\001\n\027B" +
+      "atchPeriodicDataWorker\022$\n\004data\030\001 \001(\0132\026.b",
+      "atched_periodic_data\022\022\n\nip_address\030\002 \001(\t" +
+      "\022\023\n\013received_at\030\003 \001(\003\022\030\n\020uptime_in_secon" +
+      "d\030\004 \001(\005\022#\n\ttimezones\030\005 \003(\0132\020.AccountMeta" +
+      "data\022\037\n\027firmware_middle_version\030\006 \001(\t\022\034\n" +
+      "\024firmware_top_version\030\007 \001(\tB-\n\032com.hello" +
+      ".suripu.api.inputB\017DataInputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -6794,7 +8236,13 @@ public final class DataInputProtos {
     internal_static_periodic_data_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_periodic_data_descriptor,
-        new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", "AudioNumDisturbances", "AudioPeakDisturbanceEnergyDb", "AudioPeakBackgroundEnergyDb", "AudioPeakEnergyDb", });
+        new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", "AudioNumDisturbances", "AudioPeakDisturbanceEnergyDb", "AudioPeakBackgroundEnergyDb", "AudioPeakEnergyDb", "Pressure", "Tvoc", "Co2", "LightSensor", });
+    internal_static_periodic_data_light_data_descriptor =
+      internal_static_periodic_data_descriptor.getNestedTypes().get(0);
+    internal_static_periodic_data_light_data_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_periodic_data_light_data_descriptor,
+        new java.lang.String[] { "R", "G", "B", "Infrared", "Clear", "LuxCount", "UvCount", });
     internal_static_batched_periodic_data_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_batched_periodic_data_fieldAccessorTable = new
