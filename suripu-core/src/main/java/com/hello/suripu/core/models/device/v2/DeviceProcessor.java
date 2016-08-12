@@ -256,18 +256,7 @@ public class DeviceProcessor {
 
 
         // Special case: we want to hide the low warning battery for new accounts
-        final List<Pill> pillsWithBatteryWarningHidden = new ArrayList<>();
-
-        for(final Pill pill : pills) {
-            if(pill.batteryLevelOptional.isPresent() && pill.batteryLevelOptional.get() <= BATTERY_LEVEL_LOW_BATTERY_WARNING) {
-                LOGGER.warn("message=low-battery-new-account account_id={}", account.id.get());
-                final Pill updated = Pill.withState(pill, Pill.State.NORMAL);
-                pillsWithBatteryWarningHidden.add(updated);
-                analyticsTracker.trackLowBattery(pill, account);
-            }
-        }
-
-        return pillsWithBatteryWarningHidden;
+        return DeviceProcessor.replaceBatteryWarning(pills, account, analyticsTracker);
     }
 
     @VisibleForTesting
@@ -398,4 +387,22 @@ public class DeviceProcessor {
         }
     }
 
+
+    public static List<Pill> replaceBatteryWarning(final List<Pill> pills, final Account account, final AnalyticsTracker tracker) {
+        final List<Pill> pillsWithBatteryWarningHidden = new ArrayList<>();
+
+        for(Pill pill : pills) {
+            if(pill.batteryLevelOptional.isPresent()) {
+
+                if(pill.batteryLevelOptional.get() <= BATTERY_LEVEL_LOW_BATTERY_WARNING) {
+                    LOGGER.warn("message=low-battery-new-account account_id={}", account.id.get());
+                    pill = Pill.withState(pill, Pill.State.NORMAL);
+                    tracker.trackLowBattery(pill, account);
+                }
+            }
+            pillsWithBatteryWarningHidden.add(pill);
+        }
+
+        return pillsWithBatteryWarningHidden;
+    }
 }
