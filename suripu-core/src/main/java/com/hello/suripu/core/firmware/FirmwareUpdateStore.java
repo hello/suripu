@@ -128,7 +128,9 @@ public class FirmwareUpdateStore implements FirmwareUpdateStoreInterface {
                 LOGGER.error("error=invalid-metadata-sha filename={}", s3Key);
             }
         } else {
-            fileDownloadBuilder.setSha1(ByteString.copyFrom(helper.computeSha1ForS3File(s3Key)));
+            final FileMetaData metaData = helper.fileMetadata(s3Key);
+            fileDownloadBuilder.setSha1(ByteString.copyFrom(metaData.sha1()));
+            fileDownloadBuilder.setFileSize(metaData.filesize());
         }
 
         final boolean copyToSerialFlash = fileInfo.copyToSerialFlash;
