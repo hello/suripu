@@ -255,7 +255,7 @@ public class InsightProcessor {
         }
 
         //logic for generating old random insight
-        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTimeUTC, featureFlipper);
+        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTimeLocal, featureFlipper);
         if (toGenerateRandomCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateRandomCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateRandomCategory.get());
@@ -270,7 +270,7 @@ public class InsightProcessor {
         if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_MARKETING_SCHEDULE, accountId, Collections.EMPTY_LIST)) {
             toGenerateOneTimeCategory = Optional.absent();
         } else {
-            toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTimeUTC);
+            toGenerateOneTimeCategory = selectMarketingInsightToGenerate(accountId, currentTimeLocal);
         }
 
         if (toGenerateOneTimeCategory.isPresent()) {
@@ -304,6 +304,7 @@ public class InsightProcessor {
     }
 
     public Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeLocal, final RolloutClient featureFlipper) {
+        //ToDo: For the next high priority insight, do not add to this list. This requries a fleshed out eligibility check for all high priority insights
         //Limit insight check time window
         if (currentTimeLocal.getHourOfDay() >= HIGH_PRIORITY_START_TIME && currentTimeLocal.getHourOfDay() <= HIGH_PRIORITY_END_TIME ){
             //SLEEP_DEPRIVATION
@@ -315,23 +316,22 @@ public class InsightProcessor {
             }
         }
 
-        //TODO: Read category to generate off of an external file to allow for most flexibility
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTimeUTC) {
+    private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTimeLocal) {
         //Get all historical insight categories
         final Optional<MarketingInsightsSeen> marketingInsightsSeenOptional = marketingInsightsSeenDAODynamoDB.getSeenCategories(accountId);
         if (!marketingInsightsSeenOptional.isPresent()) {
-            return selectMarketingInsightToGenerate(currentTimeUTC, new HashSet<InsightCard.Category>(), RANDOM, currentTimeUTC.minusDays(1));
+            return selectMarketingInsightToGenerate(currentTimeLocal, new HashSet<InsightCard.Category>(), RANDOM, currentTimeLocal.minusDays(1));
         }
 
-        return selectMarketingInsightToGenerate(currentTimeUTC, marketingInsightsSeenOptional.get().seenCategories, RANDOM, marketingInsightsSeenOptional.get().updated);
+        return selectMarketingInsightToGenerate(currentTimeLocal, marketingInsightsSeenOptional.get().seenCategories, RANDOM, marketingInsightsSeenOptional.get().updated);
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTimeUTC, final Set<InsightCard.Category> marketingSeenCategories, final Random random, final DateTime lastUpdate) {
-        final DateTime today = currentTimeUTC.withTimeAtStartOfDay(); //currentTime is DateTime.now() - UTC
+    public Optional<InsightCard.Category> selectMarketingInsightToGenerate(final DateTime currentTimeLocal, final Set<InsightCard.Category> marketingSeenCategories, final Random random, final DateTime lastUpdate) {
+        final DateTime today = currentTimeLocal.withTimeAtStartOfDay(); //currentTime is DateTime.now() - UTC
         final DateTime lastMarketingUpdate = lastUpdate.withTimeAtStartOfDay(); //parameter is updated_utc
 
         //Already generated marketing insight today. skip
@@ -339,7 +339,7 @@ public class InsightProcessor {
             return Optional.absent();
         }
 
-        final Integer dayOfMonth = currentTimeUTC.getDayOfMonth();
+        final Integer dayOfMonth = currentTimeLocal.getDayOfMonth();
         LOGGER.debug("The day of the month is {}", dayOfMonth);
 
         //Check date condition
@@ -383,7 +383,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeUTC, final RolloutClient featureFlipper) {
+    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeLocal, final RolloutClient featureFlipper) {
 
         /* randomly select a card that hasn't been generated recently - TODO when we have all categories
         final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
@@ -395,7 +395,7 @@ public class InsightProcessor {
         */
 
         //Generate some Insights based on day of month - once every 9 days TODO: randomly generate old Insight on day of week if has not been generated in a while
-        final Integer dayOfMonth = currentTimeUTC.getDayOfMonth();
+        final Integer dayOfMonth = currentTimeLocal.getDayOfMonth();
         LOGGER.debug("The day of the month is {}", dayOfMonth);
 
         switch (dayOfMonth) {
