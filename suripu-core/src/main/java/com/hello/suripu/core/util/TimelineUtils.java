@@ -1113,7 +1113,7 @@ public class TimelineUtils {
 
     }
 
-    public List<Event> getLightEvents(List<Sample> lightData) {
+    public List<Event> getLightEvents(Optional<Long> sleepTime, List<Sample> lightData) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1134,7 +1134,7 @@ public class TimelineUtils {
 
         final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
 
-        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData, sleepTime);
 
         // convert segments to Events
         final List<Event> events = new ArrayList<>();
@@ -1187,7 +1187,7 @@ public class TimelineUtils {
 
         final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
 
-        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData, Optional.<Long>absent());
 
         // convert segments to Events
         final List<Event> events = new ArrayList<>();
