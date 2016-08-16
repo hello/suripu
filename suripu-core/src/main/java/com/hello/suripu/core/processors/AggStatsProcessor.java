@@ -154,7 +154,7 @@ public class AggStatsProcessor {
         final Optional<AggStats> aggStats = computeAggStatsForDay(accountId, deviceId, targetDateLocal, timeZoneOffset);
         LOGGER.debug("action=computed-agg-stats account_id={} target_date_local={} present={}", accountId, targetDateLocal.toString(), aggStats.isPresent());
         if (!aggStats.isPresent()) {
-            LOGGER.info("action=do-nothing reason=agg-stats-absent");
+            LOGGER.info("action=do-nothing reason=agg-stats-absent account_id={}", accountId);
             return Boolean.FALSE;
         }
 
@@ -176,18 +176,11 @@ public class AggStatsProcessor {
     }
 
     //Method for backfilling - called by admin endpoint
-    public Boolean generatePastAggStat(final DeviceAccountPair deviceAccountPair, final DateTime targetDateLocal, final Boolean overwrite) {
+    public Boolean generatePastAggStat(final DeviceAccountPair deviceAccountPair, final DateTime targetDateLocal, final Integer timeZoneOffset, final Boolean overwrite) {
 
-        //Check that targetDateLocal passed in is reasonable
         final Long accountId = deviceAccountPair.accountId;
-        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
-        if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("method=past-aggstat action=skip-compute-agg-stats reason=timezoneoffset-absent account_id={}", accountId);
-            return Boolean.FALSE;
-        }
-        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
-        final DateTime utcNow = DateTime.now();
+        final DateTime utcNow = DateTime.now(DateTimeZone.UTC);
         final DateTime localNow = utcNow.plusMillis(timeZoneOffset);
         final DateTime latestAllowedDate = localNow.minusDays(1).withTimeAtStartOfDay();
 
@@ -214,7 +207,7 @@ public class AggStatsProcessor {
 
         //Save aggregate statistics
         final Boolean successInsert = saveAggStat(aggStats.get());
-        LOGGER.info("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.get().accountId);
+        LOGGER.info("action=insert-agg-stats success={} account_id={} overwite={}", successInsert.toString(), aggStats.get().accountId, overwrite.toString());
         return successInsert;
     }
 
