@@ -161,7 +161,7 @@ public class AggStatsProcessor {
         //Save aggregate statistics
         final Boolean successInsert = saveAggStat(aggStats.get());
         if (!successInsert) {
-            LOGGER.warn("action=insert-agg-stats success={} account_id={} ", successInsert.toString(), aggStats.get().accountId);
+            LOGGER.warn("action=insert-agg-stats success={} account_id={} ", successInsert, aggStats.get().accountId);
         }
 
         return successInsert;
@@ -207,7 +207,7 @@ public class AggStatsProcessor {
 
         //Save aggregate statistics
         final Boolean successInsert = saveAggStat(aggStats.get());
-        LOGGER.info("action=insert-agg-stats success={} account_id={} overwite={}", successInsert.toString(), aggStats.get().accountId, overwrite.toString());
+        LOGGER.info("action=insert-agg-stats success={} account_id={} overwite={}", successInsert, aggStats.get().accountId, overwrite);
         return successInsert;
     }
 
