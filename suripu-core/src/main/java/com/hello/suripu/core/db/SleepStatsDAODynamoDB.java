@@ -1,5 +1,8 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -21,13 +24,12 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.util.DateTimeUtil;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
