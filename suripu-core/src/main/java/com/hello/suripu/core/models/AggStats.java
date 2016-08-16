@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Insights.SumCountData;
@@ -164,4 +165,20 @@ public class AggStats {
         }
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(DeviceData.class)
+                .add("account_id", accountId)
+                .add("date_local", dateLocal)
+                .add("sense_id", externalDeviceId)
+                .add("device_data_count", deviceDataCount)
+                .add("tracker_motion_count", trackerMotionCount)
+                .add("avg_day_temp", avgDailyTemp)
+                .add("max_day_temp", maxDailyTemp)
+                .add("min_day_temp", minDailyTemp)
+                .add("avg_day_humid", avgDailyHumidity)
+                .add("avg_day_dust_density", avgDailyDustDensity)
+                .add("sum_count_mlux_hrs_map", sumCountMicroLuxHourMap)
+                .toString();
+    }
 }
