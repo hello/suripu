@@ -6,21 +6,17 @@ package com.hello.suripu.core.models.Insights.Message;
 public class LightMsgEN {
     public static Text getLightDark(final int medianLight, final int percentile) {
         return new Text("Hello, Darkness",
-                String.format("Your bedroom light level of %d lux is perfect, ", medianLight) +
-                        String.format("it is **dimmer than** %d%% of all Sense users.", 100 - percentile)
-        );
+                String.format("Your bedroom light level of %d lux is perfect, it is **dimmer than** %d%% of all Sense users.", medianLight, 100 - percentile));
     }
 
     public static Text getLightNotDarkEnough(final int medianLight, final int percentile) {
         return new Text("Hello, Almost Darkness",
-                String.format("Your bedroom light level of %d lux is close to ideal, ", medianLight) +
-                        String.format("it is **dimmer than** %d%% of all Sense users.", 100 - percentile));
+                String.format("Your bedroom light level of %d lux is close to ideal, it is **dimmer than** %d%% of all Sense users.", medianLight, 100 - percentile));
     }
 
     public static Text getLightALittleBright(final int medianLight, final int percentile) {
         return new Text("It's a Bit Bright",
-                String.format("Your bedroom light level of %d lux is a little brighter than ideal, ", medianLight) +
-                        String.format("it is **brighter than** %d%% of all Sense users.", percentile) +
+                String.format("Your bedroom light level of %d lux is a little brighter than ideal, it is **brighter than** %d%% of all Sense users.", medianLight, percentile) +
                         "\n\nTry dimming the light a little before bedtime.");
 
     }

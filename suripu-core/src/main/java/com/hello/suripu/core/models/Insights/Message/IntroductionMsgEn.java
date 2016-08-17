@@ -6,8 +6,7 @@ package com.hello.suripu.core.models.Insights.Message;
 public class IntroductionMsgEn {
     public static Text getWelcomeMessage() {
         return new Text("Nice To Meet You",
-                "Welcome to Sense. " +
-                        "This is where you'll see personalized Sleep Insights related to your sleeping patterns, habits, and bedroom."
+                "Welcome to Sense. This is where you'll see personalized Sleep Insights related to your sleeping patterns, habits, and bedroom."
         );
     }
 

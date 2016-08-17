@@ -18,34 +18,27 @@ public class TemperatureMsgTest {
 
     @Test
     public void testMessages() {
-        final String message;
         final String unit = TemperatureUnit.FAHRENHEIT.toString();
 
         Boolean contains;
 
-        message = TemperatureMsgEN.getCommonMsg(18, 20, unit);
-        contains = message.contains(unit);
-
-        LOGGER.debug("common msg: {}", message);
-        assertThat(contains, is(true));
-
         Text text;
-        text = TemperatureMsgEN.getTempMsgPerfect(message);
+        text = TemperatureMsgEN.getTempMsgPerfect(10, 20, unit);
         contains = text.message.contains(unit);
         LOGGER.debug("perfect msg: {}", text.message);
         assertThat(contains, is(true));
 
-        text = TemperatureMsgEN.getTempMsgTooCold(message, 10, unit);
+        text = TemperatureMsgEN.getTempMsgTooCold(10, 20, unit, 10);
         contains = text.message.contains(unit);
         LOGGER.debug("too cold msg: {}", text.message);
         assertThat(contains, is(true));
 
-        text = TemperatureMsgEN.getTempMsgTooHot(message, 35, unit);
+        text = TemperatureMsgEN.getTempMsgTooHot(10, 20, unit, 10);
         contains = text.message.contains(unit);
         LOGGER.debug("too hot msg: {}", text.message);
         assertThat(contains, is(true));
 
-        text = TemperatureMsgEN.getTempMsgBad(message, 16, 20, unit);
+        text = TemperatureMsgEN.getTempMsgFluctuate(10, 20, unit, 0, 5);
         contains = text.message.contains(unit);
         LOGGER.debug("too hot msg: {}", text.message);
         assertThat(contains, is(true));

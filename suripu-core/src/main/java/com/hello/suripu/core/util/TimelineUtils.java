@@ -1113,7 +1113,7 @@ public class TimelineUtils {
 
     }
 
-    public List<Event> getLightEvents(List<Sample> lightData) {
+    public List<Event> getLightEvents(Optional<Long> sleepTime, List<Sample> lightData) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1134,7 +1134,7 @@ public class TimelineUtils {
 
         final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
 
-        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData, sleepTime);
 
         // convert segments to Events
         final List<Event> events = new ArrayList<>();
@@ -1187,7 +1187,7 @@ public class TimelineUtils {
 
         final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
 
-        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData, Optional.<Long>absent());
 
         // convert segments to Events
         final List<Event> events = new ArrayList<>();
@@ -1509,18 +1509,33 @@ public class TimelineUtils {
         return ImmutableList.copyOf(filteredMotions);
     }
 
-    //checks if there is any motion observed during during sleep.
+    //checks if there is any motion observed during during sleep - We should expect some motion during sleep.
     public boolean motionDuringSleepCheck(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+
+        final float minMotionInterval = 10.0f; // must have motion events that span at least 10 mins
+        final int requiredSleepDuration = 240;
+        Long firstMotionTime = 0L;
+        Long lastMotionTime = 0L;
+
+
+        // Compute first to last motion time delta
         for (final TrackerMotion motion : trackerMotions) {
             if (motion.timestamp >= wakeUpTimestamp) {
                 break;
             }
             if (motion.timestamp > fallAsleepTimestamp) {
-                return true;
-            }
+                if (firstMotionTime == 0L) {
+                    firstMotionTime = motion.timestamp;
+                }
+                lastMotionTime = motion.timestamp;
+                }
         }
-        return false;
-
+        float sleepDuration = (float) ((double) (wakeUpTimestamp - fallAsleepTimestamp) / 60000.0);
+        float motionInterval = (int) ((double) (lastMotionTime - firstMotionTime) / 60000.0);
+        if (motionInterval < minMotionInterval && sleepDuration > requiredSleepDuration) {
+            return false;
+        }
+        return true;
     }
 
 }

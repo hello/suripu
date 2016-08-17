@@ -42,8 +42,7 @@ import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.CachedTimelines;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineResult;
-import com.hello.suripu.core.processors.TimelineProcessor;
-
+import com.hello.suripu.coredw8.timeline.InstrumentedTimelineProcessor;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -132,7 +131,7 @@ public class TimelineDAODynamoDB {
         for(final Long timelineDateLocalUTCMillis:dataFromCache.keySet()){
             if(requestDatesLocalUTCMillis.containsKey(timelineDateLocalUTCMillis)){
                 final DateTime requestDateLocalUTC = requestDatesLocalUTCMillis.get(timelineDateLocalUTCMillis);
-                if(dataFromCache.get(timelineDateLocalUTCMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(timelineDateLocalUTCMillis, DateTimeZone.UTC), now, maxInvalidateSpanInDay)){
+                if(dataFromCache.get(timelineDateLocalUTCMillis).shouldInvalidate(InstrumentedTimelineProcessor.VERSION, new DateTime(timelineDateLocalUTCMillis, DateTimeZone.UTC), now, maxInvalidateSpanInDay)){
                     this.timelineExpiredAtRequestMeter.mark();
                     continue;  // Do not return out-dated timeline from dynamoDB.
                 }
@@ -379,7 +378,7 @@ public class TimelineDAODynamoDB {
                 item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateOfNightLocalUTC)));
                 item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
-                item.put(VERSION, new AttributeValue().withS(TimelineProcessor.VERSION));
+                item.put(VERSION, new AttributeValue().withS(InstrumentedTimelineProcessor.VERSION));
                 item.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(String.valueOf(DateTime.now().plusHours(3).getMillis())));
 
                 final int compressType = Compression.CompressionType.NONE.getValue();

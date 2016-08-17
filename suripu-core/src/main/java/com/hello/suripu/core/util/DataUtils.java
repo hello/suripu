@@ -112,6 +112,12 @@ public class DataUtils{
         return dbIntToFloat(valueFromDatabase - TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS);
     }
 
+    public static int celsiusToFahrenheit(final double value) { return (int) Math.round((value * 9.0) / 5.0) + 32; }
+
+    public static int fahrenheitToCelsius(final double value) {
+        return (int) ((value - 32.0) * (5.0/9.0));
+    }
+
     public static float calibrateLight(final float lightInLux, Device.Color color) {
         float calibratedLight = lightInLux;
 

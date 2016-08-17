@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors.insights;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -85,6 +86,7 @@ public class TemperatureHumidity {
         return card;
     }
 
+    @VisibleForTesting
     public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data,
                                                     final TemperatureUnit tempUnit) {
 
@@ -103,14 +105,13 @@ public class TemperatureHumidity {
 
         final double tmpMinValue = stats.getMin();
         final int minTempC = (int) tmpMinValue;
-        final int minTempF = celsiusToFahrenheit(tmpMinValue);
+        final int minTempF = DataUtils.celsiusToFahrenheit(tmpMinValue);
 
         final double tmpMaxValue = stats.getMax();
         final int maxTempC = (int) tmpMaxValue;
-        final int maxTempF = celsiusToFahrenheit(tmpMaxValue);
+        final int maxTempF = DataUtils.celsiusToFahrenheit(tmpMaxValue);
         LOGGER.debug("Temp for account {}: min {}, max {}", accountId, minTempF, maxTempF);
 
-        // TODO: edits
         // Units for passing into TemperatureMsgEN
         int minTemp = minTempC;
         int maxTemp = maxTempC;
@@ -126,37 +127,27 @@ public class TemperatureHumidity {
         /* Possible cases
                     min                       max
                     |------ ideal range ------|
-            |----|                              |-----|
+            |----|                               |-----|
             too cold                            too hot
 
-                |------|                  |-------|
-                a little cold               a little warm
+            |----------------|      |------------------|
+                too cold                   too hot
 
-                |-------- way out of range! -------|
+            |---------- too much fluctuation ---------|
          */
 
         Text text;
-        final String commonMsg = TemperatureMsgEN.getCommonMsg(minTemp, maxTemp, tempUnit.toString());
 
         //careful: comparisons are done in user's own units, TemperatureMsgEN also gets passed user's own units.
-        if (idealMin <= minTemp && maxTemp <= idealMax) {
-            text = TemperatureMsgEN.getTempMsgPerfect(commonMsg);
-
-        } else if (maxTemp < idealMin) {
-            text = TemperatureMsgEN.getTempMsgTooCold(commonMsg, idealMin, tempUnit.toString());
-
-        } else if (minTemp > idealMax) {
-            text = TemperatureMsgEN.getTempMsgTooHot(commonMsg, idealMax, tempUnit.toString());
-
+        if (minTemp >= idealMin && maxTemp <= idealMax) {
+            text = TemperatureMsgEN.getTempMsgPerfect(minTemp, maxTemp, tempUnit.toString());
         } else if (minTemp < idealMin && maxTemp <= idealMax) {
-            text = TemperatureMsgEN.getTempMsgCool(commonMsg);
-
-        } else if (minTemp > idealMin && maxTemp > idealMax) {
-            text = TemperatureMsgEN.getTempMsgWarm(commonMsg);
-
+            text = TemperatureMsgEN.getTempMsgTooCold(minTemp, maxTemp, tempUnit.toString(), idealMin);
+        } else if (maxTemp > idealMax && minTemp >= idealMin) {
+            text = TemperatureMsgEN.getTempMsgTooHot(minTemp, maxTemp, tempUnit.toString(), idealMax);
         } else {
             // both min and max are outside of ideal range
-            text = TemperatureMsgEN.getTempMsgBad(commonMsg, idealMin, idealMax, tempUnit.toString());
+            text = TemperatureMsgEN.getTempMsgFluctuate(minTemp, maxTemp, tempUnit.toString(), idealMin, idealMax);
         }
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
@@ -164,11 +155,5 @@ public class TemperatureHumidity {
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
-    private static int celsiusToFahrenheit(final double value) {
-        return (int) Math.round((value * 9.0) / 5.0) + 32;
-    }
 
-    private static int fahrenheitToCelsius(final double value) {
-        return (int) ((value - 32.0) * (5.0/9.0));
-    }
 }
