@@ -54,8 +54,8 @@ public class SpeechResultDAODynamoDB {
         COMMAND("cmd", "S", ":cmd"),
         WAKE_ID("wake_id", "N", "wid"),             // wake-word ID
         WAKE_CONFIDENCE("wake_conf", "NS", "wc"),   // confidence of all wake-words
-        RESULT("result", "S", "res"),
-        RESPONSE_TEXT("resp_text", "S", ":rt"),     // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        RESULT("result", "S", "res"),               // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        RESPONSE_TEXT("resp_text", "S", ":rt"),
         UPDATED("updated", "S", ":up");
 
         private final String name;
