@@ -122,38 +122,38 @@ public class SpeechResult {
             return this;
         }
 
-        Builder withDateTimeUTC(final DateTime dateTimeUTC) {
+        public Builder withDateTimeUTC(final DateTime dateTimeUTC) {
             this.dateTimeUTC = dateTimeUTC;
             this.updatedUTC = dateTimeUTC;
             return this;
         }
 
-        Builder withUpdatedUTC(final DateTime updatedUTC) {
+        public Builder withUpdatedUTC(final DateTime updatedUTC) {
             this.updatedUTC = updatedUTC;
             return this;
         }
 
-        Builder withSenseId (final String id) {
+        public Builder withSenseId (final String id) {
             this.senseId = id;
             return this;
         }
 
-        Builder withAudioIndentifier(final String audioIdentifier) {
+        public Builder withAudioIndentifier(final String audioIdentifier) {
             this.audioIdentifier = audioIdentifier;
             return this;
         }
 
-        Builder withText(final String text) {
+        public Builder withText(final String text) {
             this.text = text;
             return this;
         }
 
-        Builder withResponseText(final String text) {
+        public Builder withResponseText(final String text) {
             this.responseText= text;
             return this;
         }
 
-        Builder withService(final SpeechToTextService service) {
+        public Builder withService(final SpeechToTextService service) {
             this.service = service;
             return this;
         }
