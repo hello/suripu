@@ -199,15 +199,15 @@ public class AggStatsProcessor {
         }
 
         final Optional<AggStats> aggStats = computeAggStatsForDay(accountId, deviceId, targetDateLocal, timeZoneOffset);
-        LOGGER.debug("action=computed-agg-stats account_id={} target_date_local={} present={}", accountId, targetDateLocal.toString(), aggStats.isPresent());
+        LOGGER.trace("action=computed-agg-stats account_id={} target_date_local={} present={}", accountId, targetDateLocal.toString(), aggStats.isPresent());
         if (!aggStats.isPresent()) {
-            LOGGER.info("action=do-nothing reason=agg-stats-absent");
+            LOGGER.trace("action=do-nothing reason=agg-stats-absent");
             return Boolean.FALSE;
         }
 
         //Save aggregate statistics
         final Boolean successInsert = saveAggStat(aggStats.get());
-        LOGGER.info("action=insert-agg-stats success={} account_id={} overwite={}", successInsert, aggStats.get().accountId, overwrite);
+        LOGGER.trace("action=insert-agg-stats success={} account_id={} overwrite={}", successInsert, aggStats.get().accountId, overwrite);
         return successInsert;
     }
 
