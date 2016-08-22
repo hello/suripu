@@ -167,7 +167,7 @@ public class AggStats {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(DeviceData.class)
+        return MoreObjects.toStringHelper(AggStats.class)
                 .add("account_id", accountId)
                 .add("date_local", dateLocal)
                 .add("sense_id", externalDeviceId)
