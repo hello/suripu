@@ -64,12 +64,14 @@ public class DynamoDBSwapper implements Swapper {
             return SwapResult.failed(SwapResult.Error.SOMETHING_ELSE);
         }
 
+        final List<Long> accountIds = new ArrayList<>();
         final List<Item> updatedItems = new ArrayList<>();
         for(Item item : itemList) {
             final Item updated = item.withPrimaryKey(
                     "device_id", swapIntent.newSenseId(),
                     "account_id", item.getLong("account_id")
             );
+            accountIds.add(item.getLong("account_id"));
             updatedItems.add(updated);
         }
 
@@ -79,7 +81,18 @@ public class DynamoDBSwapper implements Swapper {
         if(!outcome.getUnprocessedItems().isEmpty()) {
             return SwapResult.failed(SwapResult.Error.SOMETHING_ELSE);
         }
-        return SwapResult.success();
+
+        int accountSwapped = 0;
+        for(final Long accountId : accountIds) {
+            try {
+                deviceDAO.registerSense(accountId, swapIntent.newSenseId());
+                accountSwapped += 1;
+            } catch (Exception e) {
+                LOGGER.error("action=swap-sense error=failed-registration sense_id={} account_id={}", swapIntent.newSenseId(), accountId);
+            }
+        }
+
+        return (accountSwapped == accountIds.size()) ? SwapResult.success() : SwapResult.failed(SwapResult.Error.SOMETHING_ELSE);
     }
 
     @Override
@@ -110,6 +123,7 @@ public class DynamoDBSwapper implements Swapper {
         final ItemCollection<QueryOutcome> queryOutcomeItemCollection = table.query(new KeyAttribute("sense_id", senseId),
                 new RangeKeyCondition("attempted_at").between(start, end)
         );
+
         final List<Item> items = queryOutcomeItemCollection.firstPage().getLowLevelResult().getItems();
         if(items.isEmpty()) {
             LOGGER.warn("action=query-swap result=no-swap-intent sense_id={} start={} end={}", senseId, start, end);
