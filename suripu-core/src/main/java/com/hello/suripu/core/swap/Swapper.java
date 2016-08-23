@@ -6,5 +6,6 @@ public interface Swapper {
     SwapResult swap(SwapIntent intent);
     void create(SwapIntent intent);
     Optional<SwapIntent> query(String senseId);
+    Optional<SwapIntent> query(String senseId, int minutesAgo);
     Optional<SwapIntent> eligible(Long accountId, String senseId);
 }

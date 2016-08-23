@@ -35,6 +35,7 @@ import java.util.List;
 public class DynamoDBSwapper implements Swapper {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DynamoDBSwapper.class);
+    private final static Integer DEFAULT_QUERY_INTERVAL = 15;
 
     private final DeviceDAO deviceDAO;
     private final DynamoDB dynamoDB;
@@ -97,14 +98,21 @@ public class DynamoDBSwapper implements Swapper {
 
     @Override
     public Optional<SwapIntent> query(final String senseId) {
+        return query(senseId, DEFAULT_QUERY_INTERVAL);
+    }
+
+    @Override
+    public Optional<SwapIntent> query(String senseId, int minutesAgo) {
         final Table table = dynamoDB.getTable(swapTableName);
+        final String start = DateTime.now(DateTimeZone.UTC).minusMinutes(minutesAgo).toString();
+        final String end = DateTime.now(DateTimeZone.UTC).plusMinutes(1).toString();
+
         final ItemCollection<QueryOutcome> queryOutcomeItemCollection = table.query(new KeyAttribute("sense_id", senseId),
-                new RangeKeyCondition("attempted_at").between(
-                        DateTime.now(DateTimeZone.UTC).minusMinutes(15).toString(),
-                        DateTime.now(DateTimeZone.UTC).toString()
-        ));
+                new RangeKeyCondition("attempted_at").between(start, end)
+        );
         final List<Item> items = queryOutcomeItemCollection.firstPage().getLowLevelResult().getItems();
         if(items.isEmpty()) {
+            LOGGER.warn("action=query-swap result=no-swap-intent sense_id={} start={} end={}", senseId, start, end);
             return Optional.absent();
         }
         // Assuming ordered list
