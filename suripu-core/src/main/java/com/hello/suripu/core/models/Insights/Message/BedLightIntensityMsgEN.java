@@ -15,20 +15,20 @@ public class BedLightIntensityMsgEN {
     public static Text getMoreThanOne(final int nightRatio) {
         return new Text("Who's on first?",
                 "You're exposed to a bit more light at night than you are in the morning. " +
-                        "This can upset your biological clock, and make it harder to fall asleep at night. " +
+                        "This can throw your biological clock out of sync, and make it harder to fall asleep at night. " +
                         "Try dimming your lights at night, and opening your drapes to let in some natural light in the morning.");
     }
 
     public static Text getMoreThanTwo(final int nightRatio) {
         return new Text("What happens once will never...",
                 "You're exposed to more light at night than you are in the morning. " +
-                        "This can upset your biological clock, and make it harder to fall asleep at night. " +
+                        "This can throw your biological clock out of sync, and make it harder to fall asleep at night. " +
                         "Try dimming your lights at night, and opening your drapes to let in some natural light in the morning.");
     }
     public static Text getMoreThanThree(final int nightRatio) {
         return new Text("Three time's the charm",
                 "You're exposed to significantly more light at night than you are in the morning. " +
-                        "This can upset your biological clock, and make it much harder to fall asleep at night. " +
+                        "This can throw your biological clock out of sync, and make it much harder to fall asleep at night. " +
                         "Try dimming your lights at night, and opening your drapes to let in some natural light in the morning.");
     }
 

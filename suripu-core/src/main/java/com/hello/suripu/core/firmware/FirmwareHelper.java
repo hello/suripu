@@ -41,12 +41,19 @@ public interface FirmwareHelper {
 
 
     /**
-     * Computes Sha1 of object identified as filename
+     * Computes Sha1 of object identified by filename
      * @param filename
      * @return
      */
     byte[] computeSha1ForS3File(final String filename);
 
+
+    /**
+     * Computes metadata of object identified by filename
+     * @param filename
+     * @return
+     */
+    FileMetaData fileMetadata(final String filename);
 
     /**
      * Sign a url with expiration time.

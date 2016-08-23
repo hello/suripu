@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,15 +118,15 @@ public class FirmwareS3Helper implements FirmwareHelper {
 
 
     @Override
-    public byte[] computeSha1ForS3File(final String fileName) {
-        final S3Object s3Object = s3.getObject(bucketName, fileName);
+    public byte[] computeSha1ForS3File(final String filename) {
+        final S3Object s3Object = s3.getObject(bucketName, filename);
         final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
 
         try {
             return DigestUtils.sha1(s3ObjectInputStream);
 
         } catch (IOException e) {
-            LOGGER.error("Failed computing sha1 for {}", fileName);
+            LOGGER.error("Failed computing sha1 for {}", filename);
             throw new RuntimeException(e.getMessage());
         } finally {
             try {
@@ -135,6 +136,22 @@ public class FirmwareS3Helper implements FirmwareHelper {
             }
         }
     }
+
+    @Override
+    public FileMetaData fileMetadata(final String filename) {
+
+        try(final S3Object s3Object = s3.getObject(bucketName, filename))  {
+            final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
+            // WARNING this reads the file entirely in memory
+            byte[] body = IOUtils.toByteArray(s3ObjectInputStream);
+            return FileMetaData.create(DigestUtils.sha1(body), body.length);
+
+        } catch (IOException e) {
+            LOGGER.error("Failed computing sha1 for {}", filename);
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
 
     @Override
     public URL signUrl(final String objectName, final int expiresInMinutes) {

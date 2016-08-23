@@ -18,7 +18,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -37,9 +36,9 @@ import java.util.Set;
 /**
  * Created by ksg on 7/19/16
  */
-public class SpeechResultDynamoDBDAO {
+public class SpeechResultDAODynamoDB {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(SpeechResultDynamoDBDAO.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(SpeechResultDAODynamoDB.class);
 
     private enum SpeechToTextAttribute implements Attribute {
         SENSE_ID("sense_id", "S", ":sid"),      // Hash Key (external id)
@@ -55,8 +54,8 @@ public class SpeechResultDynamoDBDAO {
         COMMAND("cmd", "S", ":cmd"),
         WAKE_ID("wake_id", "N", "wid"),             // wake-word ID
         WAKE_CONFIDENCE("wake_conf", "NS", "wc"),   // confidence of all wake-words
-        RESULT("result", "S", "res"),
-        RESPONSE_TEXT("resp_text", "S", ":rt"),     // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        RESULT("result", "S", "res"),               // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        RESPONSE_TEXT("resp_text", "S", ":rt"),
         UPDATED("updated", "S", ":up");
 
         private final String name;
@@ -87,14 +86,14 @@ public class SpeechResultDynamoDBDAO {
 
     private final Table table;
 
-    private SpeechResultDynamoDBDAO(Table table) {
+    private SpeechResultDAODynamoDB(Table table) {
         this.table = table;
     }
 
-    public static SpeechResultDynamoDBDAO create (final AmazonDynamoDB amazonDynamoDB, final String tableName) {
+    public static SpeechResultDAODynamoDB create (final AmazonDynamoDB amazonDynamoDB, final String tableName) {
         final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
         final Table table = dynamoDB.getTable(tableName);
-        return new SpeechResultDynamoDBDAO(table);
+        return new SpeechResultDAODynamoDB(table);
     }
 
     private static final Set<SpeechToTextAttribute> TARGET_ATTRIBUTES = new ImmutableSet.Builder<SpeechToTextAttribute>()
@@ -220,20 +219,6 @@ public class SpeechResultDynamoDBDAO {
         return confidences;
     }
 
-    private Set<Number> wakewordsMapToDDBAttribute(final Map<String, Float> wakeWordsMaps) {
-        // get wake word confidence vector
-        final Set<Number> confidences = Sets.newHashSet();
-        for (final WakeWord word : WakeWord.values()) {
-            if (!word.equals(WakeWord.ERROR)) {
-                final String wakeWord = word.getWakeWordText();
-                if (wakeWordsMaps.containsKey(wakeWord)) {
-                    confidences.add(wakeWordsMaps.get(wakeWord));
-                }
-            }
-        }
-        return confidences;
-    }
-
     private SpeechResult DDBItemToSpeechResult(final Item item) {
         final SpeechToTextService service = SpeechToTextService.fromString(item.getString(SpeechToTextAttribute.SERVICE.shortName()));
         final Intention.IntentType intent = Intention.IntentType.fromString(item.getString(SpeechToTextAttribute.INTENT.shortName()));
@@ -263,7 +248,7 @@ public class SpeechResultDynamoDBDAO {
     }
 
     private Item speechResultToDDBItem(final SpeechResult speechResult) {
-        final Set<Number> confidences = wakewordsMapToDDBAttribute(speechResult.wakeWordsConfidence);
+        final Set<Number> confidences = SpeechUtils.wakewordsMapToDDBAttribute(speechResult.wakeWordsConfidence);
         final AttributeValue rangeKey = getRangeKey(speechResult.dateTimeUTC, speechResult.accountId);
 
         return new Item()

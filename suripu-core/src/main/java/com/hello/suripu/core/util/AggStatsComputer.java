@@ -24,7 +24,10 @@ public class AggStatsComputer {
     public static final int TO_MICRO_CONVERSION = 1000000;
     public static final List<Integer> LIGHT_HOUR_BUCKETS_LIST = ImmutableList.copyOf(Lists.newArrayList(22, 23, 0, 1, 2, 3, 4, 5));
 
-    public static AggStats computeAggStats(final Long accountId, final DeviceId deviceId, final DateTime dateLocal, final AggStatsInputs aggStatsInputs) {
+    public static Optional<AggStats> computeAggStats(final Long accountId, final DeviceId deviceId, final DateTime dateLocal, final AggStatsInputs aggStatsInputs) {
+        if (aggStatsInputs.deviceDataList.isEmpty()) {
+            return Optional.absent();
+        }
 
         //Initialize descriptive stats
         final DescriptiveStatistics tempRawStats = new DescriptiveStatistics();
@@ -93,7 +96,8 @@ public class AggStatsComputer {
 
                 .withSumCountMicroLuxHourMap(microLuxSumCountHourMap);
 
-        return aggStatsBuilder.build();
+        final AggStats aggStats =  aggStatsBuilder.build();
+        return Optional.of(aggStats);
     }
 
     private static int floatToMicroInt(final float datum) {

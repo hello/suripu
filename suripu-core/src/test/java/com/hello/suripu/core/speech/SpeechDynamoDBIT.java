@@ -23,7 +23,7 @@ public class SpeechDynamoDBIT {
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(SpeechDynamoDBIT.class);
 
     private AmazonDynamoDB amazonDynamoDB;
-    private SpeechResultDynamoDBDAO speechDAO;
+    private SpeechResultDAODynamoDB speechDAO;
     private String tableName = "test_speech";
 
     @Before
@@ -37,11 +37,11 @@ public class SpeechDynamoDBIT {
         this.amazonDynamoDB.setEndpoint("http://localhost:7777");
 
         try {
-            SpeechResultDynamoDBDAO.createTable(this.amazonDynamoDB, tableName);
+            SpeechResultDAODynamoDB.createTable(this.amazonDynamoDB, tableName);
         } catch (InterruptedException ie) {
             LOGGER.warn("Table already exists");
         }
-        speechDAO = SpeechResultDynamoDBDAO.create(amazonDynamoDB, tableName);
+        speechDAO = SpeechResultDAODynamoDB.create(amazonDynamoDB, tableName);
     }
 
     @After
