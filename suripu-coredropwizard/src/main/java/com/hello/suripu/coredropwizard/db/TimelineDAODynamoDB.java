@@ -42,7 +42,7 @@ import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.CachedTimelines;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineResult;
-import com.hello.suripu.coredw8.timeline.InstrumentedTimelineProcessor;
+import com.hello.suripu.coredropwizard.timeline.InstrumentedTimelineProcessor;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
