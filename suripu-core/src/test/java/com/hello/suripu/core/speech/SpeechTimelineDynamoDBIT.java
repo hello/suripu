@@ -4,6 +4,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.kms.AWSKMSClient;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -21,8 +22,10 @@ public class SpeechTimelineDynamoDBIT {
 
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(SpeechTimelineDynamoDBIT.class);
 
-    private final Long accountId = 1L;
-    private final String senseId = "sleepbetterer";
+    private static final Long accountId = 1L;
+    private static final String senseId = "sleepbetterer";
+    private static final String uuid1 = "encrypted_uuid_1";
+    private static final String uuid2 = "encrypted_uuid_2";
 
     private AmazonDynamoDB amazonDynamoDB;
     private SpeechTimelineDAODynamoDB speechDAO;
@@ -43,7 +46,13 @@ public class SpeechTimelineDynamoDBIT {
         } catch (InterruptedException ie) {
             LOGGER.warn("Table already exists");
         }
-        speechDAO = SpeechTimelineDAODynamoDB.create(amazonDynamoDB, tableName);
+
+        final String keyid = "xxx"
+        final BasicAWSCredentials kmsCredentials = new BasicAWSCredentials("xxx", "xxx");
+        final AWSKMSClient awskmsClient = new AWSKMSClient(kmsCredentials);
+        awskmsClient.setEndpoint("https://kms.us-east-1.amazonaws.com");
+
+        speechDAO = SpeechTimelineDAODynamoDB.create(amazonDynamoDB, tableName, awskmsClient, keyid);
     }
 
     @After
@@ -59,10 +68,10 @@ public class SpeechTimelineDynamoDBIT {
     public void testPut() {
 
         final DateTime dateTime = new DateTime().withYear(2016).withMonthOfYear(8).withDayOfMonth(22).withTimeAtStartOfDay();
-        final String encryptedUUID = "encryptedUUID";
-        final SpeechTimeline speechTimeline = SpeechTimeline.create(accountId, dateTime, senseId, encryptedUUID);
+        final SpeechTimeline speechTimeline = new SpeechTimeline(accountId, dateTime, senseId, uuid1);
 
         final boolean putRes = speechDAO.putItem(speechTimeline);
+
         assertThat(putRes, is(true));
 
         final Optional<SpeechTimeline> optionalResult = speechDAO.getItem(accountId, dateTime);
@@ -71,21 +80,19 @@ public class SpeechTimelineDynamoDBIT {
         if (optionalResult.isPresent()) {
             final SpeechTimeline result = optionalResult.get();
             assertThat(result.accountId.equals(accountId), is(true));
-            assertThat(result.encryptedUUID.equals(encryptedUUID), is(true));
+            assertThat(result.audioUUID.equals(uuid1), is(true));
         }
     }
 
     @Test
     public void testGetLatest() {
         final DateTime dateTime1 = DateTime.now(DateTimeZone.UTC).minusMinutes(5);
-        final String encryptedUUID1 = "encrypted_uuid_1";
-        final SpeechTimeline speechTimeline = SpeechTimeline.create(accountId, dateTime1, senseId, encryptedUUID1);
+        final SpeechTimeline speechTimeline = new SpeechTimeline(accountId, dateTime1, senseId, uuid1);
         boolean putRes = speechDAO.putItem(speechTimeline);
         assertThat(putRes, is(true));
 
         final DateTime dateTime2 = DateTime.now(DateTimeZone.UTC).minusMinutes(1);
-        final String encryptedUUID2 = "encrypted_uuid_2";
-        final SpeechTimeline speechTimeline2 = SpeechTimeline.create(accountId, dateTime2, senseId, encryptedUUID2);
+        final SpeechTimeline speechTimeline2 = new SpeechTimeline(accountId, dateTime2, senseId, uuid2);
         putRes = speechDAO.putItem(speechTimeline2);
         assertThat(putRes, is(true));
 
@@ -95,7 +102,7 @@ public class SpeechTimelineDynamoDBIT {
         if (optionalResult.isPresent()) {
             final SpeechTimeline result = optionalResult.get();
             assertThat(result.accountId.equals(accountId), is(true));
-            assertThat(result.encryptedUUID.equals(encryptedUUID2), is(true));
+            assertThat(result.audioUUID.equals(uuid2), is(true));
         }
     }
 
@@ -104,26 +111,24 @@ public class SpeechTimelineDynamoDBIT {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
 
         final DateTime dateTime1 = now.minusMinutes(10);
-        final String encryptedUUID1 = "encrypted_uuid_1";
-        final SpeechTimeline speechTimeline1 = SpeechTimeline.create(accountId, dateTime1, senseId, encryptedUUID1);
+        final SpeechTimeline speechTimeline1 = new SpeechTimeline(accountId, dateTime1, senseId, uuid1);
         boolean putRes = speechDAO.putItem(speechTimeline1);
         assertThat(putRes, is(true));
 
         final DateTime dateTime2 = now.minusMinutes(5);
-        final String encryptedUUID2 = "encrypted_uuid_2";
-        final SpeechTimeline speechTimeline2 = SpeechTimeline.create(accountId, dateTime2, senseId, encryptedUUID2);
+        final SpeechTimeline speechTimeline2 = new SpeechTimeline(accountId, dateTime2, senseId, uuid2);
         putRes = speechDAO.putItem(speechTimeline2);
         assertThat(putRes, is(true));
 
         final DateTime dateTime3 = now.minusMinutes(3);
-        final String encryptedUUID3 = "encrypted_uuid_3";
-        final SpeechTimeline speechTimeline3 = SpeechTimeline.create(accountId, dateTime3, senseId, encryptedUUID3);
+        final String uuid3 = "encrypted_uuid_3";
+        final SpeechTimeline speechTimeline3 = new SpeechTimeline(accountId, dateTime3, senseId, uuid3);
         putRes = speechDAO.putItem(speechTimeline3);
         assertThat(putRes, is(true));
 
         final DateTime dateTime4 = now.minusMinutes(2);
-        final String encryptedUUID4 = "encrypted_uuid_4";
-        final SpeechTimeline speechTimeline4 = SpeechTimeline.create(accountId, dateTime4, senseId, encryptedUUID4);
+        final String uuid4 = "encrypted_uuid_4";
+        final SpeechTimeline speechTimeline4 = new SpeechTimeline(accountId, dateTime4, senseId, uuid4);
         putRes = speechDAO.putItem(speechTimeline4);
         assertThat(putRes, is(true));
 
@@ -132,8 +137,8 @@ public class SpeechTimelineDynamoDBIT {
 
         final List<SpeechTimeline> results = speechDAO.getItemsByDate(accountId, queryStart, queryEnd, 10);
         assertThat(results.size(), is (3));
-        assertThat(results.get(0).encryptedUUID.equals(encryptedUUID4), is(true));
-        assertThat(results.get(1).encryptedUUID.equals(encryptedUUID3), is(true));
-        assertThat(results.get(2).encryptedUUID.equals(encryptedUUID2), is(true));
+        assertThat(results.get(0).audioUUID.equals(uuid4), is(true));
+        assertThat(results.get(1).audioUUID.equals(uuid3), is(true));
+        assertThat(results.get(2).audioUUID.equals(uuid2), is(true));
     }
 }

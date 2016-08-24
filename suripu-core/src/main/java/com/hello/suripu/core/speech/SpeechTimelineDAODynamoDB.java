@@ -13,10 +13,15 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.kms.AWSKMSClient;
+import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.EncryptRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.util.DateTimeUtil;
+import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -24,15 +29,23 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ksg on 8/22/16
  */
-public class SpeechTimelineDAODynamoDB {
+public class SpeechTimelineDAODynamoDB implements SpeechTimelineIngestDAO, SpeechTimelineReadDAO {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(SpeechTimelineDAODynamoDB.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpeechTimelineDAODynamoDB.class);
+
+    private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT);
+    private static final String KMS_KEY_SPEC = "AES_256";
+
+    private static final Charset DEFAULT_CHARSET = Charset.forName("ASCII");
 
     private enum SpeechTimelineAttribute implements Attribute {
         ACCOUNT_ID("account_id", "N", ":aid"),  // Hash Key (account-id)
@@ -64,25 +77,38 @@ public class SpeechTimelineDAODynamoDB {
     }
 
     private Table table;
-    private SpeechTimelineDAODynamoDB(final Table table) { this.table = table; }
+    private final AWSKMSClient kmsClient;
+    private final String kmsKeyId;
 
-    public static SpeechTimelineDAODynamoDB create(final AmazonDynamoDB amazonDynamoDB, final String tableName) {
-        final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
-        final Table table = dynamoDB.getTable(tableName);
-        return new SpeechTimelineDAODynamoDB(table);
+    private SpeechTimelineDAODynamoDB(final Table table, final AWSKMSClient kmsClient, final String kmsKeyId) {
+        this.table = table;
+        this.kmsClient = kmsClient;
+        this.kmsKeyId = kmsKeyId;
     }
 
-    private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT);
-    private static final int DATE_TIME_STRING_LENGTH = DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT.length();
+    public static SpeechTimelineDAODynamoDB create(final AmazonDynamoDB amazonDynamoDB,
+                                                   final String tableName,
+                                                   final AWSKMSClient kmsClient,
+                                                   final String kmsKeyId) {
+        final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
+        final Table table = dynamoDB.getTable(tableName);
+        return new SpeechTimelineDAODynamoDB(table, kmsClient, kmsKeyId);
+    }
 
-    /**
-     * Insert one item to DynamoDB
-     * @param speechTimeline item to insert
-     * @return insert success or failure
-     */
-    public boolean putItem(final SpeechTimeline speechTimeline) {
-        final Item item = speechTimelineToItem(speechTimeline);
+
+    //region SpeechTimelineIngestDAO implementation
+    @Override
+    public Boolean putItem(final SpeechTimeline speechTimeline) {
+        final Optional<Item> optionalItem = speechTimelineToItem(speechTimeline);
+        if (!optionalItem.isPresent()) {
+            LOGGER.error("error=fail-to-encrypt-uuid account_id={} sense_id={}", speechTimeline.accountId, speechTimeline.senseId);
+            return false;
+        }
+
+        final Item item = optionalItem.get();
+
         try {
+
             table.putItem(item);
         } catch (Exception e) {
             LOGGER.error("error=put-speech-timeline-item-fail error_msg={}", e.getMessage());
@@ -90,30 +116,21 @@ public class SpeechTimelineDAODynamoDB {
         }
         return true;
     }
+    //endregion
 
-    /**
-     * get single item
-     * @param accountId account
-     * @param dateTime timestamp
-     * @return optional SpeechTimeline
-     */
+    //region SpeechTimeReadDAO implementation
+    @Override
     public Optional<SpeechTimeline> getItem(final Long accountId, final DateTime dateTime) {
         final Item item = table.getItem(SpeechTimelineAttribute.ACCOUNT_ID.shortName(), accountId,
                 SpeechTimelineAttribute.TS.shortName(), dateTime.toString(DATE_TIME_WRITE_FORMATTER));
 
-        if (item == null) {
-            return Optional.absent();
+        if (item != null) {
+            return DDBItemToSpeechTimeline(item);
         }
-
-        return Optional.of(DDBItemToSpeechTimeline(item));
+        return Optional.absent();
     }
 
-    /**
-     * get last spoken command
-     * @param accountId account
-     * @param lookBackMinutes look back this much from now
-     * @return optional SpeechTimeline
-     */
+    @Override
     public Optional<SpeechTimeline> getLatest(final Long accountId, final int lookBackMinutes) {
         final DateTime queryTime = DateTime.now(DateTimeZone.UTC).minusMinutes(lookBackMinutes);
 
@@ -132,14 +149,7 @@ public class SpeechTimelineDAODynamoDB {
 
     }
 
-    /**
-     * get spoken commands between dates (inclusive for both ends), with limit
-     * @param accountId account
-     * @param startDate query start date
-     * @param endDate query end date
-     * @param limit number of results to return
-     * @return List of SpeechTimeline
-     */
+    @Override
     public List<SpeechTimeline> getItemsByDate(final Long accountId, final DateTime startDate, final DateTime endDate, final int limit) {
         final String keyCondition = getExpression(SpeechTimelineAttribute.ACCOUNT_ID, "=") + " AND " +
                 getBetweenExpression(SpeechTimelineAttribute.TS);
@@ -151,6 +161,8 @@ public class SpeechTimelineDAODynamoDB {
 
         return query(keyCondition, valueMap, false, limit);
     }
+    //endregion
+
 
     private List<SpeechTimeline> query(final String keyCondition, final ValueMap valueMap, final Boolean scanForward, final int limit) {
 
@@ -166,26 +178,80 @@ public class SpeechTimelineDAODynamoDB {
         Iterator<Item> iterator = items.iterator();
         final List<SpeechTimeline> results = Lists.newArrayList();
         while (iterator.hasNext()) {
-            results.add(DDBItemToSpeechTimeline(iterator.next()));
+            final Optional<SpeechTimeline> speechTimelineOptional = DDBItemToSpeechTimeline(iterator.next());
+            if (speechTimelineOptional.isPresent()) {
+                results.add(speechTimelineOptional.get());
+            }
         }
 
         return results;
     }
 
-    private SpeechTimeline DDBItemToSpeechTimeline(Item item) {
-        return SpeechTimeline.create(
-                item.getLong(SpeechTimelineAttribute.ACCOUNT_ID.shortName()),
-                DateTimeUtil.datetimeStringToDateTime(item.getString(SpeechTimelineAttribute.TS.shortName())),
-                item.getString(SpeechTimelineAttribute.SENSE_ID.shortName()),
-                item.getString(SpeechTimelineAttribute.ENCRYPTED_UUID.shortName())
-        );
+
+    private Optional<String> encryptUUID (final String uuid, final Long accountId) {
+        final ByteBuffer plainText = ByteBuffer.wrap(uuid.getBytes());
+
+        final Map<String, String> encryptionContext = Maps.newHashMap();
+        encryptionContext.put("account_id", accountId.toString());
+
+        final EncryptRequest encryptRequest = new EncryptRequest()
+                .withKeyId(kmsKeyId)
+                .withEncryptionContext(encryptionContext)
+                .withPlaintext(plainText);
+
+        final ByteBuffer cipherText = kmsClient.encrypt(encryptRequest).getCiphertextBlob();
+
+        // copy to String
+        if (cipherText.hasArray()) {
+            return Optional.of(new String(Base64.encodeBase64(cipherText.array())));
+        }
+        return Optional.absent();
     }
 
-    private Item speechTimelineToItem(SpeechTimeline speechTimeline) {
-        return new Item().withPrimaryKey(SpeechTimelineAttribute.ACCOUNT_ID.shortName(), speechTimeline.accountId)
+
+    private Optional<String> decryptUUID(final String encryptedUUID, final Long accountId) {
+        final ByteBuffer cipherTextBlob = ByteBuffer.wrap(Base64.decodeBase64(encryptedUUID));
+
+        final Map<String, String> encryptionContext = Maps.newHashMap();
+        encryptionContext.put("account_id", accountId.toString());
+
+        final DecryptRequest decryptRequest = new DecryptRequest()
+                .withEncryptionContext(encryptionContext)
+                .withCiphertextBlob(cipherTextBlob);
+
+        final ByteBuffer plainText =  kmsClient.decrypt(decryptRequest).getPlaintext();
+        if (plainText.hasArray()) {
+            return Optional.of(new String(plainText.array(), DEFAULT_CHARSET));
+        }
+        return Optional.absent();
+    }
+
+
+    private Optional<SpeechTimeline> DDBItemToSpeechTimeline(Item item) {
+        final Long accountId = item.getLong(SpeechTimelineAttribute.ACCOUNT_ID.shortName());
+        final Optional<String> optionalUUID = decryptUUID(item.getString(SpeechTimelineAttribute.ENCRYPTED_UUID.shortName()), accountId);
+        if (!optionalUUID.isPresent()) {
+            return Optional.absent();
+        }
+
+        return Optional.of(new SpeechTimeline(
+                accountId,
+                DateTimeUtil.datetimeStringToDateTime(item.getString(SpeechTimelineAttribute.TS.shortName())),
+                item.getString(SpeechTimelineAttribute.SENSE_ID.shortName()),
+                optionalUUID.get()));
+    }
+
+    private Optional<Item> speechTimelineToItem(SpeechTimeline speechTimeline) {
+        final Optional<String> optionalEncryptedUUID = encryptUUID(speechTimeline.audioUUID, speechTimeline.accountId);
+        if (!optionalEncryptedUUID.isPresent()) {
+            return Optional.absent();
+        }
+
+        return Optional.of(new Item()
+                .withPrimaryKey(SpeechTimelineAttribute.ACCOUNT_ID.shortName(), speechTimeline.accountId)
                 .withString(SpeechTimelineAttribute.TS.shortName(), speechTimeline.dateTimeUTC.toString(DATE_TIME_WRITE_FORMATTER))
                 .withString(SpeechTimelineAttribute.SENSE_ID.shortName(), speechTimeline.senseId)
-                .withString(SpeechTimelineAttribute.ENCRYPTED_UUID.shortName(), speechTimeline.encryptedUUID);
+                .withString(SpeechTimelineAttribute.ENCRYPTED_UUID.shortName(), optionalEncryptedUUID.get()));
 
     }
 
