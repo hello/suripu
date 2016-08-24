@@ -21,8 +21,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.swap.SwapIntent;
-import com.hello.suripu.core.swap.SwapResult;
+import com.hello.suripu.core.swap.Intent;
+import com.hello.suripu.core.swap.IntentResult;
+import com.hello.suripu.core.swap.Result;
+import com.hello.suripu.core.swap.Status;
 import com.hello.suripu.core.swap.Swapper;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -50,25 +52,25 @@ public class DynamoDBSwapper implements Swapper {
     }
 
     @Override
-    public SwapResult swap(final SwapIntent swapIntent) {
+    public Result swap(final Intent intent) {
 
         final Table table = dynamoDB.getTable(mergedTableName);
 
         final ItemCollection<QueryOutcome> queryOutcomeItemCollection = table.query(
-                new KeyAttribute("device_id", swapIntent.currentSenseId())
+                new KeyAttribute("device_id", intent.currentSenseId())
         );
 
         final List<Item> itemList = queryOutcomeItemCollection.firstPage().getLowLevelResult().getItems();
 
         if(itemList.isEmpty()) {
-            return SwapResult.failed(SwapResult.Error.SOMETHING_ELSE);
+            return Result.failed(Result.Error.SOMETHING_ELSE);
         }
 
         final List<Long> accountIds = new ArrayList<>();
         final List<Item> updatedItems = new ArrayList<>();
         for(Item item : itemList) {
             final Item updated = item.withPrimaryKey(
-                    "device_id", swapIntent.newSenseId(),
+                    "device_id", intent.newSenseId(),
                     "account_id", item.getLong("account_id")
             );
             accountIds.add(item.getLong("account_id"));
@@ -79,24 +81,24 @@ public class DynamoDBSwapper implements Swapper {
         final BatchWriteItemOutcome outcome = dynamoDB.batchWriteItem(items);
 
         if(!outcome.getUnprocessedItems().isEmpty()) {
-            return SwapResult.failed(SwapResult.Error.SOMETHING_ELSE);
+            return Result.failed(Result.Error.SOMETHING_ELSE);
         }
 
         int accountSwapped = 0;
         for(final Long accountId : accountIds) {
             try {
-                deviceDAO.registerSense(accountId, swapIntent.newSenseId());
+                deviceDAO.registerSense(accountId, intent.newSenseId());
                 accountSwapped += 1;
             } catch (Exception e) {
-                LOGGER.error("action=swap-sense error=failed-registration sense_id={} account_id={}", swapIntent.newSenseId(), accountId);
+                LOGGER.error("action=swap-sense error=failed-registration sense_id={} account_id={}", intent.newSenseId(), accountId);
             }
         }
 
-        return (accountSwapped == accountIds.size()) ? SwapResult.success() : SwapResult.failed(SwapResult.Error.SOMETHING_ELSE);
+        return (accountSwapped == accountIds.size()) ? Result.success() : Result.failed(Result.Error.SOMETHING_ELSE);
     }
 
     @Override
-    public void create(SwapIntent intent) {
+    public void create(Intent intent) {
         final Table table = dynamoDB.getTable(swapTableName);
 
         final Item item = new Item()
@@ -110,12 +112,12 @@ public class DynamoDBSwapper implements Swapper {
     }
 
     @Override
-    public Optional<SwapIntent> query(final String senseId) {
+    public Optional<Intent> query(final String senseId) {
         return query(senseId, DEFAULT_QUERY_INTERVAL);
     }
 
     @Override
-    public Optional<SwapIntent> query(String senseId, int minutesAgo) {
+    public Optional<Intent> query(String senseId, int minutesAgo) {
         final Table table = dynamoDB.getTable(swapTableName);
         final String start = DateTime.now(DateTimeZone.UTC).minusMinutes(minutesAgo).toString();
         final String end = DateTime.now(DateTimeZone.UTC).plusMinutes(1).toString();
@@ -131,7 +133,7 @@ public class DynamoDBSwapper implements Swapper {
         }
         // Assuming ordered list
         final Item item =  items.get(items.size()-1);
-        final SwapIntent intent = SwapIntent.create(
+        final Intent intent = Intent.create(
                 item.getString("current_sense_id"),
                 item.getString("sense_id"),
                 item.getLong("account_id"),
@@ -141,24 +143,24 @@ public class DynamoDBSwapper implements Swapper {
     }
 
     @Override
-    public Optional<SwapIntent> eligible(final Long accountId, String newSenseId) {
+    public IntentResult eligible(final Long accountId, String newSenseId) {
         final List<DeviceAccountPair> pairedAccountsCurrentSense = deviceDAO.getSensesForAccountId(accountId);
         if(pairedAccountsCurrentSense.size() != 1) {
-            return Optional.absent();
+            return IntentResult.failed(Status.ACCOUNT_PAIRED_TO_MULTIPLE_SENSE);
         }
 
         final List<DeviceAccountPair> pairedAccountsNewSense = deviceDAO.getAccountIdsForDeviceId(newSenseId);
         final boolean pairedToSameAccount = pairedAccountsNewSense.size() == 1 && pairedAccountsNewSense.get(0).accountId == accountId;
 
         if(pairedAccountsNewSense.isEmpty() || pairedToSameAccount) {
-            final SwapIntent intent = SwapIntent.create(
+            final Intent intent = Intent.create(
                     pairedAccountsCurrentSense.get(0).externalDeviceId,
                     newSenseId,
                     accountId);
-            return Optional.of(intent);
+            return IntentResult.ok(intent);
         }
 
-        return Optional.absent();
+        return IntentResult.failed(Status.NEW_SENSE_PAIRED_TO_DIFFERENT_ACCOUNT);
     }
 
     public static CreateTableResult createTable(final String swapTableName, final AmazonDynamoDB client) {

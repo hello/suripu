@@ -3,9 +3,9 @@ package com.hello.suripu.core.swap;
 import com.google.common.base.Optional;
 
 public interface Swapper {
-    SwapResult swap(SwapIntent intent);
-    void create(SwapIntent intent);
-    Optional<SwapIntent> query(String senseId);
-    Optional<SwapIntent> query(String senseId, int minutesAgo);
-    Optional<SwapIntent> eligible(Long accountId, String senseId);
+    Result swap(Intent intent);
+    void create(Intent intent);
+    Optional<Intent> query(String senseId);
+    Optional<Intent> query(String senseId, int minutesAgo);
+    IntentResult eligible(Long accountId, String senseId);
 }

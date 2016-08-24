@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 
 ;
 
-public class SwapResult {
+public class Result {
 
     private final boolean successful;
     private final Optional<Error> error;
@@ -15,17 +15,17 @@ public class SwapResult {
         SOMETHING_ELSE;
     }
 
-    public SwapResult(boolean successful, Optional<Error> error) {
+    public Result(boolean successful, Optional<Error> error) {
         this.successful = successful;
         this.error = error;
     }
 
-    public static SwapResult failed(Error error) {
-        return new SwapResult(false, Optional.of(error));
+    public static Result failed(Error error) {
+        return new Result(false, Optional.of(error));
     }
 
-    public static SwapResult success() {
-        return new SwapResult(true, Optional.<Error>absent());
+    public static Result success() {
+        return new Result(true, Optional.<Error>absent());
     }
 
 

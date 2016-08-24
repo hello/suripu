@@ -3,17 +3,17 @@ package com.hello.suripu.core.swap;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SwapRequest {
+public class Request {
 
     final private String senseId;
 
-    private SwapRequest(String senseId) {
+    private Request(String senseId) {
         this.senseId = senseId;
     }
 
     @JsonCreator
-    public static SwapRequest create(@JsonProperty("sense_id") final String senseId) {
-        return new SwapRequest(senseId);
+    public static Request create(@JsonProperty("sense_id") final String senseId) {
+        return new Request(senseId);
     }
 
     public String senseId() {
