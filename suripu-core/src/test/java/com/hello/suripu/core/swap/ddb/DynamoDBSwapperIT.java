@@ -19,8 +19,9 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.swap.SwapIntent;
-import com.hello.suripu.core.swap.SwapResult;
+import com.hello.suripu.core.swap.Intent;
+import com.hello.suripu.core.swap.IntentResult;
+import com.hello.suripu.core.swap.Result;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -114,14 +115,14 @@ public class DynamoDBSwapperIT {
 
         when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(pairs);
         when(deviceDAO.getAccountIdsForDeviceId(newSenseId)).thenReturn(ImmutableList.<DeviceAccountPair>of());
-        final Optional<SwapIntent> intent = swapper.eligible(accountId, newSenseId);
-        assertTrue(intent.isPresent());
-        swapper.create(intent.get());
+        final IntentResult intentResult = swapper.eligible(accountId, newSenseId);
+        assertTrue(intentResult.intent().isPresent());
+        swapper.create(intentResult.intent().get());
 
-        final Optional<SwapIntent> swapIntent = swapper.query(newSenseId);
+        final Optional<Intent> swapIntent = swapper.query(newSenseId);
         assertTrue(swapIntent.isPresent());
-        final SwapResult swapResult = swapper.swap(swapIntent.get());
-        assertTrue(swapResult.successful());
+        final Result result = swapper.swap(swapIntent.get());
+        assertTrue(result.successful());
 
         final ItemCollection<QueryOutcome> foo = mergedTable.query(
                 "device_id", newSenseId,
