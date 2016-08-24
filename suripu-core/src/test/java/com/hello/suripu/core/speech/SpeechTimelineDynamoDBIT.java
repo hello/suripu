@@ -4,8 +4,8 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.kms.AWSKMSClient;
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -14,9 +14,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SpeechTimelineDynamoDBIT {
 
@@ -24,8 +27,11 @@ public class SpeechTimelineDynamoDBIT {
 
     private static final Long accountId = 1L;
     private static final String senseId = "sleepbetterer";
-    private static final String uuid1 = "encrypted_uuid_1";
-    private static final String uuid2 = "encrypted_uuid_2";
+    private static final String uuid1 = "uuid_1";
+    private static final String uuid2 = "uuid_2";
+    private static final String uuid3 = "uuid_3";
+    private static final String uuid4 = "uuid_4";
+
 
     private AmazonDynamoDB amazonDynamoDB;
     private SpeechTimelineDAODynamoDB speechDAO;
@@ -47,12 +53,24 @@ public class SpeechTimelineDynamoDBIT {
             LOGGER.warn("Table already exists");
         }
 
-        final String keyid = "xxx";
-        final BasicAWSCredentials kmsCredentials = new BasicAWSCredentials("xxx", "xxx");
-        final AWSKMSClient awskmsClient = new AWSKMSClient(kmsCredentials);
-        awskmsClient.setEndpoint("https://kms.us-east-1.amazonaws.com");
+        final KmsDAO kmsDAO = mock(KmsDAO.class);
+        speechDAO = SpeechTimelineDAODynamoDB.create(amazonDynamoDB, tableName, kmsDAO);
 
-        speechDAO = SpeechTimelineDAODynamoDB.create(amazonDynamoDB, tableName, awskmsClient, keyid);
+        // mock kms operations
+        final Map<String, String> ec = Maps.newHashMap();
+        ec.put("account_id", accountId.toString());
+
+        when(kmsDAO.encrypt(uuid1, ec)).thenReturn(Optional.of("encrypted_" + uuid1));
+        when(kmsDAO.decrypt("encrypted_" + uuid1, ec)).thenReturn(Optional.of(uuid1));
+
+        when(kmsDAO.encrypt(uuid2, ec)).thenReturn(Optional.of("encrypted_" + uuid2));
+        when(kmsDAO.decrypt("encrypted_" + uuid2, ec)).thenReturn(Optional.of(uuid2));
+
+        when(kmsDAO.encrypt(uuid3, ec)).thenReturn(Optional.of("encrypted_" + uuid3));
+        when(kmsDAO.decrypt("encrypted_" + uuid3, ec)).thenReturn(Optional.of(uuid3));
+
+        when(kmsDAO.encrypt(uuid4, ec)).thenReturn(Optional.of("encrypted_" + uuid4));
+        when(kmsDAO.decrypt("encrypted_" + uuid4, ec)).thenReturn(Optional.of(uuid4));
     }
 
     @After
@@ -66,6 +84,7 @@ public class SpeechTimelineDynamoDBIT {
 
     @Test
     public void testPut() {
+
 
         final DateTime dateTime = new DateTime().withYear(2016).withMonthOfYear(8).withDayOfMonth(22).withTimeAtStartOfDay();
         final SpeechTimeline speechTimeline = new SpeechTimeline(accountId, dateTime, senseId, uuid1);
@@ -121,13 +140,11 @@ public class SpeechTimelineDynamoDBIT {
         assertThat(putRes, is(true));
 
         final DateTime dateTime3 = now.minusMinutes(3);
-        final String uuid3 = "encrypted_uuid_3";
         final SpeechTimeline speechTimeline3 = new SpeechTimeline(accountId, dateTime3, senseId, uuid3);
         putRes = speechDAO.putItem(speechTimeline3);
         assertThat(putRes, is(true));
 
         final DateTime dateTime4 = now.minusMinutes(2);
-        final String uuid4 = "encrypted_uuid_4";
         final SpeechTimeline speechTimeline4 = new SpeechTimeline(accountId, dateTime4, senseId, uuid4);
         putRes = speechDAO.putItem(speechTimeline4);
         assertThat(putRes, is(true));
