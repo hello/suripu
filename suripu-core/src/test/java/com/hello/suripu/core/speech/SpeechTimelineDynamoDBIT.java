@@ -47,7 +47,7 @@ public class SpeechTimelineDynamoDBIT {
             LOGGER.warn("Table already exists");
         }
 
-        final String keyid = "xxx"
+        final String keyid = "xxx";
         final BasicAWSCredentials kmsCredentials = new BasicAWSCredentials("xxx", "xxx");
         final AWSKMSClient awskmsClient = new AWSKMSClient(kmsCredentials);
         awskmsClient.setEndpoint("https://kms.us-east-1.amazonaws.com");
