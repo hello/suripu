@@ -33,6 +33,7 @@ public class SpeechTimelineIngestDAODynamoDB implements SpeechTimelineIngestDAO 
                                                          final Vault kmsVault) {
         final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
         final Table table = dynamoDB.getTable(tableName);
+        table.describe();
         return new SpeechTimelineIngestDAODynamoDB(table, kmsVault);
     }
 
@@ -45,14 +46,7 @@ public class SpeechTimelineIngestDAODynamoDB implements SpeechTimelineIngestDAO 
             return false;
         }
 
-        final Item item = optionalItem.get();
-        try {
-            table.putItem(item);
-        } catch (Exception e) {
-            LOGGER.error("error=put-speech-timeline-item-fail error_msg={}", e.getMessage());
-            return false;
-        }
-
+        table.putItem(optionalItem.get());
         return true;
     }
     //endregion
