@@ -79,9 +79,9 @@ public class InsightProcessor {
     private static final int NEW_ACCOUNT_THRESHOLD = 4;
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK = 4;
-    private static final int HIGH_PRIORITY_START_TIME = 13; //1 pm local time
-    private static final int HIGH_PRIORITY_END_TIME = 19; //6 pm local time
-    private static final int INSIGHT_FREQ_SLEEP_DEPRIVATION = 83; // Max frequency: once every 12 weeks
+    private static final int HIGH_PRIORITY_START_TIME = 14; //2 pm local time
+    private static final int HIGH_PRIORITY_END_TIME = 20; //7 pm local time
+    private static final int INSIGHT_FREQ_SLEEP_DEPRIVATION = 27; // Max frequency: once every 4 weeks
 
     private static final Random RANDOM = new Random();
 
@@ -308,9 +308,10 @@ public class InsightProcessor {
         //Limit insight check time window
         if (currentTimeLocal.getHourOfDay() >= HIGH_PRIORITY_START_TIME && currentTimeLocal.getHourOfDay() <= HIGH_PRIORITY_END_TIME ){
             //SLEEP_DEPRIVATION
-            if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST)){
-                //check for eligibility - insight not recently delivered and insight will be generated - avoids over-riding all other insights during window
-                if(SleepDeprivation.checkEligiblity(accountId,recentCategories, INSIGHT_FREQ_SLEEP_DEPRIVATION,sleepStatsDAODynamoDB, accountReadDAO, currentTimeLocal)){
+            //check for eligibility - insight not recently delivered and insight will be generated - avoids over-riding all other insights during window
+            // check eligibility delivers log message if insight is deliverable
+            if(SleepDeprivation.checkEligiblity(accountId, recentCategories, INSIGHT_FREQ_SLEEP_DEPRIVATION,sleepStatsDAODynamoDB, accountReadDAO, currentTimeLocal)) {
+                if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST)) {
                     return Optional.of(InsightCard.Category.SLEEP_DEPRIVATION);
                 }
             }
