@@ -47,6 +47,7 @@ public enum DynamoDBTableName {
     SMART_ALARM_LOG("smart_alarm_log"),
     SPEECH_COMMANDS("speech_commands"),
     SPEECH_RESULTS("speech_results"),
+    SPEECH_TIMELINE("speech_timeline"),
     SWAP_INTENTS("swap_intents"),
     SYNC_RESPONSE_COMMANDS("sync_response_commands"),
     TAGS("tags"),
