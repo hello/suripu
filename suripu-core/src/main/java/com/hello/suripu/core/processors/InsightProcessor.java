@@ -80,7 +80,7 @@ public class InsightProcessor {
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK = 4;
     private static final int HIGH_PRIORITY_START_TIME = 14; //2 pm local time
-    private static final int HIGH_PRIORITY_END_TIME = 20; //7 pm local time
+    private static final int HIGH_PRIORITY_END_TIME = 19; //7 pm local time
     private static final int INSIGHT_FREQ_SLEEP_DEPRIVATION = 27; // Max frequency: once every 4 weeks
 
     private static final Random RANDOM = new Random();
