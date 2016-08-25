@@ -13,16 +13,13 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.kms.AWSKMSClient;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,96 +30,32 @@ import java.util.Map;
 /**
  * Created by ksg on 8/22/16
  */
-public class SpeechTimelineDAODynamoDB implements SpeechTimelineIngestDAO, SpeechTimelineReadDAO {
+public class SpeechTimelineReadDAODynamoDB implements SpeechTimelineReadDAO {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SpeechTimelineDAODynamoDB.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpeechTimelineReadDAODynamoDB.class);
 
-    private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT);
+    private final Table table;
+    private final Vault kmsVault;
 
-    private enum SpeechTimelineAttribute implements Attribute {
-        ACCOUNT_ID("account_id", "N", ":aid"),      // Hash Key (account-id)
-        TS("ts", "S", ":ts"),                       // Range Key (timestamp in UTC)
-        SENSE_ID("sense_id", "S", ":sid"),          // sense-id
-        ENCRYPTED_UUID("e_uuid", "S", ":euuid");    // encrypted UUID to audio identifier
-
-        private final String name;
-        private final String type;
-        private final String queryHolder;
-
-        SpeechTimelineAttribute(String name, String type, String queryHolder) {
-            this.name = name;
-            this.type = type;
-            this.queryHolder = queryHolder;
-        }
-
-        public String sanitizedName() {
-            return toString();
-        }
-        public String shortName() {
-            return name;
-        }
-        public String type() {
-            return type;
-        }
-
-        public String queryHolder() { return queryHolder; }
-    }
-
-    private Table table;
-    private KmsDAO kmsDAO;
-
-     private SpeechTimelineDAODynamoDB(final Table table, final KmsDAO kmsDAO) {
+     private SpeechTimelineReadDAODynamoDB(final Table table, final Vault kmsVault) {
          this.table = table;
-         this.kmsDAO = kmsDAO;
+         this.kmsVault = kmsVault;
     }
 
-    public static SpeechTimelineDAODynamoDB create(final AmazonDynamoDB amazonDynamoDB,
-                                                   final String tableName,
-                                                   final KmsDAO kmsDAO) {
+    public static SpeechTimelineReadDAODynamoDB create(final AmazonDynamoDB amazonDynamoDB,
+                                                       final String tableName,
+                                                       final Vault kmsVault) {
         final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
         final Table table = dynamoDB.getTable(tableName);
-        return new SpeechTimelineDAODynamoDB(table, kmsDAO);
+        return new SpeechTimelineReadDAODynamoDB(table, kmsVault);
     }
 
-    public static SpeechTimelineDAODynamoDB create(final AmazonDynamoDB amazonDynamoDB,
-                                                   final String tableName,
-                                                   final AWSKMSClient kmsClient,
-                                                   final String kmsKeyId) {
-        final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
-        final Table table = dynamoDB.getTable(tableName);
-        final KmsDAO kmsDAO = new KmsDAOImpl(kmsClient, kmsKeyId);
-        return new SpeechTimelineDAODynamoDB(table, kmsDAO);
-    }
-
-
-    //region SpeechTimelineIngestDAO implementation
-    @Override
-    public Boolean putItem(final SpeechTimeline speechTimeline) {
-        final Optional<Item> optionalItem = speechTimelineToItem(speechTimeline);
-        if (!optionalItem.isPresent()) {
-            LOGGER.error("error=fail-to-get-ddb-item account_id={} sense_id={}", speechTimeline.accountId, speechTimeline.senseId);
-            return false;
-        }
-
-        final Item item = optionalItem.get();
-        try {
-            table.putItem(item);
-        } catch (Exception e) {
-            LOGGER.error("error=put-speech-timeline-item-fail error_msg={}", e.getMessage());
-            return false;
-        }
-
-        return true;
-    }
-    //endregion
-
-    //region SpeechTimeReadDAO implementation
     @Override
     public Optional<SpeechTimeline> getItem(final Long accountId, final DateTime dateTime) {
 
         final Item item = table.getItem(
                 SpeechTimelineAttribute.ACCOUNT_ID.shortName(), accountId,
-                SpeechTimelineAttribute.TS.shortName(), dateTime.toString(DATE_TIME_WRITE_FORMATTER));
+                SpeechTimelineAttribute.TS.shortName(), dateToString(dateTime));
 
         if (item != null) {
             return DDBItemToSpeechTimeline(item);
@@ -140,9 +73,9 @@ public class SpeechTimelineDAODynamoDB implements SpeechTimelineIngestDAO, Speec
 
         final ValueMap valueMap = new ValueMap()
                 .withNumber(SpeechTimelineAttribute.ACCOUNT_ID.queryHolder(), accountId)
-                .withString(SpeechTimelineAttribute.TS.queryHolder(), queryTime.toString(DATE_TIME_WRITE_FORMATTER));
+                .withString(SpeechTimelineAttribute.TS.queryHolder(), dateToString(queryTime));
 
-        final List<SpeechTimeline> results = query(keyCondition, valueMap, false, 1);
+        final List<SpeechTimeline> results = query(keyCondition, valueMap, false, 1); // "false" for reverse chronological query
         if (!results.isEmpty()) {
             return Optional.of(results.get(0)); // latest only
         }
@@ -159,12 +92,11 @@ public class SpeechTimelineDAODynamoDB implements SpeechTimelineIngestDAO, Speec
 
         final ValueMap valueMap = new ValueMap()
                 .withNumber(SpeechTimelineAttribute.ACCOUNT_ID.queryHolder(), accountId)
-                .withString(String.format("%s1", SpeechTimelineAttribute.TS.queryHolder()), startDate.toString(DATE_TIME_WRITE_FORMATTER))
-                .withString(String.format("%s2", SpeechTimelineAttribute.TS.queryHolder()), endDate.toString(DATE_TIME_WRITE_FORMATTER));
+                .withString(String.format("%s1", SpeechTimelineAttribute.TS.queryHolder()), dateToString(startDate))
+                .withString(String.format("%s2", SpeechTimelineAttribute.TS.queryHolder()), dateToString(endDate));
 
-        return query(keyCondition, valueMap, false, limit);
+        return query(keyCondition, valueMap, false, limit); // "false" for reverse chronological query
     }
-    //endregion
 
 
     private List<SpeechTimeline> query(final String keyCondition, final ValueMap valueMap, final Boolean scanForward, final int limit) {
@@ -172,13 +104,13 @@ public class SpeechTimelineDAODynamoDB implements SpeechTimelineIngestDAO, Speec
         final QuerySpec querySpec = new QuerySpec()
                 .withKeyConditionExpression(keyCondition)
                 .withValueMap(valueMap)
-                .withScanIndexForward(false)
+                .withScanIndexForward(scanForward)
                 .withMaxResultSize(limit);
 
-        ItemCollection<QueryOutcome> items = table.query(querySpec);
+        final ItemCollection<QueryOutcome> items = table.query(querySpec);
         LOGGER.debug("action=get-speech-timeline-by-date query_result_size={}", items.getTotalCount());
 
-        Iterator<Item> iterator = items.iterator();
+        final Iterator<Item> iterator = items.iterator();
         final List<SpeechTimeline> results = Lists.newArrayList();
         while (iterator.hasNext()) {
             final Optional<SpeechTimeline> speechTimelineOptional = DDBItemToSpeechTimeline(iterator.next());
@@ -192,41 +124,27 @@ public class SpeechTimelineDAODynamoDB implements SpeechTimelineIngestDAO, Speec
 
     private Optional<SpeechTimeline> DDBItemToSpeechTimeline(Item item) {
         final Long accountId = item.getLong(SpeechTimelineAttribute.ACCOUNT_ID.shortName());
+        final Map<String, String> encryptionContext = Maps.newHashMap();
+        encryptionContext.put("account_id", accountId.toString());
+
         final String encryptedUUID = item.getString(SpeechTimelineAttribute.ENCRYPTED_UUID.shortName());
 
-        final Optional<String> optionalUUID = kmsDAO.decrypt(encryptedUUID, getEncryptionContext(accountId));
+        final Optional<String> optionalUUID = kmsVault.decrypt(encryptedUUID, encryptionContext);
         if (!optionalUUID.isPresent()) {
             return Optional.absent();
         }
 
-        return Optional.of(new SpeechTimeline(
+        final SpeechTimeline speechTimeline = new SpeechTimeline(
                 accountId,
                 DateTimeUtil.datetimeStringToDateTime(item.getString(SpeechTimelineAttribute.TS.shortName())),
                 item.getString(SpeechTimelineAttribute.SENSE_ID.shortName()),
-                optionalUUID.get()));
+                optionalUUID.get());
+
+        return Optional.of(speechTimeline);
     }
 
-    private Optional<Item> speechTimelineToItem(SpeechTimeline speechTimeline) {
-        final Optional<String> optionalEncryptedUUID = kmsDAO.encrypt(speechTimeline.audioUUID, getEncryptionContext(speechTimeline.accountId));
-        if (!optionalEncryptedUUID.isPresent()) {
-            return Optional.absent();
-        }
-
-        return Optional.of(new Item()
-                .withPrimaryKey(SpeechTimelineAttribute.ACCOUNT_ID.shortName(), speechTimeline.accountId)
-                .withString(SpeechTimelineAttribute.TS.shortName(), speechTimeline.dateTimeUTC.toString(DATE_TIME_WRITE_FORMATTER))
-                .withString(SpeechTimelineAttribute.SENSE_ID.shortName(), speechTimeline.senseId)
-                .withString(SpeechTimelineAttribute.ENCRYPTED_UUID.shortName(), optionalEncryptedUUID.get()));
-
-    }
 
     //region helper functions
-    private Map<String, String> getEncryptionContext(final Long accountId) {
-        final Map<String, String> encryptionContext = Maps.newHashMap();
-        encryptionContext.put("account_id", accountId.toString());
-        return encryptionContext;
-    }
-
     private String getExpression(final SpeechTimelineAttribute attribute, final String comparator) {
         return String.format("%s %s %s", attribute.shortName(), comparator, attribute.queryHolder());
     }
@@ -234,6 +152,10 @@ public class SpeechTimelineDAODynamoDB implements SpeechTimelineIngestDAO, Speec
     private String getBetweenExpression(final SpeechTimelineAttribute attribute) {
         return String.format("%s BETWEEN %s AND %s", attribute.shortName(),
                 String.format("%s1", attribute.queryHolder()), String.format("%s2", attribute.queryHolder()));
+    }
+
+    private String dateToString(final DateTime dateTime) {
+        return dateTime.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT));
     }
     //endregion
 

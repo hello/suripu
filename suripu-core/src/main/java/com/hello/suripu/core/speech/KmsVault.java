@@ -11,24 +11,22 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import static org.apache.commons.codec.binary.Hex.DEFAULT_CHARSET;
-
 /**
  * Created by ksg on 8/24/16
  */
-public class KmsDAOImpl implements KmsDAO{
-    private static final Logger LOGGER = LoggerFactory.getLogger(KmsDAOImpl.class);
+public class KmsVault implements Vault {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KmsVault.class);
 
     private final AWSKMSClient kmsClient;
     private final String kmsKeyId;
 
-    public KmsDAOImpl(AWSKMSClient kmsClient, String kmsKeyId) {
+    public KmsVault(final AWSKMSClient kmsClient, final String kmsKeyId) {
         this.kmsClient = kmsClient;
         this.kmsKeyId = kmsKeyId;
     }
 
     @Override
-    public Optional<String> encrypt(String plainText, Map<String, String> encryptionContext) {
+    public Optional<String> encrypt(final String plainText, final Map<String, String> encryptionContext) {
         final ByteBuffer plainTextBlob = ByteBuffer.wrap(plainText.getBytes());
 
         final EncryptRequest encryptRequest = new EncryptRequest()
@@ -40,13 +38,14 @@ public class KmsDAOImpl implements KmsDAO{
 
         // copy to String
         if (cipherText.hasArray()) {
-            return Optional.of(new String(Base64.encodeBase64(cipherText.array())));
+            final String cipherTextString = new String(Base64.encodeBase64(cipherText.array()));
+            return Optional.of(cipherTextString);
         }
         return Optional.absent();
     }
 
     @Override
-    public Optional<String> decrypt(String cipherText, Map<String, String> encryptionContext) {
+    public Optional<String> decrypt(final String cipherText, final Map<String, String> encryptionContext) {
         final ByteBuffer cipherTextBlob = ByteBuffer.wrap(Base64.decodeBase64(cipherText));
 
         final DecryptRequest decryptRequest = new DecryptRequest()
@@ -55,7 +54,8 @@ public class KmsDAOImpl implements KmsDAO{
 
         final ByteBuffer plainText =  kmsClient.decrypt(decryptRequest).getPlaintext();
         if (plainText.hasArray()) {
-            return Optional.of(new String(plainText.array(), DEFAULT_CHARSET));
+            final String plainTextString = new String(plainText.array());
+            return Optional.of(plainTextString);
         }
         return Optional.absent();
     }
