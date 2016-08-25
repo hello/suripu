@@ -65,7 +65,7 @@ public class SleepDeprivationInsightsTest {
         final int testMeanSleepDebt = 190;
         final int userAge = 30;
 
-        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, FAKE_TIMESTAMP);
+        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, FAKE_TIMESTAMP, true);
         assertThat(insightGenerated.isPresent(), is(Boolean.TRUE));
         assertThat(insightGenerated.get().message, is(SleepDeprivationMsgEN.getSleepDeprivationMessage(8,testMeanSleepDebt).message) );
     }
@@ -98,7 +98,7 @@ public class SleepDeprivationInsightsTest {
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID,testQueryStartDate2, testQueryEndDate2)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList2));
         Mockito.when(accountReadDAO.getById(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_ACCOUNT));
 
-        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, FAKE_TIMESTAMP);
+        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, FAKE_TIMESTAMP, true);
         assertThat(insightGenerated.isPresent(), is(Boolean.FALSE));
     }
 

@@ -205,7 +205,7 @@ public class InsightProcessor {
         return Optional.of(card.category);
     }
 
-    private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final RolloutClient featureFlipper) {
+    private void generateGeneralInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final RolloutClient featureFlipper) {
         Map<InsightCard.Category, DateTime> recentCategories;
         if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_LAST_SEEN, accountId, Collections.EMPTY_LIST)) {
             final List<InsightsLastSeen> insightsLastSeenList = this.insightsLastSeenDAO.getAll(accountId);
@@ -214,7 +214,8 @@ public class InsightProcessor {
             recentCategories = this.getRecentInsightsCategories(accountId);
         }
         final DateTime currentTimeUTC = DateTime.now(DateTimeZone.UTC);
-        return generateGeneralInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, recentCategories, currentTimeUTC, featureFlipper);
+        final Optional<InsightCard.Category> category = generateGeneralInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, recentCategories, currentTimeUTC, featureFlipper);
+        return;
     }
 
     /**
@@ -232,7 +233,7 @@ public class InsightProcessor {
 
         if (toGenerateWeeklyCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory.get(), accountId);
-            final Optional<InsightCard.Category> generatedWeeklyCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateWeeklyCategory.get());
+            final Optional<InsightCard.Category> generatedWeeklyCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateWeeklyCategory.get(), featureFlipper);
             if (generatedWeeklyCategory.isPresent()) {
                 LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedWeeklyCategory.get(), accountId);
                 return generatedWeeklyCategory;
@@ -244,13 +245,14 @@ public class InsightProcessor {
         }
 
         //logic for generating current high-priority Insight
-        final Optional<InsightCard.Category> toGenerateHighPriorityCategory = selectHighPriorityInsightToGenerate(accountId, recentCategories, currentTimeLocal, featureFlipper);
-        if (toGenerateHighPriorityCategory.isPresent()) {
-            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateHighPriorityCategory.get(), accountId);
-            final Optional<InsightCard.Category> generatedHighPriorityCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateHighPriorityCategory.get());
-            if (generatedHighPriorityCategory.isPresent()) {
-                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedHighPriorityCategory.get(), accountId);
-                return generatedHighPriorityCategory;
+        final Set<InsightCard.Category> toGenerateHighPriorityCategories = selectHighPriorityInsightToGenerate(recentCategories, currentTimeLocal);
+        if (!toGenerateHighPriorityCategories.isEmpty()) {
+            for (InsightCard.Category category :toGenerateHighPriorityCategories){
+                LOGGER.debug("Trying to generate {} category insight for accountId {}", category, accountId);
+                final Optional<InsightCard.Category> generatedHighPriorityCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, category, featureFlipper);
+                if (generatedHighPriorityCategory.isPresent()) {
+                    LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedHighPriorityCategory.get(), accountId);
+                }
             }
         }
 
@@ -258,7 +260,7 @@ public class InsightProcessor {
         final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTimeLocal, featureFlipper);
         if (toGenerateRandomCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateRandomCategory.get(), accountId);
-            final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateRandomCategory.get());
+            final Optional<InsightCard.Category> generatedRandomCategory = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateRandomCategory.get(), featureFlipper);
             if (generatedRandomCategory.isPresent()) {
                 LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomCategory.get(), accountId);
                 return generatedRandomCategory;
@@ -275,7 +277,7 @@ public class InsightProcessor {
 
         if (toGenerateOneTimeCategory.isPresent()) {
             LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateOneTimeCategory.get(), accountId);
-            final Optional<InsightCard.Category> generatedRandomOneTimeInsight = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateOneTimeCategory.get());
+            final Optional<InsightCard.Category> generatedRandomOneTimeInsight = this.generateInsightsByCategory(accountId, deviceAccountPair, deviceDataInsightQueryDAO, toGenerateOneTimeCategory.get(), featureFlipper);
             if (generatedRandomOneTimeInsight.isPresent()) {
                 LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedRandomOneTimeInsight.get(), accountId);
                 return generatedRandomOneTimeInsight;
@@ -303,21 +305,18 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    public Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeLocal, final RolloutClient featureFlipper) {
+    public Set<InsightCard.Category> selectHighPriorityInsightToGenerate(final Map<InsightCard.Category, DateTime> recentCategories, final DateTime currentTimeLocal) {
         //ToDo: For the next high priority insight, do not add to this list. This requries a fleshed out eligibility check for all high priority insights
         //Limit insight check time window
+        Set<InsightCard.Category> highPriorityCategories = new HashSet<>();
         if (currentTimeLocal.getHourOfDay() >= HIGH_PRIORITY_START_TIME && currentTimeLocal.getHourOfDay() <= HIGH_PRIORITY_END_TIME ){
             //SLEEP_DEPRIVATION
-            //check for eligibility - insight not recently delivered and insight will be generated - avoids over-riding all other insights during window
-            // check eligibility delivers log message if insight is deliverable
-            if(SleepDeprivation.checkEligiblity(accountId, recentCategories, INSIGHT_FREQ_SLEEP_DEPRIVATION,sleepStatsDAODynamoDB, accountReadDAO, currentTimeLocal)) {
-                if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST)) {
-                    return Optional.of(InsightCard.Category.SLEEP_DEPRIVATION);
-                }
+            if (InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.SLEEP_DEPRIVATION, INSIGHT_FREQ_SLEEP_DEPRIVATION)) {
+                highPriorityCategories.add(InsightCard.Category.SLEEP_DEPRIVATION);
             }
         }
 
-        return Optional.absent();
+        return highPriorityCategories;
     }
 
     private Optional<InsightCard.Category> selectMarketingInsightToGenerate(final Long accountId, final DateTime currentTimeLocal) {
@@ -460,7 +459,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category) {
+    public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category, final RolloutClient featureFlipper) {
 
         final DateTimeFormatter timeFormat;
         final TemperatureUnit tempUnit;
@@ -523,8 +522,9 @@ public class InsightProcessor {
                 insightCardOptional = MarketingInsights.getRunInsight(accountId);
                 break;
             case SLEEP_DEPRIVATION:
-                final DateTime queryDate = DateTime.now().withTimeAtStartOfDay();
-                insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, queryDate);
+                final DateTime queryDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+                final boolean hasSleepDeprivationInsight = featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST);
+                insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, queryDate, hasSleepDeprivationInsight);
                 break;
             case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, sleepStatsDAODynamoDB, false);

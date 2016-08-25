@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by jarredheinrich on 7/8/16.
@@ -29,7 +28,7 @@ public class SleepDeprivation {
     private static final int MIN_N_HISTORIC_NIGHTS = 14; //minimal number of nights to calculate avg sleep dur
     private static final int DURATION_DIFF_THRESHOLD = 60; //minimal difference between avg deprived sleep and avg sleep for user
 
-    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTime queryEndDate) {
+    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTime queryEndDate, final boolean hasSleepDeprivationInsight) {
         //ideal sleep duration
         final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
         if (!optionalAccount.isPresent()){
@@ -45,15 +44,17 @@ public class SleepDeprivation {
         final List<AggregateSleepStats> sleepStatsLastWeek = getSleepDebprivationStats(accountId, sleepStatsDAODynamoDB, queryEndDate, N_NIGHTS);
         final List<AggregateSleepStats> sleepStatsLastMonth = getSleepDebprivationStats(accountId, sleepStatsDAODynamoDB, queryEndDate.minusDays(N_NIGHTS), N_HISTORIC_NIGHTS);
 
-        if (sleepStatsLastWeek.size() < N_NIGHTS || sleepStatsLastMonth.size() < MIN_N_HISTORIC_NIGHTS ){
+        if (sleepStatsLastWeek.size() < N_NIGHTS || sleepStatsLastMonth.size() < MIN_N_HISTORIC_NIGHTS ) {
             LOGGER.debug("action=insight-ineligible insight=sleep-deprivation reason=not-enough-data account_id={}", accountId);
             return Optional.absent();
         }
 
         final SleepDebtProfile sleepDebtProfile = new SleepDebtProfile(minSleepDurationMins, idealSleepDurationHours, sleepStatsLastWeek, sleepStatsLastMonth);
         final Optional<InsightCard> card = processSleepDeprivationData(accountId, sleepDebtProfile);
-
-        return card;
+        if (hasSleepDeprivationInsight) {
+            return card;
+        }
+        return Optional.absent();
     }
 
     private static List<AggregateSleepStats> getSleepDebprivationStats(final Long accountId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DateTime queryEndDate, final int numNights){
@@ -65,7 +66,7 @@ public class SleepDeprivation {
         return sleepStatsList;
     }
 
-    public static Optional<InsightCard> processSleepDeprivationData(final Long accountId, final SleepDebtProfile sleepDebtProfile){
+    public static Optional<InsightCard> processSleepDeprivationData(final Long accountId, final SleepDebtProfile sleepDebtProfile) {
         //gets duration and number of consecutive nights from agg_sleepstats
         int totalSleepDurationLastFourNights = 0;
         int numSleepDeprivedNights = 0;
@@ -109,17 +110,4 @@ public class SleepDeprivation {
 
         return card;
     }
-
-    public static boolean checkEligiblity(final Long accountId, final Map<InsightCard.Category, DateTime> insightsLastSeenMap, final int insightFrequency, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final DateTime queryEndDate) {
-        final DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(insightFrequency);
-        if (insightsLastSeenMap.containsKey(InsightCard.Category.SLEEP_DEPRIVATION)) {
-            if (insightsLastSeenMap.get(InsightCard.Category.SLEEP_DEPRIVATION).isAfter(startDate)) {
-                return false;
-            }
-        }
-        final Optional<InsightCard> insightCard = getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, queryEndDate);
-
-        return insightCard.isPresent();
-    }
-
 }
