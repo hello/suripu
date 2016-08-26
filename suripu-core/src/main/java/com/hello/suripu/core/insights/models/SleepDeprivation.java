@@ -1,12 +1,13 @@
-package com.hello.suripu.core.processors.insights;
+package com.hello.suripu.core.insights.models;
+
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.insights.InsightCard;
+import com.hello.suripu.core.insights.models.text.Text;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
-import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.SleepDeprivationMsgEN;
-import com.hello.suripu.core.models.Insights.Message.Text;
 import com.hello.suripu.core.models.SleepDebtProfile;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;

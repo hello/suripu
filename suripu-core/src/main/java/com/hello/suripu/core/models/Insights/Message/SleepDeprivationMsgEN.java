@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models.Insights.Message;
 
+import com.hello.suripu.core.insights.models.text.Text;
+
 /**
  * Created by jarredheinrich on 7/8/16.
  */
