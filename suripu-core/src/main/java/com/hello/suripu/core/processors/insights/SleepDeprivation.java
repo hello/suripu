@@ -28,12 +28,17 @@ public class SleepDeprivation {
     private static final int MIN_N_HISTORIC_NIGHTS = 14; //minimal number of nights to calculate avg sleep dur
     private static final int DURATION_DIFF_THRESHOLD = 60; //minimal difference between avg deprived sleep and avg sleep for user
 
-    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTime queryEndDate, final boolean hasSleepDeprivationInsight) {
+    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final boolean hasSleepDeprivationInsight) {
         //ideal sleep duration
         final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
         if (!optionalAccount.isPresent()){
             return Optional.absent();  //need age to assess sleep deprivation
         }
+
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        final Integer timeZoneOffset = (timeZoneOffsetOptional.isPresent()) ? timeZoneOffsetOptional.get() : 0; //defaults to utc if no timezone present
+        final DateTime currentTimeLocal = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset);
+        final DateTime queryEndDate = currentTimeLocal.minusDays(1);//query end date is last night
 
         final int userAge = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAge);
