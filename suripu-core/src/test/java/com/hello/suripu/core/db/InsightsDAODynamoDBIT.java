@@ -9,10 +9,10 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.insights.InsightCard;
 import com.hello.suripu.core.models.MultiDensityImage;
 
-import com.hello.suripu.core.processors.insights.IntroductionInsights;
+import com.hello.suripu.core.insights.models.IntroductionInsights;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;

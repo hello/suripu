@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Util;
-import com.hello.suripu.core.models.Insights.InsightCard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

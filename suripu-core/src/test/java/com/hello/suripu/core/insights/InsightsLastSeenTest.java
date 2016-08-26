@@ -1,7 +1,6 @@
 package com.hello.suripu.core.insights;
 
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.models.Insights.InsightCard;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;

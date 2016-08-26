@@ -23,7 +23,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.insights.InsightCard;
 import com.hello.suripu.core.models.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
