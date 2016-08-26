@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.insights.InsightsLastSeen;
 import com.hello.suripu.core.insights.InsightsLastSeenDynamoDB;
-import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.insights.InsightCard;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;

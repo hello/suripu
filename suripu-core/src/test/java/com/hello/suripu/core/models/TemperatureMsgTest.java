@@ -1,7 +1,7 @@
 package com.hello.suripu.core.models;
 
-import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
-import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.insights.models.text.TemperatureMsgEN;
+import com.hello.suripu.core.insights.models.text.Text;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import org.junit.Test;
 import org.slf4j.Logger;

@@ -4,8 +4,8 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DynamoDBIT;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
-import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
+import com.hello.suripu.core.insights.InsightCard;
+import com.hello.suripu.core.insights.MarketingInsightsSeen;
 import org.junit.Test;
 
 import java.util.Set;

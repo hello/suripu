@@ -1,6 +1,5 @@
 package com.hello.suripu.core.insights;
 
-import com.hello.suripu.core.models.Insights.InsightCard;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 

@@ -1,8 +1,8 @@
 package com.hello.suripu.core.db.mappers;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.Insights.InfoInsightCards;
-import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.insights.InfoInsightCards;
+import com.hello.suripu.core.insights.InsightCard;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.slf4j.Logger;

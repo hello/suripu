@@ -4,12 +4,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AggregateSleepStats;
-import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.Message.SleepMotionMsgEN;
-import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.insights.InsightCard;
+import com.hello.suripu.core.insights.models.text.SleepMotionMsgEN;
+import com.hello.suripu.core.insights.models.text.Text;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepStats;
-import com.hello.suripu.core.processors.insights.SleepMotion;
+import com.hello.suripu.core.insights.models.SleepMotion;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
