@@ -106,7 +106,7 @@ public class SleepDeprivation {
         final Optional<InsightCard> card =  Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_DEPRIVATION, InsightCard.TimePeriod.WEEKLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
-        LOGGER.debug("insight=sleep-deprivation account_id={} meanSleepDuration={}", accountId, N_NIGHTS, meanSleepDurationLastFourNights);
+        LOGGER.debug("insight=sleep-deprivation account_id={} meanSleepDuration={}", accountId, meanSleepDurationLastFourNights);
 
         return card;
     }
