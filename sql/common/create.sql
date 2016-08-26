@@ -425,6 +425,7 @@ CREATE TABLE sense_metadata (
     id BIGSERIAL PRIMARY KEY,
     sense_id VARCHAR(100),
     hw_version INTEGER
+    last_updated_at TIMESTAMP
 );
 
 CREATE INDEX sense_id_idx on sense_metadata(sense_id);
