@@ -45,7 +45,7 @@ public class SleepDeprivation {
         final List<AggregateSleepStats> sleepStatsLastMonth = getSleepDebprivationStats(accountId, sleepStatsDAODynamoDB, queryEndDate.minusDays(N_NIGHTS), N_HISTORIC_NIGHTS);
 
         if (sleepStatsLastWeek.size() < N_NIGHTS || sleepStatsLastMonth.size() < MIN_N_HISTORIC_NIGHTS ) {
-            LOGGER.debug("action=insight-ineligible insight=sleep-deprivation reason=not-enough-data account_id={}", accountId);
+            LOGGER.trace("action=insight-ineligible insight=sleep-deprivation reason=not-enough-data account_id={}", accountId);
             return Optional.absent();
         }
 
@@ -81,7 +81,7 @@ public class SleepDeprivation {
 
         //gets cases of not enough consecutive nights
         if (numSleepDeprivedNights < N_NIGHTS){
-            LOGGER.debug("action=insight-ineligible insight=sleep-deprivation reason=not-enough-sleep-deprived-nights account_id={} num-nights={}", accountId, numSleepDeprivedNights);
+            LOGGER.trace("action=insight-ineligible insight=sleep-deprivation reason=not-enough-sleep-deprived-nights account_id={} num-nights={}", accountId, numSleepDeprivedNights);
             return Optional.absent();
         }
 
@@ -97,7 +97,7 @@ public class SleepDeprivation {
         //ineligible conditions
         if (meanSleepDurationLastFourNights >= meanSleepDurationLastMonth - DURATION_DIFF_THRESHOLD){
             //safeguard for users who appear chronically sleep deprived or have atypical sleep habits - weekly average is not greatly different than avg for previous month.
-            LOGGER.debug("action=insight-ineligible insight=sleep-deprivation reason=sleep-deprivation-within-1-hour-of-mean-duration account_id={} mean-duration={} mean-duration-historic={}", accountId, meanSleepDurationLastFourNights, meanSleepDurationLastMonth);
+            LOGGER.trace("action=insight-ineligible insight=sleep-deprivation reason=sleep-deprivation-within-1-hour-of-mean-duration account_id={} mean-duration={} mean-duration-historic={}", accountId, meanSleepDurationLastFourNights, meanSleepDurationLastMonth);
             return Optional.absent();
         }
 
