@@ -522,7 +522,10 @@ public class InsightProcessor {
                 insightCardOptional = MarketingInsights.getRunInsight(accountId);
                 break;
             case SLEEP_DEPRIVATION:
-                final DateTime queryDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+                final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+                final Integer timeZoneOffset = (timeZoneOffsetOptional.isPresent()) ? timeZoneOffsetOptional.get() : 0; //defaults to utc if no timezone present
+                final DateTime currentTimeLocal = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset);
+                final DateTime queryDate = currentTimeLocal.minusDays(1);//query end date is last night
                 final boolean hasSleepDeprivationInsight = featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST);
                 insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, queryDate, hasSleepDeprivationInsight);
                 break;
