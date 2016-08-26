@@ -522,9 +522,8 @@ public class InsightProcessor {
                 insightCardOptional = MarketingInsights.getRunInsight(accountId);
                 break;
             case SLEEP_DEPRIVATION:
-                final DateTime queryDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
                 final boolean hasSleepDeprivationInsight = featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_SLEEP_DEPRIVATION, accountId, Collections.EMPTY_LIST);
-                insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, queryDate, hasSleepDeprivationInsight);
+                insightCardOptional = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, hasSleepDeprivationInsight);
                 break;
             case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, sleepStatsDAODynamoDB, false);
