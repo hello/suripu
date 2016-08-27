@@ -424,7 +424,7 @@ ALTER TABLE oauth_tokens ADD COLUMN refresh_expires_in INTEGER;
 CREATE TABLE sense_metadata (
     id BIGSERIAL PRIMARY KEY,
     sense_id VARCHAR(100),
-    hw_version INTEGER
+    hw_version INTEGER,
     last_updated_at TIMESTAMP
 );
 
