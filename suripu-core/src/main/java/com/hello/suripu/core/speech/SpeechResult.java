@@ -12,17 +12,13 @@ import java.util.Map;
  */
 public class SpeechResult {
 
-    @JsonIgnore
-    public final Long accountId;
+    private static final String UNSET_STRING_PLACEHOLDER  = "NONE";
 
     @JsonProperty("datetime_utc")
     public final DateTime dateTimeUTC;
 
     @JsonIgnore
     public final DateTime updatedUTC;
-
-    @JsonIgnore
-    public final String senseId;
 
     @JsonIgnore
     public final String audioIdentifier;  // uuid string of audio file in S3
@@ -62,10 +58,8 @@ public class SpeechResult {
     public final Result result;
 
 
-    public SpeechResult(final Long accountId,
-                        final DateTime dateTimeUTC,
+    public SpeechResult(final DateTime dateTimeUTC,
                         final DateTime updatedUTC,
-                        final String senseId,
                         final String audioIdentifier,
                         final String text,
                         final String responseText,
@@ -78,10 +72,8 @@ public class SpeechResult {
                         final WakeWord wakeWord,
                         final Map<String, Float> wakeWordsConfidence,
                         final Result result) {
-        this.accountId = accountId;
         this.dateTimeUTC = dateTimeUTC;
         this.updatedUTC = updatedUTC;
-        this.senseId = senseId;
         this.audioIdentifier = audioIdentifier;
         this.text = text;
         this.responseText = responseText;
@@ -99,28 +91,20 @@ public class SpeechResult {
     }
 
     public static class Builder {
-        private Long accountId;
         private DateTime dateTimeUTC;
         private DateTime updatedUTC;
-        private String senseId = "";
         private String audioIdentifier = "";
         private String text = "";
-        private String responseText = "";
+        private String responseText = UNSET_STRING_PLACEHOLDER;
         private SpeechToTextService service = SpeechToTextService.GOOGLE;
         private float confidence = 0.0f;
         private Intention.IntentType intent = Intention.IntentType.NONE;
         private Intention.ActionType action = Intention.ActionType.NONE;
         private Intention.IntentCategory intentCategory = Intention.IntentCategory.NONE;
-        private String command = "";
+        private String command = UNSET_STRING_PLACEHOLDER;
         private WakeWord wakeWord = WakeWord.OKAY_SENSE;
         private Map<String, Float> wakeWordsConfidence = Maps.newHashMap();
         private Result result = Result.NONE;
-
-
-        public Builder withAccountId(final Long accountId) {
-            this.accountId = accountId;
-            return this;
-        }
 
         public Builder withDateTimeUTC(final DateTime dateTimeUTC) {
             this.dateTimeUTC = dateTimeUTC;
@@ -130,11 +114,6 @@ public class SpeechResult {
 
         public Builder withUpdatedUTC(final DateTime updatedUTC) {
             this.updatedUTC = updatedUTC;
-            return this;
-        }
-
-        public Builder withSenseId (final String id) {
-            this.senseId = id;
             return this;
         }
 
@@ -209,9 +188,8 @@ public class SpeechResult {
         }
 
         public SpeechResult build() {
-            return new SpeechResult(accountId,
-                    dateTimeUTC, updatedUTC, senseId,
-                    audioIdentifier, text, responseText, service, confidence,
+            return new SpeechResult(dateTimeUTC, updatedUTC, audioIdentifier,
+                    text, responseText, service, confidence,
                     intent, action, intentCategory, command,
                     wakeWord, wakeWordsConfidence, result);
         }

@@ -6,11 +6,15 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -18,7 +22,9 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,29 +40,32 @@ public class SpeechResultDAODynamoDB {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpeechResultDAODynamoDB.class);
 
     private static final int MAX_BATCH_GET_SIZE = 100;
+    private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ssZ");
 
     private enum SpeechToTextAttribute implements Attribute {
-        UUID("uuid", "S"),                  // uuid of saved audio in S3
-        CREATED_UTC("created_utc", "S"),    // timestamp  y-m-d h:m:s
-        TEXT("text", "S"),                  // transcribed text
-        SERVICE("service", "S"),            // service used -- google
-        CONFIDENCE("conf", "N"),            // transcription confidence
-        INTENT("intent", "S"),              // the next 4 attributes describes the parsed command
-        ACTION("action", "S"),
-        INTENT_CATEGORY("cat", "S"),
-        COMMAND("cmd", "S"),
-        WAKE_ID("wake_id", "N"),            // wake-word ID
-        WAKE_CONFIDENCE("wake_conf", "SS"), // confidence of all wake-words
-        RESULT("result", "S"),              // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
-        RESPONSE_TEXT("resp_text", "S"),
-        UPDATED_UTC("updated", "S");
+        UUID("uuid", "S", ":uuid"),                  // uuid of saved audio in S3
+        CREATED_UTC("created_utc", "S", ":ts"),    // timestamp  y-m-d h:m:s
+        TEXT("text", "S", ":t"),                  // transcribed text
+        SERVICE("service", "S", ":s"),            // service used -- google
+        CONFIDENCE("conf", "N", ":c"),            // transcription confidence
+        INTENT("intent", "S", ":i"),              // the next 4 attributes describes the parsed command
+        ACTION("cmd_action", "S", ":a"),
+        INTENT_CATEGORY("cat", "S", ":ic"),
+        COMMAND("cmd", "S", ":cmd"),
+        WAKE_ID("wake_id", "N", ":wid"),            // wake-word ID
+        WAKE_CONFIDENCE("wake_conf", "SS", ":wc"), // confidence of all wake-words
+        RESULT("cmd_result", "S", ":res"),              // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        RESPONSE_TEXT("resp_text", "S", ":rt"),
+        UPDATED_UTC("updated", "S", ":up");
 
         private final String name;
         private final String type;
+        private final String query;
 
-        SpeechToTextAttribute(String name, String type) {
+        SpeechToTextAttribute(String name, String type, String query) {
             this.name = name;
             this.type = type;
+            this.query = query;
         }
 
         public String sanitizedName() {
@@ -66,6 +75,7 @@ public class SpeechResultDAODynamoDB {
             return name;
         }
 
+        public String query() { return query; }
         @Override
         public String type() {
             return type;
@@ -134,7 +144,6 @@ public class SpeechResultDAODynamoDB {
 
 
     public boolean putItem(final SpeechResult speechResult) {
-
         final Item item = speechResultToDDBItem(speechResult);
         try {
             table.putItem(item);
@@ -145,11 +154,58 @@ public class SpeechResultDAODynamoDB {
         return true;
     }
 
-    //TODO
-    public boolean updateItem(final SpeechResult speechResult) {
-        return true;
+    public boolean updateItemCommand(final SpeechResult speechResult) {
+        final String updateExpression = String.format("SET %s = %s, %s = %s, %s = %s, %s = %s, %s = %s",
+                SpeechToTextAttribute.ACTION.shortName(), SpeechToTextAttribute.ACTION.query(),
+                SpeechToTextAttribute.INTENT.shortName(), SpeechToTextAttribute.INTENT.query(),
+                SpeechToTextAttribute.INTENT_CATEGORY.shortName(), SpeechToTextAttribute.INTENT_CATEGORY.query(),
+                SpeechToTextAttribute.COMMAND.shortName(), SpeechToTextAttribute.COMMAND.query(),
+                SpeechToTextAttribute.UPDATED_UTC.shortName(), SpeechToTextAttribute.UPDATED_UTC.query()
+        );
+
+        final ValueMap valueMap = new ValueMap()
+                .withString(SpeechToTextAttribute.INTENT.query(), speechResult.intent.toString())
+                .withString(SpeechToTextAttribute.ACTION.query(), speechResult.action.toString())
+                .withString(SpeechToTextAttribute.INTENT_CATEGORY.query(), speechResult.intentCategory.toString())
+                .withString(SpeechToTextAttribute.COMMAND.query(), speechResult.command)
+                .withString(SpeechToTextAttribute.UPDATED_UTC.query(), getDateString(speechResult.updatedUTC));
+
+        return updateQuery(speechResult.audioIdentifier, updateExpression, valueMap, SpeechToTextAttribute.COMMAND.shortName());
     }
 
+    public boolean updateItemResult(final SpeechResult speechResult) {
+        final String updateExpression = String.format("SET %s = %s, %s = %s, %s = %s",
+                SpeechToTextAttribute.RESULT.shortName(), SpeechToTextAttribute.RESULT.query(),
+                SpeechToTextAttribute.RESPONSE_TEXT.shortName(), SpeechToTextAttribute.RESPONSE_TEXT.query(),
+                SpeechToTextAttribute.UPDATED_UTC.shortName(), SpeechToTextAttribute.UPDATED_UTC.query()
+        );
+
+        final ValueMap valueMap = new ValueMap()
+                .withString(SpeechToTextAttribute.RESULT.query(), speechResult.result.toString())
+                .withString(SpeechToTextAttribute.RESPONSE_TEXT.query(), speechResult.responseText)
+                .withString(SpeechToTextAttribute.UPDATED_UTC.query(), getDateString(speechResult.updatedUTC));
+
+        return updateQuery(speechResult.audioIdentifier, updateExpression, valueMap, SpeechToTextAttribute.RESULT.shortName());
+    }
+
+
+    private Boolean updateQuery(final String uuid, final String updateExpression, final ValueMap valueMap, final String updatedAttribute) {
+        final UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey(SpeechToTextAttribute.UUID.shortName(), uuid)
+                .withUpdateExpression(updateExpression)
+                .withValueMap(valueMap)
+                .withReturnValues(ReturnValue.ALL_NEW);
+
+        try {
+            final UpdateItemOutcome outcome = table.updateItem(updateItemSpec);
+            final String updatedValue = outcome.getItem().getString(updatedAttribute);
+            LOGGER.debug("action=update-success uuid={} attribute={} new_value={}", uuid, updatedAttribute, updatedValue);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("error=update-fail error_msg={} uuid={} attribute={}", e.getMessage(), uuid, updatedAttribute);
+        }
+        return false;
+    }
     //endregion
 
 
@@ -158,6 +214,10 @@ public class SpeechResultDAODynamoDB {
         return dateTime.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT));
     }
 
+    private DateTime getDateTime(final String dateString) {
+        return DateTime.parse(dateString + "Z", DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
+    }
+// DateTime.parse(dateString + ":00Z", DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
     // region DDBItemToObject
     private Map<String, Float> wakeWordsConfidenceFromDDBItem(final Item item) {
         final Set<String> values = item.getStringSet(SpeechToTextAttribute.WAKE_CONFIDENCE.shortName());
@@ -181,8 +241,8 @@ public class SpeechResultDAODynamoDB {
 
         return new SpeechResult.Builder()
                 .withAudioIndentifier(item.getString(SpeechToTextAttribute.UUID.shortName()))
-                .withDateTimeUTC(DateTimeUtil.datetimeStringToDateTime(item.getString(SpeechToTextAttribute.CREATED_UTC.shortName())))
-                .withUpdatedUTC(DateTimeUtil.datetimeStringToDateTime(item.getString(SpeechToTextAttribute.UPDATED_UTC.shortName())))
+                .withDateTimeUTC(getDateTime(item.getString(SpeechToTextAttribute.CREATED_UTC.shortName())))
+                .withUpdatedUTC(getDateTime(item.getString(SpeechToTextAttribute.UPDATED_UTC.shortName())))
                 .withText(item.getString(SpeechToTextAttribute.TEXT.shortName()))
                 .withResponseText(item.getString(SpeechToTextAttribute.RESPONSE_TEXT.shortName()))
                 .withService(service)

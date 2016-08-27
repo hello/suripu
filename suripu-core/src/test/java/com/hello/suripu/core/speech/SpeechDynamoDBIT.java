@@ -78,7 +78,7 @@ public class SpeechDynamoDBIT {
                 .withWakeWordsConfidence(confidences)
                 .build();
 
-        final boolean putRes = speechDAO.putItem(speechResult);
+        boolean putRes = speechDAO.putItem(speechResult);
         assertThat(putRes, is(true));
 
         final Optional<SpeechResult> optionalResult = speechDAO.getItem(uuid);
@@ -155,7 +155,82 @@ public class SpeechDynamoDBIT {
                 assertThat(result.command.equals(command2), is(true));
             }
         }
-
         assertThat(found, is(2));
     }
+
+    @Test
+    public void testUpdateCommand() {
+
+        final DateTime dateTime = new DateTime(DateTimeZone.UTC).withYear(2016).withMonthOfYear(7).withDayOfMonth(22).withTimeAtStartOfDay();
+        final String text = "what is the meaning of life";
+        final String uuid = UUID.randomUUID().toString();
+        final Map<String, Float> confidences = Maps.newHashMap();
+        confidences.put("okay sense", 0.5f);
+
+        final SpeechResult speechResult = new SpeechResult.Builder()
+                .withDateTimeUTC(dateTime)
+                .withAudioIndentifier(uuid)
+                .withText(text)
+                .withConfidence(1.0f)
+                .withWakeWordsConfidence(confidences)
+                .build();
+
+        boolean putRes = speechDAO.putItem(speechResult);
+        assertThat(putRes, is(true));
+
+        final Optional<SpeechResult> optionalResult = speechDAO.getItem(uuid);
+        assertThat(optionalResult.isPresent(), is(true));
+
+        if (optionalResult.isPresent()) {
+            final SpeechResult result = optionalResult.get();
+            assertThat(result.text.equals(text), is(true));
+            assertThat(result.confidence, is(1.0f));
+            assertThat(result.audioIdentifier.equalsIgnoreCase(uuid), is(true));
+        }
+
+        final String newCommand = "get-lost";
+        final DateTime updated = dateTime.plusMinutes(1);
+        final SpeechResult speechResult2 = new SpeechResult.Builder()
+                .withAudioIndentifier(uuid)
+                .withUpdatedUTC(updated)
+                .withCommand("get-lost")
+                .build();
+
+        putRes = speechDAO.updateItemCommand(speechResult2);
+        assertThat(putRes, is(true));
+
+        final Optional<SpeechResult> optionalResult2 = speechDAO.getItem(uuid);
+        assertThat(optionalResult2.isPresent(), is(true));
+        if (optionalResult2.isPresent()) {
+            final SpeechResult result = optionalResult2.get();
+            assertThat(result.command.equals(newCommand), is(true));
+            assertThat(result.updatedUTC.equals(updated), is(true));
+        }
+
+        // update result
+        final Result newResult = Result.REJECTED;
+        final String responseText = "you suck";
+        final DateTime updated3 = dateTime.plusMinutes(2);
+
+        final SpeechResult speechResult3 = new SpeechResult.Builder()
+                .withAudioIndentifier(uuid)
+                .withUpdatedUTC(updated3)
+                .withResult(newResult)
+                .withResponseText(responseText)
+                .build();
+
+        putRes = speechDAO.updateItemResult(speechResult3);
+        assertThat(putRes, is(true));
+
+        final Optional<SpeechResult> optionalResult3 = speechDAO.getItem(uuid);
+        assertThat(optionalResult3.isPresent(), is(true));
+        if (optionalResult3.isPresent()) {
+            final SpeechResult result = optionalResult3.get();
+            assertThat(result.result.equals(newResult), is(true));
+            assertThat(result.responseText.equals(responseText), is(true));
+            assertThat(result.updatedUTC.equals(updated3), is(true));
+        }
+
+    }
+
 }
