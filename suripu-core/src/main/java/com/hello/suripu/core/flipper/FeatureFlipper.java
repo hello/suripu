@@ -51,6 +51,7 @@ public class FeatureFlipper {
     public final static String INSIGHTS_CAFFEINE = "insights_caffeine";
     public final static String INSIGHTS_HUMIDITY = "insights_humidity";
     public final static String INSIGHTS_LAST_SEEN = "insights_last_seen";
+    public final static String INSIGHTS_SLEEP_DEPRIVATION = "insights_sleep_deprivation";
     public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
     public final static String INSIGHTS_MARKETING_SCHEDULE = "insights_marketing_schedule";
     public final static String INSIGHTS_SLEEP_TIME = "insights_sleep_time";
