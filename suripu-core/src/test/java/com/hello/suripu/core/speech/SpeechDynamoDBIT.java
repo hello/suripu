@@ -13,14 +13,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class SpeechDynamoDBIT {
 
-    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(SpeechDynamoDBIT.class);
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(SpeechDynamoDBIT.class);
+    private static final Long accountId = 1L;
+    private static final String senseId = "sleepbetterer";
+
 
     private AmazonDynamoDB amazonDynamoDB;
     private SpeechResultDAODynamoDB speechDAO;
@@ -55,18 +61,16 @@ public class SpeechDynamoDBIT {
 
     @Test
     public void testPut() {
-        final Long accountId = 1L;
+
         final DateTime dateTime = new DateTime().withYear(2016).withMonthOfYear(7).withDayOfMonth(22).withTimeAtStartOfDay();
-        final String senseId = "sleepbetterer";
         final String text = "what is the meaning of life";
+        final String uuid = UUID.randomUUID().toString();
         final Map<String, Float> confidences = Maps.newHashMap();
         confidences.put("okay sense", 0.5f);
 
         final SpeechResult speechResult = new SpeechResult.Builder()
-                .withAccountId(accountId)
                 .withDateTimeUTC(dateTime)
-                .withSenseId(senseId)
-                .withAudioIndentifier("abcd")
+                .withAudioIndentifier(uuid)
                 .withText(text)
                 .withResponseText("22")
                 .withCommand("as-you-wish")
@@ -77,7 +81,7 @@ public class SpeechDynamoDBIT {
         final boolean putRes = speechDAO.putItem(speechResult);
         assertThat(putRes, is(true));
 
-        final Optional<SpeechResult> optionalResult = speechDAO.getItem(accountId, dateTime, senseId);
+        final Optional<SpeechResult> optionalResult = speechDAO.getItem(uuid);
         assertThat(optionalResult.isPresent(), is(true));
 
         if (optionalResult.isPresent()) {
@@ -85,58 +89,73 @@ public class SpeechDynamoDBIT {
             assertThat(result.text.equals(text), is(true));
             assertThat(result.confidence, is(1.0f));
             assertThat(result.responseText.equals("22"), is(true));
+            assertThat(result.audioIdentifier.equalsIgnoreCase(uuid), is(true));
         }
     }
 
     @Test
-    public void testGetLatest() {
-        final Long accountId = 1L;
-        final DateTime dateTime = DateTime.now(DateTimeZone.UTC).minusMinutes(5);
-        final String senseId = "sleepbetterer";
-        final String text = "what is the meaning of life";
-        final Map<String, Float> confidences = Maps.newHashMap();
-        confidences.put("okay sense", 0.5f);
+    public void testGetBatchItems() {
 
-        final SpeechResult speechResult = new SpeechResult.Builder()
-                .withAccountId(accountId)
+        final DateTime dateTime = DateTime.now(DateTimeZone.UTC).minusMinutes(5);
+        final String uuid1 = UUID.randomUUID().toString();
+        final String text1 = "what is the meaning of life";
+        final String command1 = "as-you-wish";
+        final float conf1 = 1.0f;
+        final Map<String, Float> confidences1 = Maps.newHashMap();
+        confidences1.put("okay sense", 0.5f);
+
+        final SpeechResult speechResult1 = new SpeechResult.Builder()
                 .withDateTimeUTC(dateTime)
-                .withSenseId(senseId)
-                .withAudioIndentifier("abcd")
-                .withText(text)
-                .withResponseText("22")
-                .withCommand("as-you-wish")
-                .withConfidence(1.0f)
-                .withWakeWordsConfidence(confidences)
+                .withAudioIndentifier(uuid1)
+                .withText(text1)
+                .withResponseText("stfu")
+                .withCommand(command1)
+                .withConfidence(conf1)
+                .withWakeWordsConfidence(confidences1)
                 .build();
 
-        boolean putRes = speechDAO.putItem(speechResult);
+        boolean putRes = speechDAO.putItem(speechResult1);
         assertThat(putRes, is(true));
 
         final DateTime now = DateTime.now(DateTimeZone.UTC).minusMinutes(1);
+        final String uuid2 = UUID.randomUUID().toString();
+        final String text2 = "what is the meaning of life";
+        final String command2 = "you-decider";
+        final float conf2 = 1.0f;
+        final Map<String, Float> confidences2 = Maps.newHashMap();
+        confidences2.put("okay sense", 0.8f);
+
         final SpeechResult speechResult2 = new SpeechResult.Builder()
-                .withAccountId(accountId)
                 .withDateTimeUTC(now)
-                .withSenseId(senseId)
-                .withAudioIndentifier("abcdef")
-                .withText(text)
-                .withResponseText("24")
-                .withCommand("stfu")
-                .withConfidence(1.0f)
-                .withWakeWordsConfidence(confidences)
+                .withAudioIndentifier(uuid2)
+                .withText(text2)
+                .withResponseText("effoff")
+                .withCommand(command2)
+                .withConfidence(conf2)
+                .withWakeWordsConfidence(confidences2)
                 .build();
 
         putRes = speechDAO.putItem(speechResult2);
         assertThat(putRes, is(true));
 
-        final Optional<SpeechResult> optionalResult = speechDAO.getLatest(accountId, senseId, 3);
-        assertThat(optionalResult.isPresent(), is(true));
+        final List<SpeechResult> speechResults = speechDAO.getItems(Arrays.asList(uuid1, uuid2));
+        assertThat(speechResults.size(), is(2));
 
-        if (optionalResult.isPresent()) {
-            final SpeechResult result = optionalResult.get();
-            assertThat(result.text.equals(text), is(true));
-            assertThat(result.responseText.equals("24"), is(true));
-            assertThat(result.command.equals("stfu"), is(true));
+        int found = 0;
+        for (final SpeechResult result: speechResults) {
+            if (result.audioIdentifier.equalsIgnoreCase(uuid1)) {
+                found++;
+                assertThat(result.text.equals(text1), is(true));
+                assertThat(result.confidence, is(conf1));
+                assertThat(result.command.equals(command1), is(true));
+            } else if (result.audioIdentifier.equalsIgnoreCase(uuid2)) {
+                found++;
+                assertThat(result.text.equals(text2), is(true));
+                assertThat(result.confidence, is(conf2));
+                assertThat(result.command.equals(command2), is(true));
+            }
         }
 
+        assertThat(found, is(2));
     }
 }
