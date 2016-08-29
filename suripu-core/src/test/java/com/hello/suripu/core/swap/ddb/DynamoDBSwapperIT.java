@@ -58,6 +58,7 @@ public class DynamoDBSwapperIT {
 
         try {
             MergedUserInfoDynamoDB.createTable(mergedTableName, this.amazonDynamoDBClient);
+            this.mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(this.amazonDynamoDBClient, mergedTableName);
 
 
         }catch (ResourceInUseException rie){
@@ -92,7 +93,7 @@ public class DynamoDBSwapperIT {
     public void legitSwap() {
         final DeviceDAO deviceDAO = mock(DeviceDAO.class);
         final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDBClient);
-        swapper = new DynamoDBSwapper(deviceDAO, dynamoDB, swapTableName, mergedTableName);
+        swapper = new DynamoDBSwapper(deviceDAO, dynamoDB, swapTableName, mergedUserInfoDynamoDB);
 
         final Table mergedTable = dynamoDB.getTable(mergedTableName);
 
