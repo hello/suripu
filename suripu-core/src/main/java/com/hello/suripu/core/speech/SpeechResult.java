@@ -12,16 +12,22 @@ import java.util.Map;
  */
 public class SpeechResult {
 
-    private static final String UNSET_STRING_PLACEHOLDER  = "NONE";
+    private static final String EMPTY_STRING_PLACEHOLDER  = "NONE";
+
+    @JsonIgnore
+    public final Long accountId;
+
+    @JsonIgnore
+    public final String senseId;
+
+    @JsonIgnore
+    public final String audioIdentifier;  // uuid string of audio file in S3
 
     @JsonProperty("datetime_utc")
     public final DateTime dateTimeUTC;
 
     @JsonIgnore
     public final DateTime updatedUTC;
-
-    @JsonIgnore
-    public final String audioIdentifier;  // uuid string of audio file in S3
 
     @JsonProperty("text")
     public final String text;   // transcribed text
@@ -45,6 +51,9 @@ public class SpeechResult {
     @JsonIgnore
     public final Intention.IntentCategory intentCategory;
 
+    @JsonIgnore
+    final String handlerType;
+
     @JsonProperty("command")
     public final String command; // TODO: this should probably be a class or something
 
@@ -58,7 +67,9 @@ public class SpeechResult {
     public final Result result;
 
 
-    public SpeechResult(final DateTime dateTimeUTC,
+    public SpeechResult(final Long accountId,
+                        final String senseId,
+                        final DateTime dateTimeUTC,
                         final DateTime updatedUTC,
                         final String audioIdentifier,
                         final String text,
@@ -68,10 +79,13 @@ public class SpeechResult {
                         final Intention.IntentType intent,
                         final Intention.ActionType action,
                         final Intention.IntentCategory intentCategory,
+                        final String handlerType,
                         final String command,
                         final WakeWord wakeWord,
                         final Map<String, Float> wakeWordsConfidence,
                         final Result result) {
+        this.accountId = accountId;
+        this.senseId = senseId;
         this.dateTimeUTC = dateTimeUTC;
         this.updatedUTC = updatedUTC;
         this.audioIdentifier = audioIdentifier;
@@ -82,6 +96,7 @@ public class SpeechResult {
         this.intent = intent;
         this.action = action;
         this.intentCategory = intentCategory;
+        this.handlerType = handlerType;
         this.command = command;
         this.wakeWord = wakeWord;
         this.wakeWordsConfidence = wakeWordsConfidence;
@@ -91,20 +106,33 @@ public class SpeechResult {
     }
 
     public static class Builder {
+        private Long accountId = 0L;
+        private String senseId = "";
         private DateTime dateTimeUTC;
         private DateTime updatedUTC;
         private String audioIdentifier = "";
         private String text = "";
-        private String responseText = UNSET_STRING_PLACEHOLDER;
+        private String responseText = EMPTY_STRING_PLACEHOLDER;
         private SpeechToTextService service = SpeechToTextService.GOOGLE;
         private float confidence = 0.0f;
         private Intention.IntentType intent = Intention.IntentType.NONE;
         private Intention.ActionType action = Intention.ActionType.NONE;
         private Intention.IntentCategory intentCategory = Intention.IntentCategory.NONE;
-        private String command = UNSET_STRING_PLACEHOLDER;
+        private String handlerType = "none";
+        private String command = EMPTY_STRING_PLACEHOLDER;
         private WakeWord wakeWord = WakeWord.OKAY_SENSE;
         private Map<String, Float> wakeWordsConfidence = Maps.newHashMap();
         private Result result = Result.NONE;
+
+        public Builder withAccountId(final Long accountId) {
+            this.accountId = accountId;
+            return this;
+        }
+
+        public Builder withSenseId(final String senseId) {
+            this.senseId = senseId;
+            return this;
+        }
 
         public Builder withDateTimeUTC(final DateTime dateTimeUTC) {
             this.dateTimeUTC = dateTimeUTC;
@@ -157,6 +185,11 @@ public class SpeechResult {
             return this;
         }
 
+        public Builder withHandlerType(final String handlerType) {
+            this.handlerType = handlerType;
+            return this;
+        }
+
         public Builder withCommand(final String command) {
             this.command = command;
             return this;
@@ -188,9 +221,10 @@ public class SpeechResult {
         }
 
         public SpeechResult build() {
-            return new SpeechResult(dateTimeUTC, updatedUTC, audioIdentifier,
+            return new SpeechResult(accountId, senseId,
+                    dateTimeUTC, updatedUTC, audioIdentifier,
                     text, responseText, service, confidence,
-                    intent, action, intentCategory, command,
+                    intent, action, intentCategory, handlerType, command,
                     wakeWord, wakeWordsConfidence, result);
         }
     }
