@@ -39,4 +39,16 @@ public class AggStatsInputs {
                 deviceDataListResponse.data,
                 pillDataList);
     }
+
+    public static AggStatsInputs create(final Optional<Device.Color> senseColorOptional,
+                                        final Optional<Calibration> calibrationOptional,
+                                        final ImmutableList<DeviceData> deviceDataList,
+                                        final ImmutableList<TrackerMotion> pillDataList) {
+        return new AggStatsInputs(
+                senseColorOptional,
+                calibrationOptional,
+                deviceDataList,
+                pillDataList);
+    }
+
 }
