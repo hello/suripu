@@ -7,16 +7,15 @@
     <packaging>pom</packaging>
     <version>0.8.0-SNAPSHOT</version>
     <properties>
-        <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
         <aws.sdk.version>1.10.34</aws.sdk.version>
         <google.guava.version>18.0</google.guava.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.7</java.version>
-        <slf4j.version>1.7.4</slf4j.version>
-        <logback.version>1.0.10</logback.version>
-        <jackson.version>2.5.3</jackson.version>
+        <java.version>1.8</java.version>
+        <slf4j.version>1.7.12</slf4j.version>
+        <logback.version>1.1.7</logback.version>
+        <jackson.version>2.8.1</jackson.version>
         <joda.version>2.9.4</joda.version>
     </properties>
 
@@ -24,7 +23,7 @@
         <module>suripu-api</module>
         <module>suripu-core</module>
         <module>suripu-algorithm</module>
-        <module>suripu-coredw8</module>
+        <module>suripu-coredropwizard</module>
     </modules>
 
     <scm>
@@ -68,27 +67,6 @@
                 <groupId>com.hello.dropwizard</groupId>
                 <artifactId>dropwizard-mikkusu</artifactId>
                 <version>0.0.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.dropwizard</groupId>
-                <artifactId>dropwizard-core</artifactId>
-                <version>${dropwizard.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>joda-time</groupId>
-                        <artifactId>joda-time</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.dropwizard</groupId>
-                <artifactId>dropwizard-testing</artifactId>
-                <version>${dropwizard.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.dropwizard</groupId>
-                <artifactId>dropwizard-jdbi</artifactId>
-                <version>${dropwizard.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
