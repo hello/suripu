@@ -1,4 +1,4 @@
-package com.hello.suripu.core.speech;
+package com.hello.suripu.core.speech.models;
 
 import org.joda.time.DateTime;
 

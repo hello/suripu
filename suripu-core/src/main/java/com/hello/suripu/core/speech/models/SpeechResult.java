@@ -1,7 +1,8 @@
-package com.hello.suripu.core.speech;
+package com.hello.suripu.core.speech.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 
@@ -15,7 +16,7 @@ public class SpeechResult {
     public static final String EMPTY_STRING_PLACEHOLDER  = "NONE";
 
     @JsonIgnore
-    public final Long accountId;
+    public final Optional<Long> accountId;
 
     @JsonIgnore
     public final String senseId;
@@ -30,26 +31,26 @@ public class SpeechResult {
     public final DateTime updatedUTC;
 
     @JsonProperty("text")
-    public final String text;   // transcribed text
+    public final Optional<String> text;   // transcribed text
 
     @JsonProperty("response_text")
-    public final String responseText; // Sense response
+    public final Optional<String> responseText; // Sense response
 
     @JsonIgnore
     public final SpeechToTextService service;
 
     @JsonIgnore
-    public final float confidence;
+    public final Optional<Float> confidence;
 
 
     @JsonIgnore
-    public final String s3ResponseKeyname;
+    public final Optional<String> s3ResponseKeyname;
 
     @JsonIgnore
-    public final String handlerType;
+    public final Optional<String> handlerType;
 
     @JsonProperty("command")
-    public final String command; // TODO: this should probably be a class or something
+    public final Optional<String> command; // TODO: this should probably be a class or something
 
     @JsonIgnore
     public final WakeWord wakeWord;
@@ -61,18 +62,18 @@ public class SpeechResult {
     public final Result result;
 
 
-    public SpeechResult(final Long accountId,
+    public SpeechResult(final Optional<Long> accountId,
                         final String senseId,
                         final DateTime dateTimeUTC,
                         final DateTime updatedUTC,
                         final String audioIdentifier,
-                        final String text,
-                        final String responseText,
+                        final Optional<String> text,
+                        final Optional<String> responseText,
                         final SpeechToTextService service,
-                        final float confidence,
-                        final String s3ResponseKeyname,
-                        final String handlerType,
-                        final String command,
+                        final Optional<Float> confidence,
+                        final Optional<String> s3ResponseKeyname,
+                        final Optional<String> handlerType,
+                        final Optional<String> command,
                         final WakeWord wakeWord,
                         final Map<String, Float> wakeWordsConfidence,
                         final Result result) {
@@ -96,24 +97,24 @@ public class SpeechResult {
     }
 
     public static class Builder {
-        private Long accountId = 0L;
+        private Optional<Long> accountId = Optional.absent();
         private String senseId = "";
         private DateTime dateTimeUTC;
         private DateTime updatedUTC;
         private String audioIdentifier = "";
-        private String text = "";
-        private String responseText = EMPTY_STRING_PLACEHOLDER;
+        private Optional<String> text = Optional.absent();
+        private Optional<String> responseText = Optional.absent();
         private SpeechToTextService service = SpeechToTextService.GOOGLE;
-        private float confidence = 0.0f;
-        private String s3Keyname = EMPTY_STRING_PLACEHOLDER;
-        private String handlerType = "none";
-        private String command = EMPTY_STRING_PLACEHOLDER;
+        private Optional<Float> confidence = Optional.absent();
+        private Optional<String> s3ResponseKeyname = Optional.absent();
+        private Optional<String> handlerType = Optional.absent();
+        private Optional<String> command = Optional.absent();
         private WakeWord wakeWord = WakeWord.OKAY_SENSE;
         private Map<String, Float> wakeWordsConfidence = Maps.newHashMap();
         private Result result = Result.NONE;
 
         public Builder withAccountId(final Long accountId) {
-            this.accountId = accountId;
+            this.accountId = Optional.of(accountId);
             return this;
         }
 
@@ -139,12 +140,12 @@ public class SpeechResult {
         }
 
         public Builder withText(final String text) {
-            this.text = text;
+            this.text = Optional.of(text);
             return this;
         }
 
         public Builder withResponseText(final String text) {
-            this.responseText= text;
+            this.responseText= Optional.of(text);
             return this;
         }
 
@@ -154,22 +155,22 @@ public class SpeechResult {
         }
 
         public Builder withConfidence(final Float confidence) {
-            this.confidence = confidence;
+            this.confidence = Optional.of(confidence);
             return this;
         }
 
         public Builder withS3Keyname(final String s3Keyname) {
-            this.s3Keyname = s3Keyname;
+            this.s3ResponseKeyname = Optional.of(s3Keyname);
             return this;
         }
 
         public Builder withHandlerType(final String handlerType) {
-            this.handlerType = handlerType;
+            this.handlerType = Optional.of(handlerType);
             return this;
         }
 
         public Builder withCommand(final String command) {
-            this.command = command;
+            this.command = Optional.of(command);
             return this;
         }
 
@@ -199,10 +200,9 @@ public class SpeechResult {
         }
 
         public SpeechResult build() {
-            return new SpeechResult(accountId, senseId,
-                    dateTimeUTC, updatedUTC, audioIdentifier,
+            return new SpeechResult(accountId, senseId, dateTimeUTC, updatedUTC, audioIdentifier,
                     text, responseText, service, confidence,
-                    s3Keyname, handlerType, command,
+                    s3ResponseKeyname, handlerType, command,
                     wakeWord, wakeWordsConfidence, result);
         }
     }

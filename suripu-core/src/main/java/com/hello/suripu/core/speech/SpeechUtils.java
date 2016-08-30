@@ -1,6 +1,7 @@
 package com.hello.suripu.core.speech;
 
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.speech.models.WakeWord;
 
 import java.util.List;
 import java.util.Map;

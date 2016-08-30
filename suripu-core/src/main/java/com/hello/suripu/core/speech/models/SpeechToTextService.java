@@ -1,4 +1,4 @@
-package com.hello.suripu.core.speech;
+package com.hello.suripu.core.speech.models;
 
 /**
  * Created by ksg on 7/20/16
@@ -8,7 +8,7 @@ public enum SpeechToTextService {
     GOOGLE("google"),
     WATSON("watson");
 
-    protected String value;
+    public String value;
     SpeechToTextService(final String value) { this.value = value; }
 
     public static SpeechToTextService fromString(final String text) {

@@ -1,6 +1,7 @@
-package com.hello.suripu.core.speech;
+package com.hello.suripu.core.speech.interfaces;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.speech.models.SpeechTimeline;
 import org.joda.time.DateTime;
 
 import java.util.List;
