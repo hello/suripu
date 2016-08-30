@@ -27,6 +27,8 @@ public class SleepDeprivation {
     private static final int N_HISTORIC_NIGHTS = 28;
     private static final int MIN_N_HISTORIC_NIGHTS = 14; //minimal number of nights to calculate avg sleep dur
     private static final int DURATION_DIFF_THRESHOLD = 60; //minimal difference between avg deprived sleep and avg sleep for user
+    private static final int MIN_AGE = 18;
+    private static final int MAX_AGE = 90;
 
     public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final boolean hasSleepDeprivationInsight) {
         //ideal sleep duration
@@ -42,7 +44,7 @@ public class SleepDeprivation {
 
         final int userAge = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
 
-        if (userAge < 18 || userAge > 90){
+        if (userAge < MIN_AGE || userAge > MAX_AGE){
             return Optional.absent();
         }
 

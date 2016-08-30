@@ -132,8 +132,11 @@ public class SleepDeprivationInsightsTest {
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID, testQueryStartDate1,testQueryEndDate1)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList1));
         Mockito.when(sleepStatsDAODynamoDB.getBatchStats(FAKE_ACCOUNT_ID,testQueryStartDate2, testQueryEndDate2)).thenReturn(ImmutableList.copyOf(fakeAggregateSleepStatsList2));
         Mockito.when(accountReadDAO.getById(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(fakeAccount));
+        Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.<Integer>absent());
 
-        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, FAKE_TIMESTAMP, true);
+        final int testMeanSleepDebt = 190;
+
+        final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, true);
         assertThat(insightGenerated.isPresent(), is(Boolean.FALSE));
     }
 
