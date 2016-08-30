@@ -27,6 +27,8 @@ public class SleepDeprivation {
     private static final int N_HISTORIC_NIGHTS = 28;
     private static final int MIN_N_HISTORIC_NIGHTS = 14; //minimal number of nights to calculate avg sleep dur
     private static final int DURATION_DIFF_THRESHOLD = 60; //minimal difference between avg deprived sleep and avg sleep for user
+    private static final int MIN_AGE = 18;
+    private static final int MAX_AGE = 90;
 
     public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final boolean hasSleepDeprivationInsight) {
         //ideal sleep duration
@@ -41,6 +43,11 @@ public class SleepDeprivation {
         final DateTime queryEndDate = currentTimeLocal.minusDays(1);//query end date is last night
 
         final int userAge = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
+
+        if (userAge < MIN_AGE || userAge > MAX_AGE){
+            return Optional.absent();
+        }
+
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAge);
         final int minSleepDurationMins = idealHours.absoluteMinHours * 60;
         final int idealSleepDurationHours = (idealHours.minHours + idealHours.maxHours )/2;
@@ -111,7 +118,7 @@ public class SleepDeprivation {
         final Optional<InsightCard> card =  Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_DEPRIVATION, InsightCard.TimePeriod.WEEKLY,
                 DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
-        LOGGER.debug("insight=sleep-deprivation account_id={} meanSleepDuration={}", accountId, N_NIGHTS, meanSleepDurationLastFourNights);
+        LOGGER.debug("insight=sleep-deprivation account_id={} meanSleepDuration={} meanHistoricSleepDuration={}", accountId, meanSleepDurationLastFourNights, meanSleepDurationLastMonth);
 
         return card;
     }
