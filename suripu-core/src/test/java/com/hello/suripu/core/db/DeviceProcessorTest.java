@@ -19,6 +19,7 @@ import com.hello.suripu.core.models.device.v2.Pill;
 import com.hello.suripu.core.models.device.v2.Sense;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
+import com.hello.suripu.core.sense.metadata.SenseMetadataDAO;
 import com.hello.suripu.core.util.PillColorUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -115,11 +116,13 @@ public class DeviceProcessorTest {
         when(sensorsViewsDynamoDB.senseStatus(senseAccountPairLastSeen.externalDeviceId, senseAccountPairLastSeen.accountId, senseAccountPairLastSeen.internalDeviceId))
                 .thenReturn(Optional.of(senseStatusLastSeen));
 
+        final SenseMetadataDAO senseMetadataDAO = mock(SenseMetadataDAO.class);
+
         deviceProcessor = new DeviceProcessor.Builder()
                 .withDeviceDAO(deviceDAO)
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
                 .withPillHeartbeatDAO(pillHeartBeatDAO)
-                .withSenseColorDAO(senseColorDAO)
+                .withSenseMetadataDAO(senseMetadataDAO)
                 .withWifiInfoDAO(wifiInfoDAO)
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
                 .withPillDataDAODynamoDB(pillDataDAODynamoDB)

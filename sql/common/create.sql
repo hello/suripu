@@ -419,3 +419,13 @@ GRANT ALL PRIVILEGES ON oauth_codes TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE oauth_codes_id_seq TO ingress_user;
 
 ALTER TABLE oauth_tokens ADD COLUMN refresh_expires_in INTEGER;
+
+-- Added August 25th
+CREATE TABLE sense_metadata (
+    id BIGSERIAL PRIMARY KEY,
+    sense_id VARCHAR(100),
+    hw_version INTEGER,
+    last_updated_at TIMESTAMP
+);
+
+CREATE INDEX sense_id_idx on sense_metadata(sense_id);

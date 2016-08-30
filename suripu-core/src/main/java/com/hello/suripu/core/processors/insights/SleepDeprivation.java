@@ -28,12 +28,17 @@ public class SleepDeprivation {
     private static final int MIN_N_HISTORIC_NIGHTS = 14; //minimal number of nights to calculate avg sleep dur
     private static final int DURATION_DIFF_THRESHOLD = 60; //minimal difference between avg deprived sleep and avg sleep for user
 
-    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final DateTime queryEndDate, final boolean hasSleepDeprivationInsight) {
+    public static Optional<InsightCard> getInsights(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountReadDAO accountReadDAO, final Long accountId, final boolean hasSleepDeprivationInsight) {
         //ideal sleep duration
         final Optional<Account> optionalAccount = accountReadDAO.getById(accountId);
         if (!optionalAccount.isPresent()){
             return Optional.absent();  //need age to assess sleep deprivation
         }
+
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        final Integer timeZoneOffset = (timeZoneOffsetOptional.isPresent()) ? timeZoneOffsetOptional.get() : 0; //defaults to utc if no timezone present
+        final DateTime currentTimeLocal = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset);
+        final DateTime queryEndDate = currentTimeLocal.minusDays(1);//query end date is last night
 
         final int userAge = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
 
@@ -50,7 +55,7 @@ public class SleepDeprivation {
         final List<AggregateSleepStats> sleepStatsLastMonth = getSleepDebprivationStats(accountId, sleepStatsDAODynamoDB, queryEndDate.minusDays(N_NIGHTS), N_HISTORIC_NIGHTS);
 
         if (sleepStatsLastWeek.size() < N_NIGHTS || sleepStatsLastMonth.size() < MIN_N_HISTORIC_NIGHTS ) {
-            LOGGER.debug("action=insight-ineligible insight=sleep-deprivation reason=not-enough-data account_id={}", accountId);
+            LOGGER.trace("action=insight-ineligible insight=sleep-deprivation reason=not-enough-data account_id={}", accountId);
             return Optional.absent();
         }
 
@@ -86,7 +91,7 @@ public class SleepDeprivation {
 
         //gets cases of not enough consecutive nights
         if (numSleepDeprivedNights < N_NIGHTS){
-            LOGGER.debug("action=insight-ineligible insight=sleep-deprivation reason=not-enough-sleep-deprived-nights account_id={} num-nights={}", accountId, numSleepDeprivedNights);
+            LOGGER.trace("action=insight-ineligible insight=sleep-deprivation reason=not-enough-sleep-deprived-nights account_id={} num-nights={}", accountId, numSleepDeprivedNights);
             return Optional.absent();
         }
 
@@ -102,7 +107,7 @@ public class SleepDeprivation {
         //ineligible conditions
         if (meanSleepDurationLastFourNights >= meanSleepDurationLastMonth - DURATION_DIFF_THRESHOLD){
             //safeguard for users who appear chronically sleep deprived or have atypical sleep habits - weekly average is not greatly different than avg for previous month.
-            LOGGER.debug("action=insight-ineligible insight=sleep-deprivation reason=sleep-deprivation-within-1-hour-of-mean-duration account_id={} mean-duration={} mean-duration-historic={}", accountId, meanSleepDurationLastFourNights, meanSleepDurationLastMonth);
+            LOGGER.trace("action=insight-ineligible insight=sleep-deprivation reason=sleep-deprivation-within-1-hour-of-mean-duration account_id={} mean-duration={} mean-duration-historic={}", accountId, meanSleepDurationLastFourNights, meanSleepDurationLastMonth);
             return Optional.absent();
         }
 
