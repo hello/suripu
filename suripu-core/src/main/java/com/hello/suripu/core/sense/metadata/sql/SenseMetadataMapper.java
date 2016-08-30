@@ -15,7 +15,7 @@ public class SenseMetadataMapper implements ResultSetMapper<SenseMetadata>{
         return new SenseMetadata(
                 resultSet.getString("sense_id"),
                 Sense.Color.valueOf(resultSet.getString("color")),
-                HardwareVersion.fromInt(resultSet.getInt("hw_version"))
+                HardwareVersion.SENSE_ONE
         );
     }
 }
