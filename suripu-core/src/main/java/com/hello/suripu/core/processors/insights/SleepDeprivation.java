@@ -36,6 +36,11 @@ public class SleepDeprivation {
         }
 
         final int userAge = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
+
+        if (userAge < 18 || userAge > 90){
+            return Optional.absent();
+        }
+
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAge);
         final int minSleepDurationMins = idealHours.absoluteMinHours * 60;
         final int idealSleepDurationHours = (idealHours.minHours + idealHours.maxHours )/2;
