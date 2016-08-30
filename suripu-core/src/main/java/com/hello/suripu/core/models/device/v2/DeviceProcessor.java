@@ -23,6 +23,8 @@ import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
+import com.hello.suripu.core.sense.metadata.SenseMetadata;
+import com.hello.suripu.core.sense.metadata.SenseMetadataDAO;
 import com.hello.suripu.core.util.PillColorUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -50,8 +52,8 @@ public class DeviceProcessor {
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
     private final PillDataDAODynamoDB pillDataDAODynamoDB;
     private final WifiInfoDAO wifiInfoDAO;
-    private final SenseColorDAO senseColorDAO;
     private final AnalyticsTracker analyticsTracker;
+    private final SenseMetadataDAO senseMetadataDAO;
 
     private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 14; // days
     private final static Integer BATTERY_LEVEL_LOW_BATTERY_WARNING = 15;
@@ -60,16 +62,17 @@ public class DeviceProcessor {
                             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
                             final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB,
                             final PillDataDAODynamoDB pillDataDAODynamoDB,
-                            final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO,
-                            final AnalyticsTracker analyticsTracker) {
+                            final WifiInfoDAO wifiInfoDAO,
+                            final AnalyticsTracker analyticsTracker,
+                            final SenseMetadataDAO senseMetadataDAO) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.wifiInfoDAO = wifiInfoDAO;
-        this.senseColorDAO = senseColorDAO;
         this.analyticsTracker = analyticsTracker;
+        this.senseMetadataDAO = senseMetadataDAO;
     }
 
     /**
@@ -208,8 +211,15 @@ public class DeviceProcessor {
      * @return a Devices object which contains list of all associated senses and pills
      */
     public Devices getAllDevices(final DeviceQueryInfo deviceQueryInfo) {
-        final List<DeviceAccountPair> senseAccountPairs = deviceDAO.getSensesForAccountId(deviceQueryInfo.accountId);
         final List<DeviceAccountPair> pillAccountPairs = deviceDAO.getPillsForAccountId(deviceQueryInfo.accountId);
+
+        // We only want to return the most recently paired sense
+        final Optional<DeviceAccountPair> senseAccountPair = deviceDAO.getMostRecentSensePairByAccountId(deviceQueryInfo.accountId);
+        final List<DeviceAccountPair> senseAccountPairs = new ArrayList<>();
+        if(senseAccountPair.isPresent()) {
+            senseAccountPairs.add(senseAccountPair.get());
+        }
+
         final Map<String, Optional<WifiInfo>> wifiInfoMap = retrieveWifiInfoMap(senseAccountPairs);
         final Optional<Pill.Color> pillColorOptional = retrievePillColor(deviceQueryInfo.accountId, senseAccountPairs);
 
@@ -226,12 +236,24 @@ public class DeviceProcessor {
 
     private List<Sense> getSenses(final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
         final List<Sense> senses = Lists.newArrayList();
-
         for (final DeviceAccountPair senseAccountPair : senseAccountPairs) {
             final Optional<DeviceStatus> senseStatusOptional = retrieveSenseStatus(senseAccountPair);
             final Optional<WifiInfo> wifiInfoOptional = wifiInfoMap.get(senseAccountPair.externalDeviceId);
-            final Optional<Sense.Color> senseColorOptional = senseColorDAO.get(senseAccountPair.externalDeviceId);
-            senses.add(Sense.create(senseAccountPair, senseStatusOptional, senseColorOptional, wifiInfoOptional));
+            final Optional<SenseMetadata> metadataOptional = Optional.fromNullable(senseMetadataDAO.get(senseAccountPair.externalDeviceId));
+            // TODO: get metadata from keystore if it fails?
+            // should it be allowed to fail???
+            final SenseMetadata defaultMetadata = SenseMetadata.unknown(senseAccountPair.externalDeviceId);
+            final SenseMetadata metadata = metadataOptional.or(defaultMetadata);
+
+            final Sense sense = Sense.create(
+                    senseAccountPair,
+                    senseStatusOptional,
+                    metadata.color(),
+                    wifiInfoOptional,
+                    metadata.hardwareVersion()
+            );
+
+            senses.add(sense);
         }
         return senses;
     }
@@ -331,6 +353,7 @@ public class DeviceProcessor {
         private SenseColorDAO senseColorDAO;
         private PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
         private AnalyticsTracker analyticsTracker;
+        private SenseMetadataDAO senseMetadataDAO;
 
         public Builder withDeviceDAO(final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -362,13 +385,13 @@ public class DeviceProcessor {
             return this;
         }
 
-        public Builder withSenseColorDAO(final SenseColorDAO senseColorDAO) {
-            this.senseColorDAO = senseColorDAO;
+        public Builder withAnalyticsTracker(final AnalyticsTracker analyticsTracker) {
+            this.analyticsTracker = analyticsTracker;
             return this;
         }
 
-        public Builder withAnalyticsTracker(final AnalyticsTracker analyticsTracker) {
-            this.analyticsTracker = analyticsTracker;
+        public Builder withSenseMetadataDAO(final SenseMetadataDAO senseMetadataDAO) {
+            this.senseMetadataDAO = senseMetadataDAO;
             return this;
         }
 
@@ -377,7 +400,9 @@ public class DeviceProcessor {
 
             return new DeviceProcessor(deviceDAO, mergedUserInfoDynamoDB,
                     sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB,
-                    pillDataDAODynamoDB, wifiInfoDAO, senseColorDAO, analyticsTracker);
+                    pillDataDAODynamoDB, wifiInfoDAO, analyticsTracker,
+                    senseMetadataDAO
+            );
         }
     }
 
