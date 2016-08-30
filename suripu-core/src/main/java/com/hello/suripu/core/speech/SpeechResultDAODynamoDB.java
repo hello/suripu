@@ -43,18 +43,17 @@ public class SpeechResultDAODynamoDB {
     private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ssZ");
 
     private enum SpeechToTextAttribute implements Attribute {
-        UUID("uuid", "S", ":uuid"),                  // uuid of saved audio in S3
+        UUID("uuid", "S", ":uuid"),                // uuid of saved audio in S3
         CREATED_UTC("created_utc", "S", ":ts"),    // timestamp  y-m-d h:m:s
-        TEXT("text", "S", ":t"),                  // transcribed text
-        SERVICE("service", "S", ":s"),            // service used -- google
-        CONFIDENCE("conf", "N", ":c"),            // transcription confidence
-        INTENT("intent", "S", ":i"),              // the next 4 attributes describes the parsed command
-        ACTION("cmd_action", "S", ":a"),
-        INTENT_CATEGORY("cat", "S", ":ic"),
+        TEXT("text", "S", ":t"),                   // transcribed text
+        SERVICE("service", "S", ":s"),             // service used -- google
+        CONFIDENCE("conf", "N", ":c"),             // transcription confidence
+        S3_KEYNAME("s3_key", "S", ":sk"),           // s3 keyname for response audio
+        HANDLER_TYPE("handler_type", "S", ":h"),         // handler used to process command
         COMMAND("cmd", "S", ":cmd"),
-        WAKE_ID("wake_id", "N", ":wid"),            // wake-word ID
+        WAKE_ID("wake_id", "N", ":wid"),           // wake-word ID
         WAKE_CONFIDENCE("wake_conf", "SS", ":wc"), // confidence of all wake-words
-        RESULT("cmd_result", "S", ":res"),              // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
+        RESULT("cmd_result", "S", ":res"),         // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
         RESPONSE_TEXT("resp_text", "S", ":rt"),
         UPDATED_UTC("updated", "S", ":up");
 
@@ -145,49 +144,36 @@ public class SpeechResultDAODynamoDB {
 
     public boolean putItem(final SpeechResult speechResult) {
         final Item item = speechResultToDDBItem(speechResult);
+
         try {
             table.putItem(item);
         } catch (Exception e) {
-            LOGGER.error("error=put-item-fail msg={}", e.getMessage());
+            LOGGER.error("error=put-item-fail error_msg={}", e.getMessage());
             return false;
         }
         return true;
     }
 
-    public boolean updateItemCommand(final SpeechResult speechResult) {
-        final String updateExpression = String.format("SET %s = %s, %s = %s, %s = %s, %s = %s, %s = %s",
-                SpeechToTextAttribute.ACTION.shortName(), SpeechToTextAttribute.ACTION.query(),
-                SpeechToTextAttribute.INTENT.shortName(), SpeechToTextAttribute.INTENT.query(),
-                SpeechToTextAttribute.INTENT_CATEGORY.shortName(), SpeechToTextAttribute.INTENT_CATEGORY.query(),
+    public boolean updateItem(final SpeechResult speechResult) {
+        final String updateExpression = String.format("SET %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s",
+                SpeechToTextAttribute.HANDLER_TYPE.shortName(), SpeechToTextAttribute.HANDLER_TYPE.query(),
+                SpeechToTextAttribute.S3_KEYNAME.shortName(), SpeechToTextAttribute.S3_KEYNAME.query(),
                 SpeechToTextAttribute.COMMAND.shortName(), SpeechToTextAttribute.COMMAND.query(),
-                SpeechToTextAttribute.UPDATED_UTC.shortName(), SpeechToTextAttribute.UPDATED_UTC.query()
-        );
-
-        final ValueMap valueMap = new ValueMap()
-                .withString(SpeechToTextAttribute.INTENT.query(), speechResult.intent.toString())
-                .withString(SpeechToTextAttribute.ACTION.query(), speechResult.action.toString())
-                .withString(SpeechToTextAttribute.INTENT_CATEGORY.query(), speechResult.intentCategory.toString())
-                .withString(SpeechToTextAttribute.COMMAND.query(), speechResult.command)
-                .withString(SpeechToTextAttribute.UPDATED_UTC.query(), getDateString(speechResult.updatedUTC));
-
-        return updateQuery(speechResult.audioIdentifier, updateExpression, valueMap, SpeechToTextAttribute.COMMAND.shortName());
-    }
-
-    public boolean updateItemResult(final SpeechResult speechResult) {
-        final String updateExpression = String.format("SET %s = %s, %s = %s, %s = %s",
                 SpeechToTextAttribute.RESULT.shortName(), SpeechToTextAttribute.RESULT.query(),
                 SpeechToTextAttribute.RESPONSE_TEXT.shortName(), SpeechToTextAttribute.RESPONSE_TEXT.query(),
                 SpeechToTextAttribute.UPDATED_UTC.shortName(), SpeechToTextAttribute.UPDATED_UTC.query()
         );
 
         final ValueMap valueMap = new ValueMap()
+                .withString(SpeechToTextAttribute.HANDLER_TYPE.query(), speechResult.handlerType)
+                .withString(SpeechToTextAttribute.S3_KEYNAME.query(), speechResult.s3ResponseKeyname)
                 .withString(SpeechToTextAttribute.RESULT.query(), speechResult.result.toString())
                 .withString(SpeechToTextAttribute.RESPONSE_TEXT.query(), speechResult.responseText)
+                .withString(SpeechToTextAttribute.COMMAND.query(), speechResult.command)
                 .withString(SpeechToTextAttribute.UPDATED_UTC.query(), getDateString(speechResult.updatedUTC));
 
-        return updateQuery(speechResult.audioIdentifier, updateExpression, valueMap, SpeechToTextAttribute.RESULT.shortName());
+        return updateQuery(speechResult.audioIdentifier, updateExpression, valueMap, SpeechToTextAttribute.COMMAND.shortName());
     }
-
 
     private Boolean updateQuery(final String uuid, final String updateExpression, final ValueMap valueMap, final String updatedAttribute) {
         final UpdateItemSpec updateItemSpec = new UpdateItemSpec()
@@ -233,9 +219,6 @@ public class SpeechResultDAODynamoDB {
 
     private SpeechResult DDBItemToSpeechResult(final Item item) {
         final SpeechToTextService service = SpeechToTextService.fromString(item.getString(SpeechToTextAttribute.SERVICE.shortName()));
-        final Intention.IntentType intent = Intention.IntentType.fromString(item.getString(SpeechToTextAttribute.INTENT.shortName()));
-        final Intention.ActionType action = Intention.ActionType.fromString(item.getString(SpeechToTextAttribute.ACTION.shortName()));
-        final Intention.IntentCategory category = Intention.IntentCategory.fromString(item.getString(SpeechToTextAttribute.INTENT_CATEGORY.shortName()));
         final WakeWord wakeWord = WakeWord.fromInteger(item.getInt(SpeechToTextAttribute.WAKE_ID.shortName()));
         final Result result = Result.fromString(item.getString(SpeechToTextAttribute.RESULT.shortName()));
 
@@ -247,9 +230,8 @@ public class SpeechResultDAODynamoDB {
                 .withResponseText(item.getString(SpeechToTextAttribute.RESPONSE_TEXT.shortName()))
                 .withService(service)
                 .withConfidence(item.getFloat(SpeechToTextAttribute.CONFIDENCE.shortName()))
-                .withIntent(intent)
-                .withAction(action)
-                .withIntentCategory(category)
+                .withHandlerType(item.getString(SpeechToTextAttribute.HANDLER_TYPE.shortName()))
+                .withS3Keyname(item.getString(SpeechToTextAttribute.S3_KEYNAME.shortName()))
                 .withCommand(item.getString(SpeechToTextAttribute.COMMAND.shortName()))
                 .withWakeWord(wakeWord)
                 .withWakeWordsConfidence(wakeWordsConfidenceFromDDBItem(item))
@@ -266,9 +248,8 @@ public class SpeechResultDAODynamoDB {
                 .withString(SpeechToTextAttribute.RESPONSE_TEXT.shortName(), speechResult.responseText)
                 .withString(SpeechToTextAttribute.SERVICE.shortName(), speechResult.service.value)
                 .withFloat(SpeechToTextAttribute.CONFIDENCE.shortName(), speechResult.confidence)
-                .withString(SpeechToTextAttribute.INTENT.shortName(), speechResult.intent.toString())
-                .withString(SpeechToTextAttribute.ACTION.shortName(), speechResult.action.toString())
-                .withString(SpeechToTextAttribute.INTENT_CATEGORY.shortName(), speechResult.intentCategory.toString())
+                .withString(SpeechToTextAttribute.HANDLER_TYPE.shortName(), speechResult.handlerType)
+                .withString(SpeechToTextAttribute.S3_KEYNAME.shortName(), speechResult.s3ResponseKeyname)
                 .withString(SpeechToTextAttribute.COMMAND.shortName(), speechResult.command)
                 .withInt(SpeechToTextAttribute.WAKE_ID.shortName(), speechResult.wakeWord.getId())
                 .withList(SpeechToTextAttribute.WAKE_CONFIDENCE.shortName(), confidences)

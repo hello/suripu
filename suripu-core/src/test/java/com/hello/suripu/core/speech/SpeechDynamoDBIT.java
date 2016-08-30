@@ -186,49 +186,40 @@ public class SpeechDynamoDBIT {
             assertThat(result.text.equals(text), is(true));
             assertThat(result.confidence, is(1.0f));
             assertThat(result.audioIdentifier.equalsIgnoreCase(uuid), is(true));
+            assertThat(result.handlerType.equals("none"), is(true));
+            assertThat(result.s3ResponseKeyname.equals(SpeechResult.EMPTY_STRING_PLACEHOLDER), is(true));
+            assertThat(result.command.equals(SpeechResult.EMPTY_STRING_PLACEHOLDER), is(true));
         }
 
         final String newCommand = "get-lost";
+        final String handlerType = "handle-this!";
+        final String s3key = "nowhere to be found";
+        final Result newResult = Result.REJECTED;
+        final String responseText = "you suck";
         final DateTime updated = dateTime.plusMinutes(1);
         final SpeechResult speechResult2 = new SpeechResult.Builder()
                 .withAudioIndentifier(uuid)
                 .withUpdatedUTC(updated)
-                .withCommand("get-lost")
+                .withHandlerType(handlerType)
+                .withS3Keyname(s3key)
+                .withCommand(newCommand)
+                .withResult(newResult)
+                .withResponseText(responseText)
                 .build();
 
-        putRes = speechDAO.updateItemCommand(speechResult2);
+        putRes = speechDAO.updateItem(speechResult2);
         assertThat(putRes, is(true));
 
         final Optional<SpeechResult> optionalResult2 = speechDAO.getItem(uuid);
         assertThat(optionalResult2.isPresent(), is(true));
         if (optionalResult2.isPresent()) {
             final SpeechResult result = optionalResult2.get();
+            assertThat(result.handlerType.equals(handlerType), is(true));
+            assertThat(result.s3ResponseKeyname.equals(s3key), is(true));
             assertThat(result.command.equals(newCommand), is(true));
-            assertThat(result.updatedUTC.equals(updated), is(true));
-        }
-
-        // update result
-        final Result newResult = Result.REJECTED;
-        final String responseText = "you suck";
-        final DateTime updated3 = dateTime.plusMinutes(2);
-
-        final SpeechResult speechResult3 = new SpeechResult.Builder()
-                .withAudioIndentifier(uuid)
-                .withUpdatedUTC(updated3)
-                .withResult(newResult)
-                .withResponseText(responseText)
-                .build();
-
-        putRes = speechDAO.updateItemResult(speechResult3);
-        assertThat(putRes, is(true));
-
-        final Optional<SpeechResult> optionalResult3 = speechDAO.getItem(uuid);
-        assertThat(optionalResult3.isPresent(), is(true));
-        if (optionalResult3.isPresent()) {
-            final SpeechResult result = optionalResult3.get();
             assertThat(result.result.equals(newResult), is(true));
             assertThat(result.responseText.equals(responseText), is(true));
-            assertThat(result.updatedUTC.equals(updated3), is(true));
+            assertThat(result.updatedUTC.equals(updated), is(true));
         }
 
     }

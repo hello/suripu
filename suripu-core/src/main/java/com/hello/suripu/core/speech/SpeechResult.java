@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class SpeechResult {
 
-    private static final String EMPTY_STRING_PLACEHOLDER  = "NONE";
+    public static final String EMPTY_STRING_PLACEHOLDER  = "NONE";
 
     @JsonIgnore
     public final Long accountId;
@@ -41,18 +41,12 @@ public class SpeechResult {
     @JsonIgnore
     public final float confidence;
 
-    // maybe for the next 3
-    @JsonIgnore
-    public final Intention.IntentType intent;
 
     @JsonIgnore
-    public final Intention.ActionType action;
+    public final String s3ResponseKeyname;
 
     @JsonIgnore
-    public final Intention.IntentCategory intentCategory;
-
-    @JsonIgnore
-    final String handlerType;
+    public final String handlerType;
 
     @JsonProperty("command")
     public final String command; // TODO: this should probably be a class or something
@@ -76,9 +70,7 @@ public class SpeechResult {
                         final String responseText,
                         final SpeechToTextService service,
                         final float confidence,
-                        final Intention.IntentType intent,
-                        final Intention.ActionType action,
-                        final Intention.IntentCategory intentCategory,
+                        final String s3ResponseKeyname,
                         final String handlerType,
                         final String command,
                         final WakeWord wakeWord,
@@ -93,9 +85,7 @@ public class SpeechResult {
         this.responseText = responseText;
         this.service = service;
         this.confidence = confidence;
-        this.intent = intent;
-        this.action = action;
-        this.intentCategory = intentCategory;
+        this.s3ResponseKeyname = s3ResponseKeyname;
         this.handlerType = handlerType;
         this.command = command;
         this.wakeWord = wakeWord;
@@ -115,9 +105,7 @@ public class SpeechResult {
         private String responseText = EMPTY_STRING_PLACEHOLDER;
         private SpeechToTextService service = SpeechToTextService.GOOGLE;
         private float confidence = 0.0f;
-        private Intention.IntentType intent = Intention.IntentType.NONE;
-        private Intention.ActionType action = Intention.ActionType.NONE;
-        private Intention.IntentCategory intentCategory = Intention.IntentCategory.NONE;
+        private String s3Keyname = EMPTY_STRING_PLACEHOLDER;
         private String handlerType = "none";
         private String command = EMPTY_STRING_PLACEHOLDER;
         private WakeWord wakeWord = WakeWord.OKAY_SENSE;
@@ -170,18 +158,8 @@ public class SpeechResult {
             return this;
         }
 
-        public Builder withIntent(final Intention.IntentType intent) {
-            this.intent = intent;
-            return this;
-        }
-
-        public Builder withAction(final Intention.ActionType action) {
-            this.action = action;
-            return this;
-        }
-
-        public Builder withIntentCategory(final Intention.IntentCategory intentCategory) {
-            this.intentCategory = intentCategory;
+        public Builder withS3Keyname(final String s3Keyname) {
+            this.s3Keyname = s3Keyname;
             return this;
         }
 
@@ -224,7 +202,7 @@ public class SpeechResult {
             return new SpeechResult(accountId, senseId,
                     dateTimeUTC, updatedUTC, audioIdentifier,
                     text, responseText, service, confidence,
-                    intent, action, intentCategory, handlerType, command,
+                    s3Keyname, handlerType, command,
                     wakeWord, wakeWordsConfidence, result);
         }
     }
