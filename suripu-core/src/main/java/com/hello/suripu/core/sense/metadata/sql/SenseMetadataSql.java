@@ -14,5 +14,5 @@ public abstract class SenseMetadataSql implements SenseMetadataDAO {
     public abstract SenseMetadata get(@Bind("sense_id") String senseId);
 
     @SqlUpdate("INSERT INTO sense_metadata (sense_id, color, hw_version, last_updated_at) VALUES(:sense_id, :color, :hw_version, :last_updated_at);")
-    public abstract Boolean put(@BindSenseMetadata SenseMetadata senseMetadata);
+    public abstract Integer put(@BindSenseMetadata SenseMetadata senseMetadata);
 }
