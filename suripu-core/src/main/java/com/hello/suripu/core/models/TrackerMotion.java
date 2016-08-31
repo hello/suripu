@@ -55,6 +55,11 @@ public class TrackerMotion {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
+    public DateTime localTime() {
+        final DateTime timestamp_datetime = new DateTime(timestamp);
+        return timestamp_datetime.plusMillis(offsetMillis);
+    }
+
     @JsonIgnore
     public final String externalTrackerId;
 

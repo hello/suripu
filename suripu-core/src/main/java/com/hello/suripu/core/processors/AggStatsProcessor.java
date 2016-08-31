@@ -237,7 +237,7 @@ public class AggStatsProcessor {
         return aggStats;
     }
 
-    private Optional<Device.Color> getSenseColorOptional(final SenseColorDAO senseColorDAO, final DeviceId deviceId) {
+    public Optional<Device.Color> getSenseColorOptional(final SenseColorDAO senseColorDAO, final DeviceId deviceId) {
         if (!deviceId.externalDeviceId.isPresent()) {
             return Optional.absent();
         }
@@ -245,7 +245,7 @@ public class AggStatsProcessor {
         return senseColorDAO.getColorForSense(deviceId.externalDeviceId.get());
     }
 
-    private Optional<Calibration> getCalibrationOptional(final CalibrationDAO calibrationDAO, final DeviceId deviceId) {
+    public Optional<Calibration> getCalibrationOptional(final CalibrationDAO calibrationDAO, final DeviceId deviceId) {
         if (!deviceId.externalDeviceId.isPresent()) {
             return Optional.absent();
         }
@@ -253,7 +253,7 @@ public class AggStatsProcessor {
         return calibrationDAO.getStrict(deviceId.externalDeviceId.get());
     }
 
-    private Boolean saveAggStat(final AggStats aggStats) {
+    public Boolean saveAggStat(final AggStats aggStats) {
         return aggStatsDAODynamoDB.insertSingleStat(aggStats);
     }
 
