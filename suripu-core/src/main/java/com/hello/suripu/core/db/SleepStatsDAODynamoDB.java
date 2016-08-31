@@ -167,7 +167,15 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     @Override
     public Optional<Integer> getTimeZoneOffset(final Long accountId) {
-        return this.getTimeZoneOffset(accountId, DateTime.now(DateTimeZone.UTC).minusDays(3)); //3 is min minus needed to "guarantee" sleep stats because of 1) timezone conversion 2) morning edge case
+        final DateTime earliestAllowedDate = DateTime.now(DateTimeZone.UTC).minusDays(7); // "active user" needs to have at least 1 timeline in the past week
+        final ImmutableList<AggregateSleepStats> sleepStatsList = this.getBatchStats(accountId, earliestAllowedDate.toString(), DateTime.now(DateTimeZone.UTC).toString());
+
+        if (sleepStatsList.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final AggregateSleepStats mostRecentSleepStat = sleepStatsList.get( sleepStatsList.size() - 1 );
+        return Optional.of(mostRecentSleepStat.offsetMillis);
     }
 
     @Override
