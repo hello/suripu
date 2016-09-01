@@ -631,7 +631,7 @@ UPDATE info_insight_cards SET text='Clean air is an important part of a healthy 
 
 Particulates can come from indoor sources of pollutants like smoke, cooking fumes, and even some household cleaners. You should always take care to minimize your exposure to these types of pollutants, and open a window to help with ventilation if necessary.
 
-Particulate pollution can also come from outdoor sources, both natural and artificial. You can check <airnow.gov> to see if there’s an air quality advisory for your area at any time. If so, you should follow EPA recommendations, and limit your time spent outdoors.'
+Particulate pollution can also come from outdoor sources, both natural and artificial. You can check the AirNow website to see if there’s an air quality advisory for your area at any time. If so, you should follow EPA recommendations, and limit your time spent outdoors.'
 WHERE category='air_quality';
 
 UPDATE info_insight_cards SET title='Clean air, better sleep' WHERE category='air_quality';
