@@ -127,6 +127,8 @@ public class SpeechResultIngestDAODynamoDB implements SpeechResultIngestDAO {
                 .withString(SpeechToTextAttribute.UPDATED_UTC.shortName(), getDateString(speechResult.updatedUTC));
 
         // optional attributes
+
+        // transcribed text
         if (speechResult.text.isPresent()) {
             item.withString(SpeechToTextAttribute.TEXT.shortName(), speechResult.text.get());
         }
@@ -135,19 +137,21 @@ public class SpeechResultIngestDAODynamoDB implements SpeechResultIngestDAO {
             item.withFloat(SpeechToTextAttribute.CONFIDENCE.shortName(), speechResult.confidence.get());
         }
 
-        if (speechResult.responseText.isPresent()) {
-            item.withString(SpeechToTextAttribute.RESPONSE_TEXT.shortName(), speechResult.responseText.get());
+        // command found
+        if (speechResult.command.isPresent()) {
+            item.withString(SpeechToTextAttribute.COMMAND.shortName(), speechResult.command.get());
         }
 
         if (speechResult.handlerType.isPresent()) {
             item.withString(SpeechToTextAttribute.HANDLER_TYPE.shortName(), speechResult.handlerType.get());
         }
 
+        if (speechResult.responseText.isPresent()) {
+            item.withString(SpeechToTextAttribute.RESPONSE_TEXT.shortName(), speechResult.responseText.get());
+        }
+
         if (speechResult.s3ResponseKeyname.isPresent()) {
             item.withString(SpeechToTextAttribute.S3_KEYNAME.shortName(), speechResult.s3ResponseKeyname.get());
-        }
-        if (speechResult.command.isPresent()) {
-            item.withString(SpeechToTextAttribute.COMMAND.shortName(), speechResult.command.get());
         }
 
         return item;
