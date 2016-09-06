@@ -35,6 +35,7 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpeechResultReadDAODynamoDB.class);
 
     private static final int MAX_BATCH_GET_SIZE = 100;
+    private static final int MAX_GET_ITEMS_ATTEMPTS = 3;
     private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ssZ");
 
     private final Table table;
@@ -77,8 +78,10 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
 
             BatchGetItemOutcome outcome = dynamoDB.batchGetItem(tableKeysAndAttributes);
             Map<String, KeysAndAttributes> unprocessed = null;
+            int attempts = 0;
 
             do {
+                attempts++;
                 for (final String tableName : outcome.getTableItems().keySet()) {
                     final List<Item> items = outcome.getTableItems().get(tableName);
                     for (final Item item : items) {
@@ -89,7 +92,7 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
                         outcome = dynamoDB.batchGetItemUnprocessed(unprocessed);
                     }
                 }
-            } while (!(unprocessed != null && unprocessed.isEmpty()));
+            } while (!(unprocessed != null && unprocessed.isEmpty()) && attempts < MAX_GET_ITEMS_ATTEMPTS);
         }
 
         return speechResults;
