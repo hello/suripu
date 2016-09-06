@@ -103,7 +103,6 @@ public class SenseProcessorUtils {
 
     }
 
-
     public static String rgb(int r, int g, int b) {
         return String.format("#%02x%02x%02x", r, g, b);
     }
@@ -130,19 +129,22 @@ public class SenseProcessorUtils {
 
         // Maybe add hw version to protobuf?
         if(periodicData.hasLightSensor()) {
+
+            final String rgb = rgb(
+                    periodicData.getLightSensor().getR(),
+                    periodicData.getLightSensor().getG(),
+                    periodicData.getLightSensor().getB()
+            );
+
             final ExtraSensorData extraSensorData = SenseOneFiveExtraData.create(
-                    periodicData.getPressure(),
-                    periodicData.getTvoc(),
-                    periodicData.getCo2(),
-                    rgb(
-                            periodicData.getLightSensor().getR(),
-                            periodicData.getLightSensor().getG(),
-                            periodicData.getLightSensor().getB()
-                    ),
-                    periodicData.getLightSensor().getInfrared(),
-                    periodicData.getLightSensor().getClear(),
-                    periodicData.getLightSensor().getLuxCount(),
-                    periodicData.getLightSensor().getUvCount()
+                    periodicData.hasPressure() ? periodicData.getPressure() : -1,
+                    periodicData.hasTvoc() ? periodicData.getTvoc() : -1,
+                    periodicData.hasCo2() ? periodicData.getCo2() : -1,
+                    rgb,
+                    periodicData.getLightSensor().hasInfrared() ? periodicData.getLightSensor().getInfrared() : -1,
+                    periodicData.getLightSensor().hasClear() ? periodicData.getLightSensor().getClear() : -1,
+                    periodicData.getLightSensor().hasLuxCount() ? periodicData.getLightSensor().getLuxCount() : -1,
+                    periodicData.getLightSensor().hasUvCount() ? periodicData.getLightSensor().getUvCount() : -1
             );
 
             builder.withExtraSensorData(extraSensorData);

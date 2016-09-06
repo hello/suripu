@@ -85,7 +85,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         PRESSURE("pa", "N"),
         TVOC("tvoc", "N"),
         CO2("co2", "N"),
-        RGB("rbg", "S"), // Number ?
+        RGB("rgb", "S"), // Number ?
         IR("ir", "N"),
         CLEAR("clear", "N"),
         LUX_COUNT("lux", "N"),
