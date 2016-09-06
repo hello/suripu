@@ -1,4 +1,4 @@
-package com.hello.suripu.core.speech;
+package com.hello.suripu.core.speech.models;
 
 import com.hello.suripu.core.db.dynamo.Attribute;
 

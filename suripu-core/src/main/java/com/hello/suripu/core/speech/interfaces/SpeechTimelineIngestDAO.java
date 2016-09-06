@@ -1,4 +1,6 @@
-package com.hello.suripu.core.speech;
+package com.hello.suripu.core.speech.interfaces;
+
+import com.hello.suripu.core.speech.models.SpeechTimeline;
 
 /**
  * Created by ksg on 8/23/16

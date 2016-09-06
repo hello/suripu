@@ -1,7 +1,8 @@
-package com.hello.suripu.core.speech;
+package com.hello.suripu.core.speech.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 
@@ -12,14 +13,10 @@ import java.util.Map;
  */
 public class SpeechResult {
 
-    @JsonIgnore
-    public final Long accountId;
-
-    @JsonProperty("datetime_utc")
-    public final DateTime dateTimeUTC;
+    public static final String EMPTY_STRING_PLACEHOLDER  = "NONE";
 
     @JsonIgnore
-    public final DateTime updatedUTC;
+    public final Optional<Long> accountId;
 
     @JsonIgnore
     public final String senseId;
@@ -27,30 +24,33 @@ public class SpeechResult {
     @JsonIgnore
     public final String audioIdentifier;  // uuid string of audio file in S3
 
+    @JsonProperty("datetime_utc")
+    public final DateTime dateTimeUTC;
+
+    @JsonIgnore
+    public final DateTime updatedUTC;
+
     @JsonProperty("text")
-    public final String text;   // transcribed text
+    public final Optional<String> text;   // transcribed text
 
     @JsonProperty("response_text")
-    public final String responseText; // Sense response
+    public final Optional<String> responseText; // Sense response
 
     @JsonIgnore
     public final SpeechToTextService service;
 
     @JsonIgnore
-    public final float confidence;
+    public final Optional<Float> confidence;
 
-    // maybe for the next 3
-    @JsonIgnore
-    public final Intention.IntentType intent;
 
     @JsonIgnore
-    public final Intention.ActionType action;
+    public final Optional<String> s3ResponseKeyname;
 
     @JsonIgnore
-    public final Intention.IntentCategory intentCategory;
+    public final Optional<String> handlerType;
 
     @JsonProperty("command")
-    public final String command; // TODO: this should probably be a class or something
+    public final Optional<String> command; // TODO: this should probably be a class or something
 
     @JsonIgnore
     public final WakeWord wakeWord;
@@ -62,34 +62,32 @@ public class SpeechResult {
     public final Result result;
 
 
-    public SpeechResult(final Long accountId,
+    public SpeechResult(final Optional<Long> accountId,
+                        final String senseId,
                         final DateTime dateTimeUTC,
                         final DateTime updatedUTC,
-                        final String senseId,
                         final String audioIdentifier,
-                        final String text,
-                        final String responseText,
+                        final Optional<String> text,
+                        final Optional<String> responseText,
                         final SpeechToTextService service,
-                        final float confidence,
-                        final Intention.IntentType intent,
-                        final Intention.ActionType action,
-                        final Intention.IntentCategory intentCategory,
-                        final String command,
+                        final Optional<Float> confidence,
+                        final Optional<String> s3ResponseKeyname,
+                        final Optional<String> handlerType,
+                        final Optional<String> command,
                         final WakeWord wakeWord,
                         final Map<String, Float> wakeWordsConfidence,
                         final Result result) {
         this.accountId = accountId;
+        this.senseId = senseId;
         this.dateTimeUTC = dateTimeUTC;
         this.updatedUTC = updatedUTC;
-        this.senseId = senseId;
         this.audioIdentifier = audioIdentifier;
         this.text = text;
         this.responseText = responseText;
         this.service = service;
         this.confidence = confidence;
-        this.intent = intent;
-        this.action = action;
-        this.intentCategory = intentCategory;
+        this.s3ResponseKeyname = s3ResponseKeyname;
+        this.handlerType = handlerType;
         this.command = command;
         this.wakeWord = wakeWord;
         this.wakeWordsConfidence = wakeWordsConfidence;
@@ -99,26 +97,29 @@ public class SpeechResult {
     }
 
     public static class Builder {
-        private Long accountId;
+        private Optional<Long> accountId = Optional.absent();
+        private String senseId = "";
         private DateTime dateTimeUTC;
         private DateTime updatedUTC;
-        private String senseId = "";
         private String audioIdentifier = "";
-        private String text = "";
-        private String responseText = "";
+        private Optional<String> text = Optional.absent();
+        private Optional<String> responseText = Optional.absent();
         private SpeechToTextService service = SpeechToTextService.GOOGLE;
-        private float confidence = 0.0f;
-        private Intention.IntentType intent = Intention.IntentType.NONE;
-        private Intention.ActionType action = Intention.ActionType.NONE;
-        private Intention.IntentCategory intentCategory = Intention.IntentCategory.NONE;
-        private String command = "";
+        private Optional<Float> confidence = Optional.absent();
+        private Optional<String> s3ResponseKeyname = Optional.absent();
+        private Optional<String> handlerType = Optional.absent();
+        private Optional<String> command = Optional.absent();
         private WakeWord wakeWord = WakeWord.OKAY_SENSE;
         private Map<String, Float> wakeWordsConfidence = Maps.newHashMap();
         private Result result = Result.NONE;
 
-
         public Builder withAccountId(final Long accountId) {
-            this.accountId = accountId;
+            this.accountId = Optional.of(accountId);
+            return this;
+        }
+
+        public Builder withSenseId(final String senseId) {
+            this.senseId = senseId;
             return this;
         }
 
@@ -133,23 +134,18 @@ public class SpeechResult {
             return this;
         }
 
-        public Builder withSenseId (final String id) {
-            this.senseId = id;
-            return this;
-        }
-
         public Builder withAudioIndentifier(final String audioIdentifier) {
             this.audioIdentifier = audioIdentifier;
             return this;
         }
 
         public Builder withText(final String text) {
-            this.text = text;
+            this.text = Optional.of(text);
             return this;
         }
 
         public Builder withResponseText(final String text) {
-            this.responseText= text;
+            this.responseText= Optional.of(text);
             return this;
         }
 
@@ -159,27 +155,22 @@ public class SpeechResult {
         }
 
         public Builder withConfidence(final Float confidence) {
-            this.confidence = confidence;
+            this.confidence = Optional.of(confidence);
             return this;
         }
 
-        public Builder withIntent(final Intention.IntentType intent) {
-            this.intent = intent;
+        public Builder withS3Keyname(final String s3Keyname) {
+            this.s3ResponseKeyname = Optional.of(s3Keyname);
             return this;
         }
 
-        public Builder withAction(final Intention.ActionType action) {
-            this.action = action;
-            return this;
-        }
-
-        public Builder withIntentCategory(final Intention.IntentCategory intentCategory) {
-            this.intentCategory = intentCategory;
+        public Builder withHandlerType(final String handlerType) {
+            this.handlerType = Optional.of(handlerType);
             return this;
         }
 
         public Builder withCommand(final String command) {
-            this.command = command;
+            this.command = Optional.of(command);
             return this;
         }
 
@@ -209,10 +200,9 @@ public class SpeechResult {
         }
 
         public SpeechResult build() {
-            return new SpeechResult(accountId,
-                    dateTimeUTC, updatedUTC, senseId,
-                    audioIdentifier, text, responseText, service, confidence,
-                    intent, action, intentCategory, command,
+            return new SpeechResult(accountId, senseId, dateTimeUTC, updatedUTC, audioIdentifier,
+                    text, responseText, service, confidence,
+                    s3ResponseKeyname, handlerType, command,
                     wakeWord, wakeWordsConfidence, result);
         }
     }
