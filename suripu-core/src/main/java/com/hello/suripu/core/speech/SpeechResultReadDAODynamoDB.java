@@ -59,7 +59,7 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
             final SpeechResult result = DDBItemToSpeechResult(item);
             return Optional.of(result);
         } catch (Exception e) {
-            LOGGER.error("error=unable-to-get-item query={}", uuid);
+            LOGGER.error("error=unable-to-get-item error_msg={}", e.getMessage());
         }
         return Optional.absent();
     }
