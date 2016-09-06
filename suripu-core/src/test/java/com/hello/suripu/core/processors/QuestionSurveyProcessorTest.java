@@ -3,6 +3,8 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.models.AccountQuestion;
@@ -11,15 +13,21 @@ import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
+import com.librato.rollout.RolloutAdapter;
+import com.librato.rollout.RolloutClient;
+import dagger.Module;
+import dagger.Provides;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -45,6 +53,52 @@ public class QuestionSurveyProcessorTest {
     private final long ID_FILLER = 0;
     private final String ENGLISH_STR = "EN";
     private final String RESPONSE_STRING_FILLER = "I feel great";
+
+    public final Map<String, Boolean> features = Maps.newHashMap();
+
+    final public RolloutAdapter rolloutAdapter = new RolloutAdapter() {
+
+        @Override
+        public boolean userFeatureActive(String feature, long userId, List<String> userGroups) {
+            Boolean hasFeature = features.get(feature);
+
+            if (hasFeature == null) {
+                hasFeature = Boolean.FALSE;
+            }
+
+            return hasFeature;
+        }
+
+        @Override
+        public boolean deviceFeatureActive(String feature, String deviceId, List<String> userGroups) {
+            Boolean hasFeature = features.get(feature);
+
+            if (hasFeature == null) {
+                hasFeature = Boolean.FALSE;
+            }
+
+            return hasFeature;
+        }
+    };
+
+    @Module(
+            injects = QuestionSurveyProcessor.class,
+            library = true
+    )
+
+    class RolloutLocalModule {
+        @Provides
+        @Singleton
+        RolloutAdapter providesRolloutAdapter() {
+            return rolloutAdapter;
+        }
+
+        @Provides @Singleton
+        RolloutClient providesRolloutClient(RolloutAdapter adapter) {
+            return new RolloutClient(adapter);
+        }
+
+    }
 
     private ImmutableList<Question> getMockQuestions() {
         final List<Question> questions = new ArrayList<>();
@@ -130,6 +184,18 @@ public class QuestionSurveyProcessorTest {
                 QuestionCategory.SURVEY, dependency_response_level3);
         questions.add(question6);
 
+        final List<Choice> choices7 = new ArrayList<>();
+        choices6.add(new Choice(18, "Yes", 2));
+        choices6.add(new Choice(19, "No", 2));
+        final Question question7 = new Question(7, ACCOUNT_QID_FILLER,
+                "Spurs daily not null?", ENGLISH_STR,
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.ANYTIME,
+                DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, choices7, AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
+                QuestionCategory.SPURS_DAILY, dependency_response_null);
+        questions.add(question7);
+
         return ImmutableList.copyOf(questions);
     }
 
@@ -182,6 +248,9 @@ public class QuestionSurveyProcessorTest {
     }
 
     private QuestionSurveyProcessor setUp() {
+        ObjectGraphRoot.getInstance().init(new QuestionSurveyProcessorTest.RolloutLocalModule());
+        features.clear();
+
         //Building
         QuestionResponseReadDAO mockQuestionResponseReadDAO = Mockito.mock(QuestionResponseReadDAO.class);
         QuestionResponseDAO mockQuestionResponseDAO = Mockito.mock(QuestionResponseDAO.class);
