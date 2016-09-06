@@ -29,6 +29,7 @@ public class OAuthAuthenticator implements Authenticator<String, AccessToken> {
             final com.google.common.base.Optional<AccessToken> token = tokenStore.getAccessTokenByToken(submittedToken, DateTime.now());
             if(!token.isPresent()) {
                 LOGGER.warn("warning=token_not_present token={}", submittedToken);
+                return Optional.empty();
             }
             return Optional.of(token.get());
         } catch (MissingRequiredScopeException e) {
