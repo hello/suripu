@@ -56,8 +56,10 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
     public Optional<SpeechResult> getItem(final String uuid) {
         try {
             final Item item = table.getItem(SpeechToTextAttribute.UUID.shortName(), uuid);
-            final SpeechResult result = DDBItemToSpeechResult(item);
-            return Optional.of(result);
+            if (item != null) {
+                final SpeechResult result = DDBItemToSpeechResult(item);
+                return Optional.of(result);
+            }
         } catch (Exception e) {
             LOGGER.error("error=unable-to-get-item error_msg={}", e.getMessage());
         }
