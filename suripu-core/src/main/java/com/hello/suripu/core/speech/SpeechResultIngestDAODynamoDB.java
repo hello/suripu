@@ -129,7 +129,7 @@ public class SpeechResultIngestDAODynamoDB implements SpeechResultIngestDAO {
         // optional attributes
 
         // transcribed text
-        if (speechResult.text.isPresent()) {
+        if (speechResult.text.isPresent() && !speechResult.text.get().isEmpty()) {
             item.withString(SpeechToTextAttribute.TEXT.shortName(), speechResult.text.get());
         }
 
@@ -138,19 +138,19 @@ public class SpeechResultIngestDAODynamoDB implements SpeechResultIngestDAO {
         }
 
         // command found
-        if (speechResult.command.isPresent()) {
+        if (speechResult.command.isPresent() && !speechResult.command.get().isEmpty()) {
             item.withString(SpeechToTextAttribute.COMMAND.shortName(), speechResult.command.get());
         }
 
-        if (speechResult.handlerType.isPresent()) {
+        if (speechResult.handlerType.isPresent() && !speechResult.handlerType.get().isEmpty()) {
             item.withString(SpeechToTextAttribute.HANDLER_TYPE.shortName(), speechResult.handlerType.get());
         }
 
-        if (speechResult.responseText.isPresent()) {
+        if (speechResult.responseText.isPresent() && !speechResult.responseText.get().isEmpty()) {
             item.withString(SpeechToTextAttribute.RESPONSE_TEXT.shortName(), speechResult.responseText.get());
         }
 
-        if (speechResult.s3ResponseKeyname.isPresent()) {
+        if (speechResult.s3ResponseKeyname.isPresent() && !speechResult.s3ResponseKeyname.get().isEmpty()) {
             item.withString(SpeechToTextAttribute.S3_KEYNAME.shortName(), speechResult.s3ResponseKeyname.get());
         }
 
