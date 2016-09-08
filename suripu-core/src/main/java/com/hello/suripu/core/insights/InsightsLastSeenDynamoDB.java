@@ -94,7 +94,7 @@ public class InsightsLastSeenDynamoDB implements InsightsLastSeenDAO {
         final PrimaryKey key = new PrimaryKey(AttributeName.ACCOUNT_ID.shortName(), accountId);
         final Item item = table.getItem(key);
         if (item == null) {
-            LOGGER.error("error=get-all-last-seen-insights-fail-insight-missing account_id={}", accountId);
+            LOGGER.debug("debug=get-all-last-seen-insights-fail-insight-missing account_id={}", accountId);
             final List<InsightsLastSeen> insightsLastSeen = new ArrayList<>();
             return ImmutableList.copyOf(insightsLastSeen);
         }
