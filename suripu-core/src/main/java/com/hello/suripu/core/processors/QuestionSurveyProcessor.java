@@ -1,9 +1,12 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
@@ -12,10 +15,12 @@ import com.hello.suripu.core.util.QuestionSurveyUtils;
 import com.hello.suripu.core.util.QuestionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.regex.Matcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -106,30 +111,62 @@ public class QuestionSurveyProcessor {
             return Lists.newArrayList();
         }
 
-        //Returns and saves 1st available question.
+        //Outputs 1st available question
+        final List<Question> outputSurveyQuestions = availableQuestions.subList(0, 1);
         final DateTime expiration = todayLocal.plusDays(1);
+        return processQuestions(outputSurveyQuestions, accountId, todayLocal, expiration);
+
+    }
+
+    /*
+    Saves question to accountQuestions if not already in database
+    Return question with the accountQuestions Id from database
+     */
+    private List<Question> processQuestions(final List<Question> questions, final Long accountId, final DateTime todayLocal, final DateTime expireDate) {
+
+        final List<Question> processedQuestions = Lists.newArrayList();
 
         //Check if database already has question with unique index on (account_id, question_id, created_local_utc_ts)
-        final Boolean savedQuestion = savedAccountQuestion(accountId, availableQuestions.get(0), todayLocal);
-        if (savedQuestion) {
-            return availableQuestions.subList(0, 1);
+        final Optional<AccountQuestion> savedQuestion = getSavedAccountQuestionOptional(accountId, questions.get(0), todayLocal);
+        if (savedQuestion.isPresent()) {
+            final Long savedAccountQId = savedQuestion.get().id;
+            final Question processedQuestion = Question.withAccountQId(questions.get(0), savedAccountQId);
+            processedQuestions.add(processedQuestion);
+        }
+        else { //Save question and reform with unique index
+            final Long accountQId = saveQuestion(accountId, questions.get(0), todayLocal, expireDate);
+            final Question processedQuestion = Question.withAccountQId(questions.get(0), accountQId);
+            processedQuestions.add(processedQuestion);
         }
 
-        saveQuestion(accountId, availableQuestions.subList(0, 1).get(0), todayLocal, expiration);
-        return availableQuestions.subList(0, 1);
+        return processedQuestions;
     }
 
     /*
     Insert questions
      */
+    private Long saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
+        try {
+            LOGGER.debug("action=saving_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
+            return this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
 
-    private void saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
-        LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
-        this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if (matcher.find()) {
+                LOGGER.debug("action=not_saved_question reason=unable_to_execute_sql processor=question_survey account_id={} question_id={}", accountId, question.id);
+            }
+        }
+        return 0L;
     }
 
-    private Boolean savedAccountQuestion(final Long accountId, final Question question, final DateTime created) {
-        final List<AccountQuestion> questions = questionResponseReadDAO.getAskedQuestionByQuestionIdCreatedDate(accountId, question.id, created);
-        return !questions.isEmpty();
+    /*
+    Get question from database. For purpose of 1. determine if question already exists in db and 2. if true, extract db's accountQuestions Id
+     */
+    private Optional<AccountQuestion> getSavedAccountQuestionOptional(final Long accountId, final Question question, final DateTime created) {
+        final List<AccountQuestion> accountQuestions = questionResponseReadDAO.getAskedQuestionByQuestionIdCreatedDate(accountId, question.id, created);
+        if (accountQuestions.isEmpty()) {
+            return Optional.absent();
+        }
+        return Optional.of(accountQuestions.get(0));
     }
 }
