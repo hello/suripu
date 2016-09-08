@@ -661,6 +661,40 @@ UPDATE response_choices SET response_text='Somewhat often' WHERE response_text='
 UPDATE response_choices SET response_text='Often' WHERE response_text='Severe' AND question_id = (SELECT id FROM questions WHERE question_text='How often do you find yourself waking earlier than you should?');
 UPDATE response_choices SET response_text='Very often' WHERE response_text='Very Severe' AND question_id = (SELECT id FROM questions WHERE question_text='How often do you find yourself waking earlier than you should?');
 
+-- jyfan 2016-08-31 logic change
+UPDATE response_choices SET response_text='Very severe' WHERE response_text='Very Severe';
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (SELECT DISTINCT question_id FROM response_choices WHERE response_text='Very severe') GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
+
+UPDATE questions SET question_text='Are you worried about your sleep?' WHERE question_text='Are you worried or distressed about sleep problems?';
+UPDATE questions SET question_text='How noticeable do you think the effects of your difficulty sleeping are to other people?' WHERE question_text='If you struggle with sleep, how noticeable do you think the effects of these problems are to other people?';
+UPDATE questions SET question_text='How much does your difficulty sleeping interfere with the rest of your day? (e.g. daytime fatigue, mood, concentration, memory, mood, etc.)' WHERE question_text='If you struggle with sleep, how much do these problems interfere with the rest of your day?';
+
+UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_choices WHERE id IN (
+    SELECT id FROM response_choices WHERE response_text=ANY(ARRAY['Moderately satisfied', 'Dissatisfied', 'Very dissatisfied'])
+                                    AND question_id=(SELECT id FROM questions WHERE question_text='How satisfied are you with your sleep?')))
+    WHERE question_text=ANY(ARRAY['How much difficulty, if any, do you have falling asleep?',
+                                  'How much difficulty, if any, do you have staying asleep?',
+                                  'How often do you find yourself waking earlier than you should?']);
+
+UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_choices WHERE id IN (
+    SELECT id FROM response_choices WHERE (response_text=ANY(ARRAY['Very severe', 'Severe', 'Very often', 'Often'])
+                                        AND (question_id IN (
+                                            SELECT id FROM questions WHERE question_text='How much difficulty, if any, do you have falling asleep?' OR
+                                            question_text='How often do you find yourself waking earlier than you should?' OR
+                                            question_text='How much difficulty, if any, do you have staying asleep?'))))
+                                        )
+    WHERE question_text=ANY(ARRAY['Are you worried about your sleep?']);
+
+UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_choices WHERE id IN (
+    SELECT id FROM response_choices WHERE response_text=ANY(ARRAY['Somewhat', 'Very', 'Extremely'])
+                                    AND question_id=(SELECT id FROM questions WHERE question_text='Are you worried about your sleep?')))
+    WHERE question_text=ANY(ARRAY['How noticeable do you think the effects of your difficulty sleeping are to other people?',
+                                  'How much does your difficulty sleeping interfere with the rest of your day? (e.g. daytime fatigue, mood, concentration, memory, mood, etc.)']);
 
 
 
