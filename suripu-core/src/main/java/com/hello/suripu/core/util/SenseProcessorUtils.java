@@ -104,7 +104,7 @@ public class SenseProcessorUtils {
     }
 
     public static String rgb(int r, int g, int b) {
-        return String.format("#%02x%02x%02x", r, g, b);
+        return String.format("#%04x%04x%04x", r, g, b);
     }
     /**
      * @return A Builder with the appropriate sensor data set from the periodicData (ambientTemp, ambientLight, etc)
