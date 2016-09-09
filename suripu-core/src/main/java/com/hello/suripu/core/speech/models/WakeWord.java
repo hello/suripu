@@ -7,10 +7,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum WakeWord {
 
-    ERROR("error", 0),
+    NULL("null", 0),
     OKAY_SENSE("okay sense", 1),
-    HEY_SENSE("hey sense", 2),
-    WHATEVER_SENSE("whatever sense", 3);
+    STOP("stop", 2),
+    SNOOZE("snooze", 3),
+    ALEXA("alexa", 4);
+
 
     private final String wakeWordText;
     private final int id;
@@ -32,7 +34,7 @@ public enum WakeWord {
                     return wakeWord;
             }
         }
-        return WakeWord.ERROR;
+        return WakeWord.NULL;
     }
 
     public static WakeWord fromInteger(final int value) {
@@ -40,7 +42,7 @@ public enum WakeWord {
             if (value == word.id)
                 return word;
         }
-        return WakeWord.ERROR;
+        return WakeWord.NULL;
     }
 
     public static WakeWord fromWakeWordText(final String text) {
@@ -50,7 +52,7 @@ public enum WakeWord {
                     return wakeWord;
             }
         }
-        return WakeWord.ERROR;
+        return WakeWord.NULL;
 
     }
 
