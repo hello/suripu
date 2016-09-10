@@ -109,7 +109,7 @@ public class SpeechResult {
         private Optional<String> s3ResponseKeyname = Optional.absent();
         private Optional<String> handlerType = Optional.absent();
         private Optional<String> command = Optional.absent();
-        private WakeWord wakeWord = WakeWord.OKAY_SENSE;
+        private WakeWord wakeWord = WakeWord.OK_SENSE;
         private Map<String, Float> wakeWordsConfidence = Maps.newHashMap();
         private Result result = Result.NONE;
 

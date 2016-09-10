@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum WakeWord {
 
     NULL("null", 0),
-    OKAY_SENSE("okay sense", 1),
+    OK_SENSE("ok_sense", 1),
     STOP("stop", 2),
     SNOOZE("snooze", 3),
     ALEXA("alexa", 4);
