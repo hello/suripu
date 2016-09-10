@@ -110,8 +110,8 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
         final Map<String, Float> confidences = Maps.newHashMap();
 
         for (final String value : values) {
-            final String[] parts = value.split("_");
-            final String wakeWord = WakeWord.fromString(parts[0]).getWakeWordText();
+            final String[] parts = value.split(":");
+            final String wakeWord = WakeWord.fromWakeWordText(parts[0]).getWakeWordText();
             confidences.put(wakeWord, Float.valueOf(parts[1]));
         }
         return confidences;
