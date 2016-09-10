@@ -187,7 +187,7 @@ public class SpeechResult {
         public Builder withWakeWordsConfidence(final Map<String, Float> wakeWordsConfidence) {
             for (final Map.Entry<String, Float> entry: wakeWordsConfidence.entrySet()) {
                 final WakeWord wakeWord = WakeWord.fromWakeWordText(entry.getKey());
-                if (!wakeWord.equals(WakeWord.ERROR)) {
+                if (!wakeWord.equals(WakeWord.NULL)) {
                     this.wakeWordsConfidence.put(entry.getKey(), entry.getValue());
                 }
             }

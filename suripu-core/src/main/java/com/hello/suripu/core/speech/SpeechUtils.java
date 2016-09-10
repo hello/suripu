@@ -15,7 +15,7 @@ public class SpeechUtils {
         final List<String> confidences = Lists.newArrayList();
 
         for (final WakeWord word : WakeWord.values()) {
-            if (!word.equals(WakeWord.ERROR)) {
+            if (!word.equals(WakeWord.NULL)) {
                 final String wakeWord = word.getWakeWordText();
                 if (wakeWordsMaps.containsKey(wakeWord)) {
                     final String value = String.format("%s_%s", wakeWord.toLowerCase(), wakeWordsMaps.get(wakeWord).toString());
