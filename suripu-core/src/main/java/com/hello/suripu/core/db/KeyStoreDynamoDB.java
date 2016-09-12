@@ -294,8 +294,8 @@ public class KeyStoreDynamoDB implements KeyStore {
         final String aesKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
         final String metadata = getItemResult.getItem().containsKey(METADATA) ? getItemResult.getItem().get(METADATA).getS() : "n/a";
         final String createdAt = getItemResult.getItem().containsKey(CREATED_AT_ATTRIBUTE_NAME) ? getItemResult.getItem().get(CREATED_AT_ATTRIBUTE_NAME).getS() : "";
-
-        return Optional.of(DeviceKeyStoreRecord.create(deviceId, aesKey, metadata, createdAt));
+        final HardwareVersion hardwareVersion = HardwareVersion.valueOf(getItemResult.getItem().containsKey(HARDWARE_VERSION_ATTRIBUTE_NAME) ? getItemResult.getItem().get(HARDWARE_VERSION_ATTRIBUTE_NAME).getS() : "1");
+        return Optional.of(DeviceKeyStoreRecord.forSense(deviceId, aesKey, metadata, createdAt, hardwareVersion));
     }
 
 
