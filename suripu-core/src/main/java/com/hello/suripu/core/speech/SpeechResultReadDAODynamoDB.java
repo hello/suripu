@@ -9,7 +9,6 @@ import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hello.suripu.core.speech.interfaces.SpeechResultReadDAO;
 import com.hello.suripu.core.speech.models.Result;
 import com.hello.suripu.core.speech.models.SpeechResult;
@@ -25,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by ksg on 7/19/16
@@ -105,29 +103,20 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
         return DateTime.parse(dateString + "Z", DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
     }
 
-    private Map<String, Float> wakeWordsConfidenceFromDDBItem(final Item item) {
-        final Set<String> values = item.getStringSet(SpeechToTextAttribute.WAKE_CONFIDENCE.shortName());
-        final Map<String, Float> confidences = Maps.newHashMap();
-
-        for (final String value : values) {
-            final String[] parts = value.split(":");
-            final String wakeWord = WakeWord.fromWakeWordText(parts[0]).getWakeWordText();
-            confidences.put(wakeWord, Float.valueOf(parts[1]));
-        }
-        return confidences;
-    }
-
     private SpeechResult DDBItemToSpeechResult(final Item item) {
         final SpeechToTextService service = SpeechToTextService.fromString(item.getString(SpeechToTextAttribute.SERVICE.shortName()));
-        final WakeWord wakeWord = WakeWord.fromInteger(item.getInt(SpeechToTextAttribute.WAKE_ID.shortName()));
         final Result result = Result.fromString(item.getString(SpeechToTextAttribute.RESULT.shortName()));
+
+        final WakeWord wakeWord = WakeWord.fromInteger(item.getInt(SpeechToTextAttribute.WAKE_ID.shortName()));
+        final Map<String, Float> wakeWordConfidenceMap = SpeechUtils.wakeWordsConfidenceFromDDBItem(
+                item.getStringSet(SpeechToTextAttribute.WAKE_CONFIDENCE.shortName()));
 
         final SpeechResult.Builder builder = new SpeechResult.Builder();
         builder.withAudioIndentifier(item.getString(SpeechToTextAttribute.UUID.shortName()))
                 .withDateTimeUTC(getDateTime(item.getString(SpeechToTextAttribute.CREATED_UTC.shortName())))
                 .withService(service)
                 .withWakeWord(wakeWord)
-                .withWakeWordsConfidence(wakeWordsConfidenceFromDDBItem(item))
+                .withWakeWordsConfidence(wakeWordConfidenceMap)
                 .withResult(result)
                 .withUpdatedUTC(getDateTime(item.getString(SpeechToTextAttribute.UPDATED_UTC.shortName())));
 

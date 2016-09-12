@@ -116,7 +116,9 @@ public class SpeechResultIngestDAODynamoDB implements SpeechResultIngestDAO {
     }
 
     private Item speechResultToDDBItem(final SpeechResult speechResult) {
+
         final List<String> confidences = SpeechUtils.wakewordsMapToDDBAttribute(speechResult.wakeWordsConfidence);
+
         final Item item = new Item()
                 .withString(SpeechToTextAttribute.UUID.shortName(), speechResult.audioIdentifier)
                 .withString(SpeechToTextAttribute.CREATED_UTC.shortName(), getDateString(speechResult.dateTimeUTC))
