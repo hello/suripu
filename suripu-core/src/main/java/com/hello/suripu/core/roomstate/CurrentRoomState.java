@@ -1,11 +1,12 @@
-package com.hello.suripu.core.models;
+package com.hello.suripu.core.roomstate;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.SoundLevel;
@@ -25,91 +26,38 @@ public class CurrentRoomState {
     public final static String DEFAULT_TEMP_UNIT = "c";
     private static final Logger LOGGER = LoggerFactory.getLogger(CurrentRoomState.class);
 
-    public static class State {
-
-        public enum Unit {
-            CELCIUS("c"),
-            PERCENT("%"),
-            PPM("ppm"),
-            MICRO_G_M3("µg/m3"),
-            AQI("AQI"),
-            LUX("lux"),
-            DB("dB");
-
-            private final String value;
-            private Unit(final String value) {
-                this.value = value;
-            }
-
-            @JsonValue
-            public String getValue() {
-                return value;
-            }
-        }
-        public enum Condition {
-            UNKNOWN(0),
-            IDEAL(1),
-            WARNING(2),
-            ALERT(3),
-            IDEAL_EXCLUDING_LIGHT(4);
-
-            private final int value;
-
-            private Condition(final int value) {
-                this.value = value;
-            }
-        }
-
-        @JsonProperty("value")
-        public final Float value;
-
-        @JsonProperty("message")
-        public final String message;
-
-        @JsonProperty("ideal_conditions")
-        public final String idealConditions;
-
-        @JsonProperty("condition")
-        public final Condition condition;
-
-        @JsonProperty("last_updated_utc")
-        public final DateTime lastUpdated;
-
-        @JsonProperty("unit")
-        public final Unit unit;
-
-        public State(final Float value, final String message, final String idealConditions, final Condition condition, final DateTime lastUpdated, final Unit unit) {
-            this.value = value;
-            this.message = message;
-            this.idealConditions = idealConditions;
-            this.condition = condition;
-            this.lastUpdated = lastUpdated;
-            this.unit = unit;
-        }
-    }
+    private final State temperature;
+    private final State humidity;
+    private final State light;
+    private final State sound;
+    private final State particulates;
 
     @JsonProperty("temperature")
-    public final State temperature;
+    public State temperature() {
+        return temperature;
+    }
 
     @JsonProperty("humidity")
-    public final State humidity;
+    public State humidity() {
+        return humidity;
+    }
 
-    @JsonIgnore
-    public final State particulates;
+    @JsonProperty("light")
+    public State light() {
+        return light;
+    }
+
+    @JsonProperty("sound")
+    public State sound() {
+        return sound;
+    }
+
+    private final Boolean hasDust;
 
     @JsonProperty("particulates")
     public State particulates() {
         return (hasDust) ? particulates : null;
     }
-
-    @JsonProperty("light")
-    public final State light;
-
-    @JsonProperty("sound")
-    public final State sound;
-
-    @JsonIgnore
-    public final Boolean hasDust;
 
     public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound) {
         this(temperature, humidity, particulates, light, sound, Boolean.FALSE);
@@ -168,7 +116,7 @@ public class CurrentRoomState {
         final State lightState = getLightState(light, dataTimestampUTC, false);
         final State soundState = getSoundState(sound, dataTimestampUTC, false);
 
-        final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState, soundState);
+        final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState, soundState, true);
         return roomState;
 
     }
@@ -197,11 +145,11 @@ public class CurrentRoomState {
      */
     public static CurrentRoomState empty(final Boolean hasDust) {
         final CurrentRoomState roomState = new CurrentRoomState(
-                new State(null, English.LOADING_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
-                new State(null, English.LOADING_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
-                new State(null, English.LOADING_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
-                new State(null, English.LOADING_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.LUX),
-                new State(null, English.LOADING_SOUND_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.DB),
+                new State(null, English.LOADING_TEMPERATURE_MESSAGE, "", Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
+                new State(null, English.LOADING_HUMIDITY_MESSAGE, "", Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
+                new State(null, English.LOADING_PARTICULATES_MESSAGE, "", Condition.UNKNOWN, DateTime.now(), State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
+                new State(null, English.LOADING_LIGHT_MESSAGE, "", Condition.UNKNOWN, DateTime.now(), State.Unit.LUX),
+                new State(null, English.LOADING_SOUND_MESSAGE, "", Condition.UNKNOWN, DateTime.now(), State.Unit.DB),
                 hasDust
         );
 
@@ -212,11 +160,11 @@ public class CurrentRoomState {
                                               final float particulates, final float light, final float sound,
                                               final DateTime dataTimestampUTC) {
         final CurrentRoomState roomState = new CurrentRoomState(
-                new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS),
-                new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
-                new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
-                new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
-                new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
+                new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS),
+                new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
+                new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
+                new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
+                new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
         );
         return roomState;
     }
@@ -235,26 +183,26 @@ public class CurrentRoomState {
 
         }
 
-        State.Condition condition = State.Condition.IDEAL;
+        Condition condition = Condition.IDEAL;
         String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;
 
         if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
-            condition = State.Condition.ALERT;
+            condition = Condition.ALERT;
             idealTempConditions += English.RECOMMENDATION_TEMP_TOO_HIGH;
             message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.HIGH_TEMPERATURE_ALERT_MESSAGE;
 
         } else if (temperature > (float) TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
-            condition = State.Condition.WARNING;
+            condition = Condition.WARNING;
             idealTempConditions += English.RECOMMENDATION_TEMP_TOO_HIGH;
             message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.HIGH_TEMPERATURE_WARNING_MESSAGE;
 
         } else if (temperature  < (float) TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS) {
-            condition = State.Condition.ALERT;
+            condition = Condition.ALERT;
             idealTempConditions += English.RECOMMENDATION_TEMP_TOO_LOW;
             message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.LOW_TEMPERATURE_ALERT_MESSAGE;
 
         } else if (temperature < (float) TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS) {
-            condition = State.Condition.WARNING;
+            condition = Condition.WARNING;
             idealTempConditions += English.RECOMMENDATION_TEMP_TOO_LOW;
             message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.LOW_TEMPERATURE_WARNING_MESSAGE;
         }
@@ -264,27 +212,27 @@ public class CurrentRoomState {
 
     public static State getHumidityState(final float humidity, final DateTime dataTimestampUTC, final Boolean preSleep) {
 
-        State.Condition condition = State.Condition.IDEAL;;
+        Condition condition = Condition.IDEAL;;
         String idealHumidityConditions = English.HUMIDITY_ADVICE_MESSAGE;
         String message = (preSleep) ? English.IDEAL_HUMIDITY_PRE_SLEEP_MESSAGE: English.IDEAL_HUMIDITY_MESSAGE;
 
         if (humidity < (float) TemperatureHumidity.ALERT_HUMIDITY_LOW) {
-            condition = State.Condition.ALERT;
+            condition = Condition.ALERT;
             idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_LOW;
             message = (preSleep) ? English.LOW_HUMIDITY_PRE_SLEEP_ALERT_MESSAGE : English.LOW_HUMIDITY_ALERT_MESSAGE;
 
         } else if (humidity  < (float) TemperatureHumidity.IDEAL_HUMIDITY_MIN) {
-            condition = State.Condition.WARNING;
+            condition = Condition.WARNING;
             idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_LOW;
             message = (preSleep) ? English.LOW_HUMIDITY_PRE_SLEEP_WARNING_MESSAGE : English.LOW_HUMIDITY_WARNING_MESSAGE;
 
         } else if (humidity > (float) TemperatureHumidity.IDEAL_HUMIDITY_MAX) {
-            condition = State.Condition.WARNING;
+            condition = Condition.WARNING;
             idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_HIGH;
             message = (preSleep) ? English.HIGH_HUMIDITY_PRE_SLEEP_WARNING_MESSAGE : English.HIGH_HUMIDITY_WARNING_MESSAGE;
 
         } else if (humidity > (float) TemperatureHumidity.ALERT_HUMIDITY_HIGH) {
-            condition = State.Condition.ALERT;
+            condition = Condition.ALERT;
             idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_HIGH;
             message = (preSleep) ? English.HIGH_HUMIDITY_PRE_SLEEP_ALERT_MESSAGE : English.HIGH_HUMIDITY_ALERT_MESSAGE;
         }
@@ -296,19 +244,19 @@ public class CurrentRoomState {
         // see http://www.sparetheair.com/aqi.cfm
 
         String idealParticulatesConditions = English.PARTICULATES_ADVICE_MESSAGE;
-        State.Condition condition = State.Condition.ALERT;
+        Condition condition = Condition.ALERT;
         String message = (preSleep) ? English.VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE: English.VERY_HIGH_PARTICULATES_MESSAGE;;
 
         if (particulates <= Particulates.PARTICULATE_DENSITY_MAX_IDEAL) {
-            condition = State.Condition.IDEAL;
+            condition = Condition.IDEAL;
             message = (preSleep) ? English.IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE : English.IDEAL_PARTICULATES_MESSAGE;
         } else if (particulates <= Particulates.PARTICULATE_DENSITY_MAX_WARNING) {
-            condition = State.Condition.WARNING;
+            condition = Condition.WARNING;
             message = (preSleep) ? English.HIGH_PARTICULATES_PRE_SLEEP_MESSAGE : English.HIGH_PARTICULATES_MESSAGE;
         }
 
 
-        if (condition != State.Condition.IDEAL && !preSleep) {
+        if (condition != Condition.IDEAL && !preSleep) {
             idealParticulatesConditions += English.RECOMMENDATION_PARTICULATES_TOO_HIGH;
         }
 
@@ -316,17 +264,17 @@ public class CurrentRoomState {
     }
 
     public static State getLightState(final float light, final DateTime dataTimestampUTC, final Boolean preSleep) {
-        State.Condition condition = State.Condition.IDEAL;;
+        Condition condition = Condition.IDEAL;;
         String idealConditions = English.LIGHT_ADVICE_MESSAGE;
         String message = (preSleep) ? English.IDEAL_LIGHT_PRE_SLEEP_MESSAGE: English.IDEAL_LIGHT_MESSAGE;;
 
         if (light >  Lights.LIGHT_LEVEL_ALERT) {
-            condition = State.Condition.ALERT;
+            condition = Condition.ALERT;
             idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.ALERT_LIGHT_PRE_SLEEP_MESSAGE : English.ALERT_LIGHT_MESSAGE;
 
         } else if (light > Lights.LIGHT_LEVEL_WARNING) {
-            condition = State.Condition.WARNING;
+            condition = Condition.WARNING;
             idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.WARNING_LIGHT_PRE_SLEEP_MESSAGE: English.WARNING_LIGHT_MESSAGE;
         }
@@ -337,18 +285,18 @@ public class CurrentRoomState {
     public static State getSoundState(final float sound, final DateTime dataTimestampUTC, final Boolean preSleep) {
         // see http://www.noisehelp.com/noise-level-chart.html
 
-        State.Condition condition = State.Condition.IDEAL;;
+        Condition condition = Condition.IDEAL;;
         String idealSoundCondition = English.SOUND_ADVICE_MESSAGE;
         String message = (preSleep) ? English.IDEAL_SOUND_PRE_SLEEP_MESSAGE: English.IDEAL_SOUND_MESSAGE;;
 
         if (sound > SoundLevel.SOUND_LEVEL_ALERT) {
             // lawn mower
-            condition = State.Condition.ALERT;
+            condition = Condition.ALERT;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.ALERT_SOUND_PRE_SLEEP_MESSAGE : English.ALERT_SOUND_MESSAGE;
 
         } else if (sound > SoundLevel.SOUND_LEVEL_WARNING) {
-            condition = State.Condition.WARNING;
+            condition = Condition.WARNING;
             idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.WARNING_SOUND_PRE_SLEEP_MESSAGE: English.WARNING_SOUND_MESSAGE;
         }

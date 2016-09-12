@@ -3,9 +3,9 @@ package com.hello.suripu.core.models.timeline.v2;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.roomstate.Condition;
 
 import java.util.List;
 
@@ -21,16 +21,16 @@ public class SleepMetrics {
     public final Unit unit;
 
     @JsonProperty("condition")
-    public final CurrentRoomState.State.Condition condition;
+    public final Condition condition;
 
-    private SleepMetrics(final String name, final Optional<Long> value, final Unit unit, final CurrentRoomState.State.Condition condition) {
+    private SleepMetrics(final String name, final Optional<Long> value, final Unit unit, final Condition condition) {
         this.name = name;
         this.value = value;
         this.unit = unit;
         this.condition = condition;
     }
 
-    public static SleepMetrics create(final String name, final Optional<Long> value, final Unit unit, final CurrentRoomState.State.Condition condition) {
+    public static SleepMetrics create(final String name, final Optional<Long> value, final Unit unit, final Condition condition) {
         final Optional<Long> metricValue;
         // v1Values default to 0, but what we really want is to know if it was calculated or not and thus using
         // Optionals inside SleepStats would be ideal. Since that model is highly depended on, changing those
@@ -51,18 +51,18 @@ public class SleepMetrics {
             SleepStats statistics = maybeStatistics.get();
 
             metrics.add(create("total_sleep", Optional.of(statistics.sleepDurationInMinutes.longValue()),
-                    Unit.MINUTES, CurrentRoomState.State.Condition.IDEAL));
+                    Unit.MINUTES, Condition.IDEAL));
             metrics.add(create("sound_sleep", Optional.of(statistics.soundSleepDurationInMinutes.longValue()),
-                    Unit.MINUTES, CurrentRoomState.State.Condition.IDEAL));
+                    Unit.MINUTES, Condition.IDEAL));
             metrics.add(create("time_to_sleep", Optional.of(statistics.sleepOnsetTimeMinutes.longValue()),
-                    Unit.MINUTES, CurrentRoomState.State.Condition.IDEAL));
+                    Unit.MINUTES, Condition.IDEAL));
             metrics.add(create("times_awake", Optional.of(statistics.numberOfMotionEvents.longValue()),
-                    Unit.QUANTITY, CurrentRoomState.State.Condition.IDEAL));
+                    Unit.QUANTITY, Condition.IDEAL));
 
             metrics.add(create("fell_asleep", Optional.of(statistics.sleepTime),
-                    Unit.TIMESTAMP, CurrentRoomState.State.Condition.IDEAL));
+                    Unit.TIMESTAMP, Condition.IDEAL));
             metrics.add(create("woke_up", Optional.of(statistics.wakeTime),
-                    Unit.TIMESTAMP, CurrentRoomState.State.Condition.IDEAL));
+                    Unit.TIMESTAMP, Condition.IDEAL));
         }
 
         for (Insight insight : timelineV1.insights) {
