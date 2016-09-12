@@ -156,11 +156,11 @@ public class InsightProcessorTest {
         final int zeroLight = 0;
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0).minusMillis(OFFSET_MILLIS);
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(10), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(30), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT,"",  0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT,"",  0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(10), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, "", 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(30), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, "", 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
 
         final List<InfoInsightCards> mockInfoInsightCardsList = Lists.newArrayList(Mockito.mock(InfoInsightCards.class));
         final DeviceStatus mockDeviceStatus = Mockito.mock(DeviceStatus.class);

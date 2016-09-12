@@ -1,4 +1,4 @@
-package com.hello.suripu.coredw8.timeline;
+package com.hello.suripu.coredropwizard.timeline;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.ImmutableList;

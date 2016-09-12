@@ -1,4 +1,4 @@
-package com.hello.suripu.coredw8.timeline;
+package com.hello.suripu.coredropwizard.timeline;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
