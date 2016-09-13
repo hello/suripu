@@ -1,6 +1,5 @@
 package com.hello.suripu.core.roomstate;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -49,27 +48,22 @@ public class CurrentRoomState {
 
     private final Boolean showDust;
 
-    @JsonProperty("temperature")
     public State temperature() {
         return temperature;
     }
 
-    @JsonProperty("humidity")
     public State humidity() {
         return humidity;
     }
 
-    @JsonProperty("light")
     public State light() {
         return light;
     }
 
-    @JsonProperty("sound")
     public State sound() {
         return sound;
     }
 
-    @JsonProperty("particulates")
     public State particulates() {
         return (showDust) ? particulates : null;
     }

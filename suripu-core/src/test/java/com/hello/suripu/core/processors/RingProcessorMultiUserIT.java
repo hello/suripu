@@ -1,16 +1,16 @@
 package com.hello.suripu.core.processors;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
-
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -19,13 +19,11 @@ import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
-import com.hello.suripu.core.models.AlarmSource;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.DateTimeUtil;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -38,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -252,7 +249,7 @@ public class RingProcessorMultiUserIT {
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.processed(), is(false));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(Lists.newArrayList(100L)));
 
         UserInfo userInfo1 = this.userInfoList.get(0);
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -270,7 +267,7 @@ public class RingProcessorMultiUserIT {
         assertThat(actualRingTime.isBefore(deadline), is(true));
         assertThat(ringTime.processed(), is(true));
 
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
         userInfo1 = this.userInfoList.get(0);
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -288,7 +285,7 @@ public class RingProcessorMultiUserIT {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.processed(), is(true));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         UserInfo userInfo2 = this.userInfoList.get(1);
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
@@ -306,7 +303,7 @@ public class RingProcessorMultiUserIT {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
         assertThat(ringTime.processed(), is(true));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         userInfo2 = this.userInfoList.get(1);
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
@@ -323,7 +320,7 @@ public class RingProcessorMultiUserIT {
 
 
         assertThat(ringTime.isEmpty(), is(true));  // the two alarms are non-repeated.
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[0]));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[0]));
     }
 
 
@@ -443,7 +440,7 @@ public class RingProcessorMultiUserIT {
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime, is(deadline));
         assertThat(ringTime.processed(), is(false));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
         UserInfo userInfo1 = this.userInfoList.get(0);
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -463,7 +460,7 @@ public class RingProcessorMultiUserIT {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
         assertThat(ringTime.processed(), is(true));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
         userInfo1 = this.userInfoList.get(0);
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -491,7 +488,7 @@ public class RingProcessorMultiUserIT {
         assertThat(nextSmartRingTime.isAfter(deadline), is(false));  // this is NOT empty because we have another user!
         assertThat(nextSmartRingTime.isBefore(actualRingTime.plusMinutes(1)), is(false));
         assertThat(ringTime.processed(), is(ringTime.actualRingTimeUTC != ringTime.expectedRingTimeUTC));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
 
         // 1st alarm, smart, 2014-09-23 8:20 -- past
@@ -503,7 +500,7 @@ public class RingProcessorMultiUserIT {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime, is(deadline));
         assertThat(ringTime.processed(), is(false));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         UserInfo userInfo2 = this.userInfoList.get(1);
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
@@ -523,7 +520,7 @@ public class RingProcessorMultiUserIT {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.processed(), is(false));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         userInfo2 = this.userInfoList.get(1);
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
@@ -545,7 +542,7 @@ public class RingProcessorMultiUserIT {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.processed(), is(false));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
     }
 
 
@@ -602,7 +599,7 @@ public class RingProcessorMultiUserIT {
 
         assertThat(actualRingTime, is(expectRingTime));
         assertThat(ringTime.processed(), is(false));
-        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L, 101L}));
+        assertThat(Lists.newArrayList(ringTime.soundIds), containsInAnyOrder(new long[]{100L, 101L}));
 
     }
 }
