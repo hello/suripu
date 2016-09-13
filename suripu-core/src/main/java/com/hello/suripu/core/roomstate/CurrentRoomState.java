@@ -1,8 +1,7 @@
 package com.hello.suripu.core.roomstate;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.models.Calibration;
@@ -14,6 +13,7 @@ import com.hello.suripu.core.roomstate.classifiers.classic.LightClassifier;
 import com.hello.suripu.core.roomstate.classifiers.classic.ParticulatesClassifier;
 import com.hello.suripu.core.roomstate.classifiers.classic.SoundClassifier;
 import com.hello.suripu.core.roomstate.classifiers.classic.TemperatureClassifier;
+import com.hello.suripu.core.roomstate.serializer.CurrentRoomStateSerializer;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
@@ -24,10 +24,8 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-@JsonPropertyOrder({"temperature", "humidity", "light", "sound"})
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonSerialize(using = CurrentRoomStateSerializer.class)
 public class CurrentRoomState {
-
 
     final static Map<String, Classifier> classifiers;
     static {
@@ -48,6 +46,7 @@ public class CurrentRoomState {
     private final State light;
     private final State sound;
     private final State particulates;
+
     private final Boolean showDust;
 
     @JsonProperty("temperature")
@@ -79,8 +78,12 @@ public class CurrentRoomState {
         this(temperature, humidity, particulates, light, sound, Boolean.FALSE);
     }
 
+    public static CurrentRoomState senseOne(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean showDust) {
+        return new CurrentRoomState(temperature, humidity, particulates, light, sound, showDust);
+    }
 
-    public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean showDust) {
+
+    private CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean showDust) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.particulates = particulates;

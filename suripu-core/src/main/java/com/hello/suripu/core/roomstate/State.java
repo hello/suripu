@@ -56,4 +56,9 @@ public class State {
     public Condition condition() {
         return condition;
     }
+
+
+    public static State ideal(final Float value, final String message, final String idealConditions, final DateTime lastUpdated, final Unit unit) {
+        return new State(value, message, idealConditions, Condition.IDEAL, lastUpdated, unit);
+    }
 }
