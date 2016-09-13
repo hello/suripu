@@ -521,40 +521,33 @@ public class DeviceDataDAODynamoDBIT {
 
         final List<Sample> lightSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
-                deviceId, 1, "light", -1, colorOptional, calibrationOptional, true);
+                deviceId, 1, Sensor.LIGHT, -1, colorOptional, calibrationOptional, true);
         assertThat(lightSamples.size(), is(11));
         assertThat(countSamplesWithFillValue(lightSamples, -1), is(4));
 
         final List<Sample> tempSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
-                deviceId, 1, "temperature", -1, colorOptional, calibrationOptional, true);
+                deviceId, 1, Sensor.TEMPERATURE, -1, colorOptional, calibrationOptional, true);
         assertThat(tempSamples.size(), is(11));
         assertThat(countSamplesWithFillValue(tempSamples, -1), is(4));
 
         final List<Sample> humiditySamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
-                deviceId, 1, "humidity", -1, colorOptional, calibrationOptional, true);
+                deviceId, 1, Sensor.HUMIDITY, -1, colorOptional, calibrationOptional, true);
         assertThat(humiditySamples.size(), is(11));
         assertThat(countSamplesWithFillValue(humiditySamples, -1), is(4));
 
         final List<Sample> soundSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
-                deviceId, 1, "sound", -1, colorOptional, calibrationOptional, true);
+                deviceId, 1, Sensor.SOUND, -1, colorOptional, calibrationOptional, true);
         assertThat(soundSamples.size(), is(11));
         assertThat(countSamplesWithFillValue(soundSamples, -1), is(4));
 
         final List<Sample> particulateSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
-                deviceId, 1, "particulates", -1, colorOptional, calibrationOptional, true);
+                deviceId, 1, Sensor.PARTICULATES, -1, colorOptional, calibrationOptional, true);
         assertThat(particulateSamples.size(), is(11));
         assertThat(countSamplesWithFillValue(particulateSamples, -1), is(4));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGenerateTimeSeriesByUTCTimeInvalidSensor() {
-        final Optional<Device.Color> colorOptional = Optional.absent();
-        final Optional<Calibration> calibrationOptional = Optional.absent();
-        deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(new Long(1), new Long(1), new Long(1), "2", 1, "not_a_sensor", 0, colorOptional, calibrationOptional, true);
     }
 
     @Test
@@ -1027,9 +1020,9 @@ public class DeviceDataDAODynamoDBIT {
         deviceDataDAODynamoDB.batchInsert(data);
 
         final List<Sample> falseSample = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(endTime.minusMinutes(1).getMillis(), endTime.plusMinutes(1).getMillis(),
-                accountId, deviceId, 1, "sound", 0, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false);
+                accountId, deviceId, 1, Sensor.SOUND, 0, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false);
         final List<Sample> trueSample = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(endTime.minusMinutes(1).getMillis(), endTime.plusMinutes(1).getMillis(),
-                accountId, deviceId, 1, "sound", 0, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), true);
+                accountId, deviceId, 1, Sensor.SOUND, 0, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), true);
         assertThat(trueSample.get(1).value > falseSample.get(1).value, is(true));
     }
 

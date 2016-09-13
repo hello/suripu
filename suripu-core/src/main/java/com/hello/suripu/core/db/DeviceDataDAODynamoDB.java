@@ -141,21 +141,22 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             .add(DeviceDataAttribute.RANGE_KEY)
             .build();
 
-    private final static Map<String, Set<DeviceDataAttribute>> SENSOR_NAME_TO_ATTRIBUTES = new ImmutableMap.Builder<String, Set<DeviceDataAttribute>>()
-            .put("humidity", ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP, DeviceDataAttribute.AMBIENT_HUMIDITY))
-            .put("temperature", ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP))
-            .put("particulates", ImmutableSet.of(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW))
-            .put("light", ImmutableSet.of(DeviceDataAttribute.AMBIENT_LIGHT))
-            .put("sound", ImmutableSet.of(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB,
+    private final static Map<Sensor, Set<DeviceDataAttribute>> SENSOR_NAME_TO_ATTRIBUTES = new ImmutableMap.Builder<Sensor, Set<DeviceDataAttribute>>()
+            .put(Sensor.HUMIDITY, ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP, DeviceDataAttribute.AMBIENT_HUMIDITY))
+            .put(Sensor.TEMPERATURE, ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP))
+            .put(Sensor.PARTICULATES, ImmutableSet.of(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW))
+            .put(Sensor.LIGHT, ImmutableSet.of(DeviceDataAttribute.AMBIENT_LIGHT))
+            .put(Sensor.SOUND, ImmutableSet.of(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB,
                                           DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB,
                                           DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB))
-            .put("pressure", ImmutableSet.of(DeviceDataAttribute.PRESSURE))
-            .put("co2", ImmutableSet.of(DeviceDataAttribute.CO2))
-            .put("tvoc", ImmutableSet.of(DeviceDataAttribute.TVOC))
-            .put("ir", ImmutableSet.of(DeviceDataAttribute.IR))
-            .put("clear", ImmutableSet.of(DeviceDataAttribute.CLEAR))
-            .put("lux", ImmutableSet.of(DeviceDataAttribute.LUX_COUNT))
-            .put("uv", ImmutableSet.of(DeviceDataAttribute.UV_COUNT))
+
+            .put(Sensor.PRESSURE, ImmutableSet.of(DeviceDataAttribute.PRESSURE))
+            .put(Sensor.CO2, ImmutableSet.of(DeviceDataAttribute.CO2))
+            .put(Sensor.TVOC, ImmutableSet.of(DeviceDataAttribute.TVOC))
+            .put(Sensor.IR, ImmutableSet.of(DeviceDataAttribute.IR))
+            .put(Sensor.CLEAR, ImmutableSet.of(DeviceDataAttribute.CLEAR))
+            .put(Sensor.LUX, ImmutableSet.of(DeviceDataAttribute.LUX_COUNT))
+            .put(Sensor.UV, ImmutableSet.of(DeviceDataAttribute.UV_COUNT))
             .build();
 
     public final static ImmutableSet<DeviceDataAttribute> ALL_ATTRIBUTES = ImmutableSet.copyOf(DeviceDataAttribute.values());
@@ -435,7 +436,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         return getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, start, end, slotDuration, ALL_ATTRIBUTES);
     }
 
-    private static Set<DeviceDataAttribute> sensorNameToAttributeNames(final String sensorName) {
+    private static Set<DeviceDataAttribute> sensorNameToAttributeNames(final Sensor sensorName) {
         final Set<DeviceDataAttribute> sensorAttributes = SENSOR_NAME_TO_ATTRIBUTES.get(sensorName);
         if (sensorAttributes == null) {
             throw new IllegalArgumentException("Unknown sensor name: '" + sensorName + "'");
@@ -453,7 +454,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             final Long accountId,
             final String externalDeviceId,
             final int slotDurationInMinutes,
-            final String sensor,
+            final Sensor sensor,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
             final Optional<Calibration> calibrationOptional,
