@@ -35,7 +35,7 @@ public class AggStats {
     public final Optional<Integer> avgDailyTemp; //micro-celsius
     public final Optional<Integer> maxDailyTemp; //micro-celsius
     public final Optional<Integer> minDailyTemp; //micro-celsius
-    public final Optional<Integer> avgDailyHumidity; // percent relative humidity * 10e-6
+    public final Optional<Integer> avgDailyHumidity; // percent relative ambientHumidity * 10e-6
     public final Optional<Integer> avgDailyDustDensity; //micro-micro-gram/m^3
 
     public final Map<Integer, SumCountData> sumCountMicroLuxHourMap; //micro-lux, calibrated by sense color, each hour
