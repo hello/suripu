@@ -41,7 +41,7 @@ public class AggStatsComputer {
 
         //Add data to descriptive stats
         for (final AggStatDeviceData aggStatDeviceData : aggStatsInputs.aggStatDeviceDataList) {
-            tempRawStats.addValue(aggStatDeviceData.ambientTemperature); //TODO: edit
+            tempRawStats.addValue(aggStatDeviceData.ambientTemperature);
             humidRawStats.addValue(aggStatDeviceData.ambientHumidity);
             dustRawStats.addValue(aggStatDeviceData.ambientAirQualityRaw);
 
