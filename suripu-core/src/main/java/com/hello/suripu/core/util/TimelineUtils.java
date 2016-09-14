@@ -1,6 +1,5 @@
 package com.hello.suripu.core.util;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -22,7 +21,6 @@ import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScore
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AllSensorSampleList;
-import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -42,6 +40,9 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.roomstate.Condition;
+import com.hello.suripu.core.roomstate.CurrentRoomState;
+import com.hello.suripu.core.roomstate.State;
 import com.hello.suripu.core.translations.English;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -900,13 +901,13 @@ public class TimelineUtils {
     public Insight generateInSleepSoundInsight(final int soundEventCount) {
         final int soundScore = SleepScoreUtils.calculateSoundScore(soundEventCount);
         if (soundScore <= 20) {
-            return new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.ALERT,
+            return new Insight(Sensor.SOUND, Condition.ALERT,
                     English.ALERT_SOUND_PRE_SLEEP_MESSAGE);
         } else if (soundScore <= 60) {
-            return new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.WARNING,
+            return new Insight(Sensor.SOUND, Condition.WARNING,
                     English.WARNING_SOUND_PRE_SLEEP_MESSAGE);
         } else {
-            return new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.IDEAL,
+            return new Insight(Sensor.SOUND, Condition.IDEAL,
                     English.IDEAL_SOUND_PRE_SLEEP_MESSAGE);
         }
     }
@@ -930,14 +931,11 @@ public class TimelineUtils {
                 continue;
             }
 
-            final Optional<CurrentRoomState.State> sensorState = CurrentRoomState.getSensorState(sensor,
+            final Optional<State> sensorState = CurrentRoomState.getSensorState(sensor,
                     sampleAverage.get(), sleepDateTime, false);
-            final Optional<Insight> insight = sensorState.transform(new Function<CurrentRoomState.State, Insight>() {
-                @Override
-                public Insight apply(CurrentRoomState.State state) {
-                    return Insight.create(sensor, state.condition, state.message);
-                }
-            });
+            final Optional<Insight> insight = sensorState.transform(
+                    state -> Insight.create(sensor, state.condition(), state.message)
+            );
 
             if (insight.isPresent()) {
                 insights.add(insight.get());
@@ -1004,7 +1002,7 @@ public class TimelineUtils {
                 }
 
                 final float average = sums.get(sensor) / counts.get(sensor);
-                Optional<CurrentRoomState.State> sensorState;
+                Optional<State> sensorState;
 
                 switch (sensor) {
                     case LIGHT:
@@ -1028,7 +1026,7 @@ public class TimelineUtils {
                 }
 
                 if (sensorState.isPresent()) {
-                    generatedInsights.add(new Insight(sensor, sensorState.get().condition, sensorState.get().message));
+                    generatedInsights.add(new Insight(sensor, sensorState.get().condition(), sensorState.get().message));
                 }
             }
 
