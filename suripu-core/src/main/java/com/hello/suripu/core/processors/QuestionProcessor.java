@@ -7,10 +7,12 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
@@ -57,6 +59,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
     private final QuestionResponseDAO questionResponseDAO;
+    private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final int checkSkipsNum;
 
     private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds = ArrayListMultimap.create();
@@ -68,6 +71,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     public static class Builder {
         private QuestionResponseDAO questionResponseDAO;
         private TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
+        private SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
         private int checkSkipsNum;
         private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
         private ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap;
@@ -82,6 +86,11 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         public Builder withTimeZoneHistoryDaoDynamoDB(final TimeZoneHistoryDAODynamoDB timeZoneHistoryDaoDynamoDB){
             this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDaoDynamoDB;
+            return this;
+        }
+
+        public Builder withSleepStatsDAODynamoDB(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+            this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
             return this;
         }
 
@@ -128,13 +137,19 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         }
 
         public QuestionProcessor build() {
-            return new QuestionProcessor(this.questionResponseDAO, this.timeZoneHistoryDAODynamoDB, this.checkSkipsNum,
+            return new QuestionProcessor(this.questionResponseDAO,
+                    this.timeZoneHistoryDAODynamoDB,
+                    this.sleepStatsDAODynamoDB,
+                    this.checkSkipsNum,
                     this.availableQuestionIds, this.questionAskTimeMap, this.questionIdMap, this.baseQuestionIds,
                     this.questionCategoryMap);
         }
     }
 
-    public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB, final int checkSkipsNum,
+    public QuestionProcessor(final QuestionResponseDAO questionResponseDAO,
+                             final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
+                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                             final int checkSkipsNum,
                              final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
                              final ListMultimap<Question.ASK_TIME, Integer> questionAskTimeMap,
                              final Map<Integer, Question> questionIdMap,
@@ -142,6 +157,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                              final Map<QuestionCategory, List<Integer>> questionCategoryMap) {
         this.questionResponseDAO = questionResponseDAO;
         this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
+        this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.checkSkipsNum = checkSkipsNum;
         this.availableQuestionIds.putAll(availableQuestionIds);
         this.questionAskTimeMap.putAll(questionAskTimeMap);
@@ -182,6 +198,19 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         int answered = 0;
         boolean foundAnomalyQuestion = false;
         boolean hasCBTIGoals = hasCBTIGoalGoOutside(accountId);
+
+        // check if user has a valid timeline last night. Note: getTZOffset by date is not possible, circular logic
+        Boolean hasTimeline;
+        final Optional<Integer> timeZoneOffsetOptional = this.sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        if (!timeZoneOffsetOptional.isPresent()) {
+            hasTimeline = Boolean.FALSE;
+        } else {
+            final Integer timeZoneOffset = timeZoneOffsetOptional.get();
+            final DateTime todayLocal = today.plusMillis(timeZoneOffset);
+            final DateTime yesterdayLocal = todayLocal.minusDays(1);
+            final Optional<AggregateSleepStats> sleepStatOptional = this.sleepStatsDAODynamoDB.getSingleStat(accountId, yesterdayLocal.toString());
+            hasTimeline = sleepStatOptional.isPresent();
+        }
 
         if (!questionResponseList.isEmpty()) {
             // check number of today's question the user has answered
@@ -252,9 +281,9 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         List<Question> questions;
 
         if (accountAgeInDays < OLD_ACCOUNT_AGE) {
-            questions = this.getNewbieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet());
+            questions = this.getNewbieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet(), hasTimeline);
         } else {
-            questions = this.getOldieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet());
+            questions = this.getOldieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet(), hasTimeline);
         }
 
         if (!preGeneratedQuestions.isEmpty()) {
@@ -418,7 +447,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     /**
      * Get questions for accounts less than 2 weeks old
      */
-    private List<Question> getNewbieQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds) {
+    private List<Question> getNewbieQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds, final Boolean hasTimeline) {
 
         final List<Question> questions = new ArrayList<>();
 
@@ -428,15 +457,17 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         // add questions that has already been selected
         addedIds.addAll(seenIds);
 
-        // always include the ONE daily calibration question, most important Q has lower id
+        // choose ONE random daily-question IF there was a timeline generated last night. Most important Q has lower id
         // This should always be question 22
-        final Integer questionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
-        if (!addedIds.contains(questionId)) {
-            addedIds.add(questionId);
-            final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
-            if (savedID > 0L) {
-                final Question question = this.questionIdMap.get(questionId);
-                questions.add(Question.withAskTimeAccountQId(question, savedID, today, DateTime.now(DateTimeZone.UTC)));
+        if (hasTimeline) {
+            final Integer questionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
+            if (!addedIds.contains(questionId)) {
+                addedIds.add(questionId);
+                final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
+                if (savedID > 0L) {
+                    final Question question = this.questionIdMap.get(questionId);
+                    questions.add(Question.withAskTimeAccountQId(question, savedID, today, DateTime.now(DateTimeZone.UTC)));
+                }
             }
         }
 
@@ -473,7 +504,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
      - take weekdays/weekends into account
      - do not repeat base/ongoing questions within 2 ask days
      */
-    private List<Question> getOldieQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds) {
+    private List<Question> getOldieQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds, final Boolean hasTimeline) {
 
         final List<Question> questions = new ArrayList<>();
 
@@ -483,13 +514,14 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         // add questions that has already been selected
         addedIds.addAll(seenIds);
 
-        // always choose ONE random daily-question
-        List<Question> dailyQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
-        if (dailyQs.size() > 0 && !addedIds.contains(dailyQs.get(0).id)) {
-            addedIds.add(dailyQs.get(0).id);
-            questions.add(dailyQs.get(0));
+        // choose ONE random daily-question IF there was a timeline generated last night
+        if (hasTimeline) {
+            List<Question> dailyQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
+            if (dailyQs.size() > 0 && !addedIds.contains(dailyQs.get(0).id)) {
+                addedIds.add(dailyQs.get(0).id);
+                questions.add(dailyQs.get(0));
+            }
         }
-
 
         // first dib for base-question, randomly choose ONE
         if (questions.size() < numQuestions) {
