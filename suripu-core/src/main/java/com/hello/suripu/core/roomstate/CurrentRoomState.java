@@ -26,14 +26,14 @@ import java.util.Map;
 @JsonSerialize(using = CurrentRoomStateSerializer.class)
 public class CurrentRoomState {
 
-    final static Map<String, Classifier> classifiers;
+    private final static Map<Sensor, Classifier> classifiers;
     static {
-        final Map<String, Classifier> temp = new HashMap<>();
-        temp.put("temperature", new TemperatureClassifier());
-        temp.put("humidity", new HumidityClassifier());
-        temp.put("light", new LightClassifier());
-        temp.put("sound", new SoundClassifier());
-        temp.put("particulates", new ParticulatesClassifier());
+        final Map<Sensor, Classifier> temp = new HashMap<>();
+        temp.put(Sensor.TEMPERATURE, new TemperatureClassifier());
+        temp.put(Sensor.HUMIDITY, new HumidityClassifier());
+        temp.put(Sensor.LIGHT, new LightClassifier());
+        temp.put(Sensor.SOUND, new SoundClassifier());
+        temp.put(Sensor.PARTICULATES, new ParticulatesClassifier());
         classifiers = ImmutableMap.copyOf(temp);
     }
 
@@ -185,23 +185,23 @@ public class CurrentRoomState {
     public static State getTemperatureState(final float temperature, final DateTime dataTimestampUTC, final String tempUnit, final Boolean preSleep) {
         // Global ideal range: 60 -- 70, less than 54 = too cold, above 75= too warm
         // TODO: personalize the range
-        return classifiers.get("temperature").classify(temperature,dataTimestampUTC,preSleep, tempUnit);
+        return classifiers.get(Sensor.TEMPERATURE).classify(temperature,dataTimestampUTC,preSleep, tempUnit);
     }
 
     public static State getHumidityState(final float humidity, final DateTime dataTimestampUTC, final Boolean preSleep) {
-        return classifiers.get("humidity").classify(humidity,dataTimestampUTC,preSleep, "");
+        return classifiers.get(Sensor.HUMIDITY).classify(humidity,dataTimestampUTC,preSleep, "");
     }
 
     public static State getParticulatesState(final float particulates, final DateTime dataTimestampUTC, final Boolean preSleep) {
-        return classifiers.get("particulates").classify(particulates,dataTimestampUTC,preSleep, "");
+        return classifiers.get(Sensor.PARTICULATES).classify(particulates,dataTimestampUTC,preSleep, "");
     }
 
     public static State getLightState(final float light, final DateTime dataTimestampUTC, final Boolean preSleep) {
-        return classifiers.get("light").classify(light,dataTimestampUTC,preSleep, "");
+        return classifiers.get(Sensor.LIGHT).classify(light,dataTimestampUTC,preSleep, "");
     }
 
     public static State getSoundState(final float sound, final DateTime dataTimestampUTC, final Boolean preSleep) {
-        return classifiers.get("sound").classify(sound,dataTimestampUTC,preSleep, "");
+        return classifiers.get(Sensor.SOUND).classify(sound,dataTimestampUTC,preSleep, "");
     }
 
     public static Optional<State> getSensorState(final Sensor sensor,
