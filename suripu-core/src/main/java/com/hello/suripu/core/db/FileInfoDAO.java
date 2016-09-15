@@ -2,7 +2,9 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.binders.BindHardwareVersion;
 import com.hello.suripu.core.db.mappers.FileInfoMapper;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.FileInfo;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -32,29 +34,31 @@ public abstract class FileInfoDAO {
             "FROM file_info AS fi " +
             "LEFT JOIN sense_file_info AS sfi " +
             "ON fi.id=sfi.file_info_id " +
-            "WHERE (is_public AND firmware_version <= :firmware_version) OR sense_id=:sense_id " +
+            "WHERE (is_public AND firmware_version <= :firmware_version AND hardware_version = :hardware_version) OR sense_id=:sense_id " +
             "ORDER BY sort_key;")
     protected abstract List<FileInfo> getAllForFirmwareVersionAndSenseId(
             @Bind("firmware_version") final Integer firmwareVersion,
+            @BindHardwareVersion final HardwareVersion hardwareVersion,
             @Bind("sense_id") final String senseId);
-
 
     @SqlQuery("SELECT * FROM file_info WHERE type=:file_type ORDER BY sort_key;")
     public abstract List<FileInfo> getAllForType(@Bind("file_type") final FileInfo.FileType fileType);
 
 
 
-    public List<FileInfo> getAll(final Integer firmwareVersion, final String senseId) {
+    public List<FileInfo> getAll(final Integer firmwareVersion, final HardwareVersion hardwareVersion, final String senseId) {
         if (firmwareVersion >= OLD_FW_VERSION_CUTOFF) {
             return Lists.newArrayList();
         }
-        return getAllForFirmwareVersionAndSenseId(firmwareVersion, senseId);
+        return getAllForFirmwareVersionAndSenseId(firmwareVersion, hardwareVersion, senseId);
     }
 
 
-    @SqlQuery("SELECT * FROM file_info WHERE path=:file_path LIMIT 1;")
+    @SqlQuery("SELECT * FROM file_info WHERE path=:file_path AND hardware_version = :hardware_version LIMIT 1;")
     @SingleValueResult(FileInfo.class)
-    public abstract Optional<FileInfo> getByFilePath(@Bind("file_path") final String filePath);
+    public abstract Optional<FileInfo> getByFilePath(
+            @Bind("file_path") final String filePath,
+            @BindHardwareVersion HardwareVersion hardwareVersion);
 
     @SqlQuery("SELECT * FROM file_info WHERE name=:name LIMIT 1;")
     @SingleValueResult(FileInfo.class)
