@@ -468,6 +468,7 @@ public class TrackerMotion {
             final double maxAccelerationMS2;
             final long cosTheta;
             final long motionMask;
+            final long maxAccelerationTransform;
 
             try (final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion))) {
                 // Need to left-shift, since we have bits 8-15 of a 16-bit number.
@@ -479,8 +480,8 @@ public class TrackerMotion {
             }catch (IOException ioe){
                 throw new InvalidEncryptedPayloadException(ioe.getMessage());
             }
-
-            return PillPayloadV2.createWithMotionMask((long) (1000 * maxAccelerationMS2), motionMask, cosTheta);
+            // offsets and scales motion values for 1.5 pills based off initial comparison of 1.0 and 1.5 pills
+            return PillPayloadV2.createWithMotionMask((((long) (1000 * maxAccelerationMS2)) - 383) * 2, motionMask, cosTheta);
         }
 
         public static List<TrackerMotion> removeDuplicates(final List<TrackerMotion> original){

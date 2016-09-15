@@ -105,7 +105,7 @@ public class TrackerMotionUtilTest {
     }
 
     @Test
-    public void testFirmwareVersion4() throws Exception {
+    public void test () throws Exception {
         final String pillId = "whateva";
         final Integer firmwareVersion = 4;
         final byte[] encryptedMotionData = bytes(0x0F, 0xFB, 0x55, 0x0A, 0xC4, 0x2C, 0x53, 0x03, 0x59,
@@ -120,7 +120,7 @@ public class TrackerMotionUtilTest {
                 .setTimestamp(1L)
                 .build();
         final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.data(pillData, key, pillId);
-        assertThat(payloadV2.maxAcceleration, is(1072L));
+        assertThat(payloadV2.maxAcceleration, is((1072L-383L)*2));
         assertThat(payloadV2.onDurationInSeconds, is(2L));
         assertThat(payloadV2.motionMask.get(), is(3377699720527872L));
         assertThat(payloadV2.cosTheta.get(), is(109L));
@@ -174,7 +174,7 @@ public class TrackerMotionUtilTest {
         );
         final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToPillPayloadVersion3(decrypted);
         assertThat(payloadV2.onDurationInSeconds, is(8L));
-        assertThat(payloadV2.maxAcceleration, is(9810L));
+        assertThat(payloadV2.maxAcceleration, is((9810L - 383)*2));
         assertThat(payloadV2.cosTheta.get(), is(17L));
         assertThat(payloadV2.motionMask.get(), is(0x0003001100030011L));
     }
