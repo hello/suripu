@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.FileInfo;
 import org.junit.Test;
 import java.util.List;
@@ -35,7 +36,8 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
                 "    preview_uri VARCHAR(255),\n" +
                 "    name VARCHAR(255),\n" +
                 "    is_public BOOLEAN DEFAULT FALSE,\n" +
-                "    size_bytes INTEGER\n" +
+                "    size_bytes INTEGER,\n" +
+                "    hardware_version INTEGER NOT NULL DEFAULT 1\n" +
                 ");\n" +
                 "\n" +
                 "CREATE TABLE sense_file_info (\n" +
@@ -45,21 +47,22 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
                 ");";
     }
 
-    private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic)
+    private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic, final HardwareVersion hardwareVersion)
     {
-        final String insertStatement = "Insert INTO file_info (id, sort_key, firmware_version, is_public, type, path, sha, uri, preview_uri, name, size_bytes)\n" +
-                "VALUES (:id, :sort_key, :firmware_version, :is_public, 'SLEEP_SOUND', '', '', '', '', '', 0);";
+        final String insertStatement = "Insert INTO file_info (id, sort_key, firmware_version, is_public, type, path, sha, uri, preview_uri, name, size_bytes, hardware_version)\n" +
+                "VALUES (:id, :sort_key, :firmware_version, :is_public, 'SLEEP_SOUND', '', '', '', '', '', 0, :hardware_version);";
         handle.createStatement(insertStatement)
                 .bind("id", id)
                 .bind("sort_key", sortKey)
                 .bind("firmware_version", firmwareVersion)
                 .bind("is_public", isPublic)
+                .bind("hardware_version", hardwareVersion.value)
                 .execute();
     }
 
     private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic, final String... senseIds)
     {
-        insert(id, sortKey, firmwareVersion, isPublic);
+            insert(id, sortKey, firmwareVersion, isPublic);
         for (final String senseId: senseIds) {
             handle.createStatement("INSERT INTO sense_file_info (file_info_id, sense_id)\n" +
                     "VALUES (:id, :sense_id);")
@@ -72,7 +75,7 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
     @Test
     public void testGetAll() throws Exception {
         // Empty table
-        assertThat(dao.getAll(1, "").size(), is(0));
+        assertThat(dao.getAll(1, HardwareVersion.SENSE_ONE, "").size(), is(0));
 
         // Insert a couple of rows
         insert(1L, 1, 5, true);
@@ -84,32 +87,32 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
         insert(7L, 7, 1000, false, "sense1");
         insert(8L, 8, 1, true, "sense1", "sense2");
 
-        final List<FileInfo> after0 = dao.getAll(0, "nosense");
+        final List<FileInfo> after0 = dao.getAll(0, HardwareVersion.SENSE_ONE, "nosense");
         assertThat(after0.size(), is(0));
 
-        final List<FileInfo> after1 = dao.getAll(1, "nosense");
+        final List<FileInfo> after1 = dao.getAll(1, HardwareVersion.SENSE_ONE, "nosense");
         assertThat(after1.size(), is(2));
         assertThat(after1.get(0).id, is(4L));
         assertThat(after1.get(1).id, is(8L));
 
-        final List<FileInfo> after5 = dao.getAll(5, "nosense");
+        final List<FileInfo> after5 = dao.getAll(5, HardwareVersion.SENSE_ONE, "nosense");
         assertThat(after5.size(), is(4));
         assertThat(after5.get(0).id, is(1L));
         assertThat(after5.get(1).id, is(4L));
         assertThat(after5.get(2).id, is(8L));
         assertThat(after5.get(3).id, is(2L));
 
-        assertThat(dao.getAll(FileInfoDAO.OLD_FW_VERSION_CUTOFF, "nosense").size(), is(0));
+        assertThat(dao.getAll(FileInfoDAO.OLD_FW_VERSION_CUTOFF, HardwareVersion.SENSE_ONE, "nosense").size(), is(0));
 
         // test specific sense ids
-        final List<FileInfo> forSense1 = dao.getAll(3, "sense1");
+        final List<FileInfo> forSense1 = dao.getAll(3, HardwareVersion.SENSE_ONE, "sense1");
         assertThat(forSense1.size(), is(4));
         assertThat(forSense1.get(0).id, is(4L));
         assertThat(forSense1.get(1).id, is(5L));
         assertThat(forSense1.get(2).id, is(7L));
         assertThat(forSense1.get(3).id, is(8L));
 
-        final List<FileInfo> forSense2 = dao.getAll(5, "sense2");
+        final List<FileInfo> forSense2 = dao.getAll(5, HardwareVersion.SENSE_ONE, "sense2");
         assertThat(forSense2.size(), is(5));
         assertThat(forSense2.get(0).id, is(1L));
         assertThat(forSense2.get(1).id, is(4L));
