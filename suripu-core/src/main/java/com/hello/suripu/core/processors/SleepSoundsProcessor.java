@@ -54,7 +54,7 @@ public class SleepSoundsProcessor implements SoundMap {
         }
 
         @Override
-        public Optional<Sound> getSoundByFilePath(String filePath) {
+        public Optional<Sound> getSoundByFilePath(String filePath, HardwareVersion hardwareVersion) {
             for (final Sound sound : sounds) {
                 if (sound.filePath.equals(filePath)) {
                     return Optional.of(sound);
