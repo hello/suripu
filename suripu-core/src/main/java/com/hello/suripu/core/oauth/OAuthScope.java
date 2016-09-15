@@ -48,7 +48,9 @@ public enum OAuthScope {
     STORE_READ(34),   // for linking orders
     ADMIN_QUESTIONS_WRITE(35),
     PROFILE_PHOTO_UPLOAD(36),
-    SPEECH_COMMAND(37);
+    SPEECH_COMMAND(37),
+    EXTERNAL_APPLICATION_READ(38),
+    EXTERNAL_APPLICATION_WRITE(39);
 
     private int value;
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuthScope.class);
