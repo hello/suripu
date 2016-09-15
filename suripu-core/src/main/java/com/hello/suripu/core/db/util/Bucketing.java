@@ -174,6 +174,16 @@ public class Bucketing {
             populatedMap.addSample(newKey, deviceData.offsetMillis,
                     lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount, holdCount,
                     soundNumDisturbances, soundPeakDisturbance, soundPeakEnergy);
+            if(deviceData.hasExtra()) {
+                final float pressure = deviceData.extra().pressure();
+                final float tvoc = deviceData.extra().tvoc();
+                final float co2 = deviceData.extra().co2();
+                final float ir = deviceData.extra().ir();
+                final float clear = deviceData.extra().clear();
+                final int lux = deviceData.extra().luxCount();
+                final int uv = deviceData.extra().uvCount();
+                populatedMap.addExtraSample(newKey, deviceData.offsetMillis, pressure, tvoc, co2, ir, clear, lux, uv);
+            }
         }
 
         return populatedMap;

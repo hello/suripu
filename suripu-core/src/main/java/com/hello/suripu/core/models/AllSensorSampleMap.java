@@ -45,8 +45,26 @@ public class AllSensorSampleMap {
         put(Sensor.SOUND_NUM_DISTURBANCES, dateTime, offsetMillis, soundNumDisturbance);
         put(Sensor.SOUND_PEAK_DISTURBANCE, dateTime, offsetMillis, soundPeakDisturbance);
         put(Sensor.SOUND_PEAK_ENERGY, dateTime, offsetMillis, soundPeakEnergy);
-
     }
+
+    public void addExtraSample(final Long dateTime, final int offsetMillis,
+                          final float pressure,
+                          final float tvoc,
+                          final float co2,
+                          final float ir,
+                          final float clear,
+                          final int luxCount,
+                          final int uvCount) {
+
+        put(Sensor.PRESSURE, dateTime, offsetMillis, pressure);
+        put(Sensor.TVOC, dateTime, offsetMillis, tvoc);
+        put(Sensor.CO2, dateTime, offsetMillis, co2);
+        put(Sensor.IR, dateTime, offsetMillis, ir);
+        put(Sensor.CLEAR, dateTime, offsetMillis, clear);
+        put(Sensor.LUX, dateTime, offsetMillis, luxCount);
+        put(Sensor.UV, dateTime, offsetMillis, uvCount);
+    }
+
 
     public void setSampleMap(final Sensor sensor, final Map<Long, Sample> sampleMap) {
         if (this.sensorMap.containsKey(sensor)) {

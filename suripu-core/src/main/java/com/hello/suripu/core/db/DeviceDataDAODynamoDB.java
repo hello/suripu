@@ -327,11 +327,28 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
     //region Aggregation
     private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final DeviceData template) {
         final DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
-        return new DeviceData.Builder()
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(template.accountId)
                 .withExternalDeviceId(template.externalDeviceId)
                 .withDateTimeUTC(template.dateTimeUTC)
                 .withOffsetMillis(template.offsetMillis)
+                .withHardwareVersion(template.hardwareVersion());
+
+        if(HardwareVersion.SENSE_ONE_FIVE.equals(template.hardwareVersion())) {
+            final SenseOneFiveExtraData extra = SenseOneFiveExtraData.create(
+                    (int) aggregator.roundedMean(DeviceDataAttribute.PRESSURE.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.TVOC.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.CO2.name),
+                    "",
+                    (int) aggregator.roundedMean(DeviceDataAttribute.IR.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.CLEAR.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.PRESSURE.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.UV_COUNT.name)
+            );
+            builder.withExtraSensorData(extra);
+        }
+        return builder
                 .withAmbientTemperature((int) aggregator.min(DeviceDataAttribute.AMBIENT_TEMP.name))
                 .calibrateAmbientLight((int) aggregator.roundedMean(DeviceDataAttribute.AMBIENT_LIGHT.name))
                 .withAmbientLightVariance((int) aggregator.roundedMean(DeviceDataAttribute.AMBIENT_LIGHT_VARIANCE.name))
@@ -354,9 +371,18 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
         List<Map<String, AttributeValue>> currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
         final Map<String, AttributeValue> firstItem = items.get(0);
+
         final DeviceData.Builder templateBuilder = new DeviceData.Builder()
                 .withAccountId(Long.valueOf(firstItem.get(DeviceDataAttribute.ACCOUNT_ID.name).getN()))
                 .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem));
+
+        // Sense 1.5
+        final HardwareVersion version = firstItem.containsKey(DeviceDataAttribute.HW_VERSION.name)
+                ? HardwareVersion.fromInt(Integer.parseInt(firstItem.get(DeviceDataAttribute.HW_VERSION.name).getN()))
+                : HardwareVersion.SENSE_ONE;
+
+        templateBuilder.withHardwareVersion(version);
+
         DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
 
         for (final Map<String, AttributeValue> item: items) {
@@ -599,8 +625,6 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         final HardwareVersion version = DeviceDataAttribute.HW_VERSION.getInteger(item) == 0
                 ? HardwareVersion.SENSE_ONE
                 : HardwareVersion.fromInt(DeviceDataAttribute.HW_VERSION.getInteger(item));
-
-
 
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withDateTimeUTC(timestampFromDDBItem(item))
