@@ -7,6 +7,9 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by jakepiccolo on 3/9/16.
@@ -60,9 +63,9 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
                 .execute();
     }
 
-    private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic, final String... senseIds)
+    private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic, final HardwareVersion hardwareVersion, final String... senseIds)
     {
-            insert(id, sortKey, firmwareVersion, isPublic);
+        insert(id, sortKey, firmwareVersion, isPublic, hardwareVersion);
         for (final String senseId: senseIds) {
             handle.createStatement("INSERT INTO sense_file_info (file_info_id, sense_id)\n" +
                     "VALUES (:id, :sense_id);")
@@ -78,14 +81,15 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
         assertThat(dao.getAll(1, HardwareVersion.SENSE_ONE, "").size(), is(0));
 
         // Insert a couple of rows
-        insert(1L, 1, 5, true);
-        insert(2L, 200, 5, true);
-        insert(3L, 3, 6, true);
-        insert(4L, 4, 1, true);
-        insert(5L, 5, 1, false, "sense1");
-        insert(6L, 6, 1, false, "sense2");
-        insert(7L, 7, 1000, false, "sense1");
-        insert(8L, 8, 1, true, "sense1", "sense2");
+        insert(1L, 1, 5, true, HardwareVersion.SENSE_ONE);
+        insert(2L, 200, 5, true, HardwareVersion.SENSE_ONE);
+        insert(3L, 3, 6, true, HardwareVersion.SENSE_ONE);
+        insert(4L, 4, 1, true, HardwareVersion.SENSE_ONE);
+        insert(5L, 5, 1, false, HardwareVersion.SENSE_ONE, "sense1");
+        insert(6L, 6, 1, false, HardwareVersion.SENSE_ONE, "sense2");
+        insert(7L, 7, 1000, false, HardwareVersion.SENSE_ONE, "sense1");
+        insert(8L, 8, 1, true, HardwareVersion.SENSE_ONE, "sense1", "sense2");
+
 
         final List<FileInfo> after0 = dao.getAll(0, HardwareVersion.SENSE_ONE, "nosense");
         assertThat(after0.size(), is(0));
@@ -119,7 +123,19 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
         assertThat(forSense2.get(2).id, is(6L));
         assertThat(forSense2.get(3).id, is(8L));
         assertThat(forSense2.get(4).id, is(2L));
+
+
+        final List<FileInfo> beforeSenseOneFive = dao.getAll(1, HardwareVersion.SENSE_ONE_FIVE, "sense_one_five");
+        assertTrue("beforeSenseOneFive empty", beforeSenseOneFive.isEmpty());
+        insert(9L, 9, 1, true, HardwareVersion.SENSE_ONE_FIVE, "sense_one_five");
+        final List<FileInfo> afterSenseOneFive = dao.getAll(1, HardwareVersion.SENSE_ONE_FIVE, "foo");
+        assertEquals("after insert", afterSenseOneFive.size(), 1);
+
+        final List<FileInfo> wrongHardwareVersion = dao.getAll(1, HardwareVersion.SENSE_ONE, "sense_one_five");
+        assertFalse("wrongHardwareVersion empty", wrongHardwareVersion.isEmpty());
     }
+
+
 
     @Test
     public void testGetAllForType() throws Exception {
@@ -127,7 +143,7 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
         assertThat(dao.getAllForType(FileInfo.FileType.SLEEP_SOUND).size(), is(0));
 
         // Insert sleep sound
-        insert(1L, 1, 5, true);
+        insert(1L, 1, 5, true, HardwareVersion.SENSE_ONE);
 
         assertThat(dao.getAllForType(FileInfo.FileType.SLEEP_SOUND).get(0).id, is(1L));
         assertThat(dao.getAllForType(FileInfo.FileType.ALARM).size(), is(0));
