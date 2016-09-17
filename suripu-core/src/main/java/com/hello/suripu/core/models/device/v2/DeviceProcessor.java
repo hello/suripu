@@ -55,7 +55,7 @@ public class DeviceProcessor {
     private final AnalyticsTracker analyticsTracker;
     private final SenseMetadataDAO senseMetadataDAO;
 
-    private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 14; // days
+    private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 28; // days
     private final static Integer BATTERY_LEVEL_LOW_BATTERY_WARNING = 15;
 
     private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
