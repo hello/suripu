@@ -52,6 +52,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
 
                 // TODO: there's bug in debug mode where throwable might not have a cause
                 final String message = (debug) ? throwable.getCause().getMessage() : "Bad request.";
+                LOGGER.error("{}", throwable.getStackTrace());
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), message))
                         .type(MediaType.APPLICATION_JSON)
