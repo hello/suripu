@@ -86,6 +86,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
         } catch (Exception exception) {
             LOGGER.error("Failed to catch the following exception for: {}", throwable.getClass().getName());
             LOGGER.error(exception.getMessage());
+            LOGGER.error("{}",exception.getStackTrace());
         }
         return defaultResponse;
     }
