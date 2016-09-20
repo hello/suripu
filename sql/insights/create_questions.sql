@@ -697,6 +697,8 @@ UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_cho
                                   'How much does your difficulty sleeping interfere with the rest of your day? (e.g. daytime fatigue, mood, concentration, memory, mood, etc.)']);
 
 
+-- jyfan 2016-09-20 survey text tweak Matt
+UPDATE questions SET question_text='How often do you find yourself waking earlier than you want to?' WHERE question_text='How often do you find yourself waking earlier than you should?';
 
 
 
