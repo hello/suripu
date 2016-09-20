@@ -429,3 +429,70 @@ CREATE TABLE sense_metadata (
 );
 
 CREATE INDEX sense_id_idx on sense_metadata(sense_id);
+
+-- Added September 20th 2016
+CREATE TABLE external_oauth_applications (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR (100),
+    client_id VARCHAR (100),
+    client_secret VARCHAR (100),
+    api_uri VARCHAR (255),
+    auth_uri VARCHAR (255),
+    token_uri VARCHAR (255),
+    description VARCHAR (255),
+    created TIMESTAMP default current_timestamp,
+    grant_type INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_client_id on external_oauth_applications(client_id);
+
+GRANT ALL PRIVILEGES ON external_oauth_applications TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE external_oauth_applications_id_seq TO ingress_user;
+
+
+CREATE TABLE external_application_data (
+	id SERIAL PRIMARY KEY,
+	app_id INTEGER,
+	device_id VARCHAR(255) NOT NULL,
+	created_at TIMESTAMP default current_timestamp,
+	updated_at TIMESTAMP default current_timestamp,
+	data text
+);
+
+CREATE UNIQUE INDEX uniq_app_device_id on external_application_data(app_id, device_id);
+
+GRANT ALL PRIVILEGES ON external_application_data TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE external_application_data_id_seq TO ingress_user;
+
+
+CREATE TABLE external_oauth_states(
+    id BIGSERIAL PRIMARY KEY,
+    auth_state VARCHAR(100),
+    created_at TIMESTAMP default current_timestamp,
+    app_id INTEGER,
+    device_id VARCHAR(255) NOT NULL
+);
+
+CREATE UNIQUE INDEX uniq_auth_state on external_oauth_states(auth_state);
+
+GRANT ALL PRIVILEGES ON external_oauth_states TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE external_oauth_states_id_seq TO ingress_user;
+
+
+CREATE TABLE external_oauth_tokens(
+    id BIGSERIAL PRIMARY KEY,
+    access_token VARCHAR(511),
+    refresh_token VARCHAR(511),
+    access_expires_in INTEGER,
+    refresh_expires_in INTEGER,
+    created_at TIMESTAMP default current_timestamp,
+    app_id INTEGER,
+    device_id VARCHAR(255) NOT NULL
+);
+
+CREATE UNIQUE INDEX uniq_ext_access_token on external_oauth_tokens(access_token);
+CREATE UNIQUE INDEX uniq_ext_refresh_token on external_oauth_tokens(refresh_token);
+
+GRANT ALL PRIVILEGES ON external_oauth_tokens TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE external_oauth_tokens_id_seq TO ingress_user;
+
