@@ -27,7 +27,7 @@ public class AlarmProcessor {
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
     }
 
-    public List<Alarm> setAlarms(final Long accountId,
+    public Boolean setAlarms(final Long accountId,
                                  final String senseExternalId,
                                  final List<Alarm> alarms)  throws InvalidUserException, InvalidTimezoneException {
 
@@ -85,6 +85,6 @@ public class AlarmProcessor {
 //                            String.format("You can not set more than %d alarms.", AlarmDAODynamoDB.MAX_ALARM_COUNT))).build());
         }
 
-        return alarms;
+        return true;
     }
 }
