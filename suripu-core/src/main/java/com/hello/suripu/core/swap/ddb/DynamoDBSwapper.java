@@ -88,11 +88,13 @@ public class DynamoDBSwapper implements Swapper {
         // it is more important for the pairing to succeed than
         // the unpairing to succeed.
 
+        LOGGER.warn("action=swap-start original_sense_id={} new_sense_id={}", intent.currentSenseId(), intent.newSenseId());
         int accountSwapped = 0;
         for(final Long accountId : accountIds) {
             try {
                 deviceDAO.registerSense(accountId, intent.newSenseId());
                 accountSwapped += 1;
+                LOGGER.warn("action=swap-devicedao-success account_id={} original_sense_id={} new_sense_id={}", accountId, intent.currentSenseId(), intent.newSenseId());
             } catch (Exception e) {
                 LOGGER.error("action=swap-sense error=failed-registration sense_id={} account_id={} msg={}", intent.newSenseId(), accountId, e.getMessage());
             }
@@ -100,6 +102,7 @@ public class DynamoDBSwapper implements Swapper {
             // Optimistically unlink current account to previous sense
             try {
                 mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, intent.currentSenseId());
+                LOGGER.warn("action=swap-ddb-success account_id={} original_sense_id={} new_sense_id={}", intent.accountId(), intent.currentSenseId(), intent.newSenseId());
             } catch (Exception e) {
                 LOGGER.error("action=swap-sense error=failed-unlink-account sense_id={} account_id={} msg={}", intent.currentSenseId(), accountId, e.getMessage());
             }
@@ -112,7 +115,9 @@ public class DynamoDBSwapper implements Swapper {
         }
 
 
-        return (accountSwapped == accountIds.size()) ? Result.success() : Result.failed(Result.Error.SOMETHING_ELSE);
+        final Result result = (accountSwapped == accountIds.size()) ? Result.success() : Result.failed(Result.Error.SOMETHING_ELSE);
+        LOGGER.warn("action=swap result={} original_sense_id={} new_sense_id={}", result, intent.currentSenseId(), intent.newSenseId());
+        return result;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.hello.suripu.core.swap;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
 ;
@@ -35,5 +36,13 @@ public class Result {
 
     public Optional<Error> error() {
         return error;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(Result.class)
+                .add("successful", successful)
+                .add("error", error)
+                .toString();
     }
 }
