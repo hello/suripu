@@ -20,6 +20,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.swap.Intent;
 import com.hello.suripu.core.swap.IntentResult;
@@ -42,19 +43,18 @@ public class DynamoDBSwapper implements Swapper {
     private final DeviceDAO deviceDAO;
     private final DynamoDB dynamoDB;
     private final String swapTableName;
-    private final String mergedTableName;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
 
-    public DynamoDBSwapper(final DeviceDAO deviceDAO, final DynamoDB dynamoDB, final String swapTableName, final String mergedTableName) {
+    public DynamoDBSwapper(final DeviceDAO deviceDAO, final DynamoDB dynamoDB, final String swapTableName, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
         this.deviceDAO = deviceDAO;
         this.dynamoDB = dynamoDB;
         this.swapTableName = swapTableName;
-        this.mergedTableName = mergedTableName;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
     }
 
     @Override
     public Result swap(final Intent intent) {
-
-        final Table table = dynamoDB.getTable(mergedTableName);
+        final Table table = dynamoDB.getTable(mergedUserInfoDynamoDB.tableName());
 
         final ItemCollection<QueryOutcome> queryOutcomeItemCollection = table.query(
                 new KeyAttribute("device_id", intent.currentSenseId())
@@ -77,24 +77,47 @@ public class DynamoDBSwapper implements Swapper {
             updatedItems.add(updated);
         }
 
-        final TableWriteItems items = new TableWriteItems(mergedTableName).withItemsToPut(updatedItems);
+        final TableWriteItems items = new TableWriteItems(mergedUserInfoDynamoDB.tableName()).withItemsToPut(updatedItems);
         final BatchWriteItemOutcome outcome = dynamoDB.batchWriteItem(items);
 
         if(!outcome.getUnprocessedItems().isEmpty()) {
             return Result.failed(Result.Error.SOMETHING_ELSE);
         }
 
+        // Book keeping part
+        // it is more important for the pairing to succeed than
+        // the unpairing to succeed.
+
+        LOGGER.warn("action=swap-start original_sense_id={} new_sense_id={}", intent.currentSenseId(), intent.newSenseId());
         int accountSwapped = 0;
         for(final Long accountId : accountIds) {
             try {
                 deviceDAO.registerSense(accountId, intent.newSenseId());
                 accountSwapped += 1;
+                LOGGER.warn("action=swap-devicedao-success account_id={} original_sense_id={} new_sense_id={}", accountId, intent.currentSenseId(), intent.newSenseId());
             } catch (Exception e) {
-                LOGGER.error("action=swap-sense error=failed-registration sense_id={} account_id={}", intent.newSenseId(), accountId);
+                LOGGER.error("action=swap-sense error=failed-registration sense_id={} account_id={} msg={}", intent.newSenseId(), accountId, e.getMessage());
+            }
+
+            // Optimistically unlink current account to previous sense
+            try {
+                mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, intent.currentSenseId());
+                LOGGER.warn("action=swap-ddb-success account_id={} original_sense_id={} new_sense_id={}", intent.accountId(), intent.currentSenseId(), intent.newSenseId());
+            } catch (Exception e) {
+                LOGGER.error("action=swap-sense error=failed-unlink-account sense_id={} account_id={} msg={}", intent.currentSenseId(), accountId, e.getMessage());
             }
         }
 
-        return (accountSwapped == accountIds.size()) ? Result.success() : Result.failed(Result.Error.SOMETHING_ELSE);
+        try {
+            deviceDAO.unlinkAllAccountsPairedToSense(intent.currentSenseId());
+        } catch (Exception e) {
+            LOGGER.error("action=swap-sense error=failed-unlink-account-postgres sense_id={} msg={}", intent.currentSenseId(), e.getMessage());
+        }
+
+
+        final Result result = (accountSwapped == accountIds.size()) ? Result.success() : Result.failed(Result.Error.SOMETHING_ELSE);
+        LOGGER.warn("action=swap result={} original_sense_id={} new_sense_id={}", result, intent.currentSenseId(), intent.newSenseId());
+        return result;
     }
 
     @Override
