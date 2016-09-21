@@ -16,13 +16,13 @@ import java.util.List;
 /**
  * Created by ksg on 9/20/16
  */
-public class AlarmProcessors {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AlarmProcessors.class);
+public class AlarmProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlarmProcessor.class);
 
     private final AlarmDAODynamoDB alarmDAODynamoDB;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
 
-    public AlarmProcessors(final AlarmDAODynamoDB alarmDAODynamoDB, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
+    public AlarmProcessor(final AlarmDAODynamoDB alarmDAODynamoDB, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
         this.alarmDAODynamoDB = alarmDAODynamoDB;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
     }
