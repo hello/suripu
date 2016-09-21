@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.hello.suripu.core.firmware.HardwareVersion;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
@@ -33,6 +34,7 @@ public class FileInfo {
     public final String name;
 
     public final Integer firmwareVersion;
+    public final HardwareVersion hardwareVersion;
 
     final Boolean isPublic;
 
@@ -47,6 +49,7 @@ public class FileInfo {
         previewUri = builder.previewUri;
         name = builder.name;
         firmwareVersion = builder.firmwareVersion;
+        hardwareVersion = builder.hardwareVersion;
         isPublic = builder.isPublic;
         sizeBytes = builder.sizeBytes;
 
@@ -57,6 +60,7 @@ public class FileInfo {
         checkNotNull(uri, "previewUri must not be null");
         checkNotNull(name, "name must not be null");
         checkNotNull(firmwareVersion, "firmwareVersion must not be null");
+        checkNotNull(hardwareVersion, "hardware version must no be null");
         checkNotNull(isPublic, "isPublic must not be null");
     }
 
@@ -78,6 +82,7 @@ public class FileInfo {
         private String previewUri;
         private String name;
         private Integer firmwareVersion;
+        private HardwareVersion hardwareVersion = HardwareVersion.SENSE_ONE;
         private Boolean isPublic = false;
         private Integer sizeBytes;
 
@@ -124,6 +129,11 @@ public class FileInfo {
             return this;
         }
 
+        public Builder withHardwareVersion(HardwareVersion val) {
+            hardwareVersion = val;
+            return this;
+        }
+
         public Builder withIsPublic(Boolean val) {
             isPublic = val;
             return this;
@@ -133,6 +143,8 @@ public class FileInfo {
             sizeBytes = val;
             return this;
         }
+
+
 
         public FileInfo build() {
             return new FileInfo(this);

@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db.mappers;
 
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.FileInfo;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -23,6 +24,7 @@ public class FileInfoMapper implements ResultSetMapper<FileInfo> {
                 .withPreviewUri(resultSet.getString("preview_uri"))
                 .withName(resultSet.getString("name"))
                 .withFirmwareVersion(resultSet.getInt("firmware_version"))
+                .withHardwareVersion(HardwareVersion.fromInt(resultSet.getInt("hardware_version")))
                 .withIsPublic(resultSet.getBoolean("is_public"))
                 .withSizeBytes(resultSet.getInt("size_bytes"))
                 .build();

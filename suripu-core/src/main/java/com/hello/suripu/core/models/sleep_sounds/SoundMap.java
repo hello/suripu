@@ -6,5 +6,5 @@ import com.google.common.base.Optional;
  * Created by jakepiccolo on 4/4/16.
  */
 public interface SoundMap {
-    Optional<Sound> getSoundByFilePath(final String filePath);
+    Optional<Sound> getSoundByFilePath(final FilePathLookup filePathLookup);
 }
