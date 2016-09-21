@@ -93,6 +93,10 @@ public class MergedUserInfoDynamoDB {
         this.tableName = tableName;
     }
 
+    public String tableName() {
+        return tableName;
+    }
+
     private Map<String, AttributeValueUpdate> generateTimeZoneUpdateItem(final DateTimeZone timeZone){
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
         items.put(TIMEZONE_ID_ATTRIBUTE_NAME, new AttributeValueUpdate()
