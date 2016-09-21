@@ -92,10 +92,6 @@ public class DataUtils{
         final float whiteMultiplier = 2.0f;
 
         // set conversion to 2x for now until we have a way to get sense color
-        if ((float) rawCount > maxCount) {
-            return (whiteMultiplier * maxLux);
-        }
-
         final float internalIntensity = ((float) rawCount / maxCount) * maxLux;
         return  (whiteMultiplier * internalIntensity);
     }
@@ -160,14 +156,15 @@ public class DataUtils{
         return Math.max(removedNoiseFloor, 0) + artificialNoiseFloor;
     }
 
-    private static double computeDewPoint(final double temperature, final double humidity) {
+    //TODO: rewrite
+    public static double computeDewPoint(final double temperature, final double humidity) {
         final double saturationVaporPressure = 6.11 * Math.pow(10.0, (7.5 * (temperature / (237.7 + temperature))));
         final double actualVaporPressure = (humidity * saturationVaporPressure) / 100.0;
         final double logVaporPressure = Math.log(actualVaporPressure);
         return (-430.22 + 237.7 * logVaporPressure) / (-1.0 * logVaporPressure + 19.08);
     }
 
-    private static double computeHumidity(final double temperature, final double dewPoint) {
+    public static double computeHumidity(final double temperature, final double dewPoint) {
         final double saturationVaporPressure = 6.11 * Math.pow(10.0, (7.5 * (temperature / (237.7 + temperature))));
         final double actualPressure = 6.11 * Math.pow(10.0, (7.5 * (dewPoint / (237.7 + dewPoint))));
         return (actualPressure/saturationVaporPressure) * 100.0;
