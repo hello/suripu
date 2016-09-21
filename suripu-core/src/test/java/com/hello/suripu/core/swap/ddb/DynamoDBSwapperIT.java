@@ -205,5 +205,8 @@ public class DynamoDBSwapperIT extends SqlDAOTest<DeviceDAO> {
         final List<DeviceAccountPair> pairs = dao.getAccountIdsForDeviceId(newSenseId);
         Assert.assertEquals("new accounts paired size", 2, pairs.size());
 
+        final List<DeviceAccountPair> oldPairs = dao.getAccountIdsForDeviceId(currentSenseId);
+        assertTrue(oldPairs.isEmpty());
+
     }
 }
