@@ -1,5 +1,7 @@
 package com.hello.suripu.core.sense.data;
 
+import com.google.common.base.MoreObjects;
+
 public class SenseOneFiveExtraData implements ExtraSensorData {
 
     private final int pressure;
@@ -64,5 +66,19 @@ public class SenseOneFiveExtraData implements ExtraSensorData {
     @Override
     public int uvCount() {
         return uvCount;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(SenseOneFiveExtraData.class)
+                .add("pressure", pressure())
+                .add("tvoc", tvoc())
+                .add("co2", co2())
+                .add("rgb", rgb())
+                .add("ir", ir())
+                .add("clear", clear())
+                .add("lux", luxCount())
+                .add("uv", uvCount())
+                .toString();
     }
 }

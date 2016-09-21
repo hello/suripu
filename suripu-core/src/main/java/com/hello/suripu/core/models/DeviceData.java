@@ -501,6 +501,7 @@ public class DeviceData {
                 .add(("audio_peak_disturbances_db"), audioPeakDisturbancesDB)
                 .add(("audio_peak_energy_db"), audioPeakEnergyDB)
                 .add("hw_version", hardwareVersion)
+                .add("extra", extra)
                 .toString();
     }
 
