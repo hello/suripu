@@ -1,4 +1,4 @@
-package com.hello.suripu.core.exceptions;
+package com.hello.suripu.core.alarm;
 
 /**
  * Created by pangwu on 3/11/15.
