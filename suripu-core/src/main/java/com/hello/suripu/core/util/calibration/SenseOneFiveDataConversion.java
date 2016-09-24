@@ -26,8 +26,8 @@ public class SenseOneFiveDataConversion {
 
     final static float LUX_NEURAL_SCALE = 2f;
 
-    final static float CT_COEFF = 4417.0f;
-    final static float CT_OFFSET = 2000f;
+    final static float CT_COEFF = 5500.0f;
+    final static float CT_OFFSET = 1000f;
 
     //UV sensor constants
     final static float UVI_COEFF = 1 / 5500.0f;
@@ -77,6 +77,9 @@ public class SenseOneFiveDataConversion {
         final float bClean = bRaw - ir;
 
         //Calc
+        if (rClean <= 0.0f) {
+            return CT_OFFSET;
+        }
         final float colorTemp = ( CT_COEFF * bClean ) / rClean + CT_OFFSET;
         return colorTemp;
     }
