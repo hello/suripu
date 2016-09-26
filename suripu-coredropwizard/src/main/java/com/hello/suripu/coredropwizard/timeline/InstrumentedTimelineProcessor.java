@@ -1,12 +1,11 @@
 package com.hello.suripu.coredropwizard.timeline;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
@@ -15,27 +14,25 @@ import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
-import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.PairingDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
+import com.hello.suripu.core.db.SenseDataDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
-import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
-import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DataCompleteness;
-import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -69,7 +66,6 @@ import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -105,16 +101,18 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     private final TimelineSafeguards timelineSafeguards;
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
-    private final SenseColorDAO senseColorDAO;
-    private final CalibrationDAO calibrationDAO;
+//    private final SenseColorDAO senseColorDAO;
+//    private final CalibrationDAO calibrationDAO;
     private final UserTimelineTestGroupDAO userTimelineTestGroupDAO;
     private final SleepScoreParametersDAO sleepScoreParametersDAO;
+
+    private final SenseDataDAO senseDataDAO;
+    private final PairingDAO pairingDAO;
 
     private final AlgorithmFactory algorithmFactory;
 
     protected Histogram scoreDiff;
 
-    final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
@@ -125,23 +123,23 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
     static public InstrumentedTimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
-                                                                       final DeviceReadDAO deviceDAO,
-                                                                       final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
-                                                                       final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
-                                                                       final FeedbackReadDAO feedbackDAO,
-                                                                       final SleepHmmDAO sleepHmmDAO,
-                                                                       final AccountReadDAO accountDAO,
-                                                                       final SleepStatsDAO sleepStatsDAODynamoDB,
-                                                                       final SenseColorDAO senseColorDAO,
-                                                                       final OnlineHmmModelsDAO priorsDAO,
-                                                                       final FeatureExtractionModelsDAO featureExtractionModelsDAO,
-                                                                       final CalibrationDAO calibrationDAO,
-                                                                       final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
-                                                                       final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
-                                                                       final SleepScoreParametersDAO sleepScoreParametersDAO,
-                                                                       final NeuralNetEndpoint neuralNetEndpoint,
-                                                                       final AlgorithmConfiguration algorithmConfiguration,
-                                                                       final MetricRegistry metrics) {
+                                                                        final DeviceReadDAO deviceDAO,
+                                                                        final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                                                                        final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
+                                                                        final FeedbackReadDAO feedbackDAO,
+                                                                        final SleepHmmDAO sleepHmmDAO,
+                                                                        final AccountReadDAO accountDAO,
+                                                                        final SleepStatsDAO sleepStatsDAODynamoDB,
+                                                                        final SenseDataDAO senseDataDAO,
+                                                                        final PairingDAO pairingDAO,
+                                                                        final OnlineHmmModelsDAO priorsDAO,
+                                                                        final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                                                                        final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
+                                                                        final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                                                        final SleepScoreParametersDAO sleepScoreParametersDAO,
+                                                                        final NeuralNetEndpoint neuralNetEndpoint,
+                                                                        final AlgorithmConfiguration algorithmConfiguration,
+                                                                        final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
         final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoint,algorithmConfiguration,Optional.<UUID>absent());
@@ -151,9 +149,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return new InstrumentedTimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
-                senseColorDAO,
+                senseDataDAO,
+                pairingDAO,
                 Optional.<UUID>absent(),
-                calibrationDAO,
                 userTimelineTestGroupDAO,
                 sleepScoreParametersDAO,
                 algorithmFactory,
@@ -162,26 +160,26 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public InstrumentedTimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseDataDAO, pairingDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
     }
 
     //private SessionLogDebug(final String)
 
     private InstrumentedTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
-                              final DeviceReadDAO deviceDAO,
-                              final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
-                              final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
-                              final FeedbackReadDAO feedbackDAO,
-                              final SleepHmmDAO sleepHmmDAO,
-                              final AccountReadDAO accountDAO,
-                              final SleepStatsDAO sleepStatsDAODynamoDB,
-                              final SenseColorDAO senseColorDAO,
-                              final Optional<UUID> uuid,
-                              final CalibrationDAO calibrationDAO,
-                              final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
-                              final SleepScoreParametersDAO sleepScoreParametersDAO,
-                              final AlgorithmFactory algorithmFactory,
-                              final Histogram scoreDiff) {
+                                          final DeviceReadDAO deviceDAO,
+                                          final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                                          final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
+                                          final FeedbackReadDAO feedbackDAO,
+                                          final SleepHmmDAO sleepHmmDAO,
+                                          final AccountReadDAO accountDAO,
+                                          final SleepStatsDAO sleepStatsDAODynamoDB,
+                                          final SenseDataDAO senseDataDAO,
+                                          final PairingDAO pairingDAO,
+                                          final Optional<UUID> uuid,
+                                          final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                          final SleepScoreParametersDAO sleepScoreParametersDAO,
+                                          final AlgorithmFactory algorithmFactory,
+                                          final Histogram scoreDiff) {
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -190,8 +188,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
-        this.senseColorDAO = senseColorDAO;
-        this.calibrationDAO = calibrationDAO;
+        this.senseDataDAO = senseDataDAO;
+        this.pairingDAO = pairingDAO;
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
         this.sleepScoreParametersDAO = sleepScoreParametersDAO;
         this.algorithmFactory = algorithmFactory;
@@ -537,39 +535,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
-
         final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
-
-        // get all sensor data, used for light and sound disturbances, and presleep-insights
-
-        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
-        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-
-        if (!deviceIdPair.isPresent()) {
-            LOGGER.debug("No device ID for account_id = {} and day = {}", accountId, starteTimeLocalUTC);
-            return Optional.absent();
-        }
-
-        final String externalDeviceId = deviceIdPair.get().externalDeviceId;
-        final Long deviceId = deviceIdPair.get().internalDeviceId;
-
-        // get color of sense, yes this matters for the light sensor
-        final Optional<Device.Color> optionalColor = senseColorDAO.getColorForSense(externalDeviceId);
-
-        final Optional<Calibration> calibrationOptional = this.hasCalibrationEnabled(externalDeviceId) ? calibrationDAO.getStrict(externalDeviceId) : Optional.<Calibration>absent();
-
-        // query dates in utc_ts (table has an index for this)
-        LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
-
-        final AllSensorSampleList allSensorSampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
-                starteTimeLocalUTC.minusMillis(tzOffsetMillis).getMillis(),
-                endTimeLocalUTC.minusMillis(tzOffsetMillis).getMillis(),
-                accountId, externalDeviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional,
-                false // Don't use the new audio peak energy since the models haven't trained on it.
-        );
+        final Optional<AllSensorSampleList> allSensorSampleList = senseDataDAO.get(accountId,date,starteTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, tzOffsetMillis);
         LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
 
-        if (allSensorSampleList.isEmpty()) {
+        if (!allSensorSampleList.isPresent() || allSensorSampleList.get().isEmpty()) {
             LOGGER.debug("No sense sensor data ID for account_id = {} and day = {}", accountId, starteTimeLocalUTC);
             return Optional.absent();
         }
@@ -580,13 +550,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             feedbackList.add(newFeedback.get());
         }
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,
+        return Optional.of(new OneDaysSensorData(allSensorSampleList.get(),
                 ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
                 ImmutableList.copyOf(feedbackList),
                 ImmutableList.copyOf(filteredOriginalMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
                 date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
                 tzOffsetMillis));
-
     }
 
     private static class PopulatedTimelines {

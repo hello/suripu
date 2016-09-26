@@ -1,0 +1,43 @@
+package com.hello.suripu.core.db;
+
+import com.google.common.base.Optional;
+import com.hello.suripu.core.models.DeviceAccountPair;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class HistoricalPairingDAO implements PairingDAO {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoricalPairingDAO.class);
+
+    private final DeviceReadDAO deviceReadDAO;
+    private final DeviceDataReadAllSensorsDAO deviceDataReadAllSensorsDAO;
+
+    public HistoricalPairingDAO(DeviceReadDAO deviceReadDAO, DeviceDataReadAllSensorsDAO deviceDataReadAllSensorsDAO) {
+        this.deviceReadDAO = deviceReadDAO;
+        this.deviceDataReadAllSensorsDAO = deviceDataReadAllSensorsDAO;
+    }
+
+    @Override
+    public Optional<String> senseId(long accountId, DateTime start, DateTime end) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceReadDAO.getMostRecentSensePairByAccountId(accountId);
+        // If no current Sense is paired, look at historical data
+        if (deviceIdPair.isPresent()) {
+            return Optional.of(deviceIdPair.get().externalDeviceId);
+        }
+
+        LOGGER.warn("action=get-historical-pairing account_id={} start_time={} end_time={}", accountId, start, end);
+        final Optional<String> deviceId = deviceDataReadAllSensorsDAO.getSensePairedBetween(accountId, start, end);
+        if(!deviceId.isPresent()) {
+            LOGGER.debug("No device ID for account_id = {} and day = {}", accountId, start);
+            return Optional.absent();
+        }
+        return deviceId;
+    }
+
+    @Override
+    public Optional<String> pillId(long accountId, DateTime start, DateTime stop) {
+        LOGGER.warn("NOT_IMPLEMENTED");
+        return Optional.absent();
+    }
+}
