@@ -12,6 +12,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -172,5 +173,59 @@ public class HistoricalPairingDAOIT {
         assertTrue("senseId is present", senseIdOptional.isPresent());
         // senseId returned for that date range should be the first one for which we have data
         assertEquals("senseId match", senseId, senseIdOptional.get());
+    }
+
+    @Test
+    public void testCurrentSenseNewerThanDateRange() {
+        final Long accountId = 1L;
+        final DateTime createdAt = DateTime.now(DateTimeZone.UTC);
+        final String newSense = "just_paired";
+        final String senseId = "sense";
+
+        final DeviceAccountPair pair = new DeviceAccountPair(accountId, 0L, newSense, createdAt);
+
+        when(deviceReadDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(Optional.of(pair));
+        final PairingDAO pairingDAO = new HistoricalPairingDAO(deviceReadDAO, deviceDataDAODynamoDB);
+
+        final DateTime nowCurrentMonth = new DateTime(2015,10,1, 0,0,0,0, DateTimeZone.UTC);
+        final List<DeviceData> deviceDataList = makeDeviceData(accountId, senseId, nowCurrentMonth);
+
+        deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
+
+        final Optional<String> senseIdOptional = pairingDAO.senseId(
+                accountId,
+                nowCurrentMonth,
+                nowCurrentMonth.plusDays(1)
+        );
+        assertTrue("senseId is present", senseIdOptional.isPresent());
+        // senseId returned for that date range should be the historical sense, not the one currently paired
+        assertEquals("senseId match", senseId, senseIdOptional.get());
+    }
+
+    @Test
+    public void testCurrentSenseOlderThanDateRange() {
+        final Long accountId = 1L;
+        final DateTime createdAt = new DateTime(2015,1,1,0,0,0, DateTimeZone.UTC);
+        final String pairedSense = "paired_sense";
+        final String senseId = "sense";
+
+        final DeviceAccountPair pair = new DeviceAccountPair(accountId, 0L, pairedSense, createdAt);
+
+        when(deviceReadDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(Optional.of(pair));
+        final PairingDAO pairingDAO = new HistoricalPairingDAO(deviceReadDAO, deviceDataDAODynamoDB);
+
+        final DateTime nowCurrentMonth = new DateTime(2015,10,1, 0,0,0,0, DateTimeZone.UTC);
+        final List<DeviceData> deviceDataList = makeDeviceData(accountId, senseId, nowCurrentMonth);
+
+        deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
+
+        final Optional<String> senseIdOptional = pairingDAO.senseId(
+                accountId,
+                nowCurrentMonth,
+                nowCurrentMonth.plusDays(1)
+        );
+        assertTrue("senseId is present", senseIdOptional.isPresent());
+        // senseId should be the current sense that is paired
+        assertEquals("senseId match", pairedSense, senseIdOptional.get());
     }
 }

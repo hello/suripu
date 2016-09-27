@@ -20,7 +20,6 @@ import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
-import com.hello.suripu.core.db.PairingDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SenseDataDAO;
@@ -101,13 +100,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     private final TimelineSafeguards timelineSafeguards;
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
-//    private final SenseColorDAO senseColorDAO;
-//    private final CalibrationDAO calibrationDAO;
+
     private final UserTimelineTestGroupDAO userTimelineTestGroupDAO;
     private final SleepScoreParametersDAO sleepScoreParametersDAO;
 
     private final SenseDataDAO senseDataDAO;
-    private final PairingDAO pairingDAO;
 
     private final AlgorithmFactory algorithmFactory;
 
@@ -131,7 +128,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                                                         final AccountReadDAO accountDAO,
                                                                         final SleepStatsDAO sleepStatsDAODynamoDB,
                                                                         final SenseDataDAO senseDataDAO,
-                                                                        final PairingDAO pairingDAO,
                                                                         final OnlineHmmModelsDAO priorsDAO,
                                                                         final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                                                                         final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
@@ -150,7 +146,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseDataDAO,
-                pairingDAO,
                 Optional.<UUID>absent(),
                 userTimelineTestGroupDAO,
                 sleepScoreParametersDAO,
@@ -160,7 +155,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public InstrumentedTimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseDataDAO, pairingDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseDataDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
     }
 
     //private SessionLogDebug(final String)
@@ -174,7 +169,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                           final AccountReadDAO accountDAO,
                                           final SleepStatsDAO sleepStatsDAODynamoDB,
                                           final SenseDataDAO senseDataDAO,
-                                          final PairingDAO pairingDAO,
                                           final Optional<UUID> uuid,
                                           final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                                           final SleepScoreParametersDAO sleepScoreParametersDAO,
@@ -189,7 +183,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.senseDataDAO = senseDataDAO;
-        this.pairingDAO = pairingDAO;
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
         this.sleepScoreParametersDAO = sleepScoreParametersDAO;
         this.algorithmFactory = algorithmFactory;

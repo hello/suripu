@@ -3,6 +3,7 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import org.joda.time.DateTime;
+import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,11 @@ public class HistoricalPairingDAO implements PairingDAO {
         final Optional<DeviceAccountPair> deviceIdPair = deviceReadDAO.getMostRecentSensePairByAccountId(accountId);
         // If no current Sense is paired, look at historical data
         if (deviceIdPair.isPresent()) {
-            return Optional.of(deviceIdPair.get().externalDeviceId);
+            final Seconds seconds = Seconds.secondsBetween(start, deviceIdPair.get().created);
+            // Current Sense was paired before the date we're interested in.
+            if(seconds.getSeconds() < 0) {
+                return Optional.of(deviceIdPair.get().externalDeviceId);
+            }
         }
 
         LOGGER.warn("action=get-historical-pairing account_id={} start_time={} end_time={}", accountId, start, end);
