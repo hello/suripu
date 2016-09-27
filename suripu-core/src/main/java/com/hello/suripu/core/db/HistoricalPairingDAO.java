@@ -22,7 +22,6 @@ public class HistoricalPairingDAO implements PairingDAO {
     @Override
     public Optional<String> senseId(long accountId, DateTime start, DateTime end) {
         final Optional<DeviceAccountPair> deviceIdPair = deviceReadDAO.getMostRecentSensePairByAccountId(accountId);
-        // If no current Sense is paired, look at historical data
         if (deviceIdPair.isPresent()) {
             final Seconds seconds = Seconds.secondsBetween(start, deviceIdPair.get().created);
             // Current Sense was paired before the date we're interested in.
@@ -31,10 +30,11 @@ public class HistoricalPairingDAO implements PairingDAO {
             }
         }
 
+        // If no current Sense is paired, look at historical data
         LOGGER.warn("action=get-historical-pairing account_id={} start_time={} end_time={}", accountId, start, end);
         final Optional<String> deviceId = deviceDataReadAllSensorsDAO.getSensePairedBetween(accountId, start, end);
         if(!deviceId.isPresent()) {
-            LOGGER.debug("No device ID for account_id = {} and day = {}", accountId, start);
+            LOGGER.warn("msg=no-sense-paired account_id={} start={}", accountId, start);
             return Optional.absent();
         }
         return deviceId;
