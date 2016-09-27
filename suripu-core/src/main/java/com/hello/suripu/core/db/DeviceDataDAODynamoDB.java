@@ -42,6 +42,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Created by jakepiccolo on 10/9/15.
@@ -1019,6 +1020,33 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .withHoldCount(holdCount)
                 .build();
 
+    }
+    //endregion
+
+
+    //region pairing
+    @Override
+    public Optional<String> getSensePairedBetween(final Long accountId, final DateTime startTime, final DateTime endTime) {
+
+        final Expression keyConditionExp = Expressions.and(
+                Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, ""), getRangeKey(endTime, "")));
+        final ImmutableSet<Attribute> attributes = ImmutableSet.<Attribute>builder()
+                .add(DeviceDataAttribute.ACCOUNT_ID)
+                .add(DeviceDataAttribute.RANGE_KEY)
+                .build();
+        final Response<List<Map<String, AttributeValue>>> response = queryTables(getTableNames(startTime, endTime), keyConditionExp, attributes);
+
+        if(Response.Status.SUCCESS.equals(response.status)) {
+            for(final Map<String, AttributeValue> map : response.data) {
+                final String tsDeviceId = map.getOrDefault(DeviceDataAttribute.RANGE_KEY.shortName(), new AttributeValue("")).getS();
+                final String[] parts = tsDeviceId.split(Pattern.quote("|"));
+                if(parts.length == 2) {
+                    return Optional.of(parts[1]);
+                }
+            }
+        }
+        return Optional.absent();
     }
     //endregion
 }

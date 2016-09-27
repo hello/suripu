@@ -6,6 +6,9 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.db.HistoricalPairingDAO;
+import com.hello.suripu.core.db.PairingDAO;
+import com.hello.suripu.core.db.SenseDataDAODynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepScore;
@@ -100,10 +103,12 @@ public class InstrumentedTimelineProcessorTest {
 
         ObjectGraphRoot.getInstance().init(new RolloutLocalModule());
         features.clear();
+
+        final PairingDAO pairingDAO = new HistoricalPairingDAO(helpers.deviceReadDAO, helpers.deviceDataReadAllSensorsDAO);
         instrumentedTimelineProcessor = InstrumentedTimelineProcessor.createTimelineProcessor(
                 helpers.pillDataReadDAO,helpers.deviceReadDAO,helpers.deviceDataReadAllSensorsDAO,
                 helpers.ringTimeHistoryDAODynamoDB,helpers.feedbackDAO, helpers.sleepHmmDAO,helpers.accountDAO,helpers.sleepStatsDAO,
-                helpers.senseColorDAO,helpers.priorsDAO,helpers.featureExtractionModelsDAO,helpers.calibrationDAO,
+                new SenseDataDAODynamoDB(pairingDAO, helpers.deviceDataReadAllSensorsDAO, helpers.senseColorDAO, helpers.calibrationDAO), helpers.priorsDAO,helpers.featureExtractionModelsDAO,
                 helpers.defaultModelEnsembleDAO,helpers.userTimelineTestGroupDAO,
                 helpers.sleepScoreParametersDAO,
                 helpers.neuralNetEndpoint,helpers.algorithmConfiguration, helpers.metric);

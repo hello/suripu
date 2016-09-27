@@ -1,6 +1,7 @@
 package com.hello.suripu.coredropwizard.timeline;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
@@ -141,6 +142,11 @@ public class InstrumentedTimelineProcessorHelpers {
             allSensorSampleList.add(Sensor.WAVE_COUNT,waves);
 
             return allSensorSampleList;
+        }
+
+        @Override
+        public Optional<String> getSensePairedBetween(Long accountId, DateTime startTime, DateTime endTime) {
+            return Optional.absent();
         }
     };
 
