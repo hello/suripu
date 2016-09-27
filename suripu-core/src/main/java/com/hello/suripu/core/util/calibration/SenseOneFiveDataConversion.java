@@ -134,6 +134,6 @@ public class SenseOneFiveDataConversion {
     public static float convertRawToHumidity(final int tempRaw, final int humidRaw, final int upTimeMinutes) {
         final double dewPoint = DataUtils.computeDewPoint((double) DataUtils.dbIntToFloat(tempRaw),  (double) DataUtils.dbIntToFloat(humidRaw));
         final float adjustedHumidity = (float) DataUtils.computeHumidity(convertRawToCelsius(tempRaw, upTimeMinutes), dewPoint);
-        return adjustedHumidity;
+        return Math.min(100, adjustedHumidity);
     }
 }
