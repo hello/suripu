@@ -38,7 +38,8 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
     public enum SleepScoreParameterAttribute implements Attribute {
         ACCOUNT_ID("account_id", "N"), // hash key
         DATE("date", "S"), // sort key
-        DURATION_THRESHOLD("duration_threshold", "N");
+        DURATION_THRESHOLD("duration_threshold", "N"),
+        MOTION_FREQUENCY_THRESHOLD("motion_frequency_threshold", "N");
 
         private final String name;
         private final String type;
@@ -120,6 +121,7 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
 
         final Map<String, AttributeValueUpdate> updateItem = Maps.newHashMap();
         updateItem.put(SleepScoreParameterAttribute.DURATION_THRESHOLD.shortName(), Util.putAction(parameter.durationThreshold));
+        updateItem.put(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName(), Util.putAction(parameter.motionFrequencyThreshold));
 
         final Map<String, AttributeValue> key = getKey(accountId, parameter.dateTime);
         final UpdateItemResult result = dynamoDBClient.updateItem(tableName, key, updateItem, "ALL_NEW");
@@ -150,13 +152,20 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
         if (item.containsKey(SleepScoreParameterAttribute.DURATION_THRESHOLD.shortName())) {
             durationThreshold = Integer.valueOf(item.get(SleepScoreParameterAttribute.DURATION_THRESHOLD.shortName()).getN());
         } else {
-            durationThreshold = SleepScoreParameters.MISSING_DURATION_THRESHOLD;
+            durationThreshold = SleepScoreParameters.MISSING_THRESHOLD;
+        }
+        final Integer motionFrequencyThreshold;
+        if (item.containsKey(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName())) {
+            motionFrequencyThreshold = Integer.valueOf(item.get(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName()).getN());
+        } else {
+            motionFrequencyThreshold = SleepScoreParameters.MISSING_THRESHOLD;
         }
 
         return new SleepScoreParameters(
                 Long.valueOf(accountIdString),
                 DateTimeUtil.ymdStringToDateTime(parameterDate),
-                durationThreshold
+                durationThreshold,
+                motionFrequencyThreshold
         );
     }
 
