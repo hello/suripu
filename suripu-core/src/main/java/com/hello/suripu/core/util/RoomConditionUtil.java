@@ -22,15 +22,15 @@ public class RoomConditionUtil {
         float currentScore = 0;
 
         currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.humidity());
-        currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.particulates());
+        currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.dust());
         currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.temperature());
 
         currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.humidity());
-        currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.particulates());
+        currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.dust());
         currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.temperature());
 
         currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.humidity());
-        currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.particulates());
+        currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.dust());
         currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.temperature());
 
         float percentage = currentScore / totalScore * 100;
@@ -48,7 +48,7 @@ public class RoomConditionUtil {
         final CurrentRoomState currentRoomStateWithoutLight = new CurrentRoomState(
                 currentRoomState.temperature(),
                 currentRoomState.humidity(),
-                currentRoomState.particulates(),
+                currentRoomState.dust(),
                 new State(currentRoomState.light().value,
                         currentRoomState.light().message,
                         currentRoomState.light().idealConditions,
@@ -69,7 +69,7 @@ public class RoomConditionUtil {
         warningCount += getWarningCountFromSate(currentRoomState.light());
         warningCount += getWarningCountFromSate(currentRoomState.sound());
         if (hasCalibration) {
-            warningCount += getWarningCountFromSate(currentRoomState.particulates());
+            warningCount += getWarningCountFromSate(currentRoomState.dust());
         }
 
         alertCount += getAlertCountFromSate(currentRoomState.humidity());
@@ -77,7 +77,7 @@ public class RoomConditionUtil {
         alertCount += getAlertCountFromSate(currentRoomState.light());
         alertCount += getAlertCountFromSate(currentRoomState.sound());
         if (hasCalibration) {
-            alertCount += getAlertCountFromSate(currentRoomState.particulates());
+            alertCount += getAlertCountFromSate(currentRoomState.dust());
         }
 
 

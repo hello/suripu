@@ -68,6 +68,12 @@ public class CurrentRoomState {
         return (showDust) ? particulates : null;
     }
 
+    // Dust is never null
+    // Dust is NOT used for serialization
+    public State dust() {
+        return particulates;
+    }
+
     public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound) {
         this(temperature, humidity, particulates, light, sound, Boolean.FALSE);
     }
@@ -176,7 +182,8 @@ public class CurrentRoomState {
                 new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
                 new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
                 new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
-                new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
+                new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB),
+                true
         );
         return roomState;
     }
