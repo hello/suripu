@@ -25,8 +25,8 @@ import static org.hamcrest.Matchers.is;
 public class TrackerMotionUtilTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TrackerMotionUtilTest.class);
-    private final static int PILL_1P5_OFFSET = 383;
-    private final static int PILL_1P5_MOTION_MULTIPLIER = 2;
+    private final static int PILL_1P5_OFFSET = 0;
+    private final static int PILL_1P5_MOTION_MULTIPLIER = 1;
 
     @Test
     public void testRawToMilliG(){

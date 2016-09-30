@@ -481,8 +481,7 @@ public class TrackerMotion {
             }catch (IOException ioe){
                 throw new InvalidEncryptedPayloadException(ioe.getMessage());
             }
-            // offsets and scales motion values for 1.5 pills based off initial comparison of 1.0 and 1.5 pills
-            return PillPayloadV2.createWithMotionMask((((long) (1000 * maxAccelerationMS2)) - PILL_1P5_MOTION_OFFSET) * PILL_1P5_MOTION_MULTIPLIER, motionMask, cosTheta);
+            return PillPayloadV2.createWithMotionMask((long) (1000 * maxAccelerationMS2), motionMask, cosTheta);
         }
 
         public static List<TrackerMotion> removeDuplicates(final List<TrackerMotion> original){
