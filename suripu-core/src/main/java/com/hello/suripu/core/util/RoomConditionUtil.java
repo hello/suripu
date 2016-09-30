@@ -55,7 +55,7 @@ public class RoomConditionUtil {
                         Condition.IDEAL,
                         currentRoomState.light().lastUpdated,
                         currentRoomState.light().unit),
-                currentRoomState.sound());
+                currentRoomState.sound(), hasCalibration);
         return getGeneralRoomConditionV2(currentRoomStateWithoutLight, hasCalibration);
     }
 

@@ -77,7 +77,7 @@ public class CurrentRoomState {
     }
 
 
-    private CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean showDust) {
+    public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean showDust) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.particulates = particulates;
@@ -128,7 +128,6 @@ public class CurrentRoomState {
         final State particulatesState = getParticulatesState(particulates, dataTimestampUTC, false);
         final State lightState = getLightState(light, dataTimestampUTC, false);
         final State soundState = getSoundState(sound, dataTimestampUTC, false);
-
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState, soundState, true);
         return roomState;
 
@@ -185,6 +184,7 @@ public class CurrentRoomState {
     public static State getTemperatureState(final float temperature, final DateTime dataTimestampUTC, final String tempUnit, final Boolean preSleep) {
         // Global ideal range: 60 -- 70, less than 54 = too cold, above 75= too warm
         // TODO: personalize the range
+
         return classifiers.get(Sensor.TEMPERATURE).classify(temperature,dataTimestampUTC,preSleep, tempUnit);
     }
 
