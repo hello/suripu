@@ -39,7 +39,7 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
         ACCOUNT_ID("account_id", "N"), // hash key
         DATE("date", "S"), // sort key
         DURATION_THRESHOLD("duration_threshold", "N"),
-        MOTION_FREQUENCY_THRESHOLD("motion_frequency_threshold", "N");
+        MOTION_FREQUENCY_THRESHOLD("motion_frequency_threshold", "S");
 
         private final String name;
         private final String type;
@@ -121,7 +121,7 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
 
         final Map<String, AttributeValueUpdate> updateItem = Maps.newHashMap();
         updateItem.put(SleepScoreParameterAttribute.DURATION_THRESHOLD.shortName(), Util.putAction(parameter.durationThreshold));
-        updateItem.put(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName(), Util.putAction(parameter.motionFrequencyThreshold));
+        updateItem.put(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName(), Util.putAction(parameter.motionFrequencyThreshold.toString()));
 
         final Map<String, AttributeValue> key = getKey(accountId, parameter.dateTime);
         final UpdateItemResult result = dynamoDBClient.updateItem(tableName, key, updateItem, "ALL_NEW");
@@ -131,9 +131,11 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
         }
 
         if (!result.getAttributes().isEmpty()) {
-            final AttributeValue resultValue = result.getAttributes().get(SleepScoreParameterAttribute.DURATION_THRESHOLD.shortName());
-            final AttributeValue thresholdValue = new AttributeValue().withN(String.valueOf(parameter.durationThreshold));
-            if (resultValue.equals(thresholdValue)) {
+            final AttributeValue durationResultValue = result.getAttributes().get(SleepScoreParameterAttribute.DURATION_THRESHOLD.shortName());
+            final AttributeValue motionFrequencyResultValue = result.getAttributes().get(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName());
+            final AttributeValue durationThresholdValue = new AttributeValue().withN(String.valueOf(parameter.durationThreshold));
+            final AttributeValue motionFrequencyThresholdValue = new AttributeValue().withS(String.valueOf(parameter.motionFrequencyThreshold));
+            if (durationResultValue.equals(durationThresholdValue) & motionFrequencyResultValue.equals(motionFrequencyThresholdValue)) {
                 return true;
             }
         }
@@ -154,11 +156,11 @@ public class SleepScoreParametersDynamoDB implements SleepScoreParametersDAO{
         } else {
             durationThreshold = SleepScoreParameters.MISSING_THRESHOLD;
         }
-        final Integer motionFrequencyThreshold;
+        final Float motionFrequencyThreshold;
         if (item.containsKey(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName())) {
-            motionFrequencyThreshold = Integer.valueOf(item.get(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName()).getN());
+            motionFrequencyThreshold = Float.valueOf(item.get(SleepScoreParameterAttribute.MOTION_FREQUENCY_THRESHOLD.shortName()).getS());
         } else {
-            motionFrequencyThreshold = SleepScoreParameters.MISSING_THRESHOLD;
+            motionFrequencyThreshold =(float) SleepScoreParameters.MISSING_THRESHOLD;
         }
 
         return new SleepScoreParameters(

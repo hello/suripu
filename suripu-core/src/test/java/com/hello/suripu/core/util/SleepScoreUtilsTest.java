@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.MotionFrequency;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.Sample;
@@ -113,6 +114,27 @@ public class SleepScoreUtilsTest {
         assertThat(testDurScoreV4, is(0));
     }
 
+    @Test
+    public void testScoresV5(){
+        final float testDurScoreV3 = 54.1889f;
+        final float testMotionFreqPenalty = -14.05f;
+        final int testTimesAwake = 1;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(16, 300);
+        final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
+        assertThat(testDurScoreV5, is(77));
+    }
+
+    @Test
+    public void testScoresV5MinScore(){
+        final float testDurScoreV3 = 25;
+        final MotionFrequency testMotionFreq = new MotionFrequency(0.673f,  0.673f, 0.0f, 0.673f);
+        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(testMotionFreq, 0.0873f);
+        final int testTimesAwake = 1;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(90, 300);
+        final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
+        assertThat(testDurScoreV5, is(0));
+    }
+
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
         final URL fixtureCSVFile = Resources.getResource(fixturePath);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
@@ -156,7 +178,23 @@ public class SleepScoreUtilsTest {
         assertThat(motionFrequency.motionFrequencyFirstPeriod, is(correctFrequency.motionFrequencyFirstPeriod));
         assertThat(motionFrequency.motionFrequencyMiddlePeriod, is(correctFrequency.motionFrequencyMiddlePeriod));
         assertThat(motionFrequency.motionFrequencyLastPeriod, is(correctFrequency.motionFrequencyLastPeriod));
+    }
 
+    @Test
+    public void testMotionFrequencyPenalty(){
+        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
+        final long sleepTime = trackerMotionList.get(0).timestamp;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
+        final int sleepDurationMinutes = 400;
+        final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
+
+        float idealMF = 0.08f;
+        float motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(-18.02526F));
+
+        idealMF = 0.00f;
+        motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(-20.600298f));
     }
 
     @Test
@@ -166,6 +204,17 @@ public class SleepScoreUtilsTest {
         final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
         int  agitatedSleep= SleepScoreUtils.getAgitatedSleepDuration(trackerMotionList, sleepTime, wakeTime);
         assertThat(agitatedSleep , is(18));
+    }
+
+    @Test
+    //finish
+    public void testAgitatedSleep(){
+        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
+        final long sleepTime = trackerMotionList.get(0).timestamp;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
+        final AgitatedSleep agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, sleepTime, wakeTime);
+        assertThat(agitatedSleep.agitatedSleepMins , is(14));
+        assertThat(agitatedSleep.uninterruptedSleepMins , is(382));
     }
 
     @Test
@@ -286,6 +335,13 @@ public class SleepScoreUtilsTest {
         final long targetDate = 1470528000000L;
         final float testV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDate);
         assertThat(testV2V4Weighting, is(6*0.0333f));
+    }
+
+    @Test
+    public void testGetSleepScoreV4V5Weighting(){
+        final long targetDate = 1476489600000L;
+        final float testV2V4Weighting = SleepScoreUtils.getSleepScoreV4V5Weighting(targetDate);
+        assertThat(testV2V4Weighting, is(6*0.0715f));
     }
 
 }

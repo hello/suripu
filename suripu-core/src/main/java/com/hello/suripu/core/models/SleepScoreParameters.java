@@ -12,29 +12,35 @@ public class SleepScoreParameters {
     public final Long accountId;
     public final DateTime dateTime;
     public final Integer durationThreshold;
-    public final Integer motionFrequencyThreshold;
+    public final Float motionFrequencyThreshold;
 
 
-    public SleepScoreParameters(final Long accountId, final DateTime dateTime, final Integer durationThreshold, final Integer motionFrequencyThreshold) {
+    public SleepScoreParameters(final Long accountId, final DateTime dateTime, final Integer durationThreshold, final Float motionFrequencyThreshold) {
         this.accountId = accountId;
         this.dateTime = dateTime;
         this.durationThreshold = durationThreshold;
         this.motionFrequencyThreshold = motionFrequencyThreshold;
     }
 
+    public SleepScoreParameters(final Long accountId, final DateTime dateTime, final Integer durationThreshold, final String motionFrequencyThreshold) {
+        this.accountId = accountId;
+        this.dateTime = dateTime;
+        this.durationThreshold = durationThreshold;
+        this.motionFrequencyThreshold = Float.valueOf(motionFrequencyThreshold);
+    }
+
     public SleepScoreParameters(final Long accountId, final DateTime dateTime, final Integer durationThreshold) {
         this.accountId = accountId;
         this.dateTime = dateTime;
         this.durationThreshold = durationThreshold;
-        this.motionFrequencyThreshold = MISSING_THRESHOLD;
+        this.motionFrequencyThreshold = (float) MISSING_THRESHOLD;
     }
 
     public SleepScoreParameters(final Long accountId, final DateTime dateTime) {
         this.accountId = accountId;
         this.dateTime = dateTime;
         this.durationThreshold = MISSING_THRESHOLD;
-        this.motionFrequencyThreshold = MISSING_THRESHOLD;
-
+        this.motionFrequencyThreshold = (float) MISSING_THRESHOLD;
     }
 
 }

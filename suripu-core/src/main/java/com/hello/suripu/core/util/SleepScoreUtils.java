@@ -11,6 +11,7 @@ import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.SleepDuration;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,23 +44,25 @@ public class SleepScoreUtils {
     public static final Integer MAX_TIMES_AWAKE_PENALTY_SCORE = -30;
     public static final Integer AWAKE_PENALTY_SCORE = -5; // minus 5 for each time-awake
 
-    public static final int DURATION_MIN_V3 = 120; //2 hours
+
     public static final int DURATION_MAX_V3 = 720; //12 hours
     public static final int DURATION_POP_IDEAL = 480; //8 hours
-    public static final float RAW_SCORE_SCALING_MIN_V3 = 33.0f;
-    public static final float RAW_SCORE_SCALING_MAX_V3 = 57f;
-    public static final float RAW_SCORE_MIN_V3 = 39.32f;
     public static final float RAW_SCORE_MAX_DUR_V3 = 52.866f;//raw score if sleep > 12 hours
     public static final float[] DURATION_WEIGHTS_V3 = new float[]{14.8027f, 4.3001e-01f, -2.7177e-03f, 8.2262e-06f, -1.1033e-08f, 5.333e-12f};
     public static final float[] DURATION_WEIGHTS_V4 = new float[]{ -112.81f, 3.30f, -0.19f, -19.40f, -54.14f, 37.71f,-3.77f};
-    public static final float[] DURATION_WEIGHTS_V5 = new float[]{ -112.81f, 3.30f, -0.19f, -19.40f,-3.77f};
+    public static final float[] DURATION_WEIGHTS_V5 = new float[]{ -106.37f, 3.36f, -0.04f, -1.0f,-2.17f};
 
+    public static final float[] MOTION_FREQUENCY_PENALTY = new float[]{ -4.85f, -8.43f, -0.74f};
+    public static final float MOTION_FREQUENCY_THRESHOLD_DEFAULT = 0.07f;
+    public static final float MOTION_FREQUENCY_THRESHOLD_MIN = 0.024f;
+    public static final float MOTION_FREQUENCY_THRESHOLD_MAX = 0.10f;
+    public static final int RELATIVE_MOTION_FREQUENCY_MAX = 3;
 
     public static final long SLEEP_SCORE_V2_V4_TRANSITION_EPOCH = 1470009600000L; //2016-08-01 utc
     public static final float SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING = 0.0333f; // full transition in 30 days
 
-    public static final long SLEEP_SCORE_V4_V5_TRANSITION_EPOCH = 1476057600000L; //2016-10-10 utc
-    public static final float SLEEP_SCORE_V4_V5_TRANSITION_WEIGHTING = 0.1111f; // full transition in 9 days
+    public static final long SLEEP_SCORE_V4_V5_TRANSITION_EPOCH = 1475971200000L; //2016-10-09 utc
+    public static final float SLEEP_SCORE_V4_V5_TRANSITION_WEIGHTING = 0.0715f; // full transition in 14 days
 
 
 
@@ -331,8 +334,26 @@ public class SleepScoreUtils {
         return new MotionFrequency(motionFrequency, motionFrequencyFirstPeriod, motionFrequencyMiddlePeriod, motionFrequencyLastPeriod);
     }
 
-    public static float getMotionFrequencyPenalty(final MotionFrequency motionFrequency, final float motionFrequencyThreshold){
-        final float motionFrequencyPenalty= 100;
+    public static float getMotionFrequencyPenalty(final MotionFrequency motionFrequency, float motionFrequencyThreshold){
+        if (motionFrequencyThreshold < 0){
+            LOGGER.error("action=invalid-motion-frequency-threshold motionFrequencyThreshold ={}", motionFrequencyThreshold);
+            return 0;
+        }
+
+        //bounds motionFrequencyThreshold range.
+        if (motionFrequencyThreshold == 0){
+            motionFrequencyThreshold = MOTION_FREQUENCY_THRESHOLD_DEFAULT;
+        } else if (motionFrequencyThreshold < MOTION_FREQUENCY_THRESHOLD_MIN){
+            motionFrequencyThreshold = MOTION_FREQUENCY_THRESHOLD_MIN;
+        } else if (motionFrequencyThreshold > MOTION_FREQUENCY_THRESHOLD_MAX){
+            motionFrequencyThreshold = MOTION_FREQUENCY_THRESHOLD_MAX;
+        }
+
+        //bounds relative motion frequency range
+        final float motionFrequencyFirstPeriodRelative = Math.min(motionFrequency.motionFrequencyFirstPeriod / motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX);
+        final float motionFrequencyMiddlePeriodRelative = Math.min(motionFrequency.motionFrequencyMiddlePeriod / motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX);
+        final float motionFrequencyLastPeriodRelative = Math.min(motionFrequency.motionFrequencyLastPeriod / motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX);
+        final float motionFrequencyPenalty= MOTION_FREQUENCY_PENALTY[0] * motionFrequencyFirstPeriodRelative + MOTION_FREQUENCY_PENALTY[1] * motionFrequencyMiddlePeriodRelative + MOTION_FREQUENCY_PENALTY[2] * motionFrequencyLastPeriodRelative;
 
         return motionFrequencyPenalty;
     }
@@ -344,17 +365,17 @@ public class SleepScoreUtils {
         final int onDurationThreshold = 16; //secs
         final int minOnDuration = 1;
         final int uninterruptedSleepThreshold = 60; // represents full sleep cycle - if sleep segment < 1 sleep cycle, then do not count that sleep as uninterrupted. After ~1 sleep cycle was probably completed, it is not possible to truncate sleep duration by cycle count
-        final long noMotionThreshold = 240000L; //4 mins
+        final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 mins
         final long timeWindow = 90000L; //1.5 minutes - finds two consecutive mintues with some flexibility
         int agitatedSleepMins = 0;
         int uninterruptedSleepMins = 0;
 
-        long motionCooldown = 0L;
         long currentOnDuration = 0;
         long currentOnDurationTS = 0L;
         long lastMotionTS = fallAsleepTimestamp;
         long agitatedIntervalStartTS = 0L;
         boolean agitatedSleep = false;
+        boolean firstUninterruptedInterval = true;
         long uninterruptedSleepSegment = 0L;
         for (TrackerMotion trackerMotion : trackerMotions) {
             //ignores tracker motion  during first 15 mins and last 120 mins of sleep
@@ -374,13 +395,12 @@ public class SleepScoreUtils {
                 totalOnDuration = currentOnDuration;
             }
             //check for consecutive but distinct agitated sleep windows
-            if (agitatedSleep & motionCooldown < currentOnDuration - lastMotionTS){
-                final long agitatedSegmentDuration = (agitatedIntervalStartTS - lastMotionTS) % 60000L;
+            if (agitatedSleep & noMotionThreshold < currentOnDurationTS - lastMotionTS){
+                final long agitatedSegmentDuration = (lastMotionTS - agitatedIntervalStartTS ) / DateTimeConstants.MILLIS_PER_MINUTE;
                 agitatedSleepMins =agitatedSleepMins + (int) agitatedSegmentDuration;
                 agitatedSleep = false;
-                motionCooldown = 0;
-                if ((agitatedIntervalStartTS - lastMotionTS)%60000L >= uninterruptedSleepThreshold){
-                    uninterruptedSleepSegment = (agitatedIntervalStartTS - lastMotionTS) % 60000L;
+                if ((agitatedIntervalStartTS - lastMotionTS)/DateTimeConstants.MILLIS_PER_MINUTE >= uninterruptedSleepThreshold){
+                    uninterruptedSleepSegment = (agitatedIntervalStartTS - lastMotionTS) / DateTimeConstants.MILLIS_PER_MINUTE;
                     uninterruptedSleepMins += (int) uninterruptedSleepSegment;
                 }
             }
@@ -388,24 +408,27 @@ public class SleepScoreUtils {
             if (totalOnDuration > onDurationThreshold){
                 if (!agitatedSleep){
                     agitatedIntervalStartTS = currentOnDurationTS;
+                    //captures first uninterrupted interval
+                    if (firstUninterruptedInterval){
+                        firstUninterruptedInterval = false;
+                        if ((agitatedIntervalStartTS - lastMotionTS)/DateTimeConstants.MILLIS_PER_MINUTE >= uninterruptedSleepThreshold){
+                            uninterruptedSleepSegment = (agitatedIntervalStartTS - lastMotionTS) / DateTimeConstants.MILLIS_PER_MINUTE;
+                            uninterruptedSleepMins += (int) uninterruptedSleepSegment;
+                        }
+                    }
                 }
                 agitatedSleep = true;
-                motionCooldown = noMotionThreshold;
                 lastMotionTS = currentOnDurationTS;
-            }else if (currentOnDurationTS - lastMotionTS > motionCooldown & agitatedSleep){
-                agitatedSleep = false;
-                final long agitatedSegmentDuration = (agitatedIntervalStartTS - lastMotionTS)%60000L;
-                agitatedSleepMins =agitatedSleepMins + (int) agitatedSegmentDuration;
+
 
             } else if(totalOnDuration >= minOnDuration & agitatedSleep ){
-                motionCooldown = noMotionThreshold;
                 lastMotionTS = currentOnDurationTS;
             }
 
 
         }
-        if ((lastMotionTS - wakeUpTimestamp %60000L) > uninterruptedSleepThreshold ){
-            uninterruptedSleepSegment = (agitatedIntervalStartTS - lastMotionTS) % 60000L;
+        if ((lastMotionTS - wakeUpTimestamp / DateTimeConstants.MILLIS_PER_MINUTE) > uninterruptedSleepThreshold ){
+            uninterruptedSleepSegment = (wakeUpTimestamp - lastMotionTS) / DateTimeConstants.MILLIS_PER_MINUTE;
             uninterruptedSleepMins += (int) uninterruptedSleepSegment;
         }
 

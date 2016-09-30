@@ -161,12 +161,12 @@ public class InstrumentedTimelineProcessorTest {
     }
 
     @Test
-    public void testcomputeSleepScoreV2V4Transition(){
+    public void testcomputeSleepScoreVersionTransition(){
         final MotionScore testMotionScore = new MotionScore(19, 20, 3500F, 25000, 75);
         final SleepScore testSleepScoreV2 = new SleepScore(88, testMotionScore, 89, 100, 0);
         final SleepScore testSleepScoreV4 = new SleepScore(92, testMotionScore, 89, 100, 0 );
         final float testV2V4Weighting = 0.2f;
-        final SleepScore testSleepScoreTransition = InstrumentedTimelineProcessor.computeSleepScoreV2V4Transition(testSleepScoreV2, testSleepScoreV4, testV2V4Weighting);
+        final SleepScore testSleepScoreTransition = InstrumentedTimelineProcessor.computeSleepScoreVersionTransition(testSleepScoreV2, testSleepScoreV4, testV2V4Weighting);
         assertThat(testSleepScoreTransition.value, is(89));
     }
 }

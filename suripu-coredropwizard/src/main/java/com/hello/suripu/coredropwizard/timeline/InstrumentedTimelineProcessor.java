@@ -1,12 +1,11 @@
 package com.hello.suripu.coredropwizard.timeline;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
@@ -71,7 +70,6 @@ import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -1018,7 +1016,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         boolean isInTransitionV2V4 = (sleepScoreV2V4Weighting > 0.0f) || useSleepScoreV4(accountId);
 
         boolean usesV5 = sleepScoreV4V5Weighting==1.0f;
-        boolean isInTransitionV4V5 = (sleepScoreV2V4Weighting > 0.0f) || useSleepScoreV4(accountId);
+        boolean isInTransitionV4V5 = (sleepScoreV4V5Weighting > 0.0f) || useSleepScoreV5(accountId);
 
         final SleepScore sleepScoreV5, sleepScoreV4, sleepScoreV2, sleepScore;
 
@@ -1088,22 +1086,23 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
     private static SleepScore computeSleepScoreV5(final Long accountId, final int userAge, final SleepScoreParameters sleepScoreParameters, final SleepStats sleepStats, final List<TrackerMotion> originalTrackerMotions, final Integer environmentScore, final MotionScore motionScore){
-        //timesAwakePenalty accounted for in durv4 score
+        //timesAwakePenalty accounted for in durv5 score
         final Integer timesAwakePenalty = 0;
-        final SleepScore.Weighting sleepScoreWeightingV4 =  new SleepScore.DurationWeightingV4();
+        final SleepScore.Weighting sleepScoreWeightingV5 =  new SleepScore.DurationWeightingV5();
         final int sleepDurationThreshold = sleepScoreParameters.durationThreshold;
+
         // Calculate the sleep score based on the sub scores and weighting
         final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
         final AgitatedSleep agitatedSleep = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
         final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
-        final float motionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, sleepScoreParameters.motionFrequencyThreshold);
-        final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleep.agitatedSleepMins);
+        final float motionFrequencyPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, sleepScoreParameters.motionFrequencyThreshold);
+        final Integer durationScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(accountId, sleepDurationScoreV3, motionFrequencyPenalty, sleepStats.numberOfMotionEvents, agitatedSleep);
 
         SleepScore sleepScore = new SleepScore.Builder()
                 .withMotionScore(motionScore)
-                .withSleepDurationScore(durationScoreV4)
+                .withSleepDurationScore(durationScoreV5)
                 .withEnvironmentalScore(environmentScore)
-                .withWeighting(sleepScoreWeightingV4)
+                .withWeighting(sleepScoreWeightingV5)
                 .withTimesAwakePenaltyScore(timesAwakePenalty)
                 .build();
         return sleepScore;
