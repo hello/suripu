@@ -349,8 +349,6 @@ public class TrackerMotion {
         public static final double GRAVITY_IN_MS2 = 9.81;
         public static final double ACC_RESOLUTION_32BIT = 65536.0;
         public static final double COUNTS_IN_G = (ACC_RANGE_IN_G  * GRAVITY_IN_MS2)/ ACC_RESOLUTION_32BIT;
-        public static final int PILL_1P5_MOTION_OFFSET = 383;
-        public static final int PILL_1P5_MOTION_MULTIPLIER = 2;
 
 
         public static Long convertTimestampInSecondsToTimestampInMillis(final Long timestampInSeconds) {
