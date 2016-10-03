@@ -28,6 +28,8 @@ import java.util.List;
 public class SleepAlarm {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepAlarm.class);
 
+    public static final Integer ADULT_AGE_YEARS = 35;
+
     public static final Integer PRE_SLEEP_TIME = 30;
 
     public static final Integer NUM_DAYS = 14;
@@ -62,15 +64,8 @@ public class SleepAlarm {
             wakeTimeList.add(wakeTime);
         }
 
-        final DateTime dob;
         final Optional<Account> account = accountReadDAO.getById(accountId);
-        if (account.isPresent()) {
-            dob = account.get().DOB;
-        } else {
-            dob = DateTime.now(DateTimeZone.UTC);
-        }
-
-        final Integer userAge = Years.yearsBetween(dob, DateTime.now(DateTimeZone.UTC)).toPeriod().getYears();
+        final Integer userAge = getUserAge(account);
 
         final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge, timeFormat);
         return card;
@@ -137,6 +132,19 @@ public class SleepAlarm {
         }
 
         return Boolean.TRUE;
+    }
+
+    @VisibleForTesting
+    public static Integer getUserAge(Optional<Account> account) {
+        if (account.isPresent()) {
+            if (!account.get().DOB.isEqual(account.get().created)) { //DOB is stored as created date if user does not input DOB
+                final DateTime dob = account.get().DOB;
+                final Integer userAge = Years.yearsBetween(dob, DateTime.now(DateTimeZone.UTC)).toPeriod().getYears();
+                return userAge;
+            }
+        }
+
+        return ADULT_AGE_YEARS;
     }
 
     @VisibleForTesting
