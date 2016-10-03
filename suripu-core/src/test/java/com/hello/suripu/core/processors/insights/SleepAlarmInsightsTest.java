@@ -186,42 +186,7 @@ public class SleepAlarmInsightsTest {
 
         final Optional<InsightCard> generatedCard = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, DateTimeFormat.forPattern("h:mm aa"));
 
-//        System.out.print(generatedCard.get().message);
         assertThat(generatedCard.isPresent(), is(Boolean.TRUE));
-    }
-
-    @Test
-    public void test_noDob() {
-        final Account account = new Account.Builder()
-                .withCreated(DateTime.now())
-                .withDOB(DateTime.now())
-                .build();
-
-        final Optional<Account> accountOptional = Optional.of(account);
-
-        final Integer age = SleepAlarm.getUserAge(accountOptional);
-        assertThat(age, is(SleepAlarm.ADULT_AGE_YEARS));
-    }
-
-    @Test
-    public void test_noDob2() {
-        final Optional<Account> accountOptional = Optional.absent();
-
-        final Integer age = SleepAlarm.getUserAge(accountOptional);
-        assertThat(age, is(SleepAlarm.ADULT_AGE_YEARS));
-    }
-
-    @Test
-    public void test_dob() {
-        final Account account = new Account.Builder()
-                .withCreated(DateTime.now())
-                .withDOB(DateTime.now().minusYears(20))
-                .build();
-
-        final Optional<Account> accountOptional = Optional.of(account);
-
-        final Integer age = SleepAlarm.getUserAge(accountOptional);
-        assertThat(age, is(20));
     }
 
 }

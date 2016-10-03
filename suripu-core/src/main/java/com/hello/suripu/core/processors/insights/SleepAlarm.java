@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.AccountUtils;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.Account;
@@ -15,7 +16,6 @@ import com.hello.suripu.core.util.InsightUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Years;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +27,6 @@ import java.util.List;
  */
 public class SleepAlarm {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepAlarm.class);
-
-    public static final Integer ADULT_AGE_YEARS = 35;
 
     public static final Integer PRE_SLEEP_TIME = 30;
 
@@ -65,7 +63,7 @@ public class SleepAlarm {
         }
 
         final Optional<Account> account = accountReadDAO.getById(accountId);
-        final Integer userAge = getUserAge(account);
+        final Integer userAge = AccountUtils.getUserAge(account);
 
         final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge, timeFormat);
         return card;
@@ -134,18 +132,7 @@ public class SleepAlarm {
         return Boolean.TRUE;
     }
 
-    @VisibleForTesting
-    public static Integer getUserAge(Optional<Account> account) {
-        if (account.isPresent()) {
-            if (!account.get().DOB.isEqual(account.get().created)) { //DOB is stored as created date if user does not input DOB
-                final DateTime dob = account.get().DOB;
-                final Integer userAge = Years.yearsBetween(dob, DateTime.now(DateTimeZone.UTC)).toPeriod().getYears();
-                return userAge;
-            }
-        }
 
-        return ADULT_AGE_YEARS;
-    }
 
     @VisibleForTesting
     public static Integer getRecommendedSleepDurationMinutes(final Integer userAge) {
