@@ -188,13 +188,13 @@ public class SleepScoreUtilsTest {
         final int sleepDurationMinutes = 400;
         final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
 
-        float idealMF = 0.08f;
+        float idealMF = 0.14f;
         float motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
-        assertThat(motionPenalty, is(-18.02526F));
+        assertThat(motionPenalty, is(-5.8575892f));
 
-        idealMF = 0.00f;
+        idealMF = 0.03f;
         motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
-        assertThat(motionPenalty, is(-20.600298f));
+        assertThat(motionPenalty, is(-19.456667F));
     }
 
     @Test
@@ -207,14 +207,13 @@ public class SleepScoreUtilsTest {
     }
 
     @Test
-    //finish
     public void testAgitatedSleep(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
         final long sleepTime = trackerMotionList.get(0).timestamp;
-        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 72000000L;
         final AgitatedSleep agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, sleepTime, wakeTime);
-        assertThat(agitatedSleep.agitatedSleepMins , is(14));
-        assertThat(agitatedSleep.uninterruptedSleepMins , is(382));
+        assertThat(agitatedSleep.agitatedSleepMins , is(27));
+        assertThat(agitatedSleep.uninterruptedSleepMins , is(1145));
     }
 
     @Test

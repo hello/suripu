@@ -1089,10 +1089,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //timesAwakePenalty accounted for in durv5 score
         final Integer timesAwakePenalty = 0;
         final SleepScore.Weighting sleepScoreWeightingV5 =  new SleepScore.DurationWeightingV5();
-        final int sleepDurationThreshold = sleepScoreParameters.durationThreshold;
 
         // Calculate the sleep score based on the sub scores and weighting
-        final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
+        final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepScoreParameters.durationThreshold, sleepStats.sleepDurationInMinutes);
         final AgitatedSleep agitatedSleep = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
         final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
         final float motionFrequencyPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, sleepScoreParameters.motionFrequencyThreshold);
