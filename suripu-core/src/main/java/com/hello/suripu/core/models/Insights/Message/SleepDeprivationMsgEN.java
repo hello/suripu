@@ -6,7 +6,7 @@ package com.hello.suripu.core.models.Insights.Message;
 public class SleepDeprivationMsgEN {
 
     public static Text getSleepDeprivationMessage(final int idealDuration, final int avgSleepDebtDuration) {
-        final float avgSleepDebtHour = Math.round(avgSleepDebtDuration / 30) / 2;
+        final float avgSleepDebtHour = ((float) Math.round(avgSleepDebtDuration / 30) ) / 2;
         if (avgSleepDebtHour == 1) {
             return new Text("The importance of sleep",
                     String.format("For the last four nights, you got less than your ideal %d hours of sleep. ", idealDuration)
