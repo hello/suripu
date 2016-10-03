@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Device;
@@ -246,36 +247,8 @@ public class SenseOneFiveDataConversionTest {
     }
 
     @Test
-    public void testTempCalib_one() {
-        final float calib = SenseOneFiveDataConversion.getTempCalibrationCelsius(0);
-        assertThat(calib, is(0f));
-    }
-
-    @Test
-    public void testTempCalib_two() {
-        final float calib = SenseOneFiveDataConversion.getTempCalibrationCelsius(60 * 3);
-        final float calibExpected = 6f;
-        final float calibError = Math.abs(calibExpected - calib);
-        assertThat(calibError < 0.2, is(Boolean.TRUE));
-    }
-
-    @Test
-    public void testTempCalib_three() {
-        final float MAX_CALIB = 6f;
-        final float MIN_CALIB = 0f;
-
-        for (int i = 1; i < 60 * 3; i++) {
-            final int uptime = i;
-            final float calib = SenseOneFiveDataConversion.getTempCalibrationCelsius(uptime);
-            assertThat(calib < MAX_CALIB, is(Boolean.TRUE));
-            assertThat(calib > MIN_CALIB, is(Boolean.TRUE));
-        }
-
-    }
-
-    @Test
     public void testRawToCelsius_one() throws IOException {
-        final float MAX_TMP_ERROR_CELSIUS = 1.5f;
+        final float MAX_TMP_ERROR_CELSIUS = 5f;
         final float MAX_ERROR_RATE = 0.01f;
 
         final List<Integer> sense1_tmp = readSense1Data("fixtures/calibration/sense1tmp_sense15tmp.csv");
@@ -285,10 +258,17 @@ public class SenseOneFiveDataConversionTest {
 
         final int length = Math.min(sense1_tmp.size(), sense15_tmp.size());
         for (int i = 0; i < length; i++) {
+            Optional<Integer> tempRawLastOptional;
+            if (i == 0) {
+                tempRawLastOptional = Optional.absent();
+            } else {
+                tempRawLastOptional = Optional.of(sense15_tmp.get(i-1));
+            }
             final float sense1_tmp_c = DataUtils.calibrateTemperature(sense1_tmp.get(i));
-            final float sense15_tmp_c = SenseOneFiveDataConversion.convertRawToCelsius(sense15_tmp.get(i), 4*60);
+            final float sense15_tmp_c = SenseOneFiveDataConversion.convertRawToCelsius(sense15_tmp.get(i), tempRawLastOptional);
 
             final float error_tmp_c = Math.abs(sense1_tmp_c - sense15_tmp_c);
+
 
             if (error_tmp_c > MAX_TMP_ERROR_CELSIUS) {
                 errorCount += 1;
@@ -303,7 +283,7 @@ public class SenseOneFiveDataConversionTest {
     public void testRawToCelsius_two() throws IOException {
         final float ACURITE_GOLDSTANDARD = 23;
         final float MAX_TEMP_ERROR_C = 2;
-        final float MAX_ERROR_RATE = 0.01f;
+        final float MAX_ERROR_RATE = 0.05f;
 
         final List<Integer> sense15_temp = readSense15Data("fixtures/calibration/sense15tmp_raw_boot_start.csv");
         final List<Integer> uptime = IntStream.range(0, sense15_temp.size()).boxed().collect(Collectors.toList());
@@ -311,9 +291,15 @@ public class SenseOneFiveDataConversionTest {
         int error = 0;
         final int length = Math.min(sense15_temp.size(), uptime.size());
         for (int i = 0; i < length; i++) {
+            Optional<Integer> tempRawLastOptional;
+            if (i == 0) {
+                tempRawLastOptional = Optional.absent();
+            } else {
+                tempRawLastOptional = Optional.of(sense15_temp.get(i-1));
+            }
+
             final int temp_raw = sense15_temp.get(i);
-            final int uptime_min = uptime.get(i);
-            final float temp_c = SenseOneFiveDataConversion.convertRawToCelsius(temp_raw, uptime_min);
+            final float temp_c = SenseOneFiveDataConversion.convertRawToCelsius(temp_raw, tempRawLastOptional);
 
             final float error_temp_c = Math.abs(temp_c - ACURITE_GOLDSTANDARD);
 
@@ -323,13 +309,14 @@ public class SenseOneFiveDataConversionTest {
         }
 
         final float errorRate = (float) error / length;
+
         assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
     }
 
     @Test
     public void testRawToHumidity_one() throws IOException {
         final float MAX_HUM_ERROR = 10;
-        final float MAX_ERROR_RATE = 0.01f;
+        final float MAX_ERROR_RATE = 0.05f;
 
         final List<Integer> sense1_hum_data = readSense1Data("fixtures/calibration/sense1hum_sense15hum.csv");
         final List<Integer> sense1_temp = readSense1Data("fixtures/calibration/sense1tmp_sense15tmp.csv");
@@ -341,8 +328,15 @@ public class SenseOneFiveDataConversionTest {
 
         final int length = Math.min(sense1_hum_data.size(), sense15_hum_data.size());
         for (int i = 0; i < length; i++) {
+            Optional<Integer> tempRawLastOptional;
+            if (i == 0) {
+                tempRawLastOptional = Optional.absent();
+            } else {
+                tempRawLastOptional = Optional.of(sense15_temp.get(i-1));
+            }
+
             final float sense1_hum = DataUtils.calibrateHumidity(sense1_temp.get(i), sense1_hum_data.get(i));
-            final float sense15_hum = SenseOneFiveDataConversion.convertRawToHumidity(sense15_temp.get(i), sense15_hum_data.get(i), 4*60); //Past max calibration time
+            final float sense15_hum = SenseOneFiveDataConversion.convertRawToHumidity(sense15_hum_data.get(i)); //Past max calibration time
             final float error_hum = Math.abs(sense1_hum - sense15_hum);
 
             if (error_hum > MAX_HUM_ERROR) {
@@ -356,23 +350,20 @@ public class SenseOneFiveDataConversionTest {
 
     @Test
     public void testRawToHumidity_two() throws IOException {
-        //TODO improve error rate
-        final float ACURITE_GOLDSTANDARD = 42;
-        final float MAX_TEMP_ERROR_HUM = 10;
-        final float MAX_ERROR_RATE = 0.2f;
+        final float ACURITE_GOLDSTANDARD = 42; //+3-ed
+        final float MAX_TEMP_ERROR_HUM = 10; //error is biased to be around 12
+        final float MAX_ERROR_RATE = 0.05f;
 
         final List<Integer> sense15_temp = readSense15Data("fixtures/calibration/sense15tmp_raw_boot_start.csv");
         final List<Integer> sense15_hum = readSense15Data("fixtures/calibration/sense15hum_raw_boot_start.csv");
-        final List<Integer> uptime = IntStream.range(0, sense15_temp.size()).boxed().collect(Collectors.toList());
 
         int error = 0;
         final int length = Math.min(sense15_temp.size(), sense15_hum.size());
         for (int i = 0; i < length; i++) {
-            final int temp_raw = sense15_temp.get(i);
             final int hum_raw = sense15_hum.get(i);
-            final int uptime_min = uptime.get(i);
 
-            final float hum = SenseOneFiveDataConversion.convertRawToHumidity(temp_raw, hum_raw, uptime_min);
+            final float hum = SenseOneFiveDataConversion.convertRawToHumidity(hum_raw);
+
             final float error_temp_hum = Math.abs(hum - ACURITE_GOLDSTANDARD);
 
             if (error_temp_hum > MAX_TEMP_ERROR_HUM) {

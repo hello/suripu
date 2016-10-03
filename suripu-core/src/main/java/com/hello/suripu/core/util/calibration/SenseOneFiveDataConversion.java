@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util.calibration;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.util.DataUtils;
 
@@ -34,10 +35,9 @@ public class SenseOneFiveDataConversion {
     final static float UVI_COR = 1.0f;
 
     //Temp sensor constants
-    private static final int MAX_TEMP_CALIBRATION_FACTOR_IN_CELSIUS = 6;
-    private static final int MAX_TEMP_CALIBRATION_TIME_MINUTES = 3 * 60;
-    private static final int ONE_HOUR_MINUTES = 60;
-    private static final int HEAT_RATE_MIN = 140 / ONE_HOUR_MINUTES;
+    private static final int TEMP_MAX_DERIV = 20;
+    private static final int TEMP_ALPHA_ONE = -20;
+    private static final int TEMP_ALPHA_TWO = 600;
 
     public static float convertRawRGBCToAmbientLight(final int rRaw, final int gRaw, final int bRaw, final int clear, final Device.Color color) {
 
@@ -116,24 +116,27 @@ public class SenseOneFiveDataConversion {
         return pressureRaw / 256.0f;
     }
 
-    public static float convertRawToCelsius(final int tempRaw, final int upTimeMinutes) {
-        final float tempCalibrationCelsius = getTempCalibrationCelsius(upTimeMinutes);
-        return DataUtils.dbIntToFloat(tempRaw) - tempCalibrationCelsius;
+    public static float convertRawToCelsius(final int tempRaw, final Optional<Integer> tempRawLastMinOptional) {
+        if (!tempRawLastMinOptional.isPresent()) {
+            return DataUtils.dbIntToFloat(tempRaw);
+        }
+
+        final int tempCalibration = getTempCalibration(tempRaw, tempRawLastMinOptional.get());
+        return DataUtils.dbIntToFloat(tempRaw - tempCalibration);
     }
 
     @VisibleForTesting
-    public static float getTempCalibrationCelsius(final int uptimeMinutes) {
-        if (uptimeMinutes > MAX_TEMP_CALIBRATION_TIME_MINUTES) {
-            return MAX_TEMP_CALIBRATION_FACTOR_IN_CELSIUS;
-        }
-        final float calibration = (float) Math.log(HEAT_RATE_MIN * uptimeMinutes + 1);
+    public static int getTempCalibration(final int tempRaw, final int tempRawLastMin) {
+        final int deriv = tempRaw - tempRawLastMin;
+
+        final int deriv_cap = Math.max(Math.min(deriv, TEMP_MAX_DERIV), -TEMP_MAX_DERIV);
+
+        final int calibration = deriv_cap * TEMP_ALPHA_ONE + TEMP_ALPHA_TWO;
         return calibration;
     }
 
     //units in % humidity
-    public static float convertRawToHumidity(final int tempRaw, final int humidRaw, final int upTimeMinutes) {
-        final double dewPoint = DataUtils.computeDewPoint((double) DataUtils.dbIntToFloat(tempRaw),  (double) DataUtils.dbIntToFloat(humidRaw));
-        final float adjustedHumidity = (float) DataUtils.computeHumidity(convertRawToCelsius(tempRaw, upTimeMinutes), dewPoint);
-        return Math.min(100, adjustedHumidity);
+    public static float convertRawToHumidity(final int humidRaw) {
+        return DataUtils.dbIntToFloat(humidRaw);
     }
 }
