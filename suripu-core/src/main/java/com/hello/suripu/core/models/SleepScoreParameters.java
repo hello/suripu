@@ -8,12 +8,10 @@ import org.joda.time.DateTime;
 public class SleepScoreParameters {
     public static final Integer MISSING_THRESHOLD = 0; // return this if we don't have a personalized threshold
 
-
     public final Long accountId;
     public final DateTime dateTime;
     public final Integer durationThreshold;
     public final Float motionFrequencyThreshold;
-
 
     public SleepScoreParameters(final Long accountId, final DateTime dateTime, final Integer durationThreshold, final Float motionFrequencyThreshold) {
         this.accountId = accountId;

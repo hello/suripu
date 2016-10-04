@@ -44,7 +44,6 @@ public class SleepScoreUtils {
     public static final Integer MAX_TIMES_AWAKE_PENALTY_SCORE = -30;
     public static final Integer AWAKE_PENALTY_SCORE = -5; // minus 5 for each time-awake
 
-
     public static final int DURATION_MAX_V3 = 720; //12 hours
     public static final int DURATION_POP_IDEAL = 480; //8 hours
     public static final float RAW_SCORE_MAX_DUR_V3 = 52.866f;//raw score if sleep > 12 hours
@@ -63,7 +62,6 @@ public class SleepScoreUtils {
 
     public static final long SLEEP_SCORE_V4_V5_TRANSITION_EPOCH = 1475971200000L; //2016-10-09 utc
     public static final float SLEEP_SCORE_V4_V5_TRANSITION_WEIGHTING = 0.0715f; // full transition in 14 days
-
 
 
     /**
@@ -214,7 +212,7 @@ public class SleepScoreUtils {
         final int maxTimesAwake = 6;
         final int maxAgitatedSleep = 90;
         final float rawScore = DURATION_WEIGHTS_V5[0] + DURATION_WEIGHTS_V5[1] * sleepDurationScoreV3 + DURATION_WEIGHTS_V5[2] * Math.min(agitatedSleep.agitatedSleepMins, maxAgitatedSleep) + DURATION_WEIGHTS_V5[3] * motionFreqPenalty + DURATION_WEIGHTS_V5[4] * Math.min(timesAwake, maxTimesAwake);
-        final int durationScorev5 = (int) Math.max(Math.min(rawScore * .95 + 20, 90), 0);
+        final int durationScorev5 = (int) Math.max(Math.min(rawScore * .95 + 18, 90), 0);
         LOGGER.trace("action=calculated-durationscore-v5 account_id={} sleep_duration_score_v3={} motion_frequency_penalty={} awake_times={} agitated_sleep_duration={} durationscore_v5={}", accountId, sleepDurationScoreV3, motionFreqPenalty, timesAwake, agitatedSleep.agitatedSleepMins, durationScorev5);
         return durationScorev5;
     }
@@ -356,8 +354,6 @@ public class SleepScoreUtils {
 
         return motionFrequencyPenalty;
     }
-
-
 
     public static AgitatedSleep getAgitatedSleep(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         // computes periods of agitated sleep  using on duration. Over 16 seconds of movement within a two minute window initiates a state of agitated sleep that persists until there is a 4 minute window with no motion

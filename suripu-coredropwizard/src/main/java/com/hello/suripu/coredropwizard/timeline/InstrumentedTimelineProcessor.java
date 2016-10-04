@@ -1004,7 +1004,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final long targetDateEpoch = targetDate.getMillis();
         final String targetDateStr = DateTimeUtil.dateToYmdString(targetDate);
 
-
         float sleepScoreV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDateEpoch);
         float sleepScoreV4V5Weighting = SleepScoreUtils.getSleepScoreV4V5Weighting(targetDateEpoch);
 

@@ -122,10 +122,8 @@ public class SleepScoreUtilsTest {
         final int testTimesAwake = 2;
         final AgitatedSleep testAgitatedSleep = new AgitatedSleep(6, 311);
         final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
-        assertThat(testDurScoreV5, is(68));
+        assertThat(testDurScoreV5, is(66));
     }
-
-
 
     @Test
     public void testScoresV5MinScore(){
@@ -146,7 +144,7 @@ public class SleepScoreUtilsTest {
         final int testTimesAwake = 0;
         final AgitatedSleep testAgitatedSleep = new AgitatedSleep(0, 400);
         final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
-        assertThat(testDurScoreV5, is(90));
+        assertThat(testDurScoreV5, is(89));
     }
 
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
