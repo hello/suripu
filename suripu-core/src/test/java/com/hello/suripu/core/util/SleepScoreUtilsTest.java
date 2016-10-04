@@ -116,23 +116,37 @@ public class SleepScoreUtilsTest {
 
     @Test
     public void testScoresV5(){
-        final float testDurScoreV3 = 54.1889f;
-        final float testMotionFreqPenalty = -14.05f;
-        final int testTimesAwake = 1;
-        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(16, 300);
+        final float testDurScoreV3 = 52.092336f;
+        final MotionFrequency motionFrequency = new MotionFrequency(0.11085f, 0.10833f, 0.130435f, 0.116667f);
+        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, 0.0f);
+        final int testTimesAwake = 2;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(6, 311);
         final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
-        assertThat(testDurScoreV5, is(77));
+        assertThat(testDurScoreV5, is(68));
     }
+
+
 
     @Test
     public void testScoresV5MinScore(){
-        final float testDurScoreV3 = 25;
-        final MotionFrequency testMotionFreq = new MotionFrequency(0.673f,  0.673f, 0.0f, 0.673f);
-        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(testMotionFreq, 0.0873f);
-        final int testTimesAwake = 1;
-        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(90, 300);
+        final float testDurScoreV3 = 37f;
+        final MotionFrequency motionFrequency = new MotionFrequency(0.25f, 0.25f, 0.25f, 0.25f);
+        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, 0.16f);
+        final int testTimesAwake = 6;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(90, 0);
         final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
         assertThat(testDurScoreV5, is(0));
+    }
+
+    @Test
+    public void testScoresV5HighScore(){
+        final float testDurScoreV3 = 56.66f;
+        final MotionFrequency motionFrequency = new MotionFrequency(0.02f, 0.015f, 0.09f, 0.03f);
+        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, 0.084f);
+        final int testTimesAwake = 0;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(0, 400);
+        final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
+        assertThat(testDurScoreV5, is(90));
     }
 
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
@@ -186,15 +200,21 @@ public class SleepScoreUtilsTest {
         final long sleepTime = trackerMotionList.get(0).timestamp;
         final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
         final int sleepDurationMinutes = 400;
-        final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
+        MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
 
         float idealMF = 0.14f;
         float motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
-        assertThat(motionPenalty, is(-5.8575892f));
+        assertThat(motionPenalty, is(0.0f));
 
         idealMF = 0.03f;
         motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
-        assertThat(motionPenalty, is(-19.456667F));
+        assertThat(motionPenalty, is(-8.451269F));
+
+        idealMF = 0.25f;
+        motionFrequency = new MotionFrequency(0.25f, 0.25f, 0.25f, 0.25f);
+        motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(-11.636641F));
+
     }
 
     @Test

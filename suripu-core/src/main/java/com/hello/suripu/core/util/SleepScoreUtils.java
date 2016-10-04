@@ -50,13 +50,13 @@ public class SleepScoreUtils {
     public static final float RAW_SCORE_MAX_DUR_V3 = 52.866f;//raw score if sleep > 12 hours
     public static final float[] DURATION_WEIGHTS_V3 = new float[]{14.8027f, 4.3001e-01f, -2.7177e-03f, 8.2262e-06f, -1.1033e-08f, 5.333e-12f};
     public static final float[] DURATION_WEIGHTS_V4 = new float[]{ -112.81f, 3.30f, -0.19f, -19.40f, -54.14f, 37.71f,-3.77f};
-    public static final float[] DURATION_WEIGHTS_V5 = new float[]{ -110, 3.41f, -.10f, -1.0f,-2.31f};
+    public static final float[] DURATION_WEIGHTS_V5 = new float[]{ -107.20f, 3.22f, -.10f, 1.0f,-1.99f};
 
-    public static final float[] MOTION_FREQUENCY_PENALTY = new float[]{ -2.97f, -5.73f, -0.37f};
+    public static final float[] MOTION_FREQUENCY_PENALTY = new float[]{ -50.42f, -84.60f, 5.724f};
     public static final float MOTION_FREQUENCY_THRESHOLD_DEFAULT = 0.084f;
-    public static final float MOTION_FREQUENCY_THRESHOLD_MIN = 0.03f;
+    public static final float MOTION_FREQUENCY_THRESHOLD_MIN = 0.01f;
     public static final float MOTION_FREQUENCY_THRESHOLD_MAX = 0.16f;
-    public static final int RELATIVE_MOTION_FREQUENCY_MAX = 3;
+    public static final float RELATIVE_MOTION_FREQUENCY_MAX = .25f;
 
     public static final long SLEEP_SCORE_V2_V4_TRANSITION_EPOCH = 1470009600000L; //2016-08-01 utc
     public static final float SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING = 0.0333f; // full transition in 30 days
@@ -214,7 +214,7 @@ public class SleepScoreUtils {
         final int maxTimesAwake = 6;
         final int maxAgitatedSleep = 90;
         final float rawScore = DURATION_WEIGHTS_V5[0] + DURATION_WEIGHTS_V5[1] * sleepDurationScoreV3 + DURATION_WEIGHTS_V5[2] * Math.min(agitatedSleep.agitatedSleepMins, maxAgitatedSleep) + DURATION_WEIGHTS_V5[3] * motionFreqPenalty + DURATION_WEIGHTS_V5[4] * Math.min(timesAwake, maxTimesAwake);
-        final int durationScorev5 = (int) Math.max(Math.min(rawScore + 19, 90), 0);
+        final int durationScorev5 = (int) Math.max(Math.min(rawScore * .95 + 20, 90), 0);
         LOGGER.trace("action=calculated-durationscore-v5 account_id={} sleep_duration_score_v3={} motion_frequency_penalty={} awake_times={} agitated_sleep_duration={} durationscore_v5={}", accountId, sleepDurationScoreV3, motionFreqPenalty, timesAwake, agitatedSleep.agitatedSleepMins, durationScorev5);
         return durationScorev5;
     }
@@ -349,10 +349,10 @@ public class SleepScoreUtils {
         }
 
         //bounds relative motion frequency range
-        final float motionFrequencyFirstPeriodRelative = Math.min(motionFrequency.motionFrequencyFirstPeriod / motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX);
-        final float motionFrequencyMiddlePeriodRelative = Math.min(motionFrequency.motionFrequencyMiddlePeriod / motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX);
-        final float motionFrequencyLastPeriodRelative = Math.min(motionFrequency.motionFrequencyLastPeriod / motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX);
-        final float motionFrequencyPenalty= MOTION_FREQUENCY_PENALTY[0] * motionFrequencyFirstPeriodRelative + MOTION_FREQUENCY_PENALTY[1] * motionFrequencyMiddlePeriodRelative + MOTION_FREQUENCY_PENALTY[2] * motionFrequencyLastPeriodRelative;
+        final float motionFrequencyFirstPeriodAdjusted = Math.max(Math.min(motionFrequency.motionFrequencyFirstPeriod - motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX), 0);
+        final float motionFrequencyMiddlePeriodAdjusted = Math.max(Math.min(motionFrequency.motionFrequencyMiddlePeriod - motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX), 0);
+        final float motionFrequencyLastPeriodAdjusted = Math.max(Math.min(motionFrequency.motionFrequencyLastPeriod - motionFrequencyThreshold, RELATIVE_MOTION_FREQUENCY_MAX), 0);
+        final float motionFrequencyPenalty= MOTION_FREQUENCY_PENALTY[0] * motionFrequencyFirstPeriodAdjusted + MOTION_FREQUENCY_PENALTY[1] * motionFrequencyMiddlePeriodAdjusted+ MOTION_FREQUENCY_PENALTY[2] * motionFrequencyLastPeriodAdjusted;
 
         return motionFrequencyPenalty;
     }
