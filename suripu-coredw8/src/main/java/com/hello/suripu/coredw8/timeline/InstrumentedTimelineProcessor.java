@@ -115,6 +115,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
+    public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 8;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
@@ -323,7 +324,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         //check to see if there's an issue with the data
-        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions, sensorData.trackerMotions);
+        final boolean userLowerMotionCountThreshold = useNoMotionEnforcement(accountId);
+        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions, sensorData.trackerMotions, userLowerMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
@@ -486,6 +488,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
 
+        //removes motion events less than 2 seconds and < 300 val. groups the remaining motions into groups separated by 2 hours. If largest motion groups is greater than 6 hours hours, drop all motions afterward this motion group.
         if (this.hasOutlierFilterEnabled(accountId)) {
             filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
             filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
@@ -810,14 +813,18 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData){
+    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final boolean userLowerMotionCountThreshold){
+
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
         }
 
         //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
-        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT){
+
+        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT & !userLowerMotionCountThreshold ){
+            return TimelineError.NOT_ENOUGH_DATA;
+        } else if (originalMotionData.size() < MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD) {
             return TimelineError.NOT_ENOUGH_DATA;
         }
 
