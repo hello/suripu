@@ -1100,7 +1100,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final float motionFrequencyPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, sleepScoreParameters.motionFrequencyThreshold);
         final Integer durationScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(accountId, sleepDurationScoreV3, motionFrequencyPenalty, sleepStats.numberOfMotionEvents, agitatedSleep);
 
-        SleepScore sleepScore = new SleepScore.Builder()
+        final SleepScore sleepScore = new SleepScore.Builder()
                 .withMotionScore(motionScore)
                 .withSleepDurationScore(durationScoreV5)
                 .withEnvironmentalScore(environmentScore)
@@ -1122,7 +1122,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
         final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleepDuration);
 
-        SleepScore sleepScore = new SleepScore.Builder()
+        final SleepScore sleepScore = new SleepScore.Builder()
                 .withMotionScore(motionScore)
                 .withSleepDurationScore(durationScoreV4)
                 .withEnvironmentalScore(environmentScore)

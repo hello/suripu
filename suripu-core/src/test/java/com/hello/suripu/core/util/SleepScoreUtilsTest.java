@@ -224,7 +224,7 @@ public class SleepScoreUtilsTest {
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
         final long sleepTime = trackerMotionList.get(0).timestamp;
         final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
-        int  agitatedSleep= SleepScoreUtils.getAgitatedSleepDuration(trackerMotionList, sleepTime, wakeTime);
+        final int  agitatedSleep= SleepScoreUtils.getAgitatedSleepDuration(trackerMotionList, sleepTime, wakeTime);
         assertThat(agitatedSleep , is(18));
     }
 
