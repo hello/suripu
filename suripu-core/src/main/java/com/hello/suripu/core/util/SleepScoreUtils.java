@@ -332,13 +332,13 @@ public class SleepScoreUtils {
     }
 
     public static float getMotionFrequencyPenalty(final MotionFrequency motionFrequency, float motionFrequencyThreshold){
-        if (motionFrequencyThreshold < 0){
+        if (motionFrequencyThreshold < 0.0f){
             LOGGER.error("action=invalid-motion-frequency-threshold motionFrequencyThreshold ={}", motionFrequencyThreshold);
-            return 0;
+            return 0.0f;
         }
 
         //bounds motionFrequencyThreshold range.
-        if (motionFrequencyThreshold == 0){
+        if (motionFrequencyThreshold == 0.0f){
             motionFrequencyThreshold = MOTION_FREQUENCY_THRESHOLD_DEFAULT;
         } else if (motionFrequencyThreshold < MOTION_FREQUENCY_THRESHOLD_MIN){
             motionFrequencyThreshold = MOTION_FREQUENCY_THRESHOLD_MIN;

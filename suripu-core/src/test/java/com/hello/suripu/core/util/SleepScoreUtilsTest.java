@@ -208,6 +208,10 @@ public class SleepScoreUtilsTest {
         motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
         assertThat(motionPenalty, is(-8.451269F));
 
+        idealMF = 0.00f;
+        motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(-3.9973495F));
+
         idealMF = 0.25f;
         motionFrequency = new MotionFrequency(0.25f, 0.25f, 0.25f, 0.25f);
         motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
