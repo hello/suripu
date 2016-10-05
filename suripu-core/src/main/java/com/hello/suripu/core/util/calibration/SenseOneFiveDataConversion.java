@@ -116,9 +116,10 @@ public class SenseOneFiveDataConversion {
         return pressureRaw / 256.0f;
     }
 
+    //Note: should smooth by 5 min buckets before presenting data to user
     public static float convertRawToCelsius(final int tempRaw, final Optional<Integer> tempRawLastMinOptional) {
         if (!tempRawLastMinOptional.isPresent()) {
-            return DataUtils.dbIntToFloat(tempRaw);
+            return DataUtils.dbIntToFloat(tempRaw - TEMP_ALPHA_TWO); //If T(last min) DNE, assume no change in temp: T(now) = T(last min)
         }
 
         final int tempCalibration = getTempCalibration(tempRaw, tempRawLastMinOptional.get());
