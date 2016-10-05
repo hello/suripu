@@ -1,7 +1,6 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.AccountUtils;
 import com.hello.suripu.core.models.Account;
 import org.joda.time.DateTime;
 import org.junit.Test;

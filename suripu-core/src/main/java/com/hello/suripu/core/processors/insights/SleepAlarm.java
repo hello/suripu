@@ -3,7 +3,7 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.AccountUtils;
+import com.hello.suripu.core.util.AccountUtils;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.Account;
