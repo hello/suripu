@@ -1011,52 +1011,55 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
         final SleepScoreParameters sleepScoreParameters= sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate);
 
-        boolean usesV4 = sleepScoreV2V4Weighting==1.0f;
-        boolean isInTransitionV2V4 = (sleepScoreV2V4Weighting > 0.0f) || useSleepScoreV4(accountId);
+        final boolean usesV4 = sleepScoreV2V4Weighting==1.0f;
+        final boolean isInTransitionV2V4 = (sleepScoreV2V4Weighting > 0.0f) || useSleepScoreV4(accountId);
 
-        boolean usesV5 = sleepScoreV4V5Weighting==1.0f;
-        boolean isInTransitionV4V5 = (sleepScoreV4V5Weighting > 0.0f) || useSleepScoreV5(accountId);
+        final boolean usesV5 = sleepScoreV4V5Weighting==1.0f;
+        final boolean isInTransitionV4V5 = (sleepScoreV4V5Weighting > 0.0f) || useSleepScoreV5(accountId);
 
-        final SleepScore sleepScoreV5, sleepScoreV4, sleepScoreV2, sleepScore;
+        /*
+         sleepscoreV4: Duration score penalized for motion frequency and agitated sleep
+         sleepscorev5: Duration score penalized for motion frequency based on personalized threshold and agitated sleep
+         sleepscorev2: Duration Score, Motion Score and Environmental score discrete,
+        */
 
-        //Order: V5 -> V4V5 -> V4 -> V2V4 -> V2
+        final SleepScore sleepScoreV2 = computeSleepScoreV2(userAge, sleepStats, environmentScore, motionScore);
+        final SleepScore sleepScoreV4 = computeSleepScoreV4(accountId, userAge, sleepScoreParameters.durationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
+        final SleepScore sleepScoreV5 = computeSleepScoreV5(accountId, userAge, sleepScoreParameters, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
+
+
+        SleepScore sleepScore = sleepScoreV2;
 
         if (usesV5){
         //calculates sleep duration score v5 and sleep score
-            sleepScore = computeSleepScoreV5(accountId, userAge, sleepScoreParameters, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
+            sleepScore = sleepScoreV5;
         //calculates sleep score v4 and v5 linear blend score
         } else if (isInTransitionV4V5){
             //full v5 for users who are FF v5
             if (useSleepScoreV5(accountId)){
                 sleepScoreV4V5Weighting = 1.0f;
             }
-            sleepScoreV4 = computeSleepScoreV4(accountId, userAge, sleepScoreParameters.durationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
-            sleepScoreV5 = computeSleepScoreV5(accountId, userAge, sleepScoreParameters, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
-            sleepScore = computeSleepScoreVersionTransition(sleepScoreV4, sleepScoreV5, sleepScoreV4V5Weighting);
+
+            sleepScore = computeSleepScoreVersionTransition(sleepScoreV4, sleepScoreV5, sleepScoreV4V5Weighting, "v4-v5");
             //creates log and histogram differences between v4 and v5
             final int sleepScoreDiff = sleepScoreV5.value - sleepScoreV4.value;
             STATIC_LOGGER.info("action=sleep-score-v4-v5-difference night_of={} account_id={} v4={} v5={} difference={}", targetDateStr, accountId, sleepScoreV4, sleepScoreV5, sleepScoreDiff);
             scoreDiff.update(sleepScoreDiff);
         //calculates sleep duration score v4
         } else if (usesV4){
-            sleepScore = computeSleepScoreV4(accountId, userAge, sleepScoreParameters.durationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
+            sleepScore = sleepScoreV4;
             //calculates sleep score v4 and v2 linear blend score
         } else if (isInTransitionV2V4){
             //ensures sure that users who are feature flipped get full V4 score
             if (useSleepScoreV4(accountId)){
                 sleepScoreV2V4Weighting = 1.0f;
             }
-            sleepScoreV2 = computeSleepScoreV2(userAge, sleepStats, environmentScore, motionScore);
-            sleepScoreV4 = computeSleepScoreV4(accountId, userAge, sleepScoreParameters.durationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
-            sleepScore = computeSleepScoreVersionTransition(sleepScoreV2, sleepScoreV4, sleepScoreV2V4Weighting);
+
+            sleepScore = computeSleepScoreVersionTransition(sleepScoreV2, sleepScoreV4, sleepScoreV2V4Weighting, "v2-v4");
             //creates log and histogram differences between v2 and v4
             final int sleepScoreDiff = sleepScoreV4.value - sleepScoreV2.value;
             STATIC_LOGGER.info("action=sleep-score-v2-v4-difference night_of={} account_id={} v2={} v4={} difference={}", targetDateStr, accountId, sleepScoreV2, sleepScoreV4, sleepScoreDiff);
             scoreDiff.update(sleepScoreDiff);
-
-            //calculates sleep score v2
-        } else {
-            sleepScore = computeSleepScoreV2(userAge, sleepStats, environmentScore, motionScore);
         }
 
         // Always update stats and scores to Dynamo
@@ -1079,6 +1082,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 .withEnvironmentalScore(environmentScore)
                 .withWeighting(sleepScoreWeightingV2)
                 .withTimesAwakePenaltyScore(timesAwakePenalty)
+                .withVersion("v2")
                 .build();
         return sleepScore;
     }
@@ -1102,6 +1106,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 .withEnvironmentalScore(environmentScore)
                 .withWeighting(sleepScoreWeightingV5)
                 .withTimesAwakePenaltyScore(timesAwakePenalty)
+                .withVersion("v5")
                 .build();
         return sleepScore;
     }
@@ -1123,13 +1128,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 .withEnvironmentalScore(environmentScore)
                 .withWeighting(sleepScoreWeightingV4)
                 .withTimesAwakePenaltyScore(timesAwakePenalty)
+                .withVersion("v4")
                 .build();
         return sleepScore;
     }
 
-    public static SleepScore computeSleepScoreVersionTransition(final SleepScore sleepScoreOld, final SleepScore sleepScoreNew, final Float sleepScoreVersionWeighting){
+    public static SleepScore computeSleepScoreVersionTransition(final SleepScore sleepScoreOld, final SleepScore sleepScoreNew, final Float sleepScoreVersionWeighting, final String version){
         final Integer transitionScoreValue = Math.round(sleepScoreNew.value * sleepScoreVersionWeighting + sleepScoreOld.value * (1 - sleepScoreVersionWeighting));
-        final SleepScore sleepScoreTransition = new SleepScore(transitionScoreValue, sleepScoreNew.motionScore, sleepScoreNew.sleepDurationScore, sleepScoreNew.environmentalScore, sleepScoreNew.timesAwakePenaltyScore);
+        final SleepScore sleepScoreTransition = new SleepScore(transitionScoreValue, sleepScoreNew.motionScore, sleepScoreNew.sleepDurationScore, sleepScoreNew.environmentalScore, sleepScoreNew.timesAwakePenaltyScore,version);
         return sleepScoreTransition;
     }
 

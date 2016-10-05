@@ -163,10 +163,10 @@ public class InstrumentedTimelineProcessorTest {
     @Test
     public void testcomputeSleepScoreVersionTransition(){
         final MotionScore testMotionScore = new MotionScore(19, 20, 3500F, 25000, 75);
-        final SleepScore testSleepScoreV2 = new SleepScore(88, testMotionScore, 89, 100, 0);
-        final SleepScore testSleepScoreV4 = new SleepScore(92, testMotionScore, 89, 100, 0 );
+        final SleepScore testSleepScoreV2 = new SleepScore(88, testMotionScore, 89, 100, 0, "v2");
+        final SleepScore testSleepScoreV4 = new SleepScore(92, testMotionScore, 89, 100, 0, "v4" );
         final float testV2V4Weighting = 0.2f;
-        final SleepScore testSleepScoreTransition = InstrumentedTimelineProcessor.computeSleepScoreVersionTransition(testSleepScoreV2, testSleepScoreV4, testV2V4Weighting);
+        final SleepScore testSleepScoreTransition = InstrumentedTimelineProcessor.computeSleepScoreVersionTransition(testSleepScoreV2, testSleepScoreV4, testV2V4Weighting, "v2-V4");
         assertThat(testSleepScoreTransition.value, is(89));
     }
 }
