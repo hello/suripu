@@ -43,7 +43,7 @@ public class SleepDeprivation {
         final DateTime currentTimeLocal = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset);
         final DateTime queryEndDate = currentTimeLocal.minusDays(1);//query end date is last night
 
-        final int userAge = AccountUtils.getUserAge(optionalAccount);
+        final int userAge = AccountUtils.getUserAgeYears(optionalAccount);
 
         if (userAge < MIN_AGE || userAge > MAX_AGE){
             return Optional.absent();

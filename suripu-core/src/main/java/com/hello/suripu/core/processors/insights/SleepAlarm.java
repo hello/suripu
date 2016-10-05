@@ -63,7 +63,7 @@ public class SleepAlarm {
         }
 
         final Optional<Account> account = accountReadDAO.getById(accountId);
-        final Integer userAge = AccountUtils.getUserAge(account);
+        final Integer userAge = AccountUtils.getUserAgeYears(account);
 
         final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge, timeFormat);
         return card;

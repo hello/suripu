@@ -23,7 +23,7 @@ public class AccountUtilsTest {
 
         final Optional<Account> accountOptional = Optional.of(account);
 
-        final Integer age = AccountUtils.getUserAge(accountOptional);
+        final Integer age = AccountUtils.getUserAgeYears(accountOptional);
         assertThat(age, is(AccountUtils.ADULT_AGE_YEARS));
     }
 
@@ -31,7 +31,7 @@ public class AccountUtilsTest {
     public void test_noDob2() {
         final Optional<Account> accountOptional = Optional.absent();
 
-        final Integer age = AccountUtils.getUserAge(accountOptional);
+        final Integer age = AccountUtils.getUserAgeYears(accountOptional);
         assertThat(age, is(AccountUtils.ADULT_AGE_YEARS));
     }
 
@@ -44,7 +44,7 @@ public class AccountUtilsTest {
 
         final Optional<Account> accountOptional = Optional.of(account);
 
-        final Integer age = AccountUtils.getUserAge(accountOptional);
+        final Integer age = AccountUtils.getUserAgeYears(accountOptional);
         assertThat(age, is(20));
     }
 

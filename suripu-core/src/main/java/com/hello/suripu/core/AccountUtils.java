@@ -13,7 +13,7 @@ public class AccountUtils {
 
     public static final Integer ADULT_AGE_YEARS = 35;
 
-    public static Integer getUserAge(Optional<Account> account) {
+    public static Integer getUserAgeYears(Optional<Account> account) {
         if (account.isPresent()) {
             if (!account.get().DOB.isEqual(account.get().created)) { //DOB is stored as created date if user does not input DOB
                 final DateTime dob = account.get().DOB;
