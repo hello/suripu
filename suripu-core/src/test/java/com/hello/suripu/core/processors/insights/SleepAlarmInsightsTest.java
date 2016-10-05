@@ -186,7 +186,6 @@ public class SleepAlarmInsightsTest {
 
         final Optional<InsightCard> generatedCard = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, DateTimeFormat.forPattern("h:mm aa"));
 
-//        System.out.print(generatedCard.get().message);
         assertThat(generatedCard.isPresent(), is(Boolean.TRUE));
     }
 
