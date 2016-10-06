@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.MotionFrequency;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.Sample;
@@ -113,6 +114,39 @@ public class SleepScoreUtilsTest {
         assertThat(testDurScoreV4, is(0));
     }
 
+    @Test
+    public void testScoresV5(){
+        final float testDurScoreV3 = 52.092336f;
+        final MotionFrequency motionFrequency = new MotionFrequency(0.11085f, 0.10833f, 0.130435f, 0.116667f);
+        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, 0.0f);
+        final int testTimesAwake = 2;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(6, 311);
+        final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
+        assertThat(testDurScoreV5, is(66));
+    }
+
+    @Test
+    public void testScoresV5MinScore(){
+        final float testDurScoreV3 = 37f;
+        final MotionFrequency motionFrequency = new MotionFrequency(0.25f, 0.25f, 0.25f, 0.25f);
+        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, 0.16f);
+        final int testTimesAwake = 6;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(90, 0);
+        final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
+        assertThat(testDurScoreV5, is(0));
+    }
+
+    @Test
+    public void testScoresV5HighScore(){
+        final float testDurScoreV3 = 56.66f;
+        final MotionFrequency motionFrequency = new MotionFrequency(0.02f, 0.015f, 0.09f, 0.03f);
+        final float testMotionFreqPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, 0.084f);
+        final int testTimesAwake = 0;
+        final AgitatedSleep testAgitatedSleep = new AgitatedSleep(0, 400);
+        final int testDurScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(1001L, testDurScoreV3, testMotionFreqPenalty, testTimesAwake, testAgitatedSleep);
+        assertThat(testDurScoreV5, is(89));
+    }
+
     private List<TrackerMotion> trackerMotionList(String fixturePath) {
         final URL fixtureCSVFile = Resources.getResource(fixturePath);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
@@ -156,16 +190,52 @@ public class SleepScoreUtilsTest {
         assertThat(motionFrequency.motionFrequencyFirstPeriod, is(correctFrequency.motionFrequencyFirstPeriod));
         assertThat(motionFrequency.motionFrequencyMiddlePeriod, is(correctFrequency.motionFrequencyMiddlePeriod));
         assertThat(motionFrequency.motionFrequencyLastPeriod, is(correctFrequency.motionFrequencyLastPeriod));
+    }
 
+    @Test
+    public void testMotionFrequencyPenalty(){
+        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
+        final long sleepTime = trackerMotionList.get(0).timestamp;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
+        final int sleepDurationMinutes = 400;
+        MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(trackerMotionList, sleepDurationMinutes, sleepTime, wakeTime);
+
+        float idealMF = 0.14f;
+        float motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(0.0f));
+
+        idealMF = 0.03f;
+        motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(-8.451269F));
+
+        idealMF = 0.00f;
+        motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(-3.9973495F));
+
+        idealMF = 0.25f;
+        motionFrequency = new MotionFrequency(0.25f, 0.25f, 0.25f, 0.25f);
+        motionPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency,idealMF);
+        assertThat(motionPenalty, is(-11.636641F));
+
+    }
+
+    @Test
+    public void testAgitatedSleepDuration(){
+        final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
+        final long sleepTime = trackerMotionList.get(0).timestamp;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
+        final int  agitatedSleep= SleepScoreUtils.getAgitatedSleepDuration(trackerMotionList, sleepTime, wakeTime);
+        assertThat(agitatedSleep , is(18));
     }
 
     @Test
     public void testAgitatedSleep(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
         final long sleepTime = trackerMotionList.get(0).timestamp;
-        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
-        int  agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, sleepTime, wakeTime);
-        assertThat(agitatedSleep , is(18));
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 72000000L;
+        final AgitatedSleep agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, sleepTime, wakeTime);
+        assertThat(agitatedSleep.agitatedSleepMins , is(27));
+        assertThat(agitatedSleep.uninterruptedSleepMins , is(1145));
     }
 
     @Test
@@ -286,6 +356,13 @@ public class SleepScoreUtilsTest {
         final long targetDate = 1470528000000L;
         final float testV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDate);
         assertThat(testV2V4Weighting, is(6*0.0333f));
+    }
+
+    @Test
+    public void testGetSleepScoreV4V5Weighting(){
+        final long targetDate = 1476489600000L;
+        final float testV2V4Weighting = SleepScoreUtils.getSleepScoreV4V5Weighting(targetDate);
+        assertThat(testV2V4Weighting, is(.2f));
     }
 
 }
