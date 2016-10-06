@@ -60,8 +60,8 @@ public class SleepScoreUtils {
     public static final long SLEEP_SCORE_V2_V4_TRANSITION_EPOCH = 1470009600000L; //2016-08-01 utc
     public static final float SLEEP_SCORE_V2_V4_TRANSITION_WEIGHTING = 0.0333f; // full transition in 30 days
 
-    public static final long SLEEP_SCORE_V4_V5_TRANSITION_EPOCH = 1475971200000L; //2016-10-09 utc
-    public static final float SLEEP_SCORE_V4_V5_TRANSITION_WEIGHTING = 0.0715f; // full transition in 14 days
+    public static final long SLEEP_SCORE_V4_V5_TRANSITION_EPOCH = 1476316800000L; //2016-10-13 utc
+    public static final float SLEEP_SCORE_V4_V5_TRANSITION_WEIGHTING = .10f; // full transition in 10 days
 
 
     /**
