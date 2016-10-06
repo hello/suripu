@@ -91,7 +91,7 @@ public class SenseOneFiveDataConversionTest {
         final float MAX_LUX_ERROR_RELATIVE = 0.3f;
         final float MAX_ERROR_RATE = 0.15f;
 
-        final List<Integer> sense1_ambient_light = readSense1Data("fixtures/calibration/sense1als_sense15clear.csv");
+        final List<Integer> sense1_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15clear.csv", "sense 1.0");
         final List<List<Integer>> rgbcData = readRGBCData("fixtures/calibration/sense15rgbc_raw.csv");
 
         final int length = Math.min(sense1_ambient_light.size(), rgbcData.size());
@@ -129,8 +129,8 @@ public class SenseOneFiveDataConversionTest {
         final float MAX_LUX_ERROR_RELATIVE = 0.3f;
         final float MAX_ERROR_RATE = 0.15f;
 
-        final List<Integer> sense1_ambient_light = readSense1Data("fixtures/calibration/sense1als_sense15clear.csv");
-        final List<Integer> sense15_ambient_light = readSense15Data("fixtures/calibration/sense1als_sense15clear.csv");
+        final List<Integer> sense1_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15clear.csv", "sense 1.0");
+        final List<Integer> sense15_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15clear.csv", "sense 1.5");
 
         int errorCount = 0;
 
@@ -157,8 +157,8 @@ public class SenseOneFiveDataConversionTest {
         final float MAX_LUX_ERROR_RELATIVE = 0.3f;
         final float MAX_ERROR_RATE = 0.15f;
 
-        final List<Integer> sense1_ambient_light = readSense1Data("fixtures/calibration/sense1als_sense15lite.csv");
-        final List<Integer> sense15_ambient_light = readSense15Data("fixtures/calibration/sense1als_sense15lite.csv");
+        final List<Integer> sense1_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15lite.csv", "sense 1.0");
+        final List<Integer> sense15_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15lite.csv", "sense 1.5");
 
         int errorCount = 0;
 
@@ -208,7 +208,7 @@ public class SenseOneFiveDataConversionTest {
     @Test
     public void testCounttoUVIndex_one() throws IOException {
 
-        final List<Integer> sense15uv_raw = readSense15Data("fixtures/calibration/sense15uv_raw.csv");
+        final List<Integer> sense15uv_raw = readSenseData("fixtures/calibration/sense15uv_raw.csv", "sense 1.0");
         for (final int uv_raw : sense15uv_raw) {
             final float uv_index = SenseOneFiveDataConversion.convertRawToUV(uv_raw);
             assertThat(uv_index < ALERT_UV_HIGH, is(Boolean.TRUE));
@@ -218,7 +218,7 @@ public class SenseOneFiveDataConversionTest {
     @Test
     public void testVOC_one() throws IOException {
 
-        final List<Integer> sense15tvoc_raw = readSense15Data("fixtures/calibration/sense15tvoc_raw.csv");
+        final List<Integer> sense15tvoc_raw = readSenseData("fixtures/calibration/sense15tvoc_raw.csv", "sense 1.5");
         for (final int tvoc_raw : sense15tvoc_raw) {
             final float mugMcube = SenseOneFiveDataConversion.convertRawToVOC(tvoc_raw);
             assertThat(mugMcube < ALERT_TVOC_HIGH, is(Boolean.TRUE));
@@ -228,7 +228,7 @@ public class SenseOneFiveDataConversionTest {
     @Test
     public void testCO2_one() throws IOException {
 
-        final List<Integer> sense15co2_raw = readSense15Data("fixtures/calibration/sense15co2_raw.csv");
+        final List<Integer> sense15co2_raw = readSenseData("fixtures/calibration/sense15co2_raw.csv", "sense 1.5");
         for (final int co2_raw : sense15co2_raw) {
             final float ppm = SenseOneFiveDataConversion.convertRawToCO2(co2_raw);
             assertThat(ppm < ALERT_CO2_HIGH, is(Boolean.TRUE));
@@ -238,7 +238,7 @@ public class SenseOneFiveDataConversionTest {
     @Test
     public void testRawToMilliBar_one() throws IOException {
 
-        final List<Integer> sense15_pa_raw = readSense15Data("fixtures/calibration/sense15pa_raw.csv");
+        final List<Integer> sense15_pa_raw = readSenseData("fixtures/calibration/sense15pa_raw.csv", "sense 1.5");
         for (final int pa_raw : sense15_pa_raw) {
             final float milliBar = SenseOneFiveDataConversion.convertRawToMilliBar(pa_raw);
             assertThat(milliBar < ALERT_MBAR_HIGH, is(Boolean.TRUE));
@@ -251,8 +251,8 @@ public class SenseOneFiveDataConversionTest {
         final float MAX_TMP_ERROR_CELSIUS = 5f;
         final float MAX_ERROR_RATE = 0.01f;
 
-        final List<Integer> sense1_tmp = readSense1Data("fixtures/calibration/sense1tmp_sense15tmp.csv");
-        final List<Integer> sense15_tmp = readSense15Data("fixtures/calibration/sense1tmp_sense15tmp.csv");
+        final List<Integer> sense1_tmp = readSenseData("fixtures/calibration/sense1tmp_sense15tmp.csv", "sense 1.0");
+        final List<Integer> sense15_tmp = readSenseData("fixtures/calibration/sense1tmp_sense15tmp.csv", "sense 1.5");
 
         int errorCount = 0;
 
@@ -285,7 +285,7 @@ public class SenseOneFiveDataConversionTest {
         final float MAX_TEMP_ERROR_C = 2;
         final float MAX_ERROR_RATE = 0.06f;
 
-        final List<Integer> sense15_temp = readSense15Data("fixtures/calibration/sense15tmp_raw_boot_start.csv");
+        final List<Integer> sense15_temp = readSenseData("fixtures/calibration/sense15tmp_raw_boot_start.csv", "sense 1.5");
         final List<Integer> uptime = IntStream.range(0, sense15_temp.size()).boxed().collect(Collectors.toList());
 
         int error = 0;
@@ -310,7 +310,6 @@ public class SenseOneFiveDataConversionTest {
 
         final float errorRate = (float) error / length;
 
-        System.out.print(errorRate);
         assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
     }
 
@@ -319,23 +318,16 @@ public class SenseOneFiveDataConversionTest {
         final float MAX_HUM_ERROR = 10;
         final float MAX_ERROR_RATE = 0.05f;
 
-        final List<Integer> sense1_hum_data = readSense1Data("fixtures/calibration/sense1hum_sense15hum.csv");
-        final List<Integer> sense1_temp = readSense1Data("fixtures/calibration/sense1tmp_sense15tmp.csv");
+        final List<Integer> sense1_hum_data = readSenseData("fixtures/calibration/sense1hum_sense15hum.csv", "sense 1.0");
+        final List<Integer> sense1_temp = readSenseData("fixtures/calibration/sense1tmp_sense15tmp.csv", "sense 1.0");
 
-        final List<Integer> sense15_hum_data = readSense15Data("fixtures/calibration/sense1hum_sense15hum.csv");
-        final List<Integer> sense15_temp = readSense15Data("fixtures/calibration/sense1tmp_sense15tmp.csv");
+        final List<Integer> sense15_hum_data = readSenseData("fixtures/calibration/sense1hum_sense15hum.csv", "sense 1.5");
+        final List<Integer> sense15_temp = readSenseData("fixtures/calibration/sense1tmp_sense15tmp.csv", "sense 1.5");
 
         int errorCount = 0;
 
         final int length = Math.min(sense1_hum_data.size(), sense15_hum_data.size());
         for (int i = 0; i < length; i++) {
-            Optional<Integer> tempRawLastOptional;
-            if (i == 0) {
-                tempRawLastOptional = Optional.absent();
-            } else {
-                tempRawLastOptional = Optional.of(sense15_temp.get(i-1));
-            }
-
             final float sense1_hum = DataUtils.calibrateHumidity(sense1_temp.get(i), sense1_hum_data.get(i));
             final float sense15_hum = SenseOneFiveDataConversion.convertRawToHumidity(sense15_hum_data.get(i)); //Past max calibration time
             final float error_hum = Math.abs(sense1_hum - sense15_hum);
@@ -355,8 +347,8 @@ public class SenseOneFiveDataConversionTest {
         final float MAX_TEMP_ERROR_HUM = 10; //error is biased to be around 12
         final float MAX_ERROR_RATE = 0.05f;
 
-        final List<Integer> sense15_temp = readSense15Data("fixtures/calibration/sense15tmp_raw_boot_start.csv");
-        final List<Integer> sense15_hum = readSense15Data("fixtures/calibration/sense15hum_raw_boot_start.csv");
+        final List<Integer> sense15_temp = readSenseData("fixtures/calibration/sense15tmp_raw_boot_start.csv", "sense 1.5");
+        final List<Integer> sense15_hum = readSenseData("fixtures/calibration/sense15hum_raw_boot_start.csv", "sense 1.5");
 
         int error = 0;
         final int length = Math.min(sense15_temp.size(), sense15_hum.size());
@@ -377,35 +369,42 @@ public class SenseOneFiveDataConversionTest {
 
     }
 
-    private static List<Integer> readSense1Data(final String fileName) throws IOException {
+    private static List<Integer> readSenseData(final String fileName, final String senseVersion) throws IOException {
 
-        final List<Integer> sense1Data = Lists.newArrayList();
         final URL userCSVFile = Resources.getResource(fileName);
         final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
-        final String sense1String = csvString.split("\\n")[0];
+        final String[] lines = csvString.split("\\n");
 
-        final String[] sense1dataStringList = sense1String.replaceAll("\\s+","").split(",");
-        for (String sense1DataString : sense1dataStringList) {
-            sense1Data.add(Integer.parseInt(sense1DataString));
-        }
+        final int sense10index = 0;
+        final int sense15index = 1;
 
-        return sense1Data;
-    }
-
-    private static List<Integer> readSense15Data(final String fileName) throws IOException {
-
+        final List<Integer> sense10Data = Lists.newArrayList();
         final List<Integer> sense15Data = Lists.newArrayList();
-        final URL userCSVFile = Resources.getResource(fileName);
-        final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
-        final String sense15String = csvString.split("\\n")[1];
+        for(int i = 1; i < lines.length; i++) {
+            final String[] line = lines[i].replaceAll("\\s+","").split(",");
 
-        final String[] sense15dataStringList = sense15String.replaceAll("\\s+","").split(",");
-        for (String sense15DataString : sense15dataStringList) {
-            sense15Data.add(Integer.parseInt(sense15DataString));
+            final String sense10Datum = line[sense10index];
+            final String sense15Datum = line[sense15index];
+
+            if (!sense10Datum.contains("na")) {
+                sense10Data.add(Integer.parseInt(sense10Datum));
+            }
+
+            if (!sense15Datum.contains("na")) {
+                sense15Data.add(Integer.parseInt(sense15Datum));
+            }
+
         }
 
-        return sense15Data;
+        if (senseVersion == "sense 1.0") {
+            return sense10Data;
+        } else if (senseVersion == "sense 1.5") {
+            return sense15Data;
+        }
+
+        return Lists.newArrayList();
     }
+
 
     private static List<List<Integer>> readRGBCData(final String fileName) throws IOException {
 
