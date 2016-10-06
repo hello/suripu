@@ -92,6 +92,10 @@ public class DataUtils{
         final float whiteMultiplier = 2.0f;
 
         // set conversion to 2x for now until we have a way to get sense color
+        if ((float) rawCount > maxCount) {
+            return (whiteMultiplier * maxLux);
+        }
+
         final float internalIntensity = ((float) rawCount / maxCount) * maxLux;
         return  (whiteMultiplier * internalIntensity);
     }
