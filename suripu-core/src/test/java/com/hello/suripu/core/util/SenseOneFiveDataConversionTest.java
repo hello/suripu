@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Device;
+import com.hello.suripu.core.models.device.v2.Sense;
 import com.hello.suripu.core.util.calibration.SenseOneFiveDataConversion;
 import org.junit.Test;
 
@@ -384,6 +385,7 @@ public class SenseOneFiveDataConversionTest {
             SenseOneFiveDataConversion.convertRawToCelsius(int1, Optional.of(int2));
             SenseOneFiveDataConversion.getTempCalibration(int1, int2);
             SenseOneFiveDataConversion.convertRawToHumidity(int1);
+            SenseOneFiveDataConversion.convertRawAudioToDb(int1);
 
         }
 

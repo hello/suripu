@@ -39,6 +39,11 @@ public class SenseOneFiveDataConversion {
     private static final int TEMP_ALPHA_ONE = -20;
     private static final int TEMP_ALPHA_TWO = 600;
 
+    //Audio
+    public static final float MIN_AUDIO_DB = 25.0f; //our reported noise floor (although I doubt we're actually going to go below this)
+    public static final float MAX_AUDIO_DB = 160.f; //arbitrarily a very very very loud noise
+    public static final float AUDIO_FLOAT_TO_INT_MULTIPLIER = 1000.0f; // 3 decimal places
+
     public static float convertRawRGBCToAmbientLight(final int rRaw, final int gRaw, final int bRaw, final int clear, final Device.Color color) {
 
         //Remove IR component
@@ -142,4 +147,21 @@ public class SenseOneFiveDataConversion {
     public static float convertRawToHumidity(final int humidRaw) {
         return DataUtils.dbIntToFloat(humidRaw);
     }
+
+    public static float convertRawAudioToDb(final int rawAudio) {
+        //incoming number is in fixed point format Q10, so divide by 1024 to convert it to floating point
+        float audioDB = ((float) rawAudio )/ 1024.0f;
+
+        if (audioDB < MIN_AUDIO_DB) {
+            return MIN_AUDIO_DB;
+        }
+
+        if (audioDB > MAX_AUDIO_DB) {
+            return MAX_AUDIO_DB;
+        }
+
+        return audioDB;
+
+    }
+
 }
