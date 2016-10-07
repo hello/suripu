@@ -62,6 +62,15 @@ public class SenseOneFiveDataConversion {
         return lux * LUX_NEURAL_SCALE;
     }
 
+    //TODO: Constants may need to be adjusted for PVT units
+    public static float convertLuxCountToLux(final int luxCount, final Device.Color color) {
+        if (color == Device.Color.BLACK) {
+            return (float) luxCount / 2.0f;
+        }
+
+        return (float) luxCount / 5.0f;
+    }
+
     public static float convertRawToColorTemp(final int rRaw, final int gRaw, final int bRaw, final int clear) {
 
         //Remove IR component
