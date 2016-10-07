@@ -8,15 +8,15 @@ import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.util.calibration.SenseOneFiveDataConversion;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Created by jyfan on 9/21/16.
@@ -444,5 +444,4 @@ public class SenseOneFiveDataConversionTest {
 
         return rgbcList;
     }
-
 }
