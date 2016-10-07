@@ -58,13 +58,6 @@ public class SenseOneFiveDataConversion {
         return lux;
     }
 
-    @Deprecated
-    public static float approxClearToAmbientLight(final int clear) {
-        //note this "direct" mapping of clear => lux is true by luck for white Sense. Not based on physics.
-        return clear;
-    }
-
-    //Don't use me yet. Intended to work with convertRawRGBCToAmbientLight(), not approxClearToAmbientLight()
     public static float convertLuxToNeuralLux(final float lux) {
         return lux * LUX_NEURAL_SCALE;
     }

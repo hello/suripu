@@ -123,62 +123,6 @@ public class SenseOneFiveDataConversionTest {
         assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
     }
 
-//    @Test
-    public void testClearToLux_one() throws IOException {
-        final float MAX_LUX_ERROR = 100;
-        final float MAX_LUX_ERROR_RELATIVE = 0.3f;
-        final float MAX_ERROR_RATE = 0.15f;
-
-        final List<Integer> sense1_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15clear.csv", "sense 1.0");
-        final List<Integer> sense15_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15clear.csv", "sense 1.5");
-
-        int errorCount = 0;
-
-        final int length = Math.min(sense1_ambient_light.size(), sense15_ambient_light.size());
-        for (int i = 0; i < length; i++) {
-            final float sense1_lux = DataUtils.convertLightCountsToLux(sense1_ambient_light.get(i));
-            final float sense15_lux = SenseOneFiveDataConversion.approxClearToAmbientLight(sense15_ambient_light.get(i));
-
-            final float error_lux = Math.abs(sense1_lux - sense15_lux);
-            final float errorLuxRelative = error_lux / sense1_lux;
-
-            if (error_lux > MAX_LUX_ERROR && errorLuxRelative > MAX_LUX_ERROR_RELATIVE) {
-                errorCount += 1;
-            }
-        }
-
-        final float errorRate = (float) errorCount / length; //0.013
-        assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
-    }
-
-//    @Test
-    public void testClearToLux_two() throws IOException {
-        final float MAX_LUX_ERROR = 100;
-        final float MAX_LUX_ERROR_RELATIVE = 0.3f;
-        final float MAX_ERROR_RATE = 0.15f;
-
-        final List<Integer> sense1_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15lite.csv", "sense 1.0");
-        final List<Integer> sense15_ambient_light = readSenseData("fixtures/calibration/sense1als_sense15lite.csv", "sense 1.5");
-
-        int errorCount = 0;
-
-        final int length = Math.min(sense1_ambient_light.size(), sense15_ambient_light.size());
-        for (int i = 0; i < length; i++) {
-            final float sense1_lux = DataUtils.convertLightCountsToLux(sense1_ambient_light.get(i));
-            final float sense15_lux = SenseOneFiveDataConversion.approxClearToAmbientLight(sense15_ambient_light.get(i));
-
-            final float error_lux = Math.abs(sense1_lux - sense15_lux);
-            final float errorLuxRelative = error_lux / sense1_lux;
-
-            if (error_lux > MAX_LUX_ERROR && errorLuxRelative > MAX_LUX_ERROR_RELATIVE) {
-                errorCount += 1;
-            }
-        }
-
-        final float errorRate = (float) errorCount / length; //0.013
-        assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
-    }
-
     @Test
     public void testColorTemp_one() throws IOException {
         final float OFFICE_CT_ALERT_HIGH = 4000;
