@@ -355,6 +355,25 @@ public class SenseOneFiveDataConversionTest {
 
     }
 
+    @Test
+    public void testAudioConvert_one() throws IOException {
+        final float AUDIOMETER_GOLDSTANDARD_MIN = 50;
+        final float AUDIOMETER_GOLDSTANDARD_MAX = 80;
+        final float MAX_ERROR_RATE = 0.10f;
+
+        int errorCount = 0;
+
+        final List<Integer> audioAPBGData = readSenseData("fixtures/calibration/sense15audio_apbg_60db.csv", "sense 1.5");
+        for (final Integer datum : audioAPBGData) {
+            final float db = SenseOneFiveDataConversion.convertRawAudioToDb(datum);
+            if (db > AUDIOMETER_GOLDSTANDARD_MAX || db < AUDIOMETER_GOLDSTANDARD_MIN) {
+                errorCount += 1;
+            }
+        }
+
+        final float errorRate = (float) errorCount / audioAPBGData.size();
+        assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
+    }
 
     @Test
     public void testNumerical_random() {
