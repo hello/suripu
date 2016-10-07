@@ -125,6 +125,46 @@ public class SenseOneFiveDataConversionTest {
     }
 
     @Test
+    public void testLuxCountToLux_one() throws IOException {
+        final float LUXMETER_GOLDSTANDARD_MIN = 500;
+        final float LUXMETER_GOLDSTANDARD_MAX = 650;
+        final float MAX_ERROR_RATE = 0.02f;
+
+        int errorCount = 0;
+
+        final List<Integer> luxCountData = readSenseData("fixtures/calibration/sense15lux_count_black_550lux.csv", "sense 1.5");
+        for (final Integer datum : luxCountData) {
+            final float lux = SenseOneFiveDataConversion.convertLuxCountToLux( datum, Device.Color.BLACK);
+            if (lux > LUXMETER_GOLDSTANDARD_MAX || lux < LUXMETER_GOLDSTANDARD_MIN) {
+                errorCount += 1;
+            }
+        }
+
+        final float errorRate = (float) errorCount / luxCountData.size();
+        assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
+    }
+
+    @Test
+    public void testLuxCountToLux_two() throws IOException {
+        final float LUXMETER_GOLDSTANDARD_MIN = 500;
+        final float LUXMETER_GOLDSTANDARD_MAX = 650;
+        final float MAX_ERROR_RATE = 0.02f;
+
+        int errorCount = 0;
+
+        final List<Integer> luxCountData = readSenseData("fixtures/calibration/sense15lux_count_white_550lux.csv", "sense 1.5");
+        for (final Integer datum : luxCountData) {
+            final float lux = SenseOneFiveDataConversion.convertLuxCountToLux( datum, Device.Color.WHITE);
+            if (lux > LUXMETER_GOLDSTANDARD_MAX || lux < LUXMETER_GOLDSTANDARD_MIN) {
+                errorCount += 1;
+            }
+        }
+
+        final float errorRate = (float) errorCount / luxCountData.size();
+        assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
+    }
+
+    @Test
     public void testColorTemp_one() throws IOException {
         final float OFFICE_CT_ALERT_HIGH = 4000;
         final float OFFICE_CT_ALERT_LOW = 3000;
@@ -334,6 +374,8 @@ public class SenseOneFiveDataConversionTest {
             SenseOneFiveDataConversion.convertRawRGBCToAmbientLight(int1, int2, int3, int4, Device.Color.WHITE);
             SenseOneFiveDataConversion.convertRawRGBCToAmbientLight(int1, int2, int3, int4, Device.Color.BLACK);
             SenseOneFiveDataConversion.convertLuxToNeuralLux(float1);
+            SenseOneFiveDataConversion.convertLuxCountToLux(int1, Device.Color.WHITE);
+            SenseOneFiveDataConversion.convertLuxCountToLux(int1, Device.Color.BLACK);
             SenseOneFiveDataConversion.convertRawToColorTemp(int1, int2, int3, int4);
             SenseOneFiveDataConversion.convertRawToUV(int1);
             SenseOneFiveDataConversion.convertRawToVOC(int1);
