@@ -41,7 +41,7 @@ public class CalibratedDeviceData {
         if(!deviceData.hasExtra()) {
             return DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
         }
-        return (float) deviceData.extra().luxCount();
+        return SenseOneFiveDataConversion.convertLuxCountToLux(deviceData.extra().luxCount(), color);
     }
 
     public float particulates() {
