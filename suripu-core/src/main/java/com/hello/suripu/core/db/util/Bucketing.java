@@ -11,6 +11,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DataUtils;
+import com.hello.suripu.core.util.calibration.SenseOneFiveDataConversion;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -151,7 +152,7 @@ public class Bucketing {
 
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
-            final float lightValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
+            final float lightValue = getLux(deviceData, color);
 
             final Integer audioPeakDB;
             if (useAudioPeakEnergy && deviceData.audioPeakEnergyDB != 0) {
@@ -175,12 +176,13 @@ public class Bucketing {
                     lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount, holdCount,
                     soundNumDisturbances, soundPeakDisturbance, soundPeakEnergy);
             if(deviceData.hasExtra()) {
-                final float pressure = deviceData.extra().pressure();
-                final float tvoc = deviceData.extra().tvoc();
-                final float co2 = deviceData.extra().co2();
+                final float pressure = SenseOneFiveDataConversion.convertRawToMilliBar(deviceData.extra().pressure());
+                final float tvoc = SenseOneFiveDataConversion.convertRawToVOC(deviceData.extra().tvoc());
+                final float co2 = SenseOneFiveDataConversion.convertRawToCO2(deviceData.extra().co2());
                 final float ir = deviceData.extra().ir();
                 final float clear = deviceData.extra().clear();
-                final int lux = deviceData.extra().luxCount();
+                final float lux = deviceData.extra().luxCount();
+
                 final int uv = deviceData.extra().uvCount();
                 populatedMap.addExtraSample(newKey, deviceData.offsetMillis, pressure, tvoc, co2, ir, clear, lux, uv);
             }
@@ -188,6 +190,16 @@ public class Bucketing {
 
         return populatedMap;
     }
+
+
+    static float getLux(final DeviceData deviceData, final Device.Color color) {
+        // Sense one
+        if(!deviceData.hasExtra()) {
+            return DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
+        }
+        return (float) deviceData.extra().luxCount();
+    }
+
     /**
      * Generates a map with every bucket containing empty sample
      * @param numberOfBuckets

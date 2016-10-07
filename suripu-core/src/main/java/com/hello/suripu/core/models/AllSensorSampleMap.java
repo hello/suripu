@@ -53,7 +53,7 @@ public class AllSensorSampleMap {
                           final float co2,
                           final float ir,
                           final float clear,
-                          final int luxCount,
+                          final float luxCount,
                           final int uvCount) {
 
         put(Sensor.PRESSURE, dateTime, offsetMillis, pressure);

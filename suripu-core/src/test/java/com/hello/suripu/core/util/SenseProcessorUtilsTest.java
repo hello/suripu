@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by jakepiccolo on 11/24/15.
@@ -49,5 +50,19 @@ public class SenseProcessorUtilsTest {
         assertThat(deviceData.waveCount, is(periodicData.getWaveCount()));
         assertThat(deviceData.holdCount, is(periodicData.getHoldCount()));
         assertThat(deviceData.audioNumDisturbances, is(periodicData.getAudioNumDisturbances()));
+    }
+
+    @Test
+    public void testRGB() {
+        int r = 1;
+        int g = 1;
+        int b = 1000;
+
+        final String rgbString = SenseProcessorUtils.rgb(r,g,b);
+        assertEquals("length", 13, rgbString.length());
+        SenseProcessorUtils.HelloRGB helloRGB = SenseProcessorUtils.parseRGB(rgbString);
+        assertEquals("r", r, helloRGB.r);
+        assertEquals("g", g, helloRGB.g);
+        assertEquals("b", b, helloRGB.b);
     }
 }
