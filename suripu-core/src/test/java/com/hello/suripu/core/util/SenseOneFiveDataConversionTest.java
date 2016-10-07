@@ -14,6 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -310,6 +311,39 @@ public class SenseOneFiveDataConversionTest {
 
         final float errorRate = (float) error / length;
         assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
+
+    }
+
+
+    @Test
+    public void testNumerical_random() {
+        final Random random = new Random();
+
+        final int num_trials = 200;
+        for (int i = 0; i < num_trials; i++) {
+
+            final int int1 = random.nextInt(16); //We don't expect larger ints
+            final int int2 = random.nextInt(16); //so may as well reserve test resources to more likely values
+            final int int3 = random.nextInt(16);
+            final int int4 = random.nextInt(16);
+
+            final float maxF = 2000.0f;
+            final float minF = -100.0f;
+            final float float1 = random.nextFloat() * (maxF - minF) + minF;
+
+            SenseOneFiveDataConversion.convertRawRGBCToAmbientLight(int1, int2, int3, int4, Device.Color.WHITE);
+            SenseOneFiveDataConversion.convertRawRGBCToAmbientLight(int1, int2, int3, int4, Device.Color.BLACK);
+            SenseOneFiveDataConversion.convertLuxToNeuralLux(float1);
+            SenseOneFiveDataConversion.convertRawToColorTemp(int1, int2, int3, int4);
+            SenseOneFiveDataConversion.convertRawToUV(int1);
+            SenseOneFiveDataConversion.convertRawToVOC(int1);
+            SenseOneFiveDataConversion.convertRawToCO2(int1);
+            SenseOneFiveDataConversion.convertRawToMilliBar(int1);
+            SenseOneFiveDataConversion.convertRawToCelsius(int1, Optional.of(int2));
+            SenseOneFiveDataConversion.getTempCalibration(int1, int2);
+            SenseOneFiveDataConversion.convertRawToHumidity(int1);
+
+        }
 
     }
 
