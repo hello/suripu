@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.Calibration;
@@ -22,6 +23,8 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.sense.data.ExtraSensorData;
+import com.hello.suripu.core.sense.data.SenseOneFiveExtraData;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -39,6 +42,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Created by jakepiccolo on 10/9/15.
@@ -76,7 +80,17 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         OFFSET_MILLIS ("om", "N"),
         LOCAL_UTC_TIMESTAMP ("lutcts", "S"),
         WAVE_COUNT ("wc", "N"),
-        HOLD_COUNT ("hc", "N");
+        HOLD_COUNT ("hc", "N"),
+        // sense 1.5 sensors
+        HW_VERSION ("hw", "S"),
+        PRESSURE("pa", "N"),
+        TVOC("tvoc", "N"),
+        CO2("co2", "N"),
+        RGB("rgb", "S"), // Number ?
+        IR("ir", "N"),
+        CLEAR("clear", "N"),
+        LUX_COUNT("lux", "N"),
+        UV_COUNT("uv", "N");
 
         private final String name;
         private final String type;
@@ -100,6 +114,13 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             return 0;
         }
 
+        private String getString(final Map<String, AttributeValue> item) {
+            if (item.containsKey(this.name)) {
+                return get(item).getS();
+            }
+            return "";
+        }
+
         public String sanitizedName() {
             return toString();
         }
@@ -121,14 +142,22 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             .add(DeviceDataAttribute.RANGE_KEY)
             .build();
 
-    private final static Map<String, Set<DeviceDataAttribute>> SENSOR_NAME_TO_ATTRIBUTES = new ImmutableMap.Builder<String, Set<DeviceDataAttribute>>()
-            .put("humidity", ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP, DeviceDataAttribute.AMBIENT_HUMIDITY))
-            .put("temperature", ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP))
-            .put("particulates", ImmutableSet.of(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW))
-            .put("light", ImmutableSet.of(DeviceDataAttribute.AMBIENT_LIGHT))
-            .put("sound", ImmutableSet.of(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB,
+    private final static Map<Sensor, Set<DeviceDataAttribute>> SENSOR_NAME_TO_ATTRIBUTES = new ImmutableMap.Builder<Sensor, Set<DeviceDataAttribute>>()
+            .put(Sensor.HUMIDITY, ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP, DeviceDataAttribute.AMBIENT_HUMIDITY))
+            .put(Sensor.TEMPERATURE, ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP))
+            .put(Sensor.PARTICULATES, ImmutableSet.of(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW))
+            .put(Sensor.LIGHT, ImmutableSet.of(DeviceDataAttribute.AMBIENT_LIGHT))
+            .put(Sensor.SOUND, ImmutableSet.of(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB,
                                           DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB,
                                           DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB))
+
+            .put(Sensor.PRESSURE, ImmutableSet.of(DeviceDataAttribute.PRESSURE))
+            .put(Sensor.CO2, ImmutableSet.of(DeviceDataAttribute.CO2))
+            .put(Sensor.TVOC, ImmutableSet.of(DeviceDataAttribute.TVOC))
+            .put(Sensor.IR, ImmutableSet.of(DeviceDataAttribute.IR))
+            .put(Sensor.CLEAR, ImmutableSet.of(DeviceDataAttribute.CLEAR))
+            .put(Sensor.LUX, ImmutableSet.of(DeviceDataAttribute.LUX_COUNT))
+            .put(Sensor.UV, ImmutableSet.of(DeviceDataAttribute.UV_COUNT))
             .build();
 
     public final static ImmutableSet<DeviceDataAttribute> ALL_ATTRIBUTES = ImmutableSet.copyOf(DeviceDataAttribute.values());
@@ -228,6 +257,20 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         item.put(DeviceDataAttribute.HOLD_COUNT.name, toAttributeValue(data.holdCount));
         item.put(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP.name, dateTimeToAttributeValue(data.dateTimeUTC.plusMillis(data.offsetMillis)));
         item.put(DeviceDataAttribute.OFFSET_MILLIS.name, toAttributeValue(data.offsetMillis));
+
+        // Sense 1.5
+        if(data.hasExtra()) {
+            final ExtraSensorData extra = data.extra();
+            item.put(DeviceDataAttribute.HW_VERSION.name, toAttributeValue(data.hardwareVersion().value));
+            item.put(DeviceDataAttribute.PRESSURE.name, toAttributeValue(extra.pressure()));
+            item.put(DeviceDataAttribute.TVOC.name, toAttributeValue(extra.tvoc()));
+            item.put(DeviceDataAttribute.CO2.name, toAttributeValue(extra.co2()));
+            item.put(DeviceDataAttribute.RGB.name, toAttributeValue(extra.rgb()));
+            item.put(DeviceDataAttribute.IR.name, toAttributeValue(extra.ir()));
+            item.put(DeviceDataAttribute.CLEAR.name, toAttributeValue(extra.clear()));
+            item.put(DeviceDataAttribute.LUX_COUNT.name, toAttributeValue(extra.luxCount()));
+            item.put(DeviceDataAttribute.UV_COUNT.name, toAttributeValue(extra.uvCount()));
+        }
         return item;
     }
     //endregion
@@ -247,6 +290,10 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
     private static AttributeValue toAttributeValue(final Long value) {
         return new AttributeValue().withN(String.valueOf(value));
+    }
+
+    private static AttributeValue toAttributeValue(final String value) {
+        return new AttributeValue().withS(value);
     }
 
 
@@ -281,11 +328,28 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
     //region Aggregation
     private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final DeviceData template) {
         final DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
-        return new DeviceData.Builder()
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(template.accountId)
                 .withExternalDeviceId(template.externalDeviceId)
                 .withDateTimeUTC(template.dateTimeUTC)
                 .withOffsetMillis(template.offsetMillis)
+                .withHardwareVersion(template.hardwareVersion());
+
+        if(HardwareVersion.SENSE_ONE_FIVE.equals(template.hardwareVersion())) {
+            final SenseOneFiveExtraData extra = SenseOneFiveExtraData.create(
+                    (int) aggregator.roundedMean(DeviceDataAttribute.PRESSURE.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.TVOC.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.CO2.name),
+                    "",
+                    (int) aggregator.roundedMean(DeviceDataAttribute.IR.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.CLEAR.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.PRESSURE.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.UV_COUNT.name)
+            );
+            builder.withExtraSensorData(extra);
+        }
+        return builder
                 .withAmbientTemperature((int) aggregator.min(DeviceDataAttribute.AMBIENT_TEMP.name))
                 .calibrateAmbientLight((int) aggregator.roundedMean(DeviceDataAttribute.AMBIENT_LIGHT.name))
                 .withAmbientLightVariance((int) aggregator.roundedMean(DeviceDataAttribute.AMBIENT_LIGHT_VARIANCE.name))
@@ -308,9 +372,18 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
         List<Map<String, AttributeValue>> currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
         final Map<String, AttributeValue> firstItem = items.get(0);
+
         final DeviceData.Builder templateBuilder = new DeviceData.Builder()
                 .withAccountId(Long.valueOf(firstItem.get(DeviceDataAttribute.ACCOUNT_ID.name).getN()))
                 .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem));
+
+        // Sense 1.5
+        final HardwareVersion version = firstItem.containsKey(DeviceDataAttribute.HW_VERSION.name)
+                ? HardwareVersion.fromInt(Integer.parseInt(firstItem.get(DeviceDataAttribute.HW_VERSION.name).getN()))
+                : HardwareVersion.SENSE_ONE;
+
+        templateBuilder.withHardwareVersion(version);
+
         DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
 
         for (final Map<String, AttributeValue> item: items) {
@@ -390,7 +463,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         return getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, start, end, slotDuration, ALL_ATTRIBUTES);
     }
 
-    private static Set<DeviceDataAttribute> sensorNameToAttributeNames(final String sensorName) {
+    private static Set<DeviceDataAttribute> sensorNameToAttributeNames(final Sensor sensorName) {
         final Set<DeviceDataAttribute> sensorAttributes = SENSOR_NAME_TO_ATTRIBUTES.get(sensorName);
         if (sensorAttributes == null) {
             throw new IllegalArgumentException("Unknown sensor name: '" + sensorName + "'");
@@ -408,7 +481,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             final Long accountId,
             final String externalDeviceId,
             final int slotDurationInMinutes,
-            final String sensor,
+            final Sensor sensor,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
             final Optional<Calibration> calibrationOptional,
@@ -549,7 +622,12 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
     }
 
     final DeviceData attributeMapToDeviceData(final Map<String, AttributeValue> item) {
-        return new DeviceData.Builder()
+
+        final HardwareVersion version = DeviceDataAttribute.HW_VERSION.getInteger(item) == 0
+                ? HardwareVersion.SENSE_ONE
+                : HardwareVersion.fromInt(DeviceDataAttribute.HW_VERSION.getInteger(item));
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
                 .withDateTimeUTC(timestampFromDDBItem(item))
                 .withAccountId(Long.valueOf(DeviceDataAttribute.ACCOUNT_ID.get(item).getN()))
                 .withExternalDeviceId(externalDeviceIdFromDDBItem(item))
@@ -565,7 +643,23 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .withAudioPeakEnergyDB(DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB.getInteger(item))
                 .withAudioPeakDisturbancesDB(DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB.getInteger(item))
                 .withAmbientAirQualityRaw(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW.getInteger(item))
-                .build();
+                .withHardwareVersion(version);
+
+        if(version.equals(HardwareVersion.SENSE_ONE_FIVE)) {
+            final ExtraSensorData extra = SenseOneFiveExtraData.create(
+                    DeviceDataAttribute.PRESSURE.getInteger(item),
+                    DeviceDataAttribute.TVOC.getInteger(item),
+                    DeviceDataAttribute.CO2.getInteger(item),
+                    DeviceDataAttribute.RGB.getString(item),
+                    DeviceDataAttribute.IR.getInteger(item),
+                    DeviceDataAttribute.CLEAR.getInteger(item),
+                    DeviceDataAttribute.LUX_COUNT.getInteger(item),
+                    DeviceDataAttribute.UV_COUNT.getInteger(item)
+            );
+            builder.withExtraSensorData(extra);
+        }
+
+        return builder.build();
     }
 
     final List<DeviceData> attributeMapsToDeviceDataList(final List<Map<String, AttributeValue>> items) {
@@ -926,6 +1020,33 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .withHoldCount(holdCount)
                 .build();
 
+    }
+    //endregion
+
+
+    //region pairing
+    @Override
+    public Optional<String> getSensePairedBetween(final Long accountId, final DateTime startTime, final DateTime endTime) {
+
+        final Expression keyConditionExp = Expressions.and(
+                Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, ""), getRangeKey(endTime, "")));
+        final ImmutableSet<Attribute> attributes = ImmutableSet.<Attribute>builder()
+                .add(DeviceDataAttribute.ACCOUNT_ID)
+                .add(DeviceDataAttribute.RANGE_KEY)
+                .build();
+        final Response<List<Map<String, AttributeValue>>> response = queryTables(getTableNames(startTime, endTime), keyConditionExp, attributes);
+
+        if(Response.Status.SUCCESS.equals(response.status)) {
+            for(final Map<String, AttributeValue> map : response.data) {
+                final String tsDeviceId = map.getOrDefault(DeviceDataAttribute.RANGE_KEY.shortName(), new AttributeValue("")).getS();
+                final String[] parts = tsDeviceId.split(Pattern.quote("|"));
+                if(parts.length == 2) {
+                    return Optional.of(parts[1]);
+                }
+            }
+        }
+        return Optional.absent();
     }
     //endregion
 }

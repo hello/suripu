@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DataUtils;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
@@ -61,7 +62,7 @@ public class Bucketing {
      * @param sensorName
      * @return
      */
-    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,
+    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final Sensor sensorName,
                                                           final Optional<Device.Color> optionalColor, final Optional<Calibration> calibrationOptional,
                                                           final Boolean useAudioPeakEnergy) {
 
@@ -89,15 +90,15 @@ public class Bucketing {
             // TODO: refactor this
 
             float sensorValue = 0;
-            if(sensorName.equals("humidity")) {
+            if(sensorName.equals(Sensor.HUMIDITY)) {
                 sensorValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
-            } else if(sensorName.equals("temperature")) {
+            } else if(sensorName.equals(Sensor.TEMPERATURE)) {
                 sensorValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
-            } else if (sensorName.equals("particulates") && calibrationOptional.isPresent()) {
+            } else if (sensorName.equals(Sensor.PARTICULATES) && calibrationOptional.isPresent()) {
                 sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional);
-            } else if (sensorName.equals("light")) {
+            } else if (sensorName.equals(Sensor.LIGHT)) {
                 sensorValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
-            } else if (sensorName.equals("sound")) {
+            } else if (sensorName.equals(Sensor.SOUND)) {
                 final Integer audioPeakDB;
                 if (useAudioPeakEnergy && deviceData.audioPeakEnergyDB != 0) {
                     audioPeakDB = deviceData.audioPeakEnergyDB;
@@ -105,28 +106,16 @@ public class Bucketing {
                     audioPeakDB = deviceData.audioPeakDisturbancesDB;
                 }
                 sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(audioPeakDB), deviceData.firmwareVersion);
-            } else if(sensorName.equals("wave_count")) {
+            } else if(sensorName.equals(Sensor.WAVE_COUNT)) {
                 sensorValue = deviceData.waveCount;
-            } else if(sensorName.equals("hold_count")) {
+            } else if(sensorName.equals(Sensor.HOLD_COUNT)) {
                 sensorValue = deviceData.holdCount;
-            } else if(sensorName.equals("num_disturb")) {
+            } else if(sensorName.equals(Sensor.SOUND_NUM_DISTURBANCES)) {
                 sensorValue = deviceData.audioNumDisturbances;
-            } else if(sensorName.equals("background")) {
+            } else if(sensorName.equals(Sensor.SOUND_PEAK_ENERGY)) {
                 sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
-            } else if(sensorName.equals("peak_disturb")) {
+            } else if(sensorName.equals(Sensor.SOUND_PEAK_DISTURBANCE)) {
                 sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
-            } else if(sensorName.equals("light_variance")) {
-                sensorValue = deviceData.ambientLightVariance;
-            } else if(sensorName.equals("light_peakiness")) {
-                sensorValue = deviceData.ambientLightPeakiness;
-            } else if(sensorName.equals("dust_min")) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMin, calibrationOptional);
-            } else if(sensorName.equals("dust_max")) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMax, calibrationOptional);
-            } else if(sensorName.equals("dust_raw")) {
-                sensorValue = deviceData.ambientAirQualityRaw;
-            } else if(sensorName.equals("dust_variance")) {
-                sensorValue = deviceData.ambientDustVariance;
             } else {
                 LOGGER.warn("Sensor {} is not supported. Returning early", sensorName);
                 return Optional.absent();
@@ -185,6 +174,16 @@ public class Bucketing {
             populatedMap.addSample(newKey, deviceData.offsetMillis,
                     lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount, holdCount,
                     soundNumDisturbances, soundPeakDisturbance, soundPeakEnergy);
+            if(deviceData.hasExtra()) {
+                final float pressure = deviceData.extra().pressure();
+                final float tvoc = deviceData.extra().tvoc();
+                final float co2 = deviceData.extra().co2();
+                final float ir = deviceData.extra().ir();
+                final float clear = deviceData.extra().clear();
+                final int lux = deviceData.extra().luxCount();
+                final int uv = deviceData.extra().uvCount();
+                populatedMap.addExtraSample(newKey, deviceData.offsetMillis, pressure, tvoc, co2, ir, clear, lux, uv);
+            }
         }
 
         return populatedMap;

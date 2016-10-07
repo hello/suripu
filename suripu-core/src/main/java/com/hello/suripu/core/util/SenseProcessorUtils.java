@@ -5,8 +5,11 @@ import com.amazonaws.AmazonClientException;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.sense.data.ExtraSensorData;
+import com.hello.suripu.core.sense.data.SenseOneFiveExtraData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -100,11 +103,14 @@ public class SenseProcessorUtils {
 
     }
 
+    public static String rgb(int r, int g, int b) {
+        return String.format("#%04x%04x%04x", r, g, b);
+    }
     /**
      * @return A Builder with the appropriate sensor data set from the periodicData (ambientTemp, ambientLight, etc)
      */
     public static DeviceData.Builder periodicDataToDeviceDataBuilder(final DataInputProtos.periodic_data periodicData) {
-        return new DeviceData.Builder()
+        final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAmbientTemperature(periodicData.getTemperature())
                 .withAmbientAirQualityRaw(periodicData.getDust())
                 .withAmbientDustVariance(periodicData.getDustVariability())
@@ -120,6 +126,32 @@ public class SenseProcessorUtils {
                 .withAudioPeakDisturbancesDB(periodicData.hasAudioPeakDisturbanceEnergyDb() ? periodicData.getAudioPeakDisturbanceEnergyDb() : 0)
                 .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0)
                 .withAudioPeakEnergyDB(periodicData.hasAudioPeakEnergyDb() ? periodicData.getAudioPeakEnergyDb() : 0);
+
+        // Maybe add hw version to protobuf?
+        if(periodicData.hasLightSensor()) {
+
+            final String rgb = rgb(
+                    periodicData.getLightSensor().getR(),
+                    periodicData.getLightSensor().getG(),
+                    periodicData.getLightSensor().getB()
+            );
+
+            final ExtraSensorData extraSensorData = SenseOneFiveExtraData.create(
+                    periodicData.hasPressure() ? periodicData.getPressure() : -1,
+                    periodicData.hasTvoc() ? periodicData.getTvoc() : -1,
+                    periodicData.hasCo2() ? periodicData.getCo2() : -1,
+                    rgb,
+                    periodicData.getLightSensor().hasInfrared() ? periodicData.getLightSensor().getInfrared() : -1,
+                    periodicData.getLightSensor().hasClear() ? periodicData.getLightSensor().getClear() : -1,
+                    periodicData.getLightSensor().hasLuxCount() ? periodicData.getLightSensor().getLuxCount() : -1,
+                    periodicData.getLightSensor().hasUvCount() ? periodicData.getLightSensor().getUvCount() : -1
+            );
+
+            builder.withExtraSensorData(extraSensorData);
+            builder.withHardwareVersion(HardwareVersion.SENSE_ONE_FIVE);
+        }
+
+        return builder;
     }
 
 }

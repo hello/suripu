@@ -4,17 +4,16 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.UnmodifiableIterator;
 import com.hello.suripu.algorithm.partner.PartnerHmm;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.midi.Track;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -377,5 +376,32 @@ public class PartnerDataUtils {
 
         return ImmutableList.copyOf(myFilteredMotion);
 
+    }
+    static public float getPercentUniqueMovements(final List<TrackerMotion> userOriginalTrackerMotions, final List<TrackerMotion> partnerOriginalTrackerMotions){
+        final int numUserMotions = userOriginalTrackerMotions.size();
+        final int numPartnerMotions = partnerOriginalTrackerMotions.size();
+        int numUniqueUserMotions = numUserMotions;
+        if (numUserMotions == 0){
+            return 0.0f;
+        } else if (numPartnerMotions == 0){
+            return 1.0f;
+        }
+        long currentPartnerMotionTS = partnerOriginalTrackerMotions.get(0).timestamp;
+
+        int i = 0;
+
+        for (TrackerMotion userMotion : userOriginalTrackerMotions){
+            long currentUserMotionTS = userMotion.timestamp;
+            while (currentUserMotionTS > currentPartnerMotionTS + DateTimeConstants.MILLIS_PER_MINUTE & i < numPartnerMotions - 1){
+                i+=1;
+                currentPartnerMotionTS = partnerOriginalTrackerMotions.get(i).timestamp;
+            }
+            if (currentUserMotionTS >= currentPartnerMotionTS - DateTimeConstants.MILLIS_PER_MINUTE & currentUserMotionTS <= currentPartnerMotionTS + DateTimeConstants.MILLIS_PER_MINUTE){
+                numUniqueUserMotions -= 1;
+            }
+        }
+
+        final float percentUniqueMovements = (float)numUniqueUserMotions / (float) numUserMotions;
+        return percentUniqueMovements;
     }
 }

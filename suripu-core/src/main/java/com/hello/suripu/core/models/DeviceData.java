@@ -1,12 +1,12 @@
 package com.hello.suripu.core.models;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.hello.suripu.core.firmware.HardwareVersion;
+import com.hello.suripu.core.sense.data.ExtraSensorData;
 import com.hello.suripu.core.util.DataUtils;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -93,6 +93,21 @@ public class DeviceData {
         return dateTimeUTC.plusMillis(offsetMillis);
     }
 
+
+    private final HardwareVersion hardwareVersion;
+    public final HardwareVersion hardwareVersion() {
+        return hardwareVersion;
+    }
+
+    private final Optional<ExtraSensorData> extra;
+    public final boolean hasExtra() {
+        return  extra.isPresent();
+    }
+
+    public final ExtraSensorData extra() {
+        return extra.get();
+    }
+
     public DeviceData withCalibratedLight(Optional<Device.Color> colorOptional) {
 
         Device.Color color = Device.DEFAULT_COLOR;
@@ -126,58 +141,10 @@ public class DeviceData {
                 audioNumDisturbances,
                 audioPeakDisturbancesDB,
                 audioPeakBackgroundDB,
-                audioPeakEnergyDB);
+                audioPeakEnergyDB,
+                hardwareVersion,
+                extra.orNull());
     }
-
-    @Deprecated
-    public DeviceData(
-            final Long accountId,
-            final Long deviceId,
-            final int ambientTemperature,
-            final int ambientHumidity,
-            final int ambientAirQuality,
-            final int ambientAirQualityRaw,
-            final int ambientDustVariance,
-            final int ambientDustMin,
-            final int ambientDustMax,
-            final int ambientLight,
-            final float ambientLightFloat,
-            final int ambientLightVariance,
-            final int ambientLightPeakiness,
-            final DateTime dateTimeUTC,
-            final Integer offsetMillis,
-            final Integer firmwareVersion,
-            final Integer waveCount,
-            final Integer holdCount,
-            final Integer audioNumDisturbances,
-            final Integer audioPeakDisturbancesDB,
-            final Integer audioPeakBackgroundDB,
-            final Integer audioPeakEnergyDB) {
-        this(accountId,
-                deviceId,
-                "",
-                ambientTemperature,
-                ambientHumidity,
-                ambientAirQuality,
-                ambientAirQualityRaw,
-                ambientDustVariance,
-                ambientDustMin,
-                ambientDustMax,
-                ambientLight,
-                ambientLightFloat,
-                ambientLightVariance,
-                ambientLightPeakiness,
-                dateTimeUTC,
-                offsetMillis,
-                firmwareVersion,
-                waveCount,
-                holdCount,
-                audioNumDisturbances,
-                audioPeakDisturbancesDB,
-                audioPeakBackgroundDB,
-                audioPeakEnergyDB);
-    }
-
     public DeviceData(
             final Long accountId,
             final Long deviceId,
@@ -201,7 +168,9 @@ public class DeviceData {
             final Integer audioNumDisturbances,
             final Integer audioPeakDisturbancesDB,
             final Integer audioPeakBackgroundDB,
-            final Integer audioPeakEnergyDB) {
+            final Integer audioPeakEnergyDB,
+            final HardwareVersion hardwareVersion,
+            final ExtraSensorData extraSensorData) {
         this.accountId = accountId;
         this.deviceId = deviceId;
         this.externalDeviceId = externalDeviceId;
@@ -225,13 +194,96 @@ public class DeviceData {
         this.audioPeakBackgroundDB = audioPeakBackgroundDB;
         this.audioPeakDisturbancesDB = audioPeakDisturbancesDB;
         this.audioPeakEnergyDB = audioPeakEnergyDB;
-
+        this.extra = Optional.fromNullable(extraSensorData);
+        this.hardwareVersion = hardwareVersion;
         checkNotNull(this.accountId, "Account id can not be null");
 //        checkNotNull(this.deviceId, "Device id can not be null");
         checkNotNull(this.dateTimeUTC, "DateTimeUTC can not be null");
         checkNotNull(this.offsetMillis,"Offset millis can not be null");
     }
 
+
+    public static DeviceData senseOne(final Long accountId,
+                                      final Long deviceId,
+                                      final String externalDeviceId,
+                                      final int ambientTemperature,
+                                      final int ambientHumidity,
+                                      final int ambientAirQuality,
+                                      final int ambientAirQualityRaw,
+                                      final int ambientDustVariance,
+                                      final int ambientDustMin,
+                                      final int ambientDustMax,
+                                      final int ambientLight,
+                                      final float ambientLightFloat,
+                                      final int ambientLightVariance,
+                                      final int ambientLightPeakiness,
+                                      final DateTime dateTimeUTC,
+                                      final Integer offsetMillis,
+                                      final Integer firmwareVersion,
+                                      final Integer waveCount,
+                                      final Integer holdCount,
+                                      final Integer audioNumDisturbances,
+                                      final Integer audioPeakDisturbancesDB,
+                                      final Integer audioPeakBackgroundDB,
+                                      final Integer audioPeakEnergyDB) {
+        return new DeviceData(
+                accountId,
+                deviceId,
+                externalDeviceId,
+                ambientTemperature,
+                ambientHumidity,
+                ambientAirQuality,
+                ambientAirQualityRaw,
+                ambientDustVariance,
+                ambientDustMin,
+                ambientDustMax,
+                ambientLight,
+                ambientLightFloat,
+                ambientLightVariance,
+                ambientLightPeakiness,
+                dateTimeUTC,
+                offsetMillis,
+                firmwareVersion,
+                waveCount,
+                holdCount,
+                audioNumDisturbances,
+                audioPeakDisturbancesDB,
+                audioPeakBackgroundDB,
+                audioPeakEnergyDB,
+                HardwareVersion.SENSE_ONE,
+                null);
+    }
+
+
+    public static DeviceData senseOneFive(final DeviceData deviceData, final ExtraSensorData extraSensorData) {
+        return new DeviceData(
+                deviceData.accountId,
+                deviceData.deviceId,
+                deviceData.externalDeviceId,
+                deviceData.ambientTemperature,
+                deviceData.ambientHumidity,
+                deviceData.ambientAirQuality,
+                deviceData.ambientAirQualityRaw,
+                deviceData.ambientDustVariance,
+                deviceData.ambientDustMin,
+                deviceData.ambientDustMax,
+                deviceData.ambientLight,
+                deviceData.ambientLightFloat,
+                deviceData.ambientLightVariance,
+                deviceData.ambientLightPeakiness,
+                deviceData.dateTimeUTC,
+                deviceData.offsetMillis,
+                deviceData.firmwareVersion,
+                deviceData.waveCount,
+                deviceData.holdCount,
+                deviceData.audioNumDisturbances,
+                deviceData.audioPeakDisturbancesDB,
+                deviceData.audioPeakBackgroundDB,
+                deviceData.audioPeakEnergyDB,
+                HardwareVersion.SENSE_ONE_FIVE,
+                extraSensorData
+        );
+    }
     public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DataUtils.DUST_FLOAT_TO_INT_MULTIPLIER;}
 
     public static class Builder{
@@ -258,6 +310,8 @@ public class DeviceData {
         private Integer audioPeakDisturbancesDB = 0;
         private Integer audioPeakBackgroundDB = 0;
         private Integer audioPeakEnergyDB = 0;
+        private HardwareVersion hardwareVersion = HardwareVersion.SENSE_ONE;
+        private ExtraSensorData extra = null;
 
         public Builder withAccountId(final Long accountId){
             this.accountId = accountId;
@@ -401,12 +455,23 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withExtraSensorData(final ExtraSensorData extraSensorData) {
+            this.extra = extraSensorData;
+            return this;
+        }
+
+        public Builder withHardwareVersion(final HardwareVersion hardwareVersion) {
+            this.hardwareVersion = hardwareVersion;
+            return this;
+        }
+
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.externalDeviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
                     this.ambientLight,this.ambientLightFloat, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
                     this.firmwareVersion, this.waveCount, this.holdCount,
-                    this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB, this.audioPeakEnergyDB);
+                    this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB, this.audioPeakEnergyDB,
+                    this.hardwareVersion, this.extra);
         }
 
     }
@@ -435,6 +500,8 @@ public class DeviceData {
                 .add(("audio_num_disturbances"), audioNumDisturbances)
                 .add(("audio_peak_disturbances_db"), audioPeakDisturbancesDB)
                 .add(("audio_peak_energy_db"), audioPeakEnergyDB)
+                .add("hw_version", hardwareVersion)
+                .add("extra", extra)
                 .toString();
     }
 

@@ -1,5 +1,8 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -21,13 +24,12 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.util.DateTimeUtil;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -165,7 +167,15 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     @Override
     public Optional<Integer> getTimeZoneOffset(final Long accountId) {
-        return this.getTimeZoneOffset(accountId, DateTime.now(DateTimeZone.UTC).minusDays(3)); //3 is min minus needed to "guarantee" sleep stats because of 1) timezone conversion 2) morning edge case
+        final DateTime earliestAllowedDate = DateTime.now(DateTimeZone.UTC).minusDays(7); // "active user" needs to have at least 1 timeline in the past week
+        final ImmutableList<AggregateSleepStats> sleepStatsList = this.getBatchStats(accountId, earliestAllowedDate.toString(), DateTime.now(DateTimeZone.UTC).toString());
+
+        if (sleepStatsList.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final AggregateSleepStats mostRecentSleepStat = sleepStatsList.get( sleepStatsList.size() - 1 );
+        return Optional.of(mostRecentSleepStat.offsetMillis);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.hello.suripu.core.roomstate.State;
 
 public class SensorReading {
 
@@ -12,10 +13,10 @@ public class SensorReading {
     public final Integer value;
 
     @JsonProperty("unit")
-    public final CurrentRoomState.State.Unit unit;
+    public final State.Unit unit;
 
 
-    public SensorReading(final String name, final Integer value, final CurrentRoomState.State.Unit unit) {
+    public SensorReading(final String name, final Integer value, final State.Unit unit) {
         this.name = name;
         this.value = value;
         this.unit = unit;

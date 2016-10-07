@@ -88,7 +88,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 '),
 ----
 ('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
-'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but it is unique to the individual.''
+'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but it is unique to the individual.'
 ),
 ----
 ('time_to_sleep', '', 'Sleep Onset',
@@ -244,6 +244,7 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 
 **Associate your bedroom with sleep**. Avoid non-sleep activities such as watching TV, working, or using the computer when in the bedroom.'
 
+WHERE category ='sleep_hygiene';
 
 --jyfan 9/22/2015 Update text for humidity card.
 
@@ -536,12 +537,6 @@ UPDATE info_insight_cards SET title='Plan for a Better Night''s Sleep' WHERE cat
 UPDATE info_insight_cards SET category_name='Sleep Time' WHERE category='sleep_time';
 
 -- jyfan 2016-06-08 copy editing
--- partner motion
-UPDATE info_insight_cards SET text=
-'When you sleep next to someone, their movements can cause you to move more too, and this can affect the overall quality of your sleep. However, sleeping next to someone can have a positive effect as well. Many couples report sleeping better when they sleep together than when they sleep apart, hinting at a more complex link between your sleep and your partner.
-
-Satisfaction with your relationship is simultaneously impacted by and affects sleep quality. In addition to managing personal sleep disruptions such as sleep apnea and snoring, you and your partner can encourage each other to keep good sleep habits. Go to bed and wake up at a consistent time, keep distracting electronics out of the bedroom, and if possible, you and your partner should try to go to bed at the same time.'
-WHERE category='partner_motion';
 -- sleep hygiene
 UPDATE info_insight_cards SET text=
 'Everyone''s sleep is different, but there are some general guidelines that can help anyone get better sleep:
@@ -552,6 +547,7 @@ UPDATE info_insight_cards SET text=
 
 While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns.'
 WHERE category='sleep_hygiene';
+
 -- caffeine
 UPDATE info_insight_cards SET text='Consuming caffeinated beverages late in the day can make it more difficult to fall asleep, and prevent you from getting deep, restorative sleep. The National Sleep Foundation recommends avoiding caffeine in any form at least 4 to 6 hours before bed to avoid caffeine-related sleep problems. Caffeine can stay in the body for up to 12 hours, though, so you may want have your last cup of coffee even earlier if you are particularly susceptible to its effects.
 
@@ -569,3 +565,117 @@ And finally, consider staying away from stimulants such as nicotine and alcohol.
 
 While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns.'
 WHERE category='sleep_hygiene';
+
+--jarred-h 2016-07-14
+--sleep deprivation
+ALTER TYPE insight_category ADD VALUE 'sleep_deprivation';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('sleep_deprivation', 'The importance of sleep', 'Sleep Needs',
+ 'Depriving yourself of adequate sleep can impair both neurological and psychological functions. Researchers have shown that routine sleep deprivation can result in cognitive dysfunction (impaired alertness, cognitive speed, and memory), increased blood pressure, and an increased risk of diabetes. Over time, it can increase the risk of other serious health issues as well, such as obesity and heart disease.
+
+  While maintaining a consistent sleep schedule with great sleep each night should be your goal, sometimes it isn''t always possible to get a full night''s sleep. In that case, you can catch up by getting a bit of extra sleep within a few days — just don''t make it habit. Keeping a consistent sleep schedule helps keep your circadian rhythm strong. If you''re feeling a bit sleep deprived, try getting some extra sleep tonight.');
+
+--- big insight cleaning 7/19/2015
+-- partner motion
+UPDATE info_insight_cards SET text='When you sleep next to someone, their movements can cause you to move more too, and this can affect the overall quality of your sleep. However, sleeping next to someone can have a positive effect, too. Many couples report that they sleep better together than when they''re apart, hinting at a complex link between your sleep and your partner.
+
+Satisfaction with your relationship is impacted by, and impacts, your sleep quality. In addition to helping each other manage sleep disruptions such as sleep apnea and snoring, you and your partner should encourage each other to keep good sleep habits. This includes going to bed and waking up at consistent time each day, and minimizing the use of electronics in the bedroom. Additionally, you and your partner should try to go to bed at the same time if possible.'
+WHERE category='partner_motion';
+
+UPDATE info_insight_cards SET title='Sleep better, together' WHERE category='partner_motion';
+
+--motion
+UPDATE info_insight_cards SET text='Tossing and turning generally occurs during brief interruptions of sleep during the night. During rapid eye movement (REM) sleep, chemical systems in your brain work to paralyze your skeletal muscles, keeping you still at night. But simple factors, such as high temperature or light levels, can pull you out of REM sleep and lead to restless nights. Consuming excessive amounts of alcohol, heavy meals, or caffeine before bed can also cause tossing and turning during the night. Serious conditions such as acid reflux, periodic limb movement, and sleep apnea can also contribute to an increase in movement during the night.'
+WHERE category='sleep_quality';
+
+UPDATE info_insight_cards SET title='Movement during sleep' WHERE category='sleep_quality';
+--temp
+UPDATE info_insight_cards SET text='Like an internal thermostat, your body has an ideal **set point** for temperature that it is constantly trying to achieve. If it''s too hot or too cold, the body struggles to achieve this set point, causing interruptions to your sleep. Generally, you should keep your bedroom quiet, dark, and cool, between 65°F (18°C) and 72°F (22°C). However, the perfect room temperature is different for everyone, so you should make sure to set it for whatever is most comfortable.'
+WHERE category='temperature';
+
+UPDATE info_insight_cards SET title='Find your ideal temperature' WHERE category='temperature';
+--wake_variance
+UPDATE info_insight_cards SET text='The circadian rhythm, or internal clock, is a sequence of timed chemical cues that helps your body know when to wind down and when to wake up. Your ability to fall asleep relies in large part on the strength of these signals, and disruptions to the clock such as time zone changes or a variable work schedule can affect how well you sleep. Much of this clock is determined by genetics, so you may be naturally inclined to wake up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong and the quality of your sleep high.' WHERE category='wake_variance';
+
+UPDATE info_insight_cards SET title='Wake up to sleep better' WHERE category='wake_variance';
+--bed_light_intensity_ratio
+UPDATE info_insight_cards SET text='The right exposure to light can promote healthy sleep, boost productivity, and improve your overall well-being.
+
+Light, whether artificial or natural, is the primary signal for your circadian rhythm, which governs not only your sleep, but also your mood, appetite, and more. In the morning, light prompts your body to wake up, increasing blood flow and alertness. In the evening, the decrease in light signals to your body that it''s time to wind down, relax, and prepare for sleep.
+
+Too little light early in the day confuses your internal clock, which can feel like a miniature dose of jet lag. Similarly, too much exposure to light in the evening can artificially pump you up when you''re trying to unwind.
+
+If you''re exposed to a lot of artificial light at night, make sure you balance it out by exposing yourself to more light in the morning and during the day.'
+WHERE category='bed_light_intensity_ratio';
+
+UPDATE info_insight_cards SET title='Keep your internal clock in sync' WHERE category='bed_light_intensity_ratio';
+--bed_light_duration
+UPDATE info_insight_cards SET text='Regularly watching television, using your phone, or engaging in other mentally stimulating activities just before bed can create a subconscious link between your bedroom and staying alert. This often makes it harder to fall asleep when you want to.
+
+On the other hand, reserving your bedroom for sleep and intimacy creates a stronger link between your bedroom and sleep, which will help you fall asleep more easily when it''s time for bed.'
+WHERE category='bed_light_duration';
+
+UPDATE info_insight_cards SET title='Associate your bedroom with sleep' WHERE category='bed_light_duration';
+--humidity
+UPDATE info_insight_cards SET text='Keeping your bedroom humidity level at around 50% year-round is an important part of ensuring an optimal sleeping environment.
+
+Air that is too dry can irritate your throat and nasal passages, which can make it more difficult for you to fall asleep. If your area suffers from dry weather, investing in a humidifier can help. Also remember to keep hydrated by drinking plenty of water, and apply lotion before bed to soothe dry skin.
+
+Conversely, damp air can lead to mold growth, which can affect your sleep if you suffer from mold allergies. High humidity paired with high temperatures can be especially uncomfortable, making it even more difficult to get restorative sleep. A fan or a dehumidifier can help lower the humidity in your bedroom, and using cotton sheets and sweat-wicking pajamas will help you feel more comfortable.'
+WHERE category='humidity';
+
+UPDATE info_insight_cards SET title='The right humidity for great sleep' WHERE category='humidity';
+--caffeine
+UPDATE info_insight_cards SET text='Consuming caffeinated beverages late in the day can make it more difficult to fall asleep, and prevent you from getting deep, restorative sleep. The National Sleep Foundation recommends avoiding caffeine in any form at least 4 to 6 hours before bed to avoid caffeine-related sleep problems. Caffeine can stay in the body for up to 12 hours, though, so you may want have your last cup of coffee even earlier if you are particularly susceptible to its effects.
+
+You don''t need to swear off coffee completely. In fact, caffeine has benefits beyond a morning pick-me-up. Researchers at Johns Hopkins have found that consuming 200 mg of caffeine (roughly one cup of coffee) enhances long-term memory. Just make sure to limit your caffeine intake to before 2 PM, so that you reap the benefits while minimizing disruptions to your sleep.'
+WHERE category='caffeine';
+
+--air quality
+UPDATE info_insight_cards SET text='Clean air is an important part of a healthy environment. A high concentration of airborne particulates (microscopic fragments of matter that can penetrate deep into your lungs) can irritate your throat and airways, exacerbate asthma symptoms, and disrupt your sleep.
+
+Particulates can come from indoor sources of pollutants like smoke, cooking fumes, and even some household cleaners. You should always take care to minimize your exposure to these types of pollutants, and open a window to help with ventilation if necessary.
+
+Particulate pollution can also come from outdoor sources, both natural and artificial. You can check the AirNow website to see if there’s an air quality advisory for your area at any time. If so, you should follow EPA recommendations, and limit your time spent outdoors.'
+WHERE category='air_quality';
+
+UPDATE info_insight_cards SET title='Clean air, better sleep' WHERE category='air_quality';
+--sound
+UPDATE info_insight_cards SET text='Hearing sound causes the mind to react instinctively: you immediately become more alert. Listening to music immediately prior to going to bed, or being exposed to outdoor noise such as traffic, can have a disastrous effect on your natural tendency to wind down before sleep.
+
+Even while you''re asleep, your brain continues to register and process sounds. A loud noise can interrupt sleep by causing you to wake up, shift between stages of sleep, or experience a change in heart rate and blood pressure.
+
+If you have difficulty falling asleep or staying asleep, using Sleep Sounds can help mask disruptive noise inside and outside your bedroom, allowing for a more peaceful slumber.'
+WHERE category='sound';
+
+UPDATE info_insight_cards SET title='Sound disturbances and your sleep' WHERE category='sound';
+--caffeine alarm
+UPDATE info_insight_cards SET title='Last call for coffee' WHERE category='caffeine';
+UPDATE info_insight_cards SET category_name='Caffeine' WHERE category='caffeine';
+--welcome
+UPDATE info_insight_cards SET title='A better night''s sleep' WHERE category='sleep_duration';
+UPDATE info_insight_cards SET title='Healthy sleep habits' WHERE category='sleep_hygiene';
+UPDATE info_insight_cards SET title='Plan for better sleep' WHERE category='sleep_time';
+
+--misc title case changes
+UPDATE info_insight_cards SET title='When you''re tired, stay off the road' WHERE category='drive'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='A lack of sleep makes you hungry' WHERE category='eat'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Remember to sleep well' WHERE category='learn'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Empathy and problem solving' WHERE category='love'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Get prepped for game time' WHERE category='play'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Sleeping better keeps you moving' WHERE category='run'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Keep swimming' WHERE category='swim'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Keep up the good work' WHERE category='work'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Improving your sleep score' WHERE category='sleep_score'; --not scheduled, update for consistency
+UPDATE info_insight_cards SET title='Sleep onset' WHERE category='time_to_sleep'; --not used, update for consistency
+UPDATE info_insight_cards SET title='Coffee is a morning drink' WHERE category='goal_coffee';
+UPDATE info_insight_cards SET title='Schedule your thoughts' WHERE category='goal_schedule_thoughts';
+UPDATE info_insight_cards SET title='No screens before bed' WHERE category='goal_screens';
+UPDATE info_insight_cards SET title='Wake up to sleep better' WHERE category='goal_wake_variance';
+UPDATE info_insight_cards SET title='Here comes the sun' WHERE category='goal_go_outside';
+UPDATE info_insight_cards SET title='Sleep and wake time' WHERE category='wake_time'; --not used, update for consistency
+UPDATE info_insight_cards SET title='Effects of ambient light on your sleep' WHERE category='light'; --not used, update for consistency
+UPDATE info_insight_cards SET title='Daytime activities' WHERE category='daytime_activities'; --not used, update for consistency
+UPDATE info_insight_cards SET title='Daytime sleepiness' WHERE category='daytime_sleepiness'; --not used, update for consistency
+UPDATE info_insight_cards SET title='Effects of exercise on your sleep' WHERE category='workout'; --not used, update for consistency

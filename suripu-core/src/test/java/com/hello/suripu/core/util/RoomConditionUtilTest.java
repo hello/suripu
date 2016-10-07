@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.api.input.DataInputProtos.periodic_data;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions;
 import com.hello.suripu.core.models.Calibration;
-import com.hello.suripu.core.models.CurrentRoomState;
+import com.hello.suripu.core.roomstate.CurrentRoomState;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
@@ -58,7 +58,7 @@ public class RoomConditionUtilTest {
         final RoomConditions newConditionsCalibrated = RoomConditions.valueOf(
                 RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, true).ordinal());
 
-        LOGGER.debug("Light: {}, Audio: {}", currentRoomState.light.value, currentRoomState.sound.value);
+        LOGGER.debug("Light: {}, Audio: {}", currentRoomState.light().value, currentRoomState.sound().value);
         LOGGER.debug("New Conditions: {}", newConditions);
         LOGGER.debug("Old Conditions: {}", oldConditions);
         LOGGER.debug("New Conditions Calibrated: {}", newConditionsCalibrated);

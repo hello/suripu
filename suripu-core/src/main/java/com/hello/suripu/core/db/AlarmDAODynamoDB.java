@@ -20,7 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.exceptions.TooManyAlarmsException;
+import com.hello.suripu.core.alarm.TooManyAlarmsException;
 import com.hello.suripu.core.models.Alarm;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
