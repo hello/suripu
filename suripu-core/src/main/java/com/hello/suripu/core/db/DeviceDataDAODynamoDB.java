@@ -344,7 +344,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                     "",
                     (int) aggregator.roundedMean(DeviceDataAttribute.IR.name),
                     (int) aggregator.roundedMean(DeviceDataAttribute.CLEAR.name),
-                    (int) aggregator.roundedMean(DeviceDataAttribute.PRESSURE.name),
+                    (int) aggregator.roundedMean(DeviceDataAttribute.LUX_COUNT.name),
                     (int) aggregator.roundedMean(DeviceDataAttribute.UV_COUNT.name)
             );
             builder.withExtraSensorData(extra);
