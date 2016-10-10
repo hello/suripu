@@ -30,6 +30,14 @@ public enum Sensor {
         this.value = value;
     }
 
+    public static Sensor fromString(String sensorName) {
+        for(Sensor sensor: Sensor.values()) {
+            if(sensor.toString().equalsIgnoreCase(sensorName)) {
+                return sensor;
+            }
+        }
+        throw new IllegalArgumentException("Invalid Sensor Name");
+    }
 
     @JsonValue
     public String toString() {
