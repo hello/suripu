@@ -778,7 +778,7 @@ public class TimelineUtils {
             sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis)/MINUTE_IN_MILLIS);
         }
         final AgitatedSleep agitatedSleep = SleepScoreUtils.getAgitatedSleep(trackerMotions, sleepTimestampMillis, wakeUpTimestampMillis);
-        final Integer uninterruptedSleepDurationInMinutes = Math.max(agitatedSleep.uninterruptedSleepMins - Math.min(numberOfMotionEvents, 5) * 15 - 20, 0);
+        final Integer uninterruptedSleepDurationInMinutes = Math.max(agitatedSleep.uninterruptedSleepMins - 20, 0);
         final SleepStats sleepStats = new SleepStats(
                 soundSleepDurationInMinutes,
                 mediumSleepDurationInMinutes,

@@ -86,7 +86,7 @@ public class TimelineUtilsTest {
         final List<TrackerMotion> trackerMotions = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
         final long sleepTime = trackerMotions.get(0).timestamp;
-        final long wakeTime =  trackerMotions.get(0).timestamp + 72000000L;
+        final long wakeTime =  trackerMotions.get(0).timestamp + 24000000L;
 
         final Optional<Event> sleep=Optional.of( Event.createFromType(Event.Type.SLEEP,sleepTime,sleepTime,-25200000, Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
         final Optional<Event> wake= Optional.of(Event.createFromType(Event.Type.WAKE_UP,wakeTime,wakeTime, -25200000, Optional.of(English.OUT_OF_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
@@ -110,7 +110,7 @@ public class TimelineUtilsTest {
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
         final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, trackerMotions,70, true);
-        final Integer uninterruptedDuration = 1110;
+        final Integer uninterruptedDuration = 345;
         assertThat(sleepStats.uninterruptedSleepDurationInMinutes, is(uninterruptedDuration));
     }
 

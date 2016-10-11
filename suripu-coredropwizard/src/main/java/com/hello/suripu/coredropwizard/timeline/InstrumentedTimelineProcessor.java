@@ -592,6 +592,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //CREATE SLEEP MOTION EVENTS
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
+        //removes motion events > 5 keeps top 5 percent of motion events.
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
 
         Optional<Long> sleepTime = Optional.absent();

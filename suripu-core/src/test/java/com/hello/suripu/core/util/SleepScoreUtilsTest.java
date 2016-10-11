@@ -232,10 +232,10 @@ public class SleepScoreUtilsTest {
     public void testAgitatedSleep(){
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
         final long sleepTime = trackerMotionList.get(0).timestamp;
-        final long wakeTime =  trackerMotionList.get(0).timestamp + 72000000L;
+        final long wakeTime =  trackerMotionList.get(0).timestamp + 24000000L;
         final AgitatedSleep agitatedSleep= SleepScoreUtils.getAgitatedSleep(trackerMotionList, sleepTime, wakeTime);
-        assertThat(agitatedSleep.agitatedSleepMins , is(27));
-        assertThat(agitatedSleep.uninterruptedSleepMins , is(1145));
+        assertThat(agitatedSleep.agitatedSleepMins , is(15));
+        assertThat(agitatedSleep.uninterruptedSleepMins , is(365));
     }
 
     @Test
