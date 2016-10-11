@@ -36,7 +36,7 @@ public enum Sensor {
                 return sensor;
             }
         }
-        throw new IllegalArgumentException("exception=invalid-sensor name=" + sensorName);
+        throw new IllegalArgumentException(String.format("Invalid sensor name: %s", sensorName));
     }
 
     @JsonValue
