@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.core.db.FileInfoDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.models.sleep_sounds.SoundMap;
@@ -74,7 +75,7 @@ public class SleepSoundsProcessor implements SoundMap {
      * @param senseId Sense ID paired to this account
      * @return SoundResult containing the list of Sounds for the Sense.
      */
-    public SoundResult getSounds(final String senseId) {
+    public SoundResult getSounds(final String senseId, final HardwareVersion hardwareVersion) {
         final List<Sound> sounds = Lists.newArrayList();
 
         final Optional<FileSync.FileManifest> manifestOptional = fileManifestDAO.getManifest(senseId);
@@ -82,6 +83,7 @@ public class SleepSoundsProcessor implements SoundMap {
             LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
             // If no File manifest, Sense cannot play sounds so return an empty list.
             return new SoundResult(sounds, SoundResult.State.SENSE_UPDATE_REQUIRED);
+
         }
 
         final int firmwareVersion = manifestOptional.get().hasFirmwareVersion()
@@ -102,7 +104,7 @@ public class SleepSoundsProcessor implements SoundMap {
 
         // O(n*m) but n and m are so small this is probably faster than doing something fancier.
         for (final FileInfo fileInfo : sleepSoundFileInfoList) {
-            if (canPlayFile(manifestOptional.get(), fileInfo)) {
+            if (canPlayFile(manifestOptional.get(), fileInfo, hardwareVersion)) {
                 sounds.add(Sound.fromFileInfo(fileInfo));
             }
         }
@@ -145,7 +147,7 @@ public class SleepSoundsProcessor implements SoundMap {
     /**
      * @return a sleep sound for this Sense to play, but only if this Sense can play the sound and if the sound ID is valid.
      */
-    public Optional<Sound> getSound(final String senseId, final Long soundId) {
+    public Optional<Sound> getSound(final String senseId, final Long soundId, final HardwareVersion hardwareVersion) {
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getById(soundId);
         if (!fileInfoOptional.isPresent()) {
             LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-found", soundId);
@@ -164,7 +166,7 @@ public class SleepSoundsProcessor implements SoundMap {
             return Optional.absent();
         }
 
-        if (!canPlayFile(fileManifestOptional.get(), fileInfoOptional.get())) {
+        if (!canPlayFile(fileManifestOptional.get(), fileInfoOptional.get(), hardwareVersion)) {
             LOGGER.warn("sense-id={} error=cannot-play-file file-info-id={} path={}",
                     senseId, fileInfoOptional.get().id, fileInfoOptional.get().path);
             return Optional.absent();
@@ -178,7 +180,7 @@ public class SleepSoundsProcessor implements SoundMap {
         return "/" + sdCardPath + "/" + sdCardFilename;
     }
 
-    private static Boolean canPlayFile(final FileSync.FileManifest senseManifest, final FileInfo fileInfo) {
+    private static Boolean canPlayFile(final FileSync.FileManifest senseManifest, final FileInfo fileInfo, final HardwareVersion hardwareVersion) {
         for (final FileSync.FileManifest.File file : senseManifest.getFileInfoList()) {
             if (file.hasDownloadInfo() &&
                     file.getDownloadInfo().hasSdCardFilename() &&
@@ -201,6 +203,9 @@ public class SleepSoundsProcessor implements SoundMap {
 
                 if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path)) {
                     if (Arrays.equals(fileInfoSha, file.getDownloadInfo().getSha1().toByteArray())) {
+                        return true;
+                    } else if(HardwareVersion.SENSE_ONE_FIVE.equals(hardwareVersion)) {
+                        LOGGER.info("action=play-sleep-sound-override sense-id={}", senseManifest.getSenseId());
                         return true;
                     }
                     LOGGER.warn("sense-id={} file-info-path={} file-info-sha={} error=sha-does-not-match",
