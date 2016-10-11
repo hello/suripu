@@ -359,7 +359,7 @@ public class SleepScoreUtils {
         // computes periods of agitated sleep  using on duration. Over 16 seconds of movement within a two minute window initiates a state of agitated sleep that persists until there is a 4 minute window with no motion
         final int onDurationThreshold = 9; //secs
         final int minOnDuration = 1;
-        final int uninterruptedSleepThreshold = 60; // represents full sleep cycle - if sleep segment < 1 sleep cycle, then do not count that sleep as uninterrupted. After ~1 sleep cycle was probably completed, it is not possible to truncate sleep duration by cycle count
+        final int uninterruptedSleepThreshold = 45; // represents full sleep cycle - if sleep segment < 1 sleep cycle, then do not count that sleep as uninterrupted. After ~1 sleep cycle was probably completed, it is not possible to truncate sleep duration by cycle count
         final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 mins
         final long timeWindow = 90000L; //1.5 minutes - finds two consecutive minutes with some flexibility
         int agitatedSleepMins = 0;

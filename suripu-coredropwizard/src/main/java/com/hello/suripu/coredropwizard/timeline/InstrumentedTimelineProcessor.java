@@ -579,12 +579,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
 
-        if (this.hasTimelineOrderEnforcement(accountId)) {
-            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, sensorData.timezoneOffsetMillis);
-        }
-        else {
-            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedbackTheOldWay(feedbackList, ImmutableList.copyOf(result.mainEvents.values()), ImmutableList.copyOf(result.extraEvents), sensorData.timezoneOffsetMillis);
-        }
+        //removed FF timeline order enforcement - at 100 percent
+        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, sensorData.timezoneOffsetMillis);
 
         //GET SPECIFIC EVENTS
         final Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
@@ -719,7 +715,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
-        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, lightSleepThreshold, hasSleepStatMediumSleep(accountId));
+        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId));
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
