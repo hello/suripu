@@ -248,9 +248,8 @@ public class DeviceProcessor {
             final Sense sense = Sense.create(
                     senseAccountPair,
                     senseStatusOptional,
-                    metadata.color(),
                     wifiInfoOptional,
-                    metadata.hardwareVersion()
+                    metadata
             );
 
             senses.add(sense);
