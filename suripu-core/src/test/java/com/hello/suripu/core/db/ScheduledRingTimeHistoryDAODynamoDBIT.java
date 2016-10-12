@@ -1,5 +1,7 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.collect.Lists;
+
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -79,17 +81,17 @@ public class ScheduledRingTimeHistoryDAODynamoDBIT {
 
         final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true, Lists.newArrayList());
 
         final DateTime alarmTime2 = new DateTime(2014, 9, 24, 9, 10, 0, localTimeZone);
         final DateTime actualTime2 = new DateTime(2014, 9, 24, 9, 0, 0, localTimeZone);
-        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true, Lists.newArrayList());
 
         this.scheduledRingTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime1);
         this.scheduledRingTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime2);
 
         final RingTime nextRingTime = this.scheduledRingTimeHistoryDAODynamoDB.getNextRingTime(deviceId);
-        final RingTime expected = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
+        final RingTime expected = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true, Lists.newArrayList());
 
         assertThat(nextRingTime, is(expected));
     }

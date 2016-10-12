@@ -2,6 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import com.amazonaws.AmazonServiceException;
@@ -35,6 +36,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.AlarmExpansion;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.PillColorUtil;
@@ -75,6 +77,7 @@ public class MergedUserInfoDynamoDB {
     public static final String ACTUAL_RING_TIME_ATTRIBUTE_NAME = "actual_ring_at_utc";
     public static final String SOUND_IDS_ATTRIBUTE_NAME = "sound_ids";
     public static final String IS_SMART_ALARM_ATTRIBUTE_NAME = "is_smart";
+    public static final String EXPANSIONS_ATTRIBUTE_NAME = "expansions";
 
     // Timezone history
     public static final String TIMEZONE_ID_ATTRIBUTE_NAME = "timezone_id";
@@ -480,7 +483,7 @@ public class MergedUserInfoDynamoDB {
 
     private Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> ringTimeAttributes = new HashSet<String>();
-        Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
+        Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME, EXPANSIONS_ATTRIBUTE_NAME);
 
         if(!item.keySet().containsAll(ringTimeAttributes)){
             return Optional.absent();
@@ -496,7 +499,13 @@ public class MergedUserInfoDynamoDB {
             if(item.containsKey(IS_SMART_ALARM_ATTRIBUTE_NAME)){
                isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();
             }
-            return Optional.of(new RingTime(actual, expected, soundIds, isSmart));
+
+            List<AlarmExpansion> expansions = Lists.newArrayList();
+            if(item.containsKey(EXPANSIONS_ATTRIBUTE_NAME)){
+                final String expansionsJSON = item.get(EXPANSIONS_ATTRIBUTE_NAME).getS();
+                expansions = this.objectMapper.readValue(expansionsJSON, new TypeReference<List<AlarmExpansion>>(){});
+            }
+            return Optional.of(new RingTime(actual, expected, soundIds, isSmart, expansions));
         } catch (IOException e) {
             LOGGER.error("Deserialize JSON for ring time failed {}, device {}, account id {}.", e.getMessage(), deviceId, accountId);
         }

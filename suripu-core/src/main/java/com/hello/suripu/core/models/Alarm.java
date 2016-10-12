@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -63,6 +64,9 @@ public class Alarm {
 
     @JsonProperty("source")
     public final AlarmSource alarmSource;
+
+    @JsonProperty("expansions")
+    public final List<AlarmExpansion> expansions;
 
     /*
     @JsonCreator
@@ -129,7 +133,8 @@ public class Alarm {
             isSmart,
             sound,
             id,
-            AlarmSource.MOBILE_APP);
+            AlarmSource.MOBILE_APP,
+            Lists.newArrayList());
     }
 
     @JsonCreator
@@ -145,7 +150,8 @@ public class Alarm {
                  @JsonProperty("smart") boolean isSmart,
                  @JsonProperty("sound") final AlarmSound sound,
                  @JsonProperty("id") final String id,
-                 @JsonProperty("source") final AlarmSource alarmSource){
+                 @JsonProperty("source") final AlarmSource alarmSource,
+                 @JsonProperty("expansions") final List<AlarmExpansion> expansions){
         this.dayOfWeek = dayOfWeek;
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
@@ -178,6 +184,8 @@ public class Alarm {
         } else {
             this.alarmSource = alarmSource;
         }
+
+        this.expansions = expansions;
 
     }
 
@@ -236,6 +244,7 @@ public class Alarm {
         private Set<Integer> dayOfWeek;
         private AlarmSound sound;
         private AlarmSource alarmSource;
+        private List<AlarmExpansion> expansions;
 
         public Builder(){
             id = "";
@@ -323,6 +332,12 @@ public class Alarm {
             return this;
         }
 
+        @JsonProperty("expansions")
+        public Builder withExpansions(List<AlarmExpansion> expansions){
+            this.expansions = expansions;
+            return this;
+        }
+
         public Alarm build(){
             return new Alarm(
                 this.year,
@@ -337,7 +352,8 @@ public class Alarm {
                 this.isSmart,
                 this.sound,
                 this.id,
-                this.alarmSource);
+                this.alarmSource,
+                this.expansions);
         }
 
 
@@ -432,14 +448,15 @@ public class Alarm {
 
                 if(isAlarmExpired(alarm, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone)){
                     final Alarm disabledAlarm = new Alarm(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour,
-                            new HashSet<Integer>(),
-                            false,
-                            false,
-                            alarm.isEditable,
-                            alarm.isSmart,
-                            alarm.sound,
-                            alarm.id,
-                            alarm.alarmSource
+                        new HashSet<Integer>(),
+                        false,
+                        false,
+                        alarm.isEditable,
+                        alarm.isSmart,
+                        alarm.sound,
+                        alarm.id,
+                        alarm.alarmSource,
+                        alarm.expansions
                     );
                     newAlarmList.add(disabledAlarm);
                 }else{
@@ -483,13 +500,13 @@ public class Alarm {
                             // this alarm should be in next week.
                             ringTime = ringTime.plusWeeks(1);
                         }
-                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
+                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart, alarm.expansions));
                     }
                 }else{
                     // None repeated alarm, check if still valid
                     final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
                     if(!ringTime.isBefore(currentLocalTime)){
-                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
+                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart, alarm.expansions));
                     }
                 }
             }

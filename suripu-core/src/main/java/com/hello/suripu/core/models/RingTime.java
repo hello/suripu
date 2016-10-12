@@ -1,11 +1,16 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+
+import java.util.List;
 
 /**
  * Created by pangwu on 9/23/14.
@@ -26,11 +31,15 @@ public class RingTime {
     @JsonProperty("from_smart_alarm")
     public final boolean fromSmartAlarm;
 
+    @JsonProperty("expansions")
+    public final List<AlarmExpansion> expansions;
+
     @JsonCreator
     public RingTime(@JsonProperty("actual_ring_time_utc") long actual,
                     @JsonProperty("expected_ring_time_utc") long expected,
                     @JsonProperty("sound_ids") final long[] soundIds,
-                    @JsonProperty("from_smart_alarm") final boolean fromSmartAlarm){
+                    @JsonProperty("from_smart_alarm") final boolean fromSmartAlarm,
+                    @JsonProperty("expansions") final List<AlarmExpansion> expansions){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
@@ -39,10 +48,11 @@ public class RingTime {
         this.expectedRingTimeUTC = expected;
         this.soundIds = soundIds;
         this.fromSmartAlarm = fromSmartAlarm;
+        this.expansions = expansions;
 
     }
 
-    public RingTime(long actual, long expected, final Long[] soundIds, final boolean fromSmartAlarm){
+    public RingTime(long actual, long expected, final Long[] soundIds, final boolean fromSmartAlarm, final List<AlarmExpansion> expansions){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
@@ -55,10 +65,11 @@ public class RingTime {
         }
 
         this.fromSmartAlarm = fromSmartAlarm;
+        this.expansions = expansions;
 
     }
 
-    public RingTime(long actual, long expected, long soundId, final boolean fromSmartAlarm){
+    public RingTime(long actual, long expected, long soundId, final boolean fromSmartAlarm, final List<AlarmExpansion> expansions){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
@@ -67,11 +78,12 @@ public class RingTime {
         this.expectedRingTimeUTC = expected;
         this.soundIds = new long[]{ soundId };
         this.fromSmartAlarm = fromSmartAlarm;
+        this.expansions = expansions;
 
     }
 
     public static RingTime createEmpty(){
-        return new RingTime(EMPTY, EMPTY, new long[0], false);
+        return new RingTime(EMPTY, EMPTY, new long[0], false, Lists.newArrayList());
     }
 
     @JsonIgnore
@@ -111,6 +123,7 @@ public class RingTime {
                 .add("expectedRingTimeUTC", new DateTime(expectedRingTimeUTC, DateTimeZone.UTC))
                 .add("soundIds", soundIds)
                 .add("fromSmartAlarm", fromSmartAlarm)
+                .add("expansions", expansions)
                 .toString();
     }
 }

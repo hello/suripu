@@ -13,13 +13,13 @@ public final class AlarmAction {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional int32 unix_time = 1;</code>
+     * <code>optional uint64 unix_time = 1;</code>
      */
     boolean hasUnixTime();
     /**
-     * <code>optional int32 unix_time = 1;</code>
+     * <code>optional uint64 unix_time = 1;</code>
      */
-    int getUnixTime();
+    long getUnixTime();
 
     /**
      * <code>optional string device_id = 2;</code>
@@ -36,22 +36,22 @@ public final class AlarmAction {
         getDeviceIdBytes();
 
     /**
-     * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+     * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
      */
     boolean hasRingOffsetFromNowInSecond();
     /**
-     * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+     * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
      */
-    int getRingOffsetFromNowInSecond();
+    long getRingOffsetFromNowInSecond();
 
     /**
-     * <code>optional int32 expansion_id = 4;</code>
+     * <code>optional uint64 expansion_id = 4;</code>
      */
     boolean hasExpansionId();
     /**
-     * <code>optional int32 expansion_id = 4;</code>
+     * <code>optional uint64 expansion_id = 4;</code>
      */
-    int getExpansionId();
+    long getExpansionId();
   }
   /**
    * Protobuf type {@code alarm_action}
@@ -107,7 +107,7 @@ public final class AlarmAction {
             }
             case 8: {
               bitField0_ |= 0x00000001;
-              unixTime_ = input.readInt32();
+              unixTime_ = input.readUInt64();
               break;
             }
             case 18: {
@@ -118,12 +118,12 @@ public final class AlarmAction {
             }
             case 24: {
               bitField0_ |= 0x00000004;
-              ringOffsetFromNowInSecond_ = input.readInt32();
+              ringOffsetFromNowInSecond_ = input.readUInt64();
               break;
             }
             case 32: {
               bitField0_ |= 0x00000008;
-              expansionId_ = input.readInt32();
+              expansionId_ = input.readUInt64();
               break;
             }
           }
@@ -167,17 +167,17 @@ public final class AlarmAction {
 
     private int bitField0_;
     public static final int UNIX_TIME_FIELD_NUMBER = 1;
-    private int unixTime_;
+    private long unixTime_;
     /**
-     * <code>optional int32 unix_time = 1;</code>
+     * <code>optional uint64 unix_time = 1;</code>
      */
     public boolean hasUnixTime() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional int32 unix_time = 1;</code>
+     * <code>optional uint64 unix_time = 1;</code>
      */
-    public int getUnixTime() {
+    public long getUnixTime() {
       return unixTime_;
     }
 
@@ -224,40 +224,40 @@ public final class AlarmAction {
     }
 
     public static final int RING_OFFSET_FROM_NOW_IN_SECOND_FIELD_NUMBER = 3;
-    private int ringOffsetFromNowInSecond_;
+    private long ringOffsetFromNowInSecond_;
     /**
-     * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+     * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
      */
     public boolean hasRingOffsetFromNowInSecond() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+     * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
      */
-    public int getRingOffsetFromNowInSecond() {
+    public long getRingOffsetFromNowInSecond() {
       return ringOffsetFromNowInSecond_;
     }
 
     public static final int EXPANSION_ID_FIELD_NUMBER = 4;
-    private int expansionId_;
+    private long expansionId_;
     /**
-     * <code>optional int32 expansion_id = 4;</code>
+     * <code>optional uint64 expansion_id = 4;</code>
      */
     public boolean hasExpansionId() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional int32 expansion_id = 4;</code>
+     * <code>optional uint64 expansion_id = 4;</code>
      */
-    public int getExpansionId() {
+    public long getExpansionId() {
       return expansionId_;
     }
 
     private void initFields() {
-      unixTime_ = 0;
+      unixTime_ = 0L;
       deviceId_ = "";
-      ringOffsetFromNowInSecond_ = 0;
-      expansionId_ = 0;
+      ringOffsetFromNowInSecond_ = 0L;
+      expansionId_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -273,16 +273,16 @@ public final class AlarmAction {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(1, unixTime_);
+        output.writeUInt64(1, unixTime_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, getDeviceIdBytes());
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeInt32(3, ringOffsetFromNowInSecond_);
+        output.writeUInt64(3, ringOffsetFromNowInSecond_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeInt32(4, expansionId_);
+        output.writeUInt64(4, expansionId_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -295,7 +295,7 @@ public final class AlarmAction {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, unixTime_);
+          .computeUInt64Size(1, unixTime_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -303,11 +303,11 @@ public final class AlarmAction {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(3, ringOffsetFromNowInSecond_);
+          .computeUInt64Size(3, ringOffsetFromNowInSecond_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, expansionId_);
+          .computeUInt64Size(4, expansionId_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -426,13 +426,13 @@ public final class AlarmAction {
 
       public Builder clear() {
         super.clear();
-        unixTime_ = 0;
+        unixTime_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000001);
         deviceId_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
-        ringOffsetFromNowInSecond_ = 0;
+        ringOffsetFromNowInSecond_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000004);
-        expansionId_ = 0;
+        expansionId_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
@@ -535,34 +535,34 @@ public final class AlarmAction {
       }
       private int bitField0_;
 
-      private int unixTime_ ;
+      private long unixTime_ ;
       /**
-       * <code>optional int32 unix_time = 1;</code>
+       * <code>optional uint64 unix_time = 1;</code>
        */
       public boolean hasUnixTime() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional int32 unix_time = 1;</code>
+       * <code>optional uint64 unix_time = 1;</code>
        */
-      public int getUnixTime() {
+      public long getUnixTime() {
         return unixTime_;
       }
       /**
-       * <code>optional int32 unix_time = 1;</code>
+       * <code>optional uint64 unix_time = 1;</code>
        */
-      public Builder setUnixTime(int value) {
+      public Builder setUnixTime(long value) {
         bitField0_ |= 0x00000001;
         unixTime_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 unix_time = 1;</code>
+       * <code>optional uint64 unix_time = 1;</code>
        */
       public Builder clearUnixTime() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        unixTime_ = 0;
+        unixTime_ = 0L;
         onChanged();
         return this;
       }
@@ -643,66 +643,66 @@ public final class AlarmAction {
         return this;
       }
 
-      private int ringOffsetFromNowInSecond_ ;
+      private long ringOffsetFromNowInSecond_ ;
       /**
-       * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+       * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
        */
       public boolean hasRingOffsetFromNowInSecond() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+       * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
        */
-      public int getRingOffsetFromNowInSecond() {
+      public long getRingOffsetFromNowInSecond() {
         return ringOffsetFromNowInSecond_;
       }
       /**
-       * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+       * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
        */
-      public Builder setRingOffsetFromNowInSecond(int value) {
+      public Builder setRingOffsetFromNowInSecond(long value) {
         bitField0_ |= 0x00000004;
         ringOffsetFromNowInSecond_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 ring_offset_from_now_in_second = 3;</code>
+       * <code>optional uint64 ring_offset_from_now_in_second = 3;</code>
        */
       public Builder clearRingOffsetFromNowInSecond() {
         bitField0_ = (bitField0_ & ~0x00000004);
-        ringOffsetFromNowInSecond_ = 0;
+        ringOffsetFromNowInSecond_ = 0L;
         onChanged();
         return this;
       }
 
-      private int expansionId_ ;
+      private long expansionId_ ;
       /**
-       * <code>optional int32 expansion_id = 4;</code>
+       * <code>optional uint64 expansion_id = 4;</code>
        */
       public boolean hasExpansionId() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional int32 expansion_id = 4;</code>
+       * <code>optional uint64 expansion_id = 4;</code>
        */
-      public int getExpansionId() {
+      public long getExpansionId() {
         return expansionId_;
       }
       /**
-       * <code>optional int32 expansion_id = 4;</code>
+       * <code>optional uint64 expansion_id = 4;</code>
        */
-      public Builder setExpansionId(int value) {
+      public Builder setExpansionId(long value) {
         bitField0_ |= 0x00000008;
         expansionId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 expansion_id = 4;</code>
+       * <code>optional uint64 expansion_id = 4;</code>
        */
       public Builder clearExpansionId() {
         bitField0_ = (bitField0_ & ~0x00000008);
-        expansionId_ = 0;
+        expansionId_ = 0L;
         onChanged();
         return this;
       }
@@ -733,9 +733,9 @@ public final class AlarmAction {
   static {
     String[] descriptorData = {
       "\n\022alarm_action.proto\"r\n\014alarm_action\022\021\n\t" +
-      "unix_time\030\001 \001(\005\022\021\n\tdevice_id\030\002 \001(\t\022&\n\036ri" +
-      "ng_offset_from_now_in_second\030\003 \001(\005\022\024\n\014ex" +
-      "pansion_id\030\004 \001(\005B*\n\033com.hello.suripu.api" +
+      "unix_time\030\001 \001(\004\022\021\n\tdevice_id\030\002 \001(\t\022&\n\036ri" +
+      "ng_offset_from_now_in_second\030\003 \001(\004\022\024\n\014ex" +
+      "pansion_id\030\004 \001(\004B*\n\033com.hello.suripu.api" +
       ".outputB\013AlarmAction"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =

@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.collect.Lists;
+
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -21,6 +23,6 @@ public class RingTimeTest {
     public void testInvalid(){
         final RingTime invalidRingTime = new RingTime(DateTime.now().plusMinutes(1).getMillis(),
                 DateTime.now().getMillis(),
-                0, true);
+                0, true, Lists.newArrayList());
     }
 }

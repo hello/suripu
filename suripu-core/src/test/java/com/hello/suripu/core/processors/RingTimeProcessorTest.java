@@ -1,6 +1,8 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.RingTime;
@@ -82,7 +84,8 @@ public class RingTimeProcessorTest {
                 Optional.of(new RingTime(new DateTime(2015,2,3,7,21,0, userTimeZone).getMillis(),
                         new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis(),
                         new long[0],
-                        true)),
+                        true,
+                    Lists.newArrayList())),
                 Optional.of(userTimeZone),
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
                 now.minusMillis(100).getMillis()
@@ -210,7 +213,8 @@ public class RingTimeProcessorTest {
                 Optional.of(new RingTime(new DateTime(2015,2,3,7,21,0, userTimeZone).getMillis(),
                         new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis(),
                         new long[0],
-                        true)),
+                        true,
+                    Lists.newArrayList())),
                 Optional.of(userTimeZone),
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
                 now.minusMillis(100).getMillis()
@@ -334,7 +338,8 @@ public class RingTimeProcessorTest {
                 Optional.of(new RingTime(new DateTime(2015,2,3,7,21,0, userTimeZone).getMillis(),
                         new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis(),
                         new long[0],
-                        true)),
+                        true,
+                    Lists.newArrayList())),
                 Optional.of(userTimeZone),
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
                 now.minusMillis(100).getMillis()
