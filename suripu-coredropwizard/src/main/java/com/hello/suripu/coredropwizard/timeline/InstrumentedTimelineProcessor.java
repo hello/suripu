@@ -352,7 +352,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         /*  GET THE TIMELINE! */
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
         final Set<String> featureFlips = getTimelineFeatureFlips(accountId);
-
+        final boolean useTimelineSleepDurationCheck = useCheckTimelineSleepDuration(accountId);
 
         for (final AlgorithmType alg : algorithmChain) {
             LOGGER.info("action=try_algorithm algorithm_type={}",alg);
@@ -366,8 +366,20 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged,featureFlips);
 
             //got a valid result? poof, we're out.
+            //but first check to see if we met the duration requirement, if not try alternative algorithm
             if (resultOptional.isPresent()) {
-                break;
+                if (useTimelineSleepDurationCheck) {
+                    final boolean sufficientDuration = timelineSafeguards.checkTimelineSleepDuration(accountId, resultOptional.get());
+                    if (sufficientDuration) {
+                        break;
+                    } else {
+                        resultOptional = Optional.absent();
+                    }
+
+                } else {
+                    break;
+                }
+
             }
         }
 
@@ -724,14 +736,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
-
-        //if there is no feedback, we have a "natural" timeline
-        //check if this natural timeline makes sense.  If not, set sleep score to zero.
-        if (feedbackList.isEmpty() && sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
-            LOGGER.warn("action=zeroing-score account_id={} reason=sleep-duration-too-short sleep_duration={}", accountId, sleepStats.sleepDurationInMinutes);
-            sleepScore = 0;
-        }
-
 
         boolean isValidSleepScore = sleepScore > 0;
 

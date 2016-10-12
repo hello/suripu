@@ -4,21 +4,26 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import junit.framework.TestCase;
+import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by benjo on 5/7/15.
  */
@@ -325,9 +330,32 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(remapped.get(2).getOffsetMillis(),1);
         TestCase.assertEquals(remapped.get(3).getOffsetMillis(),2);
         TestCase.assertEquals(remapped.get(4).getOffsetMillis(),3);
+    }
+    @Test
+    public void testCheckTimelineDuration(){
+        final TimelineSafeguards safeguards = new TimelineSafeguards();
+
+        final Long testAccount = 1001L;
+        final AlgorithmType testAlg = AlgorithmType.NEURAL_NET;
+        final List<Event> testExtraEvents = new ArrayList<>();
+        List<Event> testMainEvents = new ArrayList<>();
+        TimelineAlgorithmResult testResults = new TimelineAlgorithmResult(testAlg, testMainEvents, testExtraEvents);
+        boolean sufficientDuration = safeguards.checkTimelineSleepDuration(testAccount, testResults);
+        assertThat(sufficientDuration, is(false));
 
 
+        testMainEvents.add(getEvent(Event.Type.SLEEP, DateTime.now().minusMinutes(TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES).getMillis()));
+        testMainEvents.add(getEvent(Event.Type.WAKE_UP, DateTime.now().getMillis()));
+        testResults = new TimelineAlgorithmResult(testAlg, testMainEvents, testExtraEvents);
+        sufficientDuration = safeguards.checkTimelineSleepDuration(testAccount, testResults);
+        assertThat(sufficientDuration, is(false));
 
+        testMainEvents = new ArrayList<>();
+        testMainEvents.add(getEvent(Event.Type.SLEEP, DateTime.now().minusMinutes(TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES + 1).getMillis()));
+        testMainEvents.add(getEvent(Event.Type.WAKE_UP, DateTime.now().getMillis()));
+        testResults = new TimelineAlgorithmResult(testAlg, testMainEvents, testExtraEvents);
+        sufficientDuration = safeguards.checkTimelineSleepDuration(testAccount, testResults);
+        assertThat(sufficientDuration, is(true));
 
     }
 }

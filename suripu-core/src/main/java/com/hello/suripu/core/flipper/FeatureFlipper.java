@@ -120,6 +120,7 @@ public class FeatureFlipper {
     public final static String SOUND_INFO_TIMELINE = "sound_info_timeline";
     public final static String STOP_PROCESS_TIMELINE_FROM_WORKER = "stop_process_timeline_from_worker";
 
+    public final static String TIMELINE__SLEEP_DURATION_CHECK = "timeline_sleep_duration_check";
     public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
     public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";

@@ -193,4 +193,9 @@ public class FeatureFlippedProcessor {
     protected Boolean useSleepScoreV5(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V5, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean useCheckTimelineSleepDuration(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE__SLEEP_DURATION_CHECK, accountId, Collections.EMPTY_LIST);
+    }
+
 }
