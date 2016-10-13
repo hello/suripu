@@ -357,25 +357,18 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             LOGGER.info("action=try_algorithm algorithm_type={}",alg);
             final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
 
-            if (!timelineAlgorithm.isPresent()) {
-                //assume error reporting is happening in alg, no need to report it here
-                continue;
-            }
-
-            resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged,featureFlips);
-
-            //got a valid result? poof, we're out.
-            //but first check to see if we met the duration requirement, if not try alternative algorithm
-            if (resultOptional.isPresent()) {
-                final boolean sufficientDuration = timelineSafeguards.checkTimelineSleepDuration(accountId, resultOptional.get());
-                if (sufficientDuration) {
-                    break;
-                } else {
-                    resultOptional = Optional.absent();
+            if (timelineAlgorithm.isPresent()) {
+                resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged, featureFlips);
+                //got a valid result?
+                //check to see if the duration requirement are met, if not try the next algorithm
+                if (resultOptional.isPresent()) {
+                    final boolean sufficientDuration = timelineSafeguards.checkTimelineSleepDuration(accountId, resultOptional.get());
+                    if (sufficientDuration) {
+                        break;
+                    } else {
+                        resultOptional = Optional.absent();
+                    }
                 }
-
-            } else {
-                break;
             }
         }
 
