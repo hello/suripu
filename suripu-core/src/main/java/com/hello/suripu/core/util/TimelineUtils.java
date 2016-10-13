@@ -1513,7 +1513,7 @@ public class TimelineUtils {
         final float sleepDuration = (int) ((double) (wakeUpTimestamp - fallAsleepTimestamp) / 60000.0);
         final int requiredSleepDuration = 120; // taking into account sleep window padding - this requires a minimal of 3 hours of sleep with no motion
         final int sleepWindowPadding = 30; //excludes first 30 and last 30 minutes of sleeps
-        final int minMotionCount = 2; // 99.91 % of nights with over 180 mins of duration fit this criteria
+        final int minMotionCount = 2;
         int motionCount = 0;
 
         // Compute first to last motion time delta

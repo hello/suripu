@@ -113,7 +113,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     protected Histogram scoreDiff;
 
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
-    public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 10;
+    public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 9;
     public final static float MIN_FRACTION_UNIQUE_MOTION = 0.8f;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
