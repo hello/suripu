@@ -17,7 +17,7 @@ public class AccountUtilsTest {
     public void test_noDob() {
         final Account account = new Account.Builder()
                 .withCreated(DateTime.now())
-                .withDOB(DateTime.now())
+                .withDOB(DateTime.now().withTimeAtStartOfDay())
                 .build();
 
         final Optional<Account> accountOptional = Optional.of(account);
@@ -38,7 +38,7 @@ public class AccountUtilsTest {
     public void test_dob() {
         final Account account = new Account.Builder()
                 .withCreated(DateTime.now())
-                .withDOB(DateTime.now().minusYears(20))
+                .withDOB(DateTime.now().minusYears(20).withTimeAtStartOfDay())
                 .build();
 
         final Optional<Account> accountOptional = Optional.of(account);
