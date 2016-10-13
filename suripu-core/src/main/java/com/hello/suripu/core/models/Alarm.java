@@ -185,7 +185,11 @@ public class Alarm {
             this.alarmSource = alarmSource;
         }
 
-        this.expansions = expansions;
+        if(expansions == null) {
+            this.expansions = Lists.newArrayList();
+        } else {
+            this.expansions = expansions;
+        }
 
     }
 
