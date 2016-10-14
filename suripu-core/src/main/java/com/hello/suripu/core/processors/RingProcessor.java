@@ -56,8 +56,8 @@ public class RingProcessor {
                 if(lastTimestamp != 0){
                     // If there is gap in data.
                     if(motion.timestamp - lastTimestamp > 2 * DateTimeConstants.MILLIS_PER_MINUTE){
-                       long diff = motion.timestamp - lastTimestamp;
-                       long insertCount = diff / DateTimeConstants.MILLIS_PER_MINUTE;
+                        long diff = motion.timestamp - lastTimestamp;
+                        long insertCount = diff / DateTimeConstants.MILLIS_PER_MINUTE;
                         for(int i = 0; i < insertCount; i++){
                             this.motionAmplitudes.add(new AmplitudeData(lastTimestamp + (i+1) * DateTimeConstants.MILLIS_PER_MINUTE, 0, motion.offsetMillis));
                         }
@@ -203,13 +203,9 @@ public class RingProcessor {
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
                                                                final PillDataDAODynamoDB pillDataDAODynamoDB,
-                                                               final RolloutClient feature){
+                                                               final boolean useOnDuration){
 
         Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
-        if (feature != null && feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM_TEST_VALUES, accountId, Collections.EMPTY_LIST)) {
-            progressiveWindow = 7;
-        }
-
         final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(progressiveWindow);
 
         final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(accountId,
@@ -221,19 +217,15 @@ public class RingProcessor {
         }
         final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionWithinProgressiveWindow);
         final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionWithinProgressiveWindow);
-
+        final List<AmplitudeData> onDurations = TrackerMotionUtils.trackerMotionToOnDuration(motionWithinProgressiveWindow);
+        //removed FF all users FF'd
         Boolean isUserAwake = false;
-        if (feature != null && feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM_TEST_VALUES, accountId, Collections.EMPTY_LIST)) {
-            isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(
+        isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(
                 amplitudeData,
-                kickOffCounts,
-                SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD,
-                4500,
-                SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT
-            );
-        } else {
-            isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts);
-        }
+                kickOffCounts,onDurations,
+                SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG,
+                SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT, SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD, useOnDuration
+        );
 
         if(isUserAwake){
             // TODO: STATE CHECK NEEDED FOR ROBUST IMPLEMENTATION
@@ -264,14 +256,15 @@ public class RingProcessor {
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
         if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
-            if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
-                    hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
+            //removed FF, at 100 percent
+            if(hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
+
+                final boolean useOnDuration = feature.userFeatureActive(FeatureFlipper.SMART_ALARM_ON_DURATION, userInfo.accountId, Collections.EMPTY_LIST);
 
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
-                        pillDataDAODynamoDB,
-                        feature);
+                        pillDataDAODynamoDB, useOnDuration);
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
                     smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
