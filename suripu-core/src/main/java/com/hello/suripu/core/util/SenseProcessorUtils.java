@@ -106,6 +106,35 @@ public class SenseProcessorUtils {
     public static String rgb(int r, int g, int b) {
         return String.format("#%04x%04x%04x", r, g, b);
     }
+
+    public static HelloRGB parseRGB(final String rgb) {
+        if(rgb.length() != 13) {
+            return HelloRGB.empty();
+        }
+
+        int r = Integer.parseInt(rgb.substring(1, 5), 16);
+        int g = Integer.parseInt(rgb.substring(5, 9), 16);
+        int b = Integer.parseInt(rgb.substring(9, 13), 16);
+
+        return new HelloRGB(r,g,b);
+    }
+
+    public static class HelloRGB {
+        public final int r;
+        public final int g;
+        public final int b;
+
+        public HelloRGB(int r, int g, int b) {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+        }
+
+        public static HelloRGB empty() {
+            return new HelloRGB(0,0,0);
+        }
+    }
+
     /**
      * @return A Builder with the appropriate sensor data set from the periodicData (ambientTemp, ambientLight, etc)
      */
