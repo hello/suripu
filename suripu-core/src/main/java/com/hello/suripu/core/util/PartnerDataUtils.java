@@ -390,13 +390,16 @@ public class PartnerDataUtils {
 
         int i = 0;
 
-        for (TrackerMotion userMotion : userOriginalTrackerMotions){
-            long currentUserMotionTS = userMotion.timestamp;
-            while (currentUserMotionTS > currentPartnerMotionTS + DateTimeConstants.MILLIS_PER_MINUTE & i < numPartnerMotions - 1){
+        for (final TrackerMotion userMotion : userOriginalTrackerMotions){
+            final long currentUserMotionTS = userMotion.timestamp;
+            //iterates through partner tracker motion if user current ts is ahead of partner current ts until partner trackermotion is exhaused.
+            //ensures that user motion ts is compared to the next / closest parter motion ts
+            while (currentUserMotionTS > currentPartnerMotionTS + DateTimeConstants.MILLIS_PER_MINUTE && i < numPartnerMotions - 1){
                 i+=1;
                 currentPartnerMotionTS = partnerOriginalTrackerMotions.get(i).timestamp;
             }
-            if (currentUserMotionTS >= currentPartnerMotionTS - DateTimeConstants.MILLIS_PER_MINUTE & currentUserMotionTS <= currentPartnerMotionTS + DateTimeConstants.MILLIS_PER_MINUTE){
+            //if user motion ts is with in 1 minute of the partner motion ts, then the motion is not considered unique
+            if (currentUserMotionTS >= currentPartnerMotionTS - DateTimeConstants.MILLIS_PER_MINUTE && currentUserMotionTS <= currentPartnerMotionTS + DateTimeConstants.MILLIS_PER_MINUTE){
                 numUniqueUserMotions -= 1;
             }
         }

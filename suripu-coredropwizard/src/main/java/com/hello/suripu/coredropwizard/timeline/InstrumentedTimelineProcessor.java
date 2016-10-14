@@ -792,9 +792,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //If greater than MinTracker Motion Count - continue
         // if FF for lower motion count threshold, if between lower motion threshold and high motion threshold, check percent unique motions for parter data.
         // if lower than lower motion count threshold, reject
-        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT & !useLowerMotionCountThreshold ){
+        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT && !useLowerMotionCountThreshold ){
             return TimelineError.NOT_ENOUGH_DATA;
-        } else if (originalMotionData.size() >= MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD & originalMotionData.size() < MIN_TRACKER_MOTION_COUNT) {
+        } else if (originalMotionData.size() >= MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD && originalMotionData.size() < MIN_TRACKER_MOTION_COUNT) {
             final float percentUniqueMotions = PartnerDataUtils.getPercentUniqueMovements(originalMotionData, originalPartnerTrackerMotionData);
 
             if (percentUniqueMotions < MIN_FRACTION_UNIQUE_MOTION){
