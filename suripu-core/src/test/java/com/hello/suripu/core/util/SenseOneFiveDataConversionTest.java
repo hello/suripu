@@ -212,12 +212,34 @@ public class SenseOneFiveDataConversionTest {
     }
 
     @Test
+    public void testVOC_two() {
+
+        List<Integer> sense15tvoc_raw = Lists.newArrayList(3000, 3500, 4000, 5000);
+        for (final int tvoc_raw : sense15tvoc_raw) {
+            final float mugMcube = SenseOneFiveDataConversion.convertRawToVOC(tvoc_raw);
+            assertThat(mugMcube < 4000, is(Boolean.TRUE));
+            assertThat(mugMcube > 2500, is(Boolean.TRUE));
+        }
+    }
+
+    @Test
     public void testCO2_one() throws IOException {
 
         final List<Integer> sense15co2_raw = readSenseData("fixtures/calibration/sense15co2_raw.csv", "sense 1.5");
         for (final int co2_raw : sense15co2_raw) {
             final float ppm = SenseOneFiveDataConversion.convertRawToCO2(co2_raw);
             assertThat(ppm < ALERT_CO2_HIGH, is(Boolean.TRUE));
+        }
+    }
+
+    @Test
+    public void testCO2_two() {
+
+        List<Integer> sense15co2_raw = Lists.newArrayList(1800, 2000, 2500, 5000);
+        for (final int co2_raw : sense15co2_raw) {
+            final float ppm = SenseOneFiveDataConversion.convertRawToCO2(co2_raw);
+            assertThat(ppm < 2000, is(Boolean.TRUE));
+            assertThat(ppm > 1600, is(Boolean.TRUE));
         }
     }
 

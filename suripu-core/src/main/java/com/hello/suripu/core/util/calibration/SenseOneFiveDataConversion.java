@@ -5,6 +5,8 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.util.DataUtils;
 
+import java.util.Random;
+
 /**
  * Created by jyfan on 9/20/16.
  */
@@ -43,6 +45,12 @@ public class SenseOneFiveDataConversion {
     public static final float MIN_AUDIO_DB = 25.0f; //our reported noise floor (although I doubt we're actually going to go below this)
     public static final float MAX_AUDIO_DB = 160.f; //arbitrarily a very very very loud noise
     public static final float AUDIO_FLOAT_TO_INT_MULTIPLIER = 1000.0f; // 3 decimal places
+
+    //TVOC and CO2 constants
+    private static final int MAX_VOC = 3000;
+    private static final int VOC_VARIANCE = 10;
+    private static final int MAX_CO2 = 1800;
+    private static final int CO2_VARIANCE = 10;
 
     public static float convertRawRGBCToAmbientLight(final int rRaw, final int gRaw, final int bRaw, final int clear, final Device.Color color) {
 
@@ -103,6 +111,12 @@ public class SenseOneFiveDataConversion {
             return 0.0f;
         }
 
+        if (vocRaw > MAX_VOC) {
+            final Random random = new Random();
+            final int wnoise = (int) (random.nextGaussian() * Math.sqrt(VOC_VARIANCE));
+            return (float) MAX_VOC + wnoise;
+        }
+
         return (float) vocRaw;
     }
 
@@ -110,6 +124,12 @@ public class SenseOneFiveDataConversion {
     public static float convertRawToCO2(final int co2Raw) {
         if (co2Raw <= 0) {
             return 0.0f;
+        }
+
+        if (co2Raw > MAX_CO2) {
+            final Random random = new Random();
+            final int wnoise = (int) (random.nextGaussian() * Math.sqrt(CO2_VARIANCE));
+            return (float) MAX_CO2 + wnoise;
         }
 
         return (float) co2Raw;
