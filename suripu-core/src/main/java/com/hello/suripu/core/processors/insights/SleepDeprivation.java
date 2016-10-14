@@ -45,6 +45,7 @@ public class SleepDeprivation {
         final DateTime queryEndDate = currentTimeLocal.minusDays(1);//query end date is last night
 
         if (!optionalAccount.isPresent()) {
+            LOGGER.error("error=account-absent insight=sleep-deprivation account_id={}", accountId);
             return Optional.absent();
         }
 
