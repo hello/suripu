@@ -112,7 +112,7 @@ public class SenseOneFiveDataConversion {
         }
 
         if (vocRaw > MAX_VOC) {
-            final Random random = new Random();
+            final Random random = new Random(vocRaw);
             final int wnoise = (int) (random.nextGaussian() * Math.sqrt(VOC_VARIANCE));
             return (float) MAX_VOC + wnoise;
         }
@@ -127,7 +127,7 @@ public class SenseOneFiveDataConversion {
         }
 
         if (co2Raw > MAX_CO2) {
-            final Random random = new Random();
+            final Random random = new Random(co2Raw);
             final int wnoise = (int) (random.nextGaussian() * Math.sqrt(CO2_VARIANCE));
             return (float) MAX_CO2 + wnoise;
         }
