@@ -2,13 +2,13 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
-import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -241,6 +241,21 @@ public class TimelineSafeguards {
         }
 
         return TimelineError.NO_ERROR;
+    }
+
+    public boolean checkTimelineSleepDuration(final Long accountId, final TimelineAlgorithmResult result){
+        final ImmutableMap<Event.Type, Event> mainEvents = result.mainEvents;
+        int sleepDuration = 0;
+        if (mainEvents.containsKey(Event.Type.SLEEP) && mainEvents.containsKey(Event.Type.WAKE_UP)){
+            final long sleepTime = mainEvents.get(Event.Type.SLEEP).getStartTimestamp();
+            final long wakeTime = mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp();
+            sleepDuration = (int) (wakeTime - sleepTime) / DateTimeConstants.MILLIS_PER_MINUTE;
+            if (sleepDuration > MINIMUM_SLEEP_DURATION_MINUTES){
+                return true;
+            }
+        }
+        LOGGER.warn("action=discarding-algorithm-results account_id={} reason=sleep-duration-too-short sleep_duration={} algorithm={}", accountId, sleepDuration, result.algorithmType);
+        return false;
     }
 
 }
