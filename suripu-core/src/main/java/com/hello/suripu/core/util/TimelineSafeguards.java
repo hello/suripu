@@ -246,7 +246,7 @@ public class TimelineSafeguards {
     public boolean checkTimelineSleepDuration(final Long accountId, final TimelineAlgorithmResult result){
         final ImmutableMap<Event.Type, Event> mainEvents = result.mainEvents;
         int sleepDuration = 0;
-        if (mainEvents.containsKey(Event.Type.SLEEP) & mainEvents.containsKey(Event.Type.WAKE_UP)){
+        if (mainEvents.containsKey(Event.Type.SLEEP) && mainEvents.containsKey(Event.Type.WAKE_UP)){
             final long sleepTime = mainEvents.get(Event.Type.SLEEP).getStartTimestamp();
             final long wakeTime = mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp();
             sleepDuration = (int) (wakeTime - sleepTime) / DateTimeConstants.MILLIS_PER_MINUTE;
