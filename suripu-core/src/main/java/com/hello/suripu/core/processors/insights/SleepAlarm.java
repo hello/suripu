@@ -63,7 +63,12 @@ public class SleepAlarm {
         }
 
         final Optional<Account> account = accountReadDAO.getById(accountId);
-        final Integer userAge = AccountUtils.getUserAgeYears(account);
+        if (!account.isPresent()) {
+            LOGGER.error("error=account-absent insight=sleep-alarm account_id={}", accountId);
+            return Optional.absent();
+        }
+
+        final Integer userAge = AccountUtils.getUserAgeYears(account.get());
 
         final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge, timeFormat);
         return card;

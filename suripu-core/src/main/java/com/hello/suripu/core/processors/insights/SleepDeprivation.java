@@ -15,6 +15,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.cert.PKIXRevocationChecker;
 import java.util.List;
 
 /**
@@ -43,7 +44,11 @@ public class SleepDeprivation {
         final DateTime currentTimeLocal = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset);
         final DateTime queryEndDate = currentTimeLocal.minusDays(1);//query end date is last night
 
-        final int userAge = AccountUtils.getUserAgeYears(optionalAccount);
+        if (!optionalAccount.isPresent()) {
+            return Optional.absent();
+        }
+
+        final int userAge = AccountUtils.getUserAgeYears(optionalAccount.get());
 
         if (userAge < MIN_AGE || userAge > MAX_AGE){
             return Optional.absent();
