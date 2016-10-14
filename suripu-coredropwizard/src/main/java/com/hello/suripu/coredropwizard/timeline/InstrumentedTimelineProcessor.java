@@ -372,6 +372,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
 
+        //TODO perform all post-timeline checks here
+
         //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
         if (!resultOptional.isPresent()) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms",accountId, targetDate.toDate());
@@ -390,16 +392,26 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             extraEvents = Collections.EMPTY_LIST;
         }
 
-        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC, result, sensorData);
+        final Optional<PopulatedTimelines> populateTimelinesOptional = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC, result, sensorData);
 
-
-        if (!populateTimelines.isValidSleepScore) {
+        if (!populateTimelinesOptional.isPresent()) {
             log.addMessage(TimelineError.INVALID_SLEEP_SCORE);
             LOGGER.warn("invalid sleep score");
             return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
         }
 
-        return TimelineResult.create(populateTimelines.timelines, log);
+        final PopulatedTimelines populatedTimelines = populateTimelinesOptional.get();
+
+        /*  UPDATE SLEEP STATS IN DYNAMO AFTER ALL CHECKS OF TIMELINE VALIDITY */
+        // Always update stats and scores to Dynamo
+        final Integer userOffsetMillis = sensorData.timezoneOffsetMillis;
+        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
+                targetDate.withTimeAtStartOfDay(), populatedTimelines.sleepScore.value, populatedTimelines.sleepScore, populatedTimelines.sleepStats, userOffsetMillis);
+
+        LOGGER.info("action=updated-stats-score updated={} account_id={} score={}, stats={}", updatedStats, accountId, populatedTimelines.sleepScore, populatedTimelines.sleepStats);
+
+
+        return TimelineResult.create(populateTimelinesOptional.get().timelines, log);
 
     }
 
@@ -555,16 +567,18 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     private static class PopulatedTimelines {
         public final List<Timeline> timelines;
-        public final boolean isValidSleepScore;
+        public final SleepScore sleepScore;
+        public final SleepStats sleepStats;
 
-        public PopulatedTimelines(List<Timeline> timelines, boolean isValidSleepScore) {
+        public PopulatedTimelines(List<Timeline> timelines, final SleepScore sleepScore,final SleepStats sleepStats) {
             this.timelines = timelines;
-            this.isValidSleepScore = isValidSleepScore;
+            this.sleepScore = sleepScore;
+            this.sleepStats = sleepStats;
         }
     }
 
 
-    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimelineAlgorithmResult result,
+    public Optional<PopulatedTimelines> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimelineAlgorithmResult result,
                                                final OneDaysSensorData sensorData) {
 
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
@@ -723,27 +737,32 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        final Optional<SleepScore> sleepScoreOptional = getSleepScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
+        if (!sleepScoreOptional.isPresent()) {
+            LOGGER.error("action=returning-no-timeline reason=no-sleep-score");
+            return Optional.absent();
+        }
+
+        final SleepScore sleepScore = sleepScoreOptional.get();
+
+        //if sleep score is invalid and there is no user feedback (i.e. timeline wasn't corrected into a weird state)
+        if (sleepScore.value <= 0 && feedbackList.isEmpty() ) {
+            LOGGER.error("action=returning-no-timeline reason=zero-sleep-score");
+            return Optional.absent();
+        }
+
+        LOGGER.info("action=compute_sleep_score score={} account_id={}", sleepScore.value,accountId);
+
+        //TODO move to post-timeline checks
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
         if (feedbackList.isEmpty() && sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
             LOGGER.warn("action=zeroing-score account_id={} reason=sleep-duration-too-short sleep_duration={}", accountId, sleepStats.sleepDurationInMinutes);
-            sleepScore = 0;
-        }
-
-
-        boolean isValidSleepScore = sleepScore > 0;
-
-        //if there's feedback, sleep score can never be invalid
-        if (!feedbackList.isEmpty()) {
-            isValidSleepScore = true;
+            return Optional.absent();
         }
 
         final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
-
-        LOGGER.info("action=compute_sleep_score score={} account_id={}", sleepScore,accountId);
-
 
         final List<Insight> insights;
         if (hasTimelineInSleepInsights(accountId)) {
@@ -760,9 +779,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             reversedSegments = sensorDataTimezoneMap.remapSleepSegmentOffsets(reversedSegments);
         }
 
-        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScore.value, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
-        return new PopulatedTimelines(Lists.newArrayList(timeline),isValidSleepScore);
+        return Optional.of(new PopulatedTimelines(Lists.newArrayList(timeline),sleepScore,sleepStats));
     }
 
     /*
@@ -937,7 +956,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
      * @param sleepStats
      * @return
      */
-    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions,
+    private Optional<SleepScore> getSleepScore(final List<TrackerMotion> trackerMotions,
                                              final List<TrackerMotion> originalTrackerMotions,
                                              final int numberSoundEvents,
                                              final AllSensorSampleList sensors,
@@ -960,7 +979,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
                 // if motion score is zero, something is not quite right, don't save score
                 LOGGER.error("action=no-motion-score-generated: account_id={} night_of={}", accountId, targetDate);
-                return 0;
+                return Optional.absent();
             }
         }
 
@@ -1026,13 +1045,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             scoreDiff.update(sleepScoreDiff);
         }
 
-        // Always update stats and scores to Dynamo
-        final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
-        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
-                targetDate.withTimeAtStartOfDay(), sleepScore.value, sleepScore, sleepStats, userOffsetMillis);
-
-        LOGGER.debug("action=updated-stats-score updated={} account_id={} score={}, stats={}", updatedStats, accountId, sleepScore, sleepStats);
-        return sleepScore.value;
+        return Optional.of(sleepScore);
     }
 
     private static SleepScore computeSleepScoreV2(final int userAge, final SleepStats sleepStats, final Integer environmentScore, final MotionScore motionScore){
