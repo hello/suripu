@@ -35,7 +35,7 @@ public class AlarmExpansion {
             return false;
         }
 
-        final AlarmExpansion sound = (AlarmExpansion) other;
-        return Objects.equal(sound.id, this.id);
+        final AlarmExpansion expansion = (AlarmExpansion) other;
+        return Objects.equal(expansion.id, this.id);
     }
 }
