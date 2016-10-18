@@ -5,7 +5,6 @@ import com.hello.suripu.core.models.TrackerMotion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -78,13 +77,13 @@ public class OutlierFilter {
 
         TrackerMotion prev = null;
         final List<MotionGroupsWithDuration> groupsWithDurations = Lists.newArrayList();
-
+        //creates motion groups separated by 2 hours
         for (final Iterator<TrackerMotion> it = realPoints.iterator(); it.hasNext(); ) {
             final TrackerMotion m = it.next();
 
             if (prev != null) {
                 final long tdiff = m.timestamp - prev.timestamp;
-
+                //tdiff > 2 hours
                 if (tdiff  > outlierGuardDurationMillis) {
                     groupsWithDurations.add(new MotionGroupsWithDuration(currentGroupMotions));
                     currentGroupMotions = Lists.newArrayList();
