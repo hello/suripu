@@ -802,12 +802,14 @@ public class TimelineUtils {
      * @param sleepStats
      * @return
      */
-    public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents) {
+    public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents, final boolean useUninterruptedDuration) {
 
         final Integer percentageOfSoundSleep = Math.round((float) sleepStats.soundSleepDurationInMinutes /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
-        final double soundDurationInHours = sleepStats.uninterruptedSleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
-
+        double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double) DateTimeConstants.MINUTES_PER_HOUR;
+        if (useUninterruptedDuration) {
+            soundDurationInHours = sleepStats.uninterruptedSleepDurationInMinutes / (double) DateTimeConstants.MINUTES_PER_HOUR;
+        }
         // report in-bed time
         String message = String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
         if(!sleepStats.isInBedDuration){

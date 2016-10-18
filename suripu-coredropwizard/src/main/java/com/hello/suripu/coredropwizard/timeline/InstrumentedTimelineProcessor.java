@@ -737,7 +737,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             isValidSleepScore = true;
         }
 
-        final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
+        final boolean useUninterruptedDuration = useUninterruptedDuration(accountId);
+        final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents, useUninterruptedDuration);
 
         LOGGER.info("action=compute_sleep_score score={} account_id={}", sleepScore,accountId);
 
