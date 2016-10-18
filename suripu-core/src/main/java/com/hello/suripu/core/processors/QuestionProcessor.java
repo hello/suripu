@@ -18,6 +18,7 @@ import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.TimeZoneHistory;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
@@ -206,7 +207,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
             hasTimeline = Boolean.FALSE;
         } else {
             final DateTime yesterdayLocal = todayLocal.minusDays(1);
-            final Optional<AggregateSleepStats> sleepStatOptional = this.sleepStatsDAODynamoDB.getSingleStat(accountId, yesterdayLocal.toString());
+            final String yesterdayLocalString = DateTimeUtil.dateToYmdString(yesterdayLocal);
+            final Optional<AggregateSleepStats> sleepStatOptional = this.sleepStatsDAODynamoDB.getSingleStat(accountId, yesterdayLocalString);
             hasTimeline = sleepStatOptional.isPresent();
         }
 
