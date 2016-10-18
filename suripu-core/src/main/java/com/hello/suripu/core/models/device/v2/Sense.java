@@ -68,19 +68,14 @@ public class Sense {
 
     private final HardwareVersion hardwareVersion;
 
-    @JsonProperty("is_primary_account")
-    public final boolean primaryAccount() {
-        return isPrimaryAccount;
-    }
-
     @JsonProperty("hw_version")
     public HumanReadableHardwareVersion hardwareVersion() {
         return readableHwVersion.getOrDefault(hardwareVersion, HumanReadableHardwareVersion.UNKNOWN);
     }
 
-    private final boolean isPrimaryAccount;
 
-    private Sense(final DeviceAccountPair pair, final String firmwareVersionOptional, final State state, final Optional<DateTime> lastUpdatedOptional, final Color color, final Optional<WifiInfo> wifiInfoOptional, final HardwareVersion hardwareVersion, final boolean isPrimaryAccount) {
+
+    private Sense(final DeviceAccountPair pair, final String firmwareVersionOptional, final State state, final Optional<DateTime> lastUpdatedOptional, final Color color, final Optional<WifiInfo> wifiInfoOptional, final HardwareVersion hardwareVersion) {
         this.internalId = pair.internalDeviceId;
         this.externalId = pair.externalDeviceId;
         this.firmwareVersionOptional = firmwareVersionOptional;
@@ -89,23 +84,22 @@ public class Sense {
         this.color = color;
         this.wifiInfoOptional = wifiInfoOptional;
         this.hardwareVersion = hardwareVersion;
-        this.isPrimaryAccount = isPrimaryAccount;
     }
 
     public static Sense create(final DeviceAccountPair senseAccountPair, final Optional<DeviceStatus> senseStatusOptional, Color color, final Optional<WifiInfo> wifiInfoOptional, final HardwareVersion hardwareVersion) {
         if (!senseStatusOptional.isPresent()) {
-            return new Sense(senseAccountPair, DEFAULT_FW_VERSION, State.UNKNOWN, Optional.<DateTime>absent(), color, wifiInfoOptional, hardwareVersion, false);
+            return new Sense(senseAccountPair, DEFAULT_FW_VERSION, State.UNKNOWN, Optional.<DateTime>absent(), color, wifiInfoOptional, hardwareVersion);
         }
         final DeviceStatus senseStatus = senseStatusOptional.get();
-        return new Sense(senseAccountPair, senseStatus.firmwareVersion, State.NORMAL, Optional.of(senseStatus.lastSeen), color, wifiInfoOptional, hardwareVersion, false);
+        return new Sense(senseAccountPair, senseStatus.firmwareVersion, State.NORMAL, Optional.of(senseStatus.lastSeen), color, wifiInfoOptional, hardwareVersion);
     }
 
     public static Sense create(final DeviceAccountPair senseAccountPair, final Optional<DeviceStatus> senseStatusOptional, final Optional<WifiInfo> wifiInfoOptional, final SenseMetadata metadata) {
         final boolean isPrimary = metadata.hasPrimaryAccountId() && (senseAccountPair.accountId.equals(metadata.primaryAccountId()));
         if (!senseStatusOptional.isPresent()) {
-            return new Sense(senseAccountPair, DEFAULT_FW_VERSION, State.UNKNOWN, Optional.<DateTime>absent(), metadata.color(), wifiInfoOptional, metadata.hardwareVersion(), isPrimary);
+            return new Sense(senseAccountPair, DEFAULT_FW_VERSION, State.UNKNOWN, Optional.<DateTime>absent(), metadata.color(), wifiInfoOptional, metadata.hardwareVersion());
         }
         final DeviceStatus senseStatus = senseStatusOptional.get();
-        return new Sense(senseAccountPair, senseStatus.firmwareVersion, State.NORMAL, Optional.of(senseStatus.lastSeen), metadata.color(), wifiInfoOptional, metadata.hardwareVersion(), isPrimary);
+        return new Sense(senseAccountPair, senseStatus.firmwareVersion, State.NORMAL, Optional.of(senseStatus.lastSeen), metadata.color(), wifiInfoOptional, metadata.hardwareVersion());
     }
 }

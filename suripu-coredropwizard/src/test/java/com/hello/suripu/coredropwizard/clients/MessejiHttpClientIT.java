@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.hello.messeji.api.AudioCommands;
 import com.hello.messeji.api.Messeji;
+import com.hello.suripu.core.messeji.Sender;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
 import io.dropwizard.client.HttpClientBuilder;
@@ -43,7 +44,7 @@ public class MessejiHttpClientIT {
     @Test
     public void testPlayAudio() throws Exception {
         final Optional<Long> idOptional = client.playAudio(
-                "sense1", MessejiClient.Sender.fromAccountId(1L), System.nanoTime(), Duration.create(1L, "duration", 30),
+                "sense1", Sender.fromAccountId(1L), System.nanoTime(), Duration.create(1L, "duration", 30),
                 Sound.create(1L, "preview", "sound", "path", "url"), 2, 2, 50, 2);
         assertThat(idOptional.isPresent(), is(true));
     }
@@ -51,7 +52,7 @@ public class MessejiHttpClientIT {
     @Test
     public void testStopAudio() throws Exception {
         final Optional<Long> idOptional = client.stopAudio(
-                "sense1", MessejiClient.Sender.fromAccountId(1L), System.nanoTime(), 3);
+                "sense1", Sender.fromAccountId(1L), System.nanoTime(), 3);
         assertThat(idOptional.isPresent(), is(true));
     }
 }

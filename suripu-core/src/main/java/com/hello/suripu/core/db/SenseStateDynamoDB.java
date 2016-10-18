@@ -5,10 +5,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.core.db.dynamo.Attribute;
@@ -20,7 +18,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,7 +42,9 @@ public class SenseStateDynamoDB {
         PLAYING_AUDIO("playing_audio", "B"),
         SLEEP_SOUND_DURATION("duration", "N"),
         SLEEP_SOUND_FILE("sound", "S"),
-        SLEEP_SOUND_VOLUME("volume", "N");
+        SLEEP_SOUND_VOLUME("volume", "N"),
+        VOICE_ENABLED("voice_enabled", "B"),
+        SYSTEM_VOLUME("sys_volume", "N");
 
         private final String name;
         private final String type;
@@ -139,6 +138,16 @@ public class SenseStateDynamoDB {
                     updates.put(SenseStateAttribute.SLEEP_SOUND_VOLUME.shortName(), Util.putAction((long) audioState.getVolumePercent()));
                 }
             }
+        }
+
+        if(state.state.hasVoiceControlEnabled()) {
+            final boolean enabled = state.state.getVoiceControlEnabled();
+            updates.put(SenseStateAttribute.VOICE_ENABLED.shortName(), Util.putAction(enabled));
+        }
+
+        if(state.state.hasVolume()) {
+            final int volume = state.systemVolume.intValue();
+            updates.put(SenseStateAttribute.SYSTEM_VOLUME.shortName(), Util.putAction(volume));
         }
 
         return updates;
