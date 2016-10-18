@@ -113,7 +113,6 @@ public class FeatureFlipper {
     public final static String SLEEP_STATS_MEDIUM_SLEEP = "sleep_stats_medium_sleep";
     public final static String SMART_ALARM = "smart_alarm";
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
-    public final static String SMART_ALARM_ON_DURATION = "smart_alarm_on_duration";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
     public final static String SOUND_EVENTS_USE_HIGHER_THRESHOLD = "sound_events_use_higher_threshold";
     public final static String SOUND_INFO_TIMELINE = "sound_info_timeline";

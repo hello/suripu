@@ -202,8 +202,7 @@ public class RingProcessor {
     protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
-                                                               final PillDataDAODynamoDB pillDataDAODynamoDB,
-                                                               final boolean useOnDuration){
+                                                               final PillDataDAODynamoDB pillDataDAODynamoDB){
 
         Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
         final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(progressiveWindow);
@@ -219,6 +218,14 @@ public class RingProcessor {
         final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionWithinProgressiveWindow);
         final List<AmplitudeData> onDurations = TrackerMotionUtils.trackerMotionToOnDuration(motionWithinProgressiveWindow);
         //removed FF all users FF'd
+
+        //checks if kick off count is valid. if pill data contains motion mask, then pill packet is version 4 and kick off count is set to 0
+        // if pill packet 4, then add on duration trigger to replace kick off count behavior
+        Boolean useOnDuration = false;
+        if (!motionWithinProgressiveWindow.isEmpty() && motionWithinProgressiveWindow.get(0).motionMask.isPresent()){
+            useOnDuration = true;
+        }
+
         Boolean isUserAwake = false;
         isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(
                 amplitudeData,
@@ -259,12 +266,10 @@ public class RingProcessor {
             //removed FF, at 100 percent
             if(hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
 
-                final boolean useOnDuration = feature.userFeatureActive(FeatureFlipper.SMART_ALARM_ON_DURATION, userInfo.accountId, Collections.EMPTY_LIST);
-
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
-                        pillDataDAODynamoDB, useOnDuration);
+                        pillDataDAODynamoDB);
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
                     smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
