@@ -12,10 +12,11 @@ import java.sql.SQLException;
 public class SenseMetadataMapper implements ResultSetMapper<SenseMetadata>{
     @Override
     public SenseMetadata map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-        return new SenseMetadata(
+        return SenseMetadata.create(
                 resultSet.getString("sense_id"),
                 Sense.Color.valueOf(resultSet.getString("color")),
-                HardwareVersion.SENSE_ONE
+                HardwareVersion.SENSE_ONE,
+                0L
         );
     }
 }

@@ -190,13 +190,16 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ASK_TIME_ENABLED, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useNoMotionEnforcement(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_NO_MOTION_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean useSleepScoreV5(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V5, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean useUninterruptedDuration(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_STATS_UNINTERRUPTED_SLEEP, accountId, Collections.EMPTY_LIST);
-
     }
 
 }

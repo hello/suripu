@@ -113,10 +113,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     protected Histogram scoreDiff;
 
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
+    public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 9;
+    public final static float MIN_FRACTION_UNIQUE_MOTION = 0.5f;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
-    public final static int MIN_MOTION_AMPLITUDE = 1000;
+    public final static int MIN_MOTION_AMPLITUDE = 500;
     final static long OUTLIER_GUARD_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
     final static long DOMINANT_GROUP_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
 
@@ -317,7 +319,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         //check to see if there's an issue with the data
-        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions, sensorData.trackerMotions);
+        final boolean userLowerMotionCountThreshold = useNoMotionEnforcement(accountId);
+
+        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions, sensorData.trackerMotions, sensorData.originalPartnerTrackerMotions, userLowerMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
@@ -480,6 +484,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
 
+        //removes motion events less than 2 seconds and < 300 val. groups the remaining motions into groups separated by 2 hours. If largest motion groups is greater than 6 hours hours, drop all motions afterward this motion group.
         if (this.hasOutlierFilterEnabled(accountId)) {
             filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
             filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
@@ -719,7 +724,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId));
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
-
         Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
@@ -729,6 +733,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
+        //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
+        if (feedbackList.isEmpty() && this.useNoMotionEnforcement(accountId)) {
+            final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+            if (!motionDuringSleep) {
+                LOGGER.warn("action=zeroing-score  account_id={} reason=insufficient-motion-during-sleeptime night_of={}", accountId, targetDate);
+                sleepScore =  0;
+            }
+        }
 
         boolean isValidSleepScore = sleepScore > 0;
 
@@ -766,14 +778,27 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData){
+    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData,final boolean useLowerMotionCountThreshold){
+
+
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
         }
 
         //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
-        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT){
+        //If greater than MinTracker Motion Count - continue
+        // if FF for lower motion count threshold, if between lower motion threshold and high motion threshold, check percent unique motions for parter data.
+        // if lower than lower motion count threshold, reject
+        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT && !useLowerMotionCountThreshold ){
+            return TimelineError.NOT_ENOUGH_DATA;
+        } else if (originalMotionData.size() >= MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD && originalMotionData.size() < MIN_TRACKER_MOTION_COUNT) {
+            final float percentUniqueMotions = PartnerDataUtils.getPercentUniqueMovements(originalMotionData, originalPartnerTrackerMotionData);
+
+            if (percentUniqueMotions < MIN_FRACTION_UNIQUE_MOTION){
+                return TimelineError.NOT_ENOUGH_DATA;
+            }
+        } else if (originalMotionData.size() < MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD){
             return TimelineError.NOT_ENOUGH_DATA;
         }
 
@@ -947,19 +972,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
                 trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
-        if (this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
-            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
-                LOGGER.warn("action=enforced-minimum-motion-score: account_id={} night_of={}", accountId, targetDate);
-                motionScore = new MotionScore(motionScore.numMotions, motionScore.motionPeriodMinutes, motionScore.avgAmplitude, motionScore.maxAmplitude, (int) SleepScoreUtils.MOTION_SCORE_MIN);
-            }
-        }
-        else {
-            //original behavior
-            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
-                // if motion score is zero, something is not quite right, don't save score
-                LOGGER.error("action=no-motion-score-generated: account_id={} night_of={}", accountId, targetDate);
-                return 0;
-            }
+        //if motion score is less than the min score - ff'd removed, at 100 percent deployement
+        if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
+            LOGGER.warn("action=enforced-minimum-motion-score: account_id={} night_of={}", accountId, targetDate);
+            motionScore = new MotionScore(motionScore.numMotions, motionScore.motionPeriodMinutes, motionScore.avgAmplitude, motionScore.maxAmplitude, (int) SleepScoreUtils.MOTION_SCORE_MIN);
         }
 
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);

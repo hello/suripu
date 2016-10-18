@@ -55,11 +55,11 @@ public class CalibratedDeviceData {
         } else {
             audioPeakDB = deviceData.audioPeakDisturbancesDB;
         }
-        return DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(audioPeakDB), deviceData.firmwareVersion);
+        return DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB), DataUtils.dbIntToFloatAudioDecibels(audioPeakDB), deviceData.firmwareVersion);
     }
 
     public float soundPeakEnergy() {
-        return DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
+        return DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
     }
 
     public float soundPeakDisturbance() {
