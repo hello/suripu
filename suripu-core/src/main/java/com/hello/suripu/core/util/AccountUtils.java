@@ -12,7 +12,7 @@ import org.joda.time.Years;
 public class AccountUtils {
 
     public static final Integer ADULT_AGE_YEARS = 35;
-    public static final DateTime EARLIEST_ALLOWABLE_DOB = new DateTime(1990, 1, 1, 0, 0, 0);
+    public static final DateTime EARLIEST_ALLOWABLE_DOB = new DateTime(1900, 1, 1, 0, 0, 0);
 
     public static Integer getUserAgeYears(Account account) {
 
