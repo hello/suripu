@@ -9,7 +9,7 @@ public final class ExpansionProtos {
       com.google.protobuf.ExtensionRegistry registry) {
   }
   public interface AlarmActionOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:AlarmAction)
+      // @@protoc_insertion_point(interface_extends:hello.AlarmAction)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -54,11 +54,11 @@ public final class ExpansionProtos {
     long getExpansionId();
   }
   /**
-   * Protobuf type {@code AlarmAction}
+   * Protobuf type {@code hello.AlarmAction}
    */
   public static final class AlarmAction extends
       com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:AlarmAction)
+      // @@protoc_insertion_point(message_implements:hello.AlarmAction)
       AlarmActionOrBuilder {
     // Use AlarmAction.newBuilder() to construct.
     private AlarmAction(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -140,12 +140,12 @@ public final class ExpansionProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ExpansionProtos.internal_static_AlarmAction_descriptor;
+      return ExpansionProtos.internal_static_hello_AlarmAction_descriptor;
     }
 
     protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ExpansionProtos.internal_static_AlarmAction_fieldAccessorTable
+      return ExpansionProtos.internal_static_hello_AlarmAction_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               AlarmAction.class, Builder.class);
     }
@@ -388,20 +388,20 @@ public final class ExpansionProtos {
       return builder;
     }
     /**
-     * Protobuf type {@code AlarmAction}
+     * Protobuf type {@code hello.AlarmAction}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:AlarmAction)
+        // @@protoc_insertion_point(builder_implements:hello.AlarmAction)
         AlarmActionOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ExpansionProtos.internal_static_AlarmAction_descriptor;
+        return ExpansionProtos.internal_static_hello_AlarmAction_descriptor;
       }
 
       protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ExpansionProtos.internal_static_AlarmAction_fieldAccessorTable
+        return ExpansionProtos.internal_static_hello_AlarmAction_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 AlarmAction.class, Builder.class);
       }
@@ -443,7 +443,7 @@ public final class ExpansionProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ExpansionProtos.internal_static_AlarmAction_descriptor;
+        return ExpansionProtos.internal_static_hello_AlarmAction_descriptor;
       }
 
       public AlarmAction getDefaultInstanceForType() {
@@ -707,7 +707,7 @@ public final class ExpansionProtos {
         return this;
       }
 
-      // @@protoc_insertion_point(builder_scope:AlarmAction)
+      // @@protoc_insertion_point(builder_scope:hello.AlarmAction)
     }
 
     static {
@@ -715,14 +715,14 @@ public final class ExpansionProtos {
       defaultInstance.initFields();
     }
 
-    // @@protoc_insertion_point(class_scope:AlarmAction)
+    // @@protoc_insertion_point(class_scope:hello.AlarmAction)
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_AlarmAction_descriptor;
+    internal_static_hello_AlarmAction_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_AlarmAction_fieldAccessorTable;
+      internal_static_hello_AlarmAction_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -732,11 +732,11 @@ public final class ExpansionProtos {
       descriptor;
   static {
     String[] descriptorData = {
-      "\n\022alarm_action.proto\"h\n\013AlarmAction\022\021\n\tu" +
-      "nix_time\030\001 \001(\004\022\021\n\tdevice_id\030\002 \001(\t\022\035\n\025exp" +
-      "ected_ringtime_utc\030\003 \001(\004\022\024\n\014expansion_id" +
-      "\030\004 \001(\004B2\n\037com.hello.suripu.api.expansion" +
-      "sB\017ExpansionProtos"
+      "\n\022alarm_action.proto\022\005hello\"h\n\013AlarmActi" +
+      "on\022\021\n\tunix_time\030\001 \001(\004\022\021\n\tdevice_id\030\002 \001(\t" +
+      "\022\035\n\025expected_ringtime_utc\030\003 \001(\004\022\024\n\014expan" +
+      "sion_id\030\004 \001(\004B2\n\037com.hello.suripu.api.ex" +
+      "pansionsB\017ExpansionProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -750,11 +750,11 @@ public final class ExpansionProtos {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_AlarmAction_descriptor =
+    internal_static_hello_AlarmAction_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_AlarmAction_fieldAccessorTable = new
+    internal_static_hello_AlarmAction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_AlarmAction_descriptor,
+        internal_static_hello_AlarmAction_descriptor,
         new String[] { "UnixTime", "DeviceId", "ExpectedRingtimeUtc", "ExpansionId", });
   }
 

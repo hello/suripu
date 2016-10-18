@@ -68,6 +68,9 @@ public class RingTime {
         this.expansions = expansions;
 
     }
+    public RingTime(long actual, long expected, final long[] soundIds, final boolean fromSmartAlarm){
+        this(actual, expected, soundIds, fromSmartAlarm, Lists.newArrayList());
+    }
 
     public RingTime(long actual, long expected, long soundId, final boolean fromSmartAlarm, final List<AlarmExpansion> expansions){
         if(expected < actual){
@@ -82,8 +85,12 @@ public class RingTime {
 
     }
 
+    public RingTime(long actual, long expected, long soundId, final boolean fromSmartAlarm){
+        this(actual, expected, soundId, fromSmartAlarm, Lists.newArrayList());
+    }
+
     public static RingTime createEmpty(){
-        return new RingTime(EMPTY, EMPTY, new long[0], false, Lists.newArrayList());
+        return new RingTime(EMPTY, EMPTY, new long[0], false);
     }
 
     @JsonIgnore

@@ -100,7 +100,7 @@ public class MergedUserInfoDynamoDBIT {
 
     @Test
     public void testUpdateNotAppend(){
-        final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L}, false, Lists.newArrayList());
+        final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L}, false);
 
         this.mergedUserInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);  // Timezone must set first, or ringtime will be reset
         this.mergedUserInfoDynamoDB.setRingTime(this.deviceId, this.accountId, ringTime);

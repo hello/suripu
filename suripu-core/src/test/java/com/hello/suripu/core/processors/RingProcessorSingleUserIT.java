@@ -3,7 +3,6 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import com.amazonaws.ClientConfiguration;
@@ -467,8 +466,7 @@ public class RingProcessorSingleUserIT {
         final RingTime nextRingTime = new RingTime(deadline.getMillis(),
                 deadline.getMillis(),
                 100,
-                true,
-            Lists.newArrayList());
+                true);
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,

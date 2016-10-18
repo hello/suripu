@@ -1,7 +1,5 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.collect.Lists;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
@@ -16,6 +14,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hello.suripu.core.models.RingTime;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -84,11 +83,11 @@ public class RingTimeHistoryDAODynamoDBIT {
 
         final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true, Lists.newArrayList());
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
 
         final DateTime alarmTime2 = new DateTime(2014, 9, 24, 9, 10, 0, localTimeZone);
         final DateTime actualTime2 = new DateTime(2014, 9, 24, 9, 0, 0, localTimeZone);
-        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true, Lists.newArrayList());
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime2);
@@ -144,11 +143,11 @@ public class RingTimeHistoryDAODynamoDBIT {
 
         final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true, Lists.newArrayList());
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
 
         final DateTime alarmTime2 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime2 = new DateTime(2014, 9, 23, 8, 9, 0, localTimeZone);
-        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true, Lists.newArrayList());
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 2L, ringTime2);
@@ -169,11 +168,11 @@ public class RingTimeHistoryDAODynamoDBIT {
 
         final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, false, Lists.newArrayList());
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, false);
 
         final DateTime alarmTime2 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime2 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
-        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, false, Lists.newArrayList());
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, false);
 
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 2L, ringTime2);
@@ -194,11 +193,11 @@ public class RingTimeHistoryDAODynamoDBIT {
 
         final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true, Lists.newArrayList());
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
 
         final DateTime alarmTime2 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime2 = new DateTime(2014, 9, 23, 8, 9, 0, localTimeZone);
-        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true, Lists.newArrayList());
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
         this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime2);
