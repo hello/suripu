@@ -168,22 +168,22 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     /**
      * Get a list of questions for the user, or pre-generate one
      */
-    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final Integer numQuestions, final Boolean checkPause) {
+    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime todayLocal, final Integer numQuestions, final Boolean checkPause) {
 
         // brand new user - get on-boarding questions
         if (accountAgeInDays < NEW_ACCOUNT_AGE) {
-            return this.getOnBoardingQuestions(accountId, today);
+            return this.getOnBoardingQuestions(accountId, todayLocal);
         }
 
         // check if user has skipped too many questions in the past.
         if (checkPause) {
-            final boolean pauseQuestion = this.pauseQuestions(accountId, today);
+            final boolean pauseQuestion = this.pauseQuestions(accountId, todayLocal);
             if (pauseQuestion) {
                 LOGGER.debug("Pause questions for user {}", accountId);
                 return Collections.emptyList();
             }
         } else {
-            this.resetNextAsk(accountId, today);
+            this.resetNextAsk(accountId, todayLocal);
         }
 
         // check if we have already generated a list of questions
@@ -191,7 +191,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         final LinkedHashMap<Integer, Question> preGeneratedQuestions = Maps.newLinkedHashMap();
 
         // grab user question and response status for today if this is not a "get-more questions" request
-        final DateTime expiration = today.plusDays(1);
+        final DateTime expiration = todayLocal.plusDays(1);
         final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
 
         // check if we have generated any questions for this user TODAY
@@ -205,8 +205,6 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         if (!timeZoneOffsetOptional.isPresent()) {
             hasTimeline = Boolean.FALSE;
         } else {
-            final Integer timeZoneOffset = timeZoneOffsetOptional.get();
-            final DateTime todayLocal = today.plusMillis(timeZoneOffset);
             final DateTime yesterdayLocal = todayLocal.minusDays(1);
             final Optional<AggregateSleepStats> sleepStatOptional = this.sleepStatsDAODynamoDB.getSingleStat(accountId, yesterdayLocal.toString());
             hasTimeline = sleepStatOptional.isPresent();
@@ -253,7 +251,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                 // question inserted into queue
                 preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
                         accountQId,
-                        today,
+                        todayLocal,
                         question.questionCreationDate));
             }
 
@@ -281,9 +279,9 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
         List<Question> questions;
 
         if (accountAgeInDays < OLD_ACCOUNT_AGE) {
-            questions = this.getNewbieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet(), hasTimeline);
+            questions = this.getNewbieQuestions(accountId, todayLocal, getMoreNum, preGeneratedQuestions.keySet(), hasTimeline);
         } else {
-            questions = this.getOldieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet(), hasTimeline);
+            questions = this.getOldieQuestions(accountId, todayLocal, getMoreNum, preGeneratedQuestions.keySet(), hasTimeline);
         }
 
         if (!preGeneratedQuestions.isEmpty()) {
