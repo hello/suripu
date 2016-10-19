@@ -9,10 +9,14 @@ import org.joda.time.DateTime;
 public class SenseStateAtTime {
     public final State.SenseState state;
     public final DateTime timestamp;
+    public final Boolean muted;
+    public final Integer systemVolume;
 
     public SenseStateAtTime(final State.SenseState state, final DateTime timestamp) {
         this.state = state;
         this.timestamp = timestamp;
+        this.muted = state.getVoiceControlEnabled();
+        this.systemVolume = state.getVolume();
     }
 
     @Override

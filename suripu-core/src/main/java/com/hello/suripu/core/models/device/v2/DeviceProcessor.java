@@ -6,6 +6,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import com.google.common.primitives.Longs;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.analytics.AnalyticsTracker;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -25,6 +27,8 @@ import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.sense.metadata.SenseMetadata;
 import com.hello.suripu.core.sense.metadata.SenseMetadataDAO;
+import com.hello.suripu.core.sense.voice.VoiceMetadata;
+import com.hello.suripu.core.sense.voice.VoiceMetadataDAO;
 import com.hello.suripu.core.util.PillColorUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -54,6 +58,7 @@ public class DeviceProcessor {
     private final WifiInfoDAO wifiInfoDAO;
     private final AnalyticsTracker analyticsTracker;
     private final SenseMetadataDAO senseMetadataDAO;
+    private final VoiceMetadataDAO voiceMetadataDAO;
 
     private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 28; // days
     private final static Integer BATTERY_LEVEL_LOW_BATTERY_WARNING = 15;
@@ -64,7 +69,8 @@ public class DeviceProcessor {
                             final PillDataDAODynamoDB pillDataDAODynamoDB,
                             final WifiInfoDAO wifiInfoDAO,
                             final AnalyticsTracker analyticsTracker,
-                            final SenseMetadataDAO senseMetadataDAO) {
+                            final SenseMetadataDAO senseMetadataDAO,
+                            final VoiceMetadataDAO voiceMetadataDAO) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
@@ -73,6 +79,7 @@ public class DeviceProcessor {
         this.wifiInfoDAO = wifiInfoDAO;
         this.analyticsTracker = analyticsTracker;
         this.senseMetadataDAO = senseMetadataDAO;
+        this.voiceMetadataDAO = voiceMetadataDAO;
     }
 
     /**
@@ -249,8 +256,7 @@ public class DeviceProcessor {
                     senseAccountPair,
                     senseStatusOptional,
                     wifiInfoOptional,
-                    metadata
-            );
+                    metadata);
 
             senses.add(sense);
         }
@@ -353,6 +359,7 @@ public class DeviceProcessor {
         private PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
         private AnalyticsTracker analyticsTracker;
         private SenseMetadataDAO senseMetadataDAO;
+        private VoiceMetadataDAO voiceMetadataDAO;
 
         public Builder withDeviceDAO(final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -394,13 +401,18 @@ public class DeviceProcessor {
             return this;
         }
 
+        public Builder withVoiceMetadataDAO(final VoiceMetadataDAO voiceMetadataDAO) {
+            this.voiceMetadataDAO = voiceMetadataDAO;
+            return this;
+        }
+
         public DeviceProcessor build() {
             checkNotNull(analyticsTracker, "analytics tracker can not be null");
 
             return new DeviceProcessor(deviceDAO, mergedUserInfoDynamoDB,
                     sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB,
                     pillDataDAODynamoDB, wifiInfoDAO, analyticsTracker,
-                    senseMetadataDAO
+                    senseMetadataDAO, voiceMetadataDAO
             );
         }
     }
@@ -428,5 +440,37 @@ public class DeviceProcessor {
         }
 
         return pillsWithBatteryWarningHidden;
+    }
+
+    public Optional<Long> primaryAccount(final String senseId) {
+        final Optional<Long> primaryOverride = voiceMetadataDAO.getPrimaryAccount(senseId);
+        if(primaryOverride.isPresent()) {
+            return primaryOverride;
+        }
+
+        final List<DeviceAccountPair> pairs = deviceDAO.getAccountIdsForDeviceId(senseId);
+
+        if(pairs.isEmpty()) {
+            LOGGER.error("error=no-account-paired sense_id={}", senseId);
+            return Optional.absent();
+        }
+
+        if(pairs.size() == 1) {
+            return Optional.of(pairs.get(0).accountId);
+        }
+
+        final Ordering<DeviceAccountPair> byPairedDateOrdering = new Ordering<DeviceAccountPair>() {
+            public int compare(DeviceAccountPair left, DeviceAccountPair right) {
+                return Longs.compare(left.created.getMillis(), right.created.getMillis());
+            }
+        };
+
+        return Optional.of(byPairedDateOrdering.sortedCopy(pairs).get(0).accountId);
+    }
+
+    public VoiceMetadata voiceMetadata(final String senseId, final Long accountId) {
+        final Optional<Long> primaryAccount = primaryAccount(senseId);
+        final VoiceMetadata voiceMetadata = voiceMetadataDAO.get(senseId, accountId, primaryAccount.orNull());
+        return voiceMetadata;
     }
 }
