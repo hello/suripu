@@ -552,6 +552,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
                                                           final Question.FREQUENCY questionType,
                                                           final DateTime today, final int numQuestions) {
 
+        //Note: only daily question delivered is "how was your sleep last night" right now. Use of this method needs to change if we add other daily questions.
+
         final List<Question> questions = new ArrayList<>();
         List<Integer> eligibleQuestions = new ArrayList<>();
 
