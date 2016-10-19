@@ -260,9 +260,6 @@ public class TrendsProcessor {
                 statValue = (float) stat.sleepScore;
             }
 
-            LOGGER.debug("key=trends-v2 action=aggregate-data, account={} date={}, stat={} value={}",
-                    accountId, stat.dateTime, dataType.value, statValue);
-
             currentDateTime = stat.dateTime;
             final int dayOfWeek = currentDateTime.getDayOfWeek();
 

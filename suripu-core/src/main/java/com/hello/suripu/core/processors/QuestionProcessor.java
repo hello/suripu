@@ -341,7 +341,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
             }
 
             Boolean skip = null;
-            if (response.skip != null) {
+            if (response.skip != null && response.skip.isPresent()) {
                 skip = response.skip.get();
             }
 
