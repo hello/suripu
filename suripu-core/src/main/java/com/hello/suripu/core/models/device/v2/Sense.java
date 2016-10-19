@@ -95,7 +95,6 @@ public class Sense {
     }
 
     public static Sense create(final DeviceAccountPair senseAccountPair, final Optional<DeviceStatus> senseStatusOptional, final Optional<WifiInfo> wifiInfoOptional, final SenseMetadata metadata) {
-        final boolean isPrimary = metadata.hasPrimaryAccountId() && (senseAccountPair.accountId.equals(metadata.primaryAccountId()));
         if (!senseStatusOptional.isPresent()) {
             return new Sense(senseAccountPair, DEFAULT_FW_VERSION, State.UNKNOWN, Optional.<DateTime>absent(), metadata.color(), wifiInfoOptional, metadata.hardwareVersion());
         }
