@@ -473,4 +473,9 @@ public class DeviceProcessor {
         final VoiceMetadata voiceMetadata = voiceMetadataDAO.get(senseId, accountId, primaryAccount.orNull());
         return voiceMetadata;
     }
+
+    public boolean isPairedTo(final Long accountId, final String senseId) {
+        final Optional<Long> internalId = deviceDAO.getIdForAccountIdDeviceId(accountId, senseId);
+        return internalId.isPresent();
+    }
 }
