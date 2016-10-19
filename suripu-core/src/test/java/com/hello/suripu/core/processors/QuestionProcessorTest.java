@@ -18,6 +18,7 @@ import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
 import dagger.Module;
@@ -124,10 +125,10 @@ public class QuestionProcessorTest {
 
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = mock(SleepStatsDAODynamoDB.class);
         when(sleepStatsDAODynamoDB.getTimeZoneOffset(ACCOUNT_ID_PASS)).thenReturn(Optional.of(0));
-        when(sleepStatsDAODynamoDB.getSingleStat(ACCOUNT_ID_PASS, this.today.minusDays(1).toString())).thenReturn(Optional.of(new AggregateSleepStats(0L, this.today, 0, 0, "String", new MotionScore(0,0,0F,0,0), 0, 0, 0, new SleepStats(0,0,0,0,Boolean.TRUE,0, 0L, 0L, 0))));
+        when(sleepStatsDAODynamoDB.getSingleStat(ACCOUNT_ID_PASS, DateTimeUtil.dateToYmdString(this.today.minusDays(1)))).thenReturn(Optional.of(new AggregateSleepStats(0L, this.today, 0, 0, "String", new MotionScore(0,0,0F,0,0), 0, 0, 0, new SleepStats(0,0,0,0,Boolean.TRUE,0, 0L, 0L, 0))));
 
         when(sleepStatsDAODynamoDB.getTimeZoneOffset(ACCOUNT_ID_FAIL)).thenReturn(Optional.of(0));
-        when(sleepStatsDAODynamoDB.getSingleStat(ACCOUNT_ID_FAIL, this.today.minusDays(1).toString())).thenReturn(Optional.of(new AggregateSleepStats(0L, this.today, 0, 0, "String", new MotionScore(0,0,0F,0,0), 0, 0, 0, new SleepStats(0,0,0,0,Boolean.TRUE,0, 0L, 0L, 0))));
+        when(sleepStatsDAODynamoDB.getSingleStat(ACCOUNT_ID_FAIL, DateTimeUtil.dateToYmdString(this.today.minusDays(1)))).thenReturn(Optional.of(new AggregateSleepStats(0L, this.today, 0, 0, "String", new MotionScore(0,0,0F,0,0), 0, 0, 0, new SleepStats(0,0,0,0,Boolean.TRUE,0, 0L, 0L, 0))));
 
         final List<Question> questions = this.getMockQuestions();
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
