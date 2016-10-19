@@ -8,6 +8,88 @@ public final class ExpansionProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
+  /**
+   * Protobuf enum {@code hello.ServiceType}
+   */
+  public enum ServiceType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>HUE = 1;</code>
+     */
+    HUE(0, 1),
+    /**
+     * <code>NEST = 2;</code>
+     */
+    NEST(1, 2),
+    ;
+
+    /**
+     * <code>HUE = 1;</code>
+     */
+    public static final int HUE_VALUE = 1;
+    /**
+     * <code>NEST = 2;</code>
+     */
+    public static final int NEST_VALUE = 2;
+
+
+    public final int getNumber() { return value; }
+
+    public static ServiceType valueOf(int value) {
+      switch (value) {
+        case 1: return HUE;
+        case 2: return NEST;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<ServiceType>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<ServiceType>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<ServiceType>() {
+            public ServiceType findValueByNumber(int number) {
+              return ServiceType.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return ExpansionProtos.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final ServiceType[] VALUES = values();
+
+    public static ServiceType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private ServiceType(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:hello.ServiceType)
+  }
+
   public interface AlarmActionOrBuilder extends
       // @@protoc_insertion_point(interface_extends:hello.AlarmAction)
       com.google.protobuf.MessageOrBuilder {
@@ -45,13 +127,13 @@ public final class ExpansionProtos {
     long getExpectedRingtimeUtc();
 
     /**
-     * <code>optional uint64 expansion_id = 4;</code>
+     * <code>optional .hello.ServiceType service_type = 4;</code>
      */
-    boolean hasExpansionId();
+    boolean hasServiceType();
     /**
-     * <code>optional uint64 expansion_id = 4;</code>
+     * <code>optional .hello.ServiceType service_type = 4;</code>
      */
-    long getExpansionId();
+    ServiceType getServiceType();
   }
   /**
    * Protobuf type {@code hello.AlarmAction}
@@ -122,8 +204,14 @@ public final class ExpansionProtos {
               break;
             }
             case 32: {
-              bitField0_ |= 0x00000008;
-              expansionId_ = input.readUInt64();
+              int rawValue = input.readEnum();
+              ServiceType value = ServiceType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(4, rawValue);
+              } else {
+                bitField0_ |= 0x00000008;
+                serviceType_ = value;
+              }
               break;
             }
           }
@@ -238,26 +326,26 @@ public final class ExpansionProtos {
       return expectedRingtimeUtc_;
     }
 
-    public static final int EXPANSION_ID_FIELD_NUMBER = 4;
-    private long expansionId_;
+    public static final int SERVICE_TYPE_FIELD_NUMBER = 4;
+    private ServiceType serviceType_;
     /**
-     * <code>optional uint64 expansion_id = 4;</code>
+     * <code>optional .hello.ServiceType service_type = 4;</code>
      */
-    public boolean hasExpansionId() {
+    public boolean hasServiceType() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional uint64 expansion_id = 4;</code>
+     * <code>optional .hello.ServiceType service_type = 4;</code>
      */
-    public long getExpansionId() {
-      return expansionId_;
+    public ServiceType getServiceType() {
+      return serviceType_;
     }
 
     private void initFields() {
       unixTime_ = 0L;
       deviceId_ = "";
       expectedRingtimeUtc_ = 0L;
-      expansionId_ = 0L;
+      serviceType_ = ServiceType.HUE;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -282,7 +370,7 @@ public final class ExpansionProtos {
         output.writeUInt64(3, expectedRingtimeUtc_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeUInt64(4, expansionId_);
+        output.writeEnum(4, serviceType_.getNumber());
       }
       getUnknownFields().writeTo(output);
     }
@@ -307,7 +395,7 @@ public final class ExpansionProtos {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(4, expansionId_);
+          .computeEnumSize(4, serviceType_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -432,7 +520,7 @@ public final class ExpansionProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         expectedRingtimeUtc_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000004);
-        expansionId_ = 0L;
+        serviceType_ = ServiceType.HUE;
         bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
@@ -477,7 +565,7 @@ public final class ExpansionProtos {
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.expansionId_ = expansionId_;
+        result.serviceType_ = serviceType_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -505,8 +593,8 @@ public final class ExpansionProtos {
         if (other.hasExpectedRingtimeUtc()) {
           setExpectedRingtimeUtc(other.getExpectedRingtimeUtc());
         }
-        if (other.hasExpansionId()) {
-          setExpansionId(other.getExpansionId());
+        if (other.hasServiceType()) {
+          setServiceType(other.getServiceType());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -675,34 +763,37 @@ public final class ExpansionProtos {
         return this;
       }
 
-      private long expansionId_ ;
+      private ServiceType serviceType_ = ServiceType.HUE;
       /**
-       * <code>optional uint64 expansion_id = 4;</code>
+       * <code>optional .hello.ServiceType service_type = 4;</code>
        */
-      public boolean hasExpansionId() {
+      public boolean hasServiceType() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional uint64 expansion_id = 4;</code>
+       * <code>optional .hello.ServiceType service_type = 4;</code>
        */
-      public long getExpansionId() {
-        return expansionId_;
+      public ServiceType getServiceType() {
+        return serviceType_;
       }
       /**
-       * <code>optional uint64 expansion_id = 4;</code>
+       * <code>optional .hello.ServiceType service_type = 4;</code>
        */
-      public Builder setExpansionId(long value) {
+      public Builder setServiceType(ServiceType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
         bitField0_ |= 0x00000008;
-        expansionId_ = value;
+        serviceType_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional uint64 expansion_id = 4;</code>
+       * <code>optional .hello.ServiceType service_type = 4;</code>
        */
-      public Builder clearExpansionId() {
+      public Builder clearServiceType() {
         bitField0_ = (bitField0_ & ~0x00000008);
-        expansionId_ = 0L;
+        serviceType_ = ServiceType.HUE;
         onChanged();
         return this;
       }
@@ -732,11 +823,12 @@ public final class ExpansionProtos {
       descriptor;
   static {
     String[] descriptorData = {
-      "\n\022alarm_action.proto\022\005hello\"h\n\013AlarmActi" +
+      "\n\022alarm_action.proto\022\005hello\"|\n\013AlarmActi" +
       "on\022\021\n\tunix_time\030\001 \001(\004\022\021\n\tdevice_id\030\002 \001(\t" +
-      "\022\035\n\025expected_ringtime_utc\030\003 \001(\004\022\024\n\014expan" +
-      "sion_id\030\004 \001(\004B2\n\037com.hello.suripu.api.ex" +
-      "pansionsB\017ExpansionProtos"
+      "\022\035\n\025expected_ringtime_utc\030\003 \001(\004\022(\n\014servi" +
+      "ce_type\030\004 \001(\0162\022.hello.ServiceType* \n\013Ser" +
+      "viceType\022\007\n\003HUE\020\001\022\010\n\004NEST\020\002B2\n\037com.hello" +
+      ".suripu.api.expansionsB\017ExpansionProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -755,7 +847,7 @@ public final class ExpansionProtos {
     internal_static_hello_AlarmAction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_hello_AlarmAction_descriptor,
-        new String[] { "UnixTime", "DeviceId", "ExpectedRingtimeUtc", "ExpansionId", });
+        new String[] { "UnixTime", "DeviceId", "ExpectedRingtimeUtc", "ServiceType", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

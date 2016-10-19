@@ -10,19 +10,29 @@ public class AlarmExpansion {
     @JsonProperty("id")
     public final long id;
 
-    @JsonProperty("enable")
-    public final Boolean enable;
+    @JsonProperty("enabled")
+    public final Boolean enabled;
+
+    @JsonProperty("category")
+    public final String category;
+
+    @JsonProperty("service_name")
+    public String serviceName;
 
     @JsonCreator
     public AlarmExpansion(@JsonProperty("id") long id,
-                          @JsonProperty("enable") final Boolean enable){
+                          @JsonProperty("enabled") final Boolean enabled,
+                          @JsonProperty("category") final String category,
+                          @JsonProperty("service_name") final String serviceName){
         this.id = id;
-        this.enable = enable;
+        this.enabled = enabled;
+        this.category = category;
+        this.serviceName = serviceName;
     }
 
     @Override
     public int hashCode(){
-        return Objects.hashCode(this.id);
+        return Objects.hashCode(this.id, this.enabled, this.category);
     }
 
     @Override
@@ -36,6 +46,8 @@ public class AlarmExpansion {
         }
 
         final AlarmExpansion expansion = (AlarmExpansion) other;
-        return Objects.equal(expansion.id, this.id);
+        return Objects.equal(expansion.id, this.id) &&
+            Objects.equal(expansion.enabled, this.enabled) &&
+            Objects.equal(expansion.category, this.category);
     }
 }
