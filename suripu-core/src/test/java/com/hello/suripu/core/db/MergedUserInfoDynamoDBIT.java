@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -237,7 +238,7 @@ public class MergedUserInfoDynamoDBIT {
         final DateTime previousRing = now.plusHours(1);
         this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
-                previousRing.getMillis(), new long[0], true));
+                previousRing.getMillis(), new long[0], true, Lists.newArrayList()));
 
         final UserInfo userInfo = this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get();
         assertThat(userInfo.ringTime.get().actualRingTimeUTC,
@@ -270,7 +271,7 @@ public class MergedUserInfoDynamoDBIT {
         final DateTime previousRing = now.plusHours(1);
         this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
-                previousRing.getMillis(), new long[0], true));
+                previousRing.getMillis(), new long[0], true, Lists.newArrayList()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
                 is(previousRing.minusMinutes(5).getMillis()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
@@ -302,7 +303,7 @@ public class MergedUserInfoDynamoDBIT {
         final DateTime now = DateTime.now();
         final DateTime previousRing = now.plusHours(1);
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
-                previousRing.getMillis(), new long[0], true));
+                previousRing.getMillis(), new long[0], true, Lists.newArrayList()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
                 is(previousRing.minusMinutes(5).getMillis()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,

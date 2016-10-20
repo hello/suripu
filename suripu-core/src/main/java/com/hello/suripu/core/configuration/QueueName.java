@@ -8,6 +8,7 @@ public enum QueueName {
     AUDIO_FEATURES("audio_features"),
     AUDIO_PRODUCTS("audio_products"),
     ACTIVITY_STREAM("activity_stream"),
+    ALARM_ACTIONS("alarm_actions"),
     REGISTRATIONS("registrations"),
     ENCODE_AUDIO("encode_audio"),
     BATCH_PILL_DATA ("batch_pill_data"),
