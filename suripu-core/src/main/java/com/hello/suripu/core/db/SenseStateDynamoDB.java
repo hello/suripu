@@ -101,6 +101,13 @@ public class SenseStateDynamoDB {
             senseStateBuilder.setAudioState(audioStateBuilder.build());
         }
 
+        if(item.containsKey(SenseStateAttribute.SYSTEM_VOLUME.shortName())) {
+            senseStateBuilder.setVolume(Integer.valueOf(item.get(SenseStateAttribute.SYSTEM_VOLUME.shortName()).getN()));
+        }
+        if(item.containsKey(SenseStateAttribute.VOICE_ENABLED.shortName())) {
+            senseStateBuilder.setVoiceControlEnabled(item.get(SenseStateAttribute.VOICE_ENABLED.shortName()).getBOOL());
+        }
+
         final State.SenseState state = senseStateBuilder.build();
 
         final Long timestamp = Long.valueOf(item.get(SenseStateAttribute.TIMESTAMP.shortName()).getN());
