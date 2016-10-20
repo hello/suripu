@@ -39,6 +39,7 @@ public class MessejiHttpClient extends MessejiClient {
         return MessejiHttpClient.create(httpClient, uri.getScheme(), uri.getHost(), uri.getPort());
     }
 
+    @Override
     public Optional<Long> sendMessage(final String senseId, final Messeji.Message message) {
         final HttpPost request = new HttpPost("/send");
         request.setHeader(HelloHttpHeader.SENSE_ID, senseId);

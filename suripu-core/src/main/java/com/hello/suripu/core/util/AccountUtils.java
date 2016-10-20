@@ -12,16 +12,21 @@ import org.joda.time.Years;
 public class AccountUtils {
 
     public static final Integer ADULT_AGE_YEARS = 35;
+    public static final DateTime EARLIEST_ALLOWABLE_DOB = new DateTime(1900, 1, 1, 0, 0, 0);
 
-    public static Integer getUserAgeYears(Optional<Account> account) {
-        if (account.isPresent()) {
-            if (!account.get().DOB.isEqual(account.get().created)) { //DOB is stored as created date if user does not input DOB
-                final DateTime dob = account.get().DOB;
-                final Integer userAge = Years.yearsBetween(dob, DateTime.now(DateTimeZone.UTC)).toPeriod().getYears();
-                return userAge;
-            }
+    public static Integer getUserAgeYears(Account account) {
+
+        if (account.DOB.withTimeAtStartOfDay().isEqual(account.created.withTimeAtStartOfDay())) {//DOB is stored as created date (hour,min,sec removed) if user does not input DOB
+            return ADULT_AGE_YEARS;
         }
 
-        return ADULT_AGE_YEARS;
+        if (account.DOB.withTimeAtStartOfDay().isBefore(EARLIEST_ALLOWABLE_DOB)) {
+            return ADULT_AGE_YEARS;
+        }
+
+        final DateTime dob = account.DOB;
+        final Integer userAge = Years.yearsBetween(dob, DateTime.now(DateTimeZone.UTC)).toPeriod().getYears();
+        return userAge;
+
     }
 }

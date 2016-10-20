@@ -35,7 +35,7 @@ public class InsightUtils {
         }
 
         final int hours = ((minuteOfDay + DateTimeConstants.MINUTES_PER_DAY) % DateTimeConstants.MINUTES_PER_DAY) / 60;
-        final int hoursRound = hours + hourAdd;
+        final int hoursRound = (hours + hourAdd) % 24;
 
         final String timeString = timeFormat.print(new DateTime(0).withHourOfDay(hoursRound).withMinuteOfHour(minutesRound));
         return timeString;
