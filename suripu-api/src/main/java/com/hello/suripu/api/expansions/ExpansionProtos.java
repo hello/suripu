@@ -134,6 +134,24 @@ public final class ExpansionProtos {
      * <code>optional .hello.ServiceType service_type = 4;</code>
      */
     ServiceType getServiceType();
+
+    /**
+     * <code>optional uint32 target_value_min = 5;</code>
+     */
+    boolean hasTargetValueMin();
+    /**
+     * <code>optional uint32 target_value_min = 5;</code>
+     */
+    int getTargetValueMin();
+
+    /**
+     * <code>optional uint32 target_value_max = 6;</code>
+     */
+    boolean hasTargetValueMax();
+    /**
+     * <code>optional uint32 target_value_max = 6;</code>
+     */
+    int getTargetValueMax();
   }
   /**
    * Protobuf type {@code hello.AlarmAction}
@@ -212,6 +230,16 @@ public final class ExpansionProtos {
                 bitField0_ |= 0x00000008;
                 serviceType_ = value;
               }
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              targetValueMin_ = input.readUInt32();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              targetValueMax_ = input.readUInt32();
               break;
             }
           }
@@ -341,11 +369,43 @@ public final class ExpansionProtos {
       return serviceType_;
     }
 
+    public static final int TARGET_VALUE_MIN_FIELD_NUMBER = 5;
+    private int targetValueMin_;
+    /**
+     * <code>optional uint32 target_value_min = 5;</code>
+     */
+    public boolean hasTargetValueMin() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional uint32 target_value_min = 5;</code>
+     */
+    public int getTargetValueMin() {
+      return targetValueMin_;
+    }
+
+    public static final int TARGET_VALUE_MAX_FIELD_NUMBER = 6;
+    private int targetValueMax_;
+    /**
+     * <code>optional uint32 target_value_max = 6;</code>
+     */
+    public boolean hasTargetValueMax() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional uint32 target_value_max = 6;</code>
+     */
+    public int getTargetValueMax() {
+      return targetValueMax_;
+    }
+
     private void initFields() {
       unixTime_ = 0L;
       deviceId_ = "";
       expectedRingtimeUtc_ = 0L;
       serviceType_ = ServiceType.HUE;
+      targetValueMin_ = 0;
+      targetValueMax_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -372,6 +432,12 @@ public final class ExpansionProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeEnum(4, serviceType_.getNumber());
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeUInt32(5, targetValueMin_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeUInt32(6, targetValueMax_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -396,6 +462,14 @@ public final class ExpansionProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(4, serviceType_.getNumber());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(5, targetValueMin_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(6, targetValueMax_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -522,6 +596,10 @@ public final class ExpansionProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         serviceType_ = ServiceType.HUE;
         bitField0_ = (bitField0_ & ~0x00000008);
+        targetValueMin_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        targetValueMax_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -566,6 +644,14 @@ public final class ExpansionProtos {
           to_bitField0_ |= 0x00000008;
         }
         result.serviceType_ = serviceType_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.targetValueMin_ = targetValueMin_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.targetValueMax_ = targetValueMax_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -595,6 +681,12 @@ public final class ExpansionProtos {
         }
         if (other.hasServiceType()) {
           setServiceType(other.getServiceType());
+        }
+        if (other.hasTargetValueMin()) {
+          setTargetValueMin(other.getTargetValueMin());
+        }
+        if (other.hasTargetValueMax()) {
+          setTargetValueMax(other.getTargetValueMax());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -798,6 +890,70 @@ public final class ExpansionProtos {
         return this;
       }
 
+      private int targetValueMin_ ;
+      /**
+       * <code>optional uint32 target_value_min = 5;</code>
+       */
+      public boolean hasTargetValueMin() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional uint32 target_value_min = 5;</code>
+       */
+      public int getTargetValueMin() {
+        return targetValueMin_;
+      }
+      /**
+       * <code>optional uint32 target_value_min = 5;</code>
+       */
+      public Builder setTargetValueMin(int value) {
+        bitField0_ |= 0x00000010;
+        targetValueMin_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 target_value_min = 5;</code>
+       */
+      public Builder clearTargetValueMin() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        targetValueMin_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int targetValueMax_ ;
+      /**
+       * <code>optional uint32 target_value_max = 6;</code>
+       */
+      public boolean hasTargetValueMax() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional uint32 target_value_max = 6;</code>
+       */
+      public int getTargetValueMax() {
+        return targetValueMax_;
+      }
+      /**
+       * <code>optional uint32 target_value_max = 6;</code>
+       */
+      public Builder setTargetValueMax(int value) {
+        bitField0_ |= 0x00000020;
+        targetValueMax_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 target_value_max = 6;</code>
+       */
+      public Builder clearTargetValueMax() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        targetValueMax_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.AlarmAction)
     }
 
@@ -823,12 +979,14 @@ public final class ExpansionProtos {
       descriptor;
   static {
     String[] descriptorData = {
-      "\n\022alarm_action.proto\022\005hello\"|\n\013AlarmActi" +
-      "on\022\021\n\tunix_time\030\001 \001(\004\022\021\n\tdevice_id\030\002 \001(\t" +
-      "\022\035\n\025expected_ringtime_utc\030\003 \001(\004\022(\n\014servi" +
-      "ce_type\030\004 \001(\0162\022.hello.ServiceType* \n\013Ser" +
-      "viceType\022\007\n\003HUE\020\001\022\010\n\004NEST\020\002B2\n\037com.hello" +
-      ".suripu.api.expansionsB\017ExpansionProtos"
+      "\n\022alarm_action.proto\022\005hello\"\260\001\n\013AlarmAct" +
+      "ion\022\021\n\tunix_time\030\001 \001(\004\022\021\n\tdevice_id\030\002 \001(" +
+      "\t\022\035\n\025expected_ringtime_utc\030\003 \001(\004\022(\n\014serv" +
+      "ice_type\030\004 \001(\0162\022.hello.ServiceType\022\030\n\020ta" +
+      "rget_value_min\030\005 \001(\r\022\030\n\020target_value_max" +
+      "\030\006 \001(\r* \n\013ServiceType\022\007\n\003HUE\020\001\022\010\n\004NEST\020\002" +
+      "B2\n\037com.hello.suripu.api.expansionsB\017Exp" +
+      "ansionProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -847,7 +1005,7 @@ public final class ExpansionProtos {
     internal_static_hello_AlarmAction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_hello_AlarmAction_descriptor,
-        new String[] { "UnixTime", "DeviceId", "ExpectedRingtimeUtc", "ServiceType", });
+        new String[] { "UnixTime", "DeviceId", "ExpectedRingtimeUtc", "ServiceType", "TargetValueMin", "TargetValueMax", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

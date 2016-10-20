@@ -20,24 +20,28 @@ public class AlarmExpansion {
     public String serviceName;
 
     @JsonProperty("target_value")
-    public Integer targetValue;
+    public ValueRange targetValue;
 
     @JsonCreator
     public AlarmExpansion(@JsonProperty("id") long id,
                           @JsonProperty("enabled") final Boolean enabled,
                           @JsonProperty("category") final String category,
                           @JsonProperty("service_name") final String serviceName,
-                          @JsonProperty("target_value") final Integer targetValue){
+                          @JsonProperty("target_value") final ValueRange targetValue){
         this.id = id;
         this.enabled = enabled;
         this.category = category;
         this.serviceName = serviceName;
-        this.targetValue = targetValue;
+        if(targetValue == null) {
+            this.targetValue  = ValueRange.createEmpty();
+        } else {
+            this.targetValue = targetValue;
+        }
     }
 
     @Override
     public int hashCode(){
-        return Objects.hashCode(this.id, this.enabled, this.category, this.targetValue);
+        return Objects.hashCode(this.id, this.enabled, this.category);
     }
 
     @Override
