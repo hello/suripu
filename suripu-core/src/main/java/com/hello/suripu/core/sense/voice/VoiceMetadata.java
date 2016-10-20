@@ -57,7 +57,7 @@ public class VoiceMetadata {
         return volume.or(60);
     }
 
-    @JsonProperty("is_primary_account")
+    @JsonProperty("is_primary_user")
     public Boolean isPrimary() {
         return primaryAccountId.isPresent() && primaryAccountId.get().equals(currentAccount);
     }
