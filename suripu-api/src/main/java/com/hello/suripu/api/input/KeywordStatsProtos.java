@@ -6,40 +6,34 @@ package com.hello.suripu.api.input;
 public final class KeywordStatsProtos {
   private KeywordStatsProtos() {}
   public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
-  }
-
-  public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   public interface IndividualKeywordHistogramOrBuilder extends
       // @@protoc_insertion_point(interface_extends:IndividualKeywordHistogram)
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     * <code>repeated sint32 histogram_counts = 1;</code>
+     *
      * <pre>
      *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
      * </pre>
-     *
-     * <code>repeated sint32 histogram_counts = 1;</code>
      */
     java.util.List<java.lang.Integer> getHistogramCountsList();
     /**
+     * <code>repeated sint32 histogram_counts = 1;</code>
+     *
      * <pre>
      *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
      * </pre>
-     *
-     * <code>repeated sint32 histogram_counts = 1;</code>
      */
     int getHistogramCountsCount();
     /**
+     * <code>repeated sint32 histogram_counts = 1;</code>
+     *
      * <pre>
      *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
      * </pre>
-     *
-     * <code>repeated sint32 histogram_counts = 1;</code>
      */
     int getHistogramCounts(int index);
 
@@ -55,29 +49,37 @@ public final class KeywordStatsProtos {
   /**
    * Protobuf type {@code IndividualKeywordHistogram}
    */
-  public  static final class IndividualKeywordHistogram extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class IndividualKeywordHistogram extends
+      com.google.protobuf.GeneratedMessage implements
       // @@protoc_insertion_point(message_implements:IndividualKeywordHistogram)
       IndividualKeywordHistogramOrBuilder {
     // Use IndividualKeywordHistogram.newBuilder() to construct.
-    private IndividualKeywordHistogram(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private IndividualKeywordHistogram(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private IndividualKeywordHistogram() {
-      histogramCounts_ = java.util.Collections.emptyList();
-      keyWordIndex_ = 0;
+    private IndividualKeywordHistogram(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final IndividualKeywordHistogram defaultInstance;
+    public static IndividualKeywordHistogram getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public IndividualKeywordHistogram getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private IndividualKeywordHistogram(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -128,7 +130,7 @@ public final class KeywordStatsProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           histogramCounts_ = java.util.Collections.unmodifiableList(histogramCounts_);
@@ -142,43 +144,58 @@ public final class KeywordStatsProtos {
       return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_IndividualKeywordHistogram_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_IndividualKeywordHistogram_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram.class, com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<IndividualKeywordHistogram> PARSER =
+        new com.google.protobuf.AbstractParser<IndividualKeywordHistogram>() {
+      public IndividualKeywordHistogram parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new IndividualKeywordHistogram(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<IndividualKeywordHistogram> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
     public static final int HISTOGRAM_COUNTS_FIELD_NUMBER = 1;
     private java.util.List<java.lang.Integer> histogramCounts_;
     /**
+     * <code>repeated sint32 histogram_counts = 1;</code>
+     *
      * <pre>
      *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
      * </pre>
-     *
-     * <code>repeated sint32 histogram_counts = 1;</code>
      */
     public java.util.List<java.lang.Integer>
         getHistogramCountsList() {
       return histogramCounts_;
     }
     /**
+     * <code>repeated sint32 histogram_counts = 1;</code>
+     *
      * <pre>
      *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
      * </pre>
-     *
-     * <code>repeated sint32 histogram_counts = 1;</code>
      */
     public int getHistogramCountsCount() {
       return histogramCounts_.size();
     }
     /**
+     * <code>repeated sint32 histogram_counts = 1;</code>
+     *
      * <pre>
      *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
      * </pre>
-     *
-     * <code>repeated sint32 histogram_counts = 1;</code>
      */
     public int getHistogramCounts(int index) {
       return histogramCounts_.get(index);
@@ -199,6 +216,10 @@ public final class KeywordStatsProtos {
       return keyWordIndex_;
     }
 
+    private void initFields() {
+      histogramCounts_ = java.util.Collections.emptyList();
+      keyWordIndex_ = 0;
+    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -211,17 +232,19 @@ public final class KeywordStatsProtos {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       for (int i = 0; i < histogramCounts_.size(); i++) {
         output.writeSInt32(1, histogramCounts_.get(i));
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeSInt32(2, keyWordIndex_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -238,52 +261,16 @@ public final class KeywordStatsProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(2, keyWordIndex_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram)) {
-        return super.equals(obj);
-      }
-      com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram other = (com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram) obj;
-
-      boolean result = true;
-      result = result && getHistogramCountsList()
-          .equals(other.getHistogramCountsList());
-      result = result && (hasKeyWordIndex() == other.hasKeyWordIndex());
-      if (hasKeyWordIndex()) {
-        result = result && (getKeyWordIndex()
-            == other.getKeyWordIndex());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (getHistogramCountsCount() > 0) {
-        hash = (37 * hash) + HISTOGRAM_COUNTS_FIELD_NUMBER;
-        hash = (53 * hash) + getHistogramCountsList().hashCode();
-      }
-      if (hasKeyWordIndex()) {
-        hash = (37 * hash) + KEY_WORD_INDEX_FIELD_NUMBER;
-        hash = (53 * hash) + getKeyWordIndex();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram parseFrom(
@@ -309,57 +296,46 @@ public final class KeywordStatsProtos {
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -367,7 +343,7 @@ public final class KeywordStatsProtos {
      * Protobuf type {@code IndividualKeywordHistogram}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:IndividualKeywordHistogram)
         com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogramOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -375,7 +351,7 @@ public final class KeywordStatsProtos {
         return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_IndividualKeywordHistogram_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_IndividualKeywordHistogram_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -388,15 +364,18 @@ public final class KeywordStatsProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
         }
       }
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         histogramCounts_ = java.util.Collections.emptyList();
@@ -404,6 +383,10 @@ public final class KeywordStatsProtos {
         keyWordIndex_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -441,32 +424,6 @@ public final class KeywordStatsProtos {
         return result;
       }
 
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram) {
           return mergeFrom((com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram)other);
@@ -491,8 +448,7 @@ public final class KeywordStatsProtos {
         if (other.hasKeyWordIndex()) {
           setKeyWordIndex(other.getKeyWordIndex());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
@@ -509,7 +465,7 @@ public final class KeywordStatsProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -527,42 +483,42 @@ public final class KeywordStatsProtos {
          }
       }
       /**
+       * <code>repeated sint32 histogram_counts = 1;</code>
+       *
        * <pre>
        *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
        * </pre>
-       *
-       * <code>repeated sint32 histogram_counts = 1;</code>
        */
       public java.util.List<java.lang.Integer>
           getHistogramCountsList() {
         return java.util.Collections.unmodifiableList(histogramCounts_);
       }
       /**
+       * <code>repeated sint32 histogram_counts = 1;</code>
+       *
        * <pre>
        *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
        * </pre>
-       *
-       * <code>repeated sint32 histogram_counts = 1;</code>
        */
       public int getHistogramCountsCount() {
         return histogramCounts_.size();
       }
       /**
+       * <code>repeated sint32 histogram_counts = 1;</code>
+       *
        * <pre>
        *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
        * </pre>
-       *
-       * <code>repeated sint32 histogram_counts = 1;</code>
        */
       public int getHistogramCounts(int index) {
         return histogramCounts_.get(index);
       }
       /**
+       * <code>repeated sint32 histogram_counts = 1;</code>
+       *
        * <pre>
        *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
        * </pre>
-       *
-       * <code>repeated sint32 histogram_counts = 1;</code>
        */
       public Builder setHistogramCounts(
           int index, int value) {
@@ -572,11 +528,11 @@ public final class KeywordStatsProtos {
         return this;
       }
       /**
+       * <code>repeated sint32 histogram_counts = 1;</code>
+       *
        * <pre>
        *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
        * </pre>
-       *
-       * <code>repeated sint32 histogram_counts = 1;</code>
        */
       public Builder addHistogramCounts(int value) {
         ensureHistogramCountsIsMutable();
@@ -585,11 +541,11 @@ public final class KeywordStatsProtos {
         return this;
       }
       /**
+       * <code>repeated sint32 histogram_counts = 1;</code>
+       *
        * <pre>
        *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
        * </pre>
-       *
-       * <code>repeated sint32 histogram_counts = 1;</code>
        */
       public Builder addAllHistogramCounts(
           java.lang.Iterable<? extends java.lang.Integer> values) {
@@ -600,11 +556,11 @@ public final class KeywordStatsProtos {
         return this;
       }
       /**
+       * <code>repeated sint32 histogram_counts = 1;</code>
+       *
        * <pre>
        *bins, say 0 to 1.0 in chunks the size of 0.1, representing the counts of how often in each bin
        * </pre>
-       *
-       * <code>repeated sint32 histogram_counts = 1;</code>
        */
       public Builder clearHistogramCounts() {
         histogramCounts_ = java.util.Collections.emptyList();
@@ -644,53 +600,16 @@ public final class KeywordStatsProtos {
         onChanged();
         return this;
       }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:IndividualKeywordHistogram)
     }
 
-    // @@protoc_insertion_point(class_scope:IndividualKeywordHistogram)
-    private static final com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram();
+      defaultInstance = new IndividualKeywordHistogram(true);
+      defaultInstance.initFields();
     }
 
-    public static com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<IndividualKeywordHistogram>
-        PARSER = new com.google.protobuf.AbstractParser<IndividualKeywordHistogram>() {
-      public IndividualKeywordHistogram parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new IndividualKeywordHistogram(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<IndividualKeywordHistogram> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<IndividualKeywordHistogram> getParserForType() {
-      return PARSER;
-    }
-
-    public com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:IndividualKeywordHistogram)
   }
 
   public interface KeywordActivationOrBuilder extends
@@ -698,19 +617,19 @@ public final class KeywordStatsProtos {
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     * <code>optional sint64 time_counter = 1;</code>
+     *
      * <pre>
      *not be be confused with wall-time
      * </pre>
-     *
-     * <code>optional sint64 time_counter = 1;</code>
      */
     boolean hasTimeCounter();
     /**
+     * <code>optional sint64 time_counter = 1;</code>
+     *
      * <pre>
      *not be be confused with wall-time
      * </pre>
-     *
-     * <code>optional sint64 time_counter = 1;</code>
      */
     long getTimeCounter();
 
@@ -726,29 +645,37 @@ public final class KeywordStatsProtos {
   /**
    * Protobuf type {@code KeywordActivation}
    */
-  public  static final class KeywordActivation extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class KeywordActivation extends
+      com.google.protobuf.GeneratedMessage implements
       // @@protoc_insertion_point(message_implements:KeywordActivation)
       KeywordActivationOrBuilder {
     // Use KeywordActivation.newBuilder() to construct.
-    private KeywordActivation(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private KeywordActivation(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private KeywordActivation() {
-      timeCounter_ = 0L;
-      keyWordIndex_ = 0;
+    private KeywordActivation(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final KeywordActivation defaultInstance;
+    public static KeywordActivation getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public KeywordActivation getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private KeywordActivation(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -783,7 +710,7 @@ public final class KeywordStatsProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -794,32 +721,47 @@ public final class KeywordStatsProtos {
       return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordActivation_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordActivation_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation.class, com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<KeywordActivation> PARSER =
+        new com.google.protobuf.AbstractParser<KeywordActivation>() {
+      public KeywordActivation parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new KeywordActivation(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<KeywordActivation> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
     public static final int TIME_COUNTER_FIELD_NUMBER = 1;
     private long timeCounter_;
     /**
+     * <code>optional sint64 time_counter = 1;</code>
+     *
      * <pre>
      *not be be confused with wall-time
      * </pre>
-     *
-     * <code>optional sint64 time_counter = 1;</code>
      */
     public boolean hasTimeCounter() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
+     * <code>optional sint64 time_counter = 1;</code>
+     *
      * <pre>
      *not be be confused with wall-time
      * </pre>
-     *
-     * <code>optional sint64 time_counter = 1;</code>
      */
     public long getTimeCounter() {
       return timeCounter_;
@@ -840,6 +782,10 @@ public final class KeywordStatsProtos {
       return keyWordIndex_;
     }
 
+    private void initFields() {
+      timeCounter_ = 0L;
+      keyWordIndex_ = 0;
+    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -852,17 +798,19 @@ public final class KeywordStatsProtos {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeSInt64(1, timeCounter_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeSInt32(2, keyWordIndex_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -874,56 +822,16 @@ public final class KeywordStatsProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(2, keyWordIndex_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation)) {
-        return super.equals(obj);
-      }
-      com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation other = (com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation) obj;
-
-      boolean result = true;
-      result = result && (hasTimeCounter() == other.hasTimeCounter());
-      if (hasTimeCounter()) {
-        result = result && (getTimeCounter()
-            == other.getTimeCounter());
-      }
-      result = result && (hasKeyWordIndex() == other.hasKeyWordIndex());
-      if (hasKeyWordIndex()) {
-        result = result && (getKeyWordIndex()
-            == other.getKeyWordIndex());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (hasTimeCounter()) {
-        hash = (37 * hash) + TIME_COUNTER_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getTimeCounter());
-      }
-      if (hasKeyWordIndex()) {
-        hash = (37 * hash) + KEY_WORD_INDEX_FIELD_NUMBER;
-        hash = (53 * hash) + getKeyWordIndex();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation parseFrom(
@@ -949,57 +857,46 @@ public final class KeywordStatsProtos {
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -1007,7 +904,7 @@ public final class KeywordStatsProtos {
      * Protobuf type {@code KeywordActivation}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:KeywordActivation)
         com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivationOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -1015,7 +912,7 @@ public final class KeywordStatsProtos {
         return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordActivation_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordActivation_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -1028,15 +925,18 @@ public final class KeywordStatsProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
         }
       }
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         timeCounter_ = 0L;
@@ -1044,6 +944,10 @@ public final class KeywordStatsProtos {
         keyWordIndex_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -1080,32 +984,6 @@ public final class KeywordStatsProtos {
         return result;
       }
 
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation) {
           return mergeFrom((com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation)other);
@@ -1123,8 +1001,7 @@ public final class KeywordStatsProtos {
         if (other.hasKeyWordIndex()) {
           setKeyWordIndex(other.getKeyWordIndex());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
@@ -1141,7 +1018,7 @@ public final class KeywordStatsProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -1153,31 +1030,31 @@ public final class KeywordStatsProtos {
 
       private long timeCounter_ ;
       /**
+       * <code>optional sint64 time_counter = 1;</code>
+       *
        * <pre>
        *not be be confused with wall-time
        * </pre>
-       *
-       * <code>optional sint64 time_counter = 1;</code>
        */
       public boolean hasTimeCounter() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
+       * <code>optional sint64 time_counter = 1;</code>
+       *
        * <pre>
        *not be be confused with wall-time
        * </pre>
-       *
-       * <code>optional sint64 time_counter = 1;</code>
        */
       public long getTimeCounter() {
         return timeCounter_;
       }
       /**
+       * <code>optional sint64 time_counter = 1;</code>
+       *
        * <pre>
        *not be be confused with wall-time
        * </pre>
-       *
-       * <code>optional sint64 time_counter = 1;</code>
        */
       public Builder setTimeCounter(long value) {
         bitField0_ |= 0x00000001;
@@ -1186,11 +1063,11 @@ public final class KeywordStatsProtos {
         return this;
       }
       /**
+       * <code>optional sint64 time_counter = 1;</code>
+       *
        * <pre>
        *not be be confused with wall-time
        * </pre>
-       *
-       * <code>optional sint64 time_counter = 1;</code>
        */
       public Builder clearTimeCounter() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1230,53 +1107,16 @@ public final class KeywordStatsProtos {
         onChanged();
         return this;
       }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:KeywordActivation)
     }
 
-    // @@protoc_insertion_point(class_scope:KeywordActivation)
-    private static final com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation();
+      defaultInstance = new KeywordActivation(true);
+      defaultInstance.initFields();
     }
 
-    public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<KeywordActivation>
-        PARSER = new com.google.protobuf.AbstractParser<KeywordActivation>() {
-      public KeywordActivation parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new KeywordActivation(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<KeywordActivation> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<KeywordActivation> getParserForType() {
-      return PARSER;
-    }
-
-    public com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:KeywordActivation)
   }
 
   public interface KeywordStatsOrBuilder extends
@@ -1348,30 +1188,37 @@ public final class KeywordStatsProtos {
   /**
    * Protobuf type {@code KeywordStats}
    */
-  public  static final class KeywordStats extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class KeywordStats extends
+      com.google.protobuf.GeneratedMessage implements
       // @@protoc_insertion_point(message_implements:KeywordStats)
       KeywordStatsOrBuilder {
     // Use KeywordStats.newBuilder() to construct.
-    private KeywordStats(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private KeywordStats(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private KeywordStats() {
-      netModel_ = "";
-      histograms_ = java.util.Collections.emptyList();
-      keywordActivations_ = java.util.Collections.emptyList();
+    private KeywordStats(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final KeywordStats defaultInstance;
+    public static KeywordStats getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public KeywordStats getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private KeywordStats(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1401,8 +1248,7 @@ public final class KeywordStatsProtos {
                 histograms_ = new java.util.ArrayList<com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram>();
                 mutable_bitField0_ |= 0x00000002;
               }
-              histograms_.add(
-                  input.readMessage(com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram.PARSER, extensionRegistry));
+              histograms_.add(input.readMessage(com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram.PARSER, extensionRegistry));
               break;
             }
             case 26: {
@@ -1410,8 +1256,7 @@ public final class KeywordStatsProtos {
                 keywordActivations_ = new java.util.ArrayList<com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation>();
                 mutable_bitField0_ |= 0x00000004;
               }
-              keywordActivations_.add(
-                  input.readMessage(com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation.PARSER, extensionRegistry));
+              keywordActivations_.add(input.readMessage(com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation.PARSER, extensionRegistry));
               break;
             }
           }
@@ -1420,7 +1265,7 @@ public final class KeywordStatsProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           histograms_ = java.util.Collections.unmodifiableList(histograms_);
@@ -1437,16 +1282,31 @@ public final class KeywordStatsProtos {
       return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordStats_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordStats_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.class, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<KeywordStats> PARSER =
+        new com.google.protobuf.AbstractParser<KeywordStats>() {
+      public KeywordStats parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new KeywordStats(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<KeywordStats> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
     public static final int NET_MODEL_FIELD_NUMBER = 1;
-    private volatile java.lang.Object netModel_;
+    private java.lang.Object netModel_;
     /**
      * <code>optional string net_model = 1;</code>
      */
@@ -1557,6 +1417,11 @@ public final class KeywordStatsProtos {
       return keywordActivations_.get(index);
     }
 
+    private void initFields() {
+      netModel_ = "";
+      histograms_ = java.util.Collections.emptyList();
+      keywordActivations_ = java.util.Collections.emptyList();
+    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1569,8 +1434,9 @@ public final class KeywordStatsProtos {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, netModel_);
+        output.writeBytes(1, getNetModelBytes());
       }
       for (int i = 0; i < histograms_.size(); i++) {
         output.writeMessage(2, histograms_.get(i));
@@ -1578,16 +1444,18 @@ public final class KeywordStatsProtos {
       for (int i = 0; i < keywordActivations_.size(); i++) {
         output.writeMessage(3, keywordActivations_.get(i));
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, netModel_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getNetModelBytes());
       }
       for (int i = 0; i < histograms_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
@@ -1597,58 +1465,16 @@ public final class KeywordStatsProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, keywordActivations_.get(i));
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats)) {
-        return super.equals(obj);
-      }
-      com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats other = (com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats) obj;
-
-      boolean result = true;
-      result = result && (hasNetModel() == other.hasNetModel());
-      if (hasNetModel()) {
-        result = result && getNetModel()
-            .equals(other.getNetModel());
-      }
-      result = result && getHistogramsList()
-          .equals(other.getHistogramsList());
-      result = result && getKeywordActivationsList()
-          .equals(other.getKeywordActivationsList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (hasNetModel()) {
-        hash = (37 * hash) + NET_MODEL_FIELD_NUMBER;
-        hash = (53 * hash) + getNetModel().hashCode();
-      }
-      if (getHistogramsCount() > 0) {
-        hash = (37 * hash) + HISTOGRAMS_FIELD_NUMBER;
-        hash = (53 * hash) + getHistogramsList().hashCode();
-      }
-      if (getKeywordActivationsCount() > 0) {
-        hash = (37 * hash) + KEYWORD_ACTIVATIONS_FIELD_NUMBER;
-        hash = (53 * hash) + getKeywordActivationsList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats parseFrom(
@@ -1674,57 +1500,46 @@ public final class KeywordStatsProtos {
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -1732,7 +1547,7 @@ public final class KeywordStatsProtos {
      * Protobuf type {@code KeywordStats}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:KeywordStats)
         com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -1740,7 +1555,7 @@ public final class KeywordStatsProtos {
         return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordStats_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.KeywordStatsProtos.internal_static_KeywordStats_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -1753,17 +1568,20 @@ public final class KeywordStatsProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getHistogramsFieldBuilder();
           getKeywordActivationsFieldBuilder();
         }
       }
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         netModel_ = "";
@@ -1781,6 +1599,10 @@ public final class KeywordStatsProtos {
           keywordActivationsBuilder_.clear();
         }
         return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -1831,32 +1653,6 @@ public final class KeywordStatsProtos {
         return result;
       }
 
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats) {
           return mergeFrom((com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats)other);
@@ -1892,7 +1688,7 @@ public final class KeywordStatsProtos {
               histograms_ = other.histograms_;
               bitField0_ = (bitField0_ & ~0x00000002);
               histogramsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getHistogramsFieldBuilder() : null;
             } else {
               histogramsBuilder_.addAllMessages(other.histograms_);
@@ -1918,15 +1714,14 @@ public final class KeywordStatsProtos {
               keywordActivations_ = other.keywordActivations_;
               bitField0_ = (bitField0_ & ~0x00000004);
               keywordActivationsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getKeywordActivationsFieldBuilder() : null;
             } else {
               keywordActivationsBuilder_.addAllMessages(other.keywordActivations_);
             }
           }
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
@@ -1943,7 +1738,7 @@ public final class KeywordStatsProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -2038,7 +1833,7 @@ public final class KeywordStatsProtos {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram, com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram.Builder, com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogramOrBuilder> histogramsBuilder_;
 
       /**
@@ -2254,11 +2049,11 @@ public final class KeywordStatsProtos {
            getHistogramsBuilderList() {
         return getHistogramsFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram, com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram.Builder, com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogramOrBuilder> 
           getHistogramsFieldBuilder() {
         if (histogramsBuilder_ == null) {
-          histogramsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+          histogramsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram, com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogram.Builder, com.hello.suripu.api.input.KeywordStatsProtos.IndividualKeywordHistogramOrBuilder>(
                   histograms_,
                   ((bitField0_ & 0x00000002) == 0x00000002),
@@ -2278,7 +2073,7 @@ public final class KeywordStatsProtos {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation, com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivationOrBuilder> keywordActivationsBuilder_;
 
       /**
@@ -2494,11 +2289,11 @@ public final class KeywordStatsProtos {
            getKeywordActivationsBuilderList() {
         return getKeywordActivationsFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation, com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivationOrBuilder> 
           getKeywordActivationsFieldBuilder() {
         if (keywordActivationsBuilder_ == null) {
-          keywordActivationsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+          keywordActivationsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation, com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivation.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordActivationOrBuilder>(
                   keywordActivations_,
                   ((bitField0_ & 0x00000004) == 0x00000004),
@@ -2508,76 +2303,39 @@ public final class KeywordStatsProtos {
         }
         return keywordActivationsBuilder_;
       }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:KeywordStats)
     }
 
-    // @@protoc_insertion_point(class_scope:KeywordStats)
-    private static final com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats();
+      defaultInstance = new KeywordStats(true);
+      defaultInstance.initFields();
     }
 
-    public static com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<KeywordStats>
-        PARSER = new com.google.protobuf.AbstractParser<KeywordStats>() {
-      public KeywordStats parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new KeywordStats(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<KeywordStats> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<KeywordStats> getParserForType() {
-      return PARSER;
-    }
-
-    public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:KeywordStats)
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_IndividualKeywordHistogram_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_IndividualKeywordHistogram_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_KeywordActivation_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_KeywordActivation_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_KeywordStats_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_KeywordStats_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
+  private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
     java.lang.String[] descriptorData = {
@@ -2606,19 +2364,19 @@ public final class KeywordStatsProtos {
     internal_static_IndividualKeywordHistogram_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_IndividualKeywordHistogram_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_IndividualKeywordHistogram_descriptor,
         new java.lang.String[] { "HistogramCounts", "KeyWordIndex", });
     internal_static_KeywordActivation_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_KeywordActivation_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_KeywordActivation_descriptor,
         new java.lang.String[] { "TimeCounter", "KeyWordIndex", });
     internal_static_KeywordStats_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_KeywordStats_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_KeywordStats_descriptor,
         new java.lang.String[] { "NetModel", "Histograms", "KeywordActivations", });
   }

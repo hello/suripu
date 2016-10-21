@@ -6,13 +6,7 @@ package com.hello.suripu.api.input;
 public final class DataInputProtos {
   private DataInputProtos() {}
   public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
-  }
-
-  public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   public interface periodic_dataOrBuilder extends
       // @@protoc_insertion_point(interface_extends:periodic_data)
@@ -114,27 +108,27 @@ public final class DataInputProtos {
     int getFirmwareVersion();
 
     /**
+     * <code>optional string device_id = 12;</code>
+     *
      * <pre>
      * Please do not reuse index 11, it's for the removed pill_data.
      * </pre>
-     *
-     * <code>optional string device_id = 12;</code>
      */
     boolean hasDeviceId();
     /**
+     * <code>optional string device_id = 12;</code>
+     *
      * <pre>
      * Please do not reuse index 11, it's for the removed pill_data.
      * </pre>
-     *
-     * <code>optional string device_id = 12;</code>
      */
     java.lang.String getDeviceId();
     /**
+     * <code>optional string device_id = 12;</code>
+     *
      * <pre>
      * Please do not reuse index 11, it's for the removed pill_data.
      * </pre>
-     *
-     * <code>optional string device_id = 12;</code>
      */
     com.google.protobuf.ByteString
         getDeviceIdBytes();
@@ -221,53 +215,53 @@ public final class DataInputProtos {
     int getAudioPeakEnergyDb();
 
     /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
      * <pre>
      * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
      * </pre>
-     *
-     * <code>optional uint32 pressure = 22;</code>
      */
     boolean hasPressure();
     /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
      * <pre>
      * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
      * </pre>
-     *
-     * <code>optional uint32 pressure = 22;</code>
      */
     int getPressure();
 
     /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
      * <pre>
      *from 0 - 1000 ppb
      * </pre>
-     *
-     * <code>optional int32 tvoc = 23;</code>
      */
     boolean hasTvoc();
     /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
      * <pre>
      *from 0 - 1000 ppb
      * </pre>
-     *
-     * <code>optional int32 tvoc = 23;</code>
      */
     int getTvoc();
 
     /**
+     * <code>optional int32 co2 = 24;</code>
+     *
      * <pre>
      *from 400 - 5000 ppm
      * </pre>
-     *
-     * <code>optional int32 co2 = 24;</code>
      */
     boolean hasCo2();
     /**
+     * <code>optional int32 co2 = 24;</code>
+     *
      * <pre>
      *from 400 - 5000 ppm
      * </pre>
-     *
-     * <code>optional int32 co2 = 24;</code>
      */
     int getCo2();
 
@@ -309,51 +303,37 @@ public final class DataInputProtos {
   /**
    * Protobuf type {@code periodic_data}
    */
-  public  static final class periodic_data extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class periodic_data extends
+      com.google.protobuf.GeneratedMessage implements
       // @@protoc_insertion_point(message_implements:periodic_data)
       periodic_dataOrBuilder {
     // Use periodic_data.newBuilder() to construct.
-    private periodic_data(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private periodic_data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private periodic_data() {
-      unixTime_ = 0;
-      light_ = 0;
-      temperature_ = 0;
-      humidity_ = 0;
-      dust_ = 0;
-      name_ = "";
-      mac_ = com.google.protobuf.ByteString.EMPTY;
-      lightVariability_ = 0;
-      lightTonality_ = 0;
-      firmwareVersion_ = 0;
-      deviceId_ = "";
-      dustVariability_ = 0;
-      dustMax_ = 0;
-      dustMin_ = 0;
-      waveCount_ = 0;
-      holdCount_ = 0;
-      audioNumDisturbances_ = 0;
-      audioPeakDisturbanceEnergyDb_ = 0;
-      audioPeakBackgroundEnergyDb_ = 0;
-      audioPeakEnergyDb_ = 0;
-      pressure_ = 0;
-      tvoc_ = 0;
-      co2_ = 0;
-      lightDurationMs_ = 0;
+    private periodic_data(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final periodic_data defaultInstance;
+    public static periodic_data getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public periodic_data getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private periodic_data(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -526,7 +506,7 @@ public final class DataInputProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -537,11 +517,26 @@ public final class DataInputProtos {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.hello.suripu.api.input.DataInputProtos.periodic_data.class, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<periodic_data> PARSER =
+        new com.google.protobuf.AbstractParser<periodic_data>() {
+      public periodic_data parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new periodic_data(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<periodic_data> getParserForType() {
+      return PARSER;
     }
 
     public interface light_dataOrBuilder extends
@@ -614,34 +609,37 @@ public final class DataInputProtos {
     /**
      * Protobuf type {@code periodic_data.light_data}
      */
-    public  static final class light_data extends
-        com.google.protobuf.GeneratedMessageV3 implements
+    public static final class light_data extends
+        com.google.protobuf.GeneratedMessage implements
         // @@protoc_insertion_point(message_implements:periodic_data.light_data)
         light_dataOrBuilder {
       // Use light_data.newBuilder() to construct.
-      private light_data(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      private light_data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
+        this.unknownFields = builder.getUnknownFields();
       }
-      private light_data() {
-        r_ = 0;
-        g_ = 0;
-        b_ = 0;
-        infrared_ = 0;
-        clear_ = 0;
-        luxCount_ = 0;
-        uvCount_ = 0;
+      private light_data(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final light_data defaultInstance;
+      public static light_data getDefaultInstance() {
+        return defaultInstance;
       }
 
+      public light_data getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
       @java.lang.Override
       public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+          getUnknownFields() {
         return this.unknownFields;
       }
       private light_data(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        this();
+        initFields();
         int mutable_bitField0_ = 0;
         com.google.protobuf.UnknownFieldSet.Builder unknownFields =
             com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -701,7 +699,7 @@ public final class DataInputProtos {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
           throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+              e.getMessage()).setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
@@ -712,11 +710,26 @@ public final class DataInputProtos {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.class, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<light_data> PARSER =
+          new com.google.protobuf.AbstractParser<light_data>() {
+        public light_data parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new light_data(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<light_data> getParserForType() {
+        return PARSER;
       }
 
       private int bitField0_;
@@ -825,6 +838,15 @@ public final class DataInputProtos {
         return uvCount_;
       }
 
+      private void initFields() {
+        r_ = 0;
+        g_ = 0;
+        b_ = 0;
+        infrared_ = 0;
+        clear_ = 0;
+        luxCount_ = 0;
+        uvCount_ = 0;
+      }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -849,6 +871,7 @@ public final class DataInputProtos {
 
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
+        getSerializedSize();
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           output.writeInt32(1, r_);
         }
@@ -870,11 +893,12 @@ public final class DataInputProtos {
         if (((bitField0_ & 0x00000040) == 0x00000040)) {
           output.writeInt32(7, uvCount_);
         }
-        unknownFields.writeTo(output);
+        getUnknownFields().writeTo(output);
       }
 
+      private int memoizedSerializedSize = -1;
       public int getSerializedSize() {
-        int size = memoizedSize;
+        int size = memoizedSerializedSize;
         if (size != -1) return size;
 
         size = 0;
@@ -906,100 +930,16 @@ public final class DataInputProtos {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(7, uvCount_);
         }
-        size += unknownFields.getSerializedSize();
-        memoizedSize = size;
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
         return size;
       }
 
       private static final long serialVersionUID = 0L;
       @java.lang.Override
-      public boolean equals(final java.lang.Object obj) {
-        if (obj == this) {
-         return true;
-        }
-        if (!(obj instanceof com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data)) {
-          return super.equals(obj);
-        }
-        com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data other = (com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data) obj;
-
-        boolean result = true;
-        result = result && (hasR() == other.hasR());
-        if (hasR()) {
-          result = result && (getR()
-              == other.getR());
-        }
-        result = result && (hasG() == other.hasG());
-        if (hasG()) {
-          result = result && (getG()
-              == other.getG());
-        }
-        result = result && (hasB() == other.hasB());
-        if (hasB()) {
-          result = result && (getB()
-              == other.getB());
-        }
-        result = result && (hasInfrared() == other.hasInfrared());
-        if (hasInfrared()) {
-          result = result && (getInfrared()
-              == other.getInfrared());
-        }
-        result = result && (hasClear() == other.hasClear());
-        if (hasClear()) {
-          result = result && (getClear()
-              == other.getClear());
-        }
-        result = result && (hasLuxCount() == other.hasLuxCount());
-        if (hasLuxCount()) {
-          result = result && (getLuxCount()
-              == other.getLuxCount());
-        }
-        result = result && (hasUvCount() == other.hasUvCount());
-        if (hasUvCount()) {
-          result = result && (getUvCount()
-              == other.getUvCount());
-        }
-        result = result && unknownFields.equals(other.unknownFields);
-        return result;
-      }
-
-      @java.lang.Override
-      public int hashCode() {
-        if (memoizedHashCode != 0) {
-          return memoizedHashCode;
-        }
-        int hash = 41;
-        hash = (19 * hash) + getDescriptorForType().hashCode();
-        if (hasR()) {
-          hash = (37 * hash) + R_FIELD_NUMBER;
-          hash = (53 * hash) + getR();
-        }
-        if (hasG()) {
-          hash = (37 * hash) + G_FIELD_NUMBER;
-          hash = (53 * hash) + getG();
-        }
-        if (hasB()) {
-          hash = (37 * hash) + B_FIELD_NUMBER;
-          hash = (53 * hash) + getB();
-        }
-        if (hasInfrared()) {
-          hash = (37 * hash) + INFRARED_FIELD_NUMBER;
-          hash = (53 * hash) + getInfrared();
-        }
-        if (hasClear()) {
-          hash = (37 * hash) + CLEAR_FIELD_NUMBER;
-          hash = (53 * hash) + getClear();
-        }
-        if (hasLuxCount()) {
-          hash = (37 * hash) + LUX_COUNT_FIELD_NUMBER;
-          hash = (53 * hash) + getLuxCount();
-        }
-        if (hasUvCount()) {
-          hash = (37 * hash) + UV_COUNT_FIELD_NUMBER;
-          hash = (53 * hash) + getUvCount();
-        }
-        hash = (29 * hash) + unknownFields.hashCode();
-        memoizedHashCode = hash;
-        return hash;
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
       }
 
       public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
@@ -1025,57 +965,46 @@ public final class DataInputProtos {
       }
       public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return PARSER.parseFrom(input);
       }
       public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return PARSER.parseFrom(input, extensionRegistry);
       }
       public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
+        return PARSER.parseDelimitedFrom(input);
       }
       public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
       public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return PARSER.parseFrom(input);
       }
       public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return PARSER.parseFrom(input, extensionRegistry);
       }
 
+      public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder() {
-        return DEFAULT_INSTANCE.toBuilder();
-      }
       public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data prototype) {
-        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        return newBuilder().mergeFrom(prototype);
       }
-      public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
-      }
+      public Builder toBuilder() { return newBuilder(this); }
 
       @java.lang.Override
       protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -1083,7 +1012,7 @@ public final class DataInputProtos {
        * Protobuf type {@code periodic_data.light_data}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:periodic_data.light_data)
           com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
@@ -1091,7 +1020,7 @@ public final class DataInputProtos {
           return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_descriptor;
         }
 
-        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
           return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_light_data_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
@@ -1104,15 +1033,18 @@ public final class DataInputProtos {
         }
 
         private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           }
         }
+        private static Builder create() {
+          return new Builder();
+        }
+
         public Builder clear() {
           super.clear();
           r_ = 0;
@@ -1130,6 +1062,10 @@ public final class DataInputProtos {
           uvCount_ = 0;
           bitField0_ = (bitField0_ & ~0x00000040);
           return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
         }
 
         public com.google.protobuf.Descriptors.Descriptor
@@ -1186,32 +1122,6 @@ public final class DataInputProtos {
           return result;
         }
 
-        public Builder clone() {
-          return (Builder) super.clone();
-        }
-        public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            Object value) {
-          return (Builder) super.setField(field, value);
-        }
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
-          return (Builder) super.clearField(field);
-        }
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-          return (Builder) super.clearOneof(oneof);
-        }
-        public Builder setRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, Object value) {
-          return (Builder) super.setRepeatedField(field, index, value);
-        }
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            Object value) {
-          return (Builder) super.addRepeatedField(field, value);
-        }
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data) {
             return mergeFrom((com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data)other);
@@ -1244,19 +1154,21 @@ public final class DataInputProtos {
           if (other.hasUvCount()) {
             setUvCount(other.getUvCount());
           }
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
+          this.mergeUnknownFields(other.getUnknownFields());
           return this;
         }
 
         public final boolean isInitialized() {
           if (!hasR()) {
+            
             return false;
           }
           if (!hasG()) {
+            
             return false;
           }
           if (!hasB()) {
+            
             return false;
           }
           return true;
@@ -1271,7 +1183,7 @@ public final class DataInputProtos {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             parsedMessage = (com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data) e.getUnfinishedMessage();
-            throw e.unwrapIOException();
+            throw e;
           } finally {
             if (parsedMessage != null) {
               mergeFrom(parsedMessage);
@@ -1504,53 +1416,16 @@ public final class DataInputProtos {
           onChanged();
           return this;
         }
-        public final Builder setUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.setUnknownFields(unknownFields);
-        }
-
-        public final Builder mergeUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.mergeUnknownFields(unknownFields);
-        }
-
 
         // @@protoc_insertion_point(builder_scope:periodic_data.light_data)
       }
 
-      // @@protoc_insertion_point(class_scope:periodic_data.light_data)
-      private static final com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data DEFAULT_INSTANCE;
       static {
-        DEFAULT_INSTANCE = new com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data();
+        defaultInstance = new light_data(true);
+        defaultInstance.initFields();
       }
 
-      public static com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getDefaultInstance() {
-        return DEFAULT_INSTANCE;
-      }
-
-      @java.lang.Deprecated public static final com.google.protobuf.Parser<light_data>
-          PARSER = new com.google.protobuf.AbstractParser<light_data>() {
-        public light_data parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-            return new light_data(input, extensionRegistry);
-        }
-      };
-
-      public static com.google.protobuf.Parser<light_data> parser() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<light_data> getParserForType() {
-        return PARSER;
-      }
-
-      public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getDefaultInstanceForType() {
-        return DEFAULT_INSTANCE;
-      }
-
+      // @@protoc_insertion_point(class_scope:periodic_data.light_data)
     }
 
     private int bitField0_;
@@ -1630,7 +1505,7 @@ public final class DataInputProtos {
     }
 
     public static final int NAME_FIELD_NUMBER = 6;
-    private volatile java.lang.Object name_;
+    private java.lang.Object name_;
     /**
      * <code>optional string name = 6;</code>
      */
@@ -1732,23 +1607,23 @@ public final class DataInputProtos {
     }
 
     public static final int DEVICE_ID_FIELD_NUMBER = 12;
-    private volatile java.lang.Object deviceId_;
+    private java.lang.Object deviceId_;
     /**
+     * <code>optional string device_id = 12;</code>
+     *
      * <pre>
      * Please do not reuse index 11, it's for the removed pill_data.
      * </pre>
-     *
-     * <code>optional string device_id = 12;</code>
      */
     public boolean hasDeviceId() {
       return ((bitField0_ & 0x00000400) == 0x00000400);
     }
     /**
+     * <code>optional string device_id = 12;</code>
+     *
      * <pre>
      * Please do not reuse index 11, it's for the removed pill_data.
      * </pre>
-     *
-     * <code>optional string device_id = 12;</code>
      */
     public java.lang.String getDeviceId() {
       java.lang.Object ref = deviceId_;
@@ -1765,11 +1640,11 @@ public final class DataInputProtos {
       }
     }
     /**
+     * <code>optional string device_id = 12;</code>
+     *
      * <pre>
      * Please do not reuse index 11, it's for the removed pill_data.
      * </pre>
-     *
-     * <code>optional string device_id = 12;</code>
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
@@ -1923,21 +1798,21 @@ public final class DataInputProtos {
     public static final int PRESSURE_FIELD_NUMBER = 22;
     private int pressure_;
     /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
      * <pre>
      * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
      * </pre>
-     *
-     * <code>optional uint32 pressure = 22;</code>
      */
     public boolean hasPressure() {
       return ((bitField0_ & 0x00100000) == 0x00100000);
     }
     /**
+     * <code>optional uint32 pressure = 22;</code>
+     *
      * <pre>
      * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
      * </pre>
-     *
-     * <code>optional uint32 pressure = 22;</code>
      */
     public int getPressure() {
       return pressure_;
@@ -1946,21 +1821,21 @@ public final class DataInputProtos {
     public static final int TVOC_FIELD_NUMBER = 23;
     private int tvoc_;
     /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
      * <pre>
      *from 0 - 1000 ppb
      * </pre>
-     *
-     * <code>optional int32 tvoc = 23;</code>
      */
     public boolean hasTvoc() {
       return ((bitField0_ & 0x00200000) == 0x00200000);
     }
     /**
+     * <code>optional int32 tvoc = 23;</code>
+     *
      * <pre>
      *from 0 - 1000 ppb
      * </pre>
-     *
-     * <code>optional int32 tvoc = 23;</code>
      */
     public int getTvoc() {
       return tvoc_;
@@ -1969,21 +1844,21 @@ public final class DataInputProtos {
     public static final int CO2_FIELD_NUMBER = 24;
     private int co2_;
     /**
+     * <code>optional int32 co2 = 24;</code>
+     *
      * <pre>
      *from 400 - 5000 ppm
      * </pre>
-     *
-     * <code>optional int32 co2 = 24;</code>
      */
     public boolean hasCo2() {
       return ((bitField0_ & 0x00400000) == 0x00400000);
     }
     /**
+     * <code>optional int32 co2 = 24;</code>
+     *
      * <pre>
      *from 400 - 5000 ppm
      * </pre>
-     *
-     * <code>optional int32 co2 = 24;</code>
      */
     public int getCo2() {
       return co2_;
@@ -2001,13 +1876,13 @@ public final class DataInputProtos {
      * <code>optional .periodic_data.light_data light_sensor = 25;</code>
      */
     public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getLightSensor() {
-      return lightSensor_ == null ? com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance() : lightSensor_;
+      return lightSensor_;
     }
     /**
      * <code>optional .periodic_data.light_data light_sensor = 25;</code>
      */
     public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder getLightSensorOrBuilder() {
-      return lightSensor_ == null ? com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance() : lightSensor_;
+      return lightSensor_;
     }
 
     public static final int LIGHT_DURATION_MS_FIELD_NUMBER = 26;
@@ -2037,15 +1912,43 @@ public final class DataInputProtos {
      * <code>optional .KeywordStats keyword_stats = 27;</code>
      */
     public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats getKeywordStats() {
-      return keywordStats_ == null ? com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance() : keywordStats_;
+      return keywordStats_;
     }
     /**
      * <code>optional .KeywordStats keyword_stats = 27;</code>
      */
     public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder getKeywordStatsOrBuilder() {
-      return keywordStats_ == null ? com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance() : keywordStats_;
+      return keywordStats_;
     }
 
+    private void initFields() {
+      unixTime_ = 0;
+      light_ = 0;
+      temperature_ = 0;
+      humidity_ = 0;
+      dust_ = 0;
+      name_ = "";
+      mac_ = com.google.protobuf.ByteString.EMPTY;
+      lightVariability_ = 0;
+      lightTonality_ = 0;
+      firmwareVersion_ = 0;
+      deviceId_ = "";
+      dustVariability_ = 0;
+      dustMax_ = 0;
+      dustMin_ = 0;
+      waveCount_ = 0;
+      holdCount_ = 0;
+      audioNumDisturbances_ = 0;
+      audioPeakDisturbanceEnergyDb_ = 0;
+      audioPeakBackgroundEnergyDb_ = 0;
+      audioPeakEnergyDb_ = 0;
+      pressure_ = 0;
+      tvoc_ = 0;
+      co2_ = 0;
+      lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
+      lightDurationMs_ = 0;
+      keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
+    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2064,6 +1967,7 @@ public final class DataInputProtos {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt32(1, unixTime_);
       }
@@ -2080,7 +1984,7 @@ public final class DataInputProtos {
         output.writeInt32(5, dust_);
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, name_);
+        output.writeBytes(6, getNameBytes());
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeBytes(7, mac_);
@@ -2095,7 +1999,7 @@ public final class DataInputProtos {
         output.writeInt32(10, firmwareVersion_);
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 12, deviceId_);
+        output.writeBytes(12, getDeviceIdBytes());
       }
       if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeInt32(13, dustVariability_);
@@ -2134,19 +2038,20 @@ public final class DataInputProtos {
         output.writeInt32(24, co2_);
       }
       if (((bitField0_ & 0x00800000) == 0x00800000)) {
-        output.writeMessage(25, getLightSensor());
+        output.writeMessage(25, lightSensor_);
       }
       if (((bitField0_ & 0x01000000) == 0x01000000)) {
         output.writeInt32(26, lightDurationMs_);
       }
       if (((bitField0_ & 0x02000000) == 0x02000000)) {
-        output.writeMessage(27, getKeywordStats());
+        output.writeMessage(27, keywordStats_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -2171,7 +2076,8 @@ public final class DataInputProtos {
           .computeInt32Size(5, dust_);
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, name_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getNameBytes());
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
@@ -2190,7 +2096,8 @@ public final class DataInputProtos {
           .computeInt32Size(10, firmwareVersion_);
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, deviceId_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(12, getDeviceIdBytes());
       }
       if (((bitField0_ & 0x00000800) == 0x00000800)) {
         size += com.google.protobuf.CodedOutputStream
@@ -2242,7 +2149,7 @@ public final class DataInputProtos {
       }
       if (((bitField0_ & 0x00800000) == 0x00800000)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(25, getLightSensor());
+          .computeMessageSize(25, lightSensor_);
       }
       if (((bitField0_ & 0x01000000) == 0x01000000)) {
         size += com.google.protobuf.CodedOutputStream
@@ -2250,273 +2157,18 @@ public final class DataInputProtos {
       }
       if (((bitField0_ & 0x02000000) == 0x02000000)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(27, getKeywordStats());
+          .computeMessageSize(27, keywordStats_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.hello.suripu.api.input.DataInputProtos.periodic_data)) {
-        return super.equals(obj);
-      }
-      com.hello.suripu.api.input.DataInputProtos.periodic_data other = (com.hello.suripu.api.input.DataInputProtos.periodic_data) obj;
-
-      boolean result = true;
-      result = result && (hasUnixTime() == other.hasUnixTime());
-      if (hasUnixTime()) {
-        result = result && (getUnixTime()
-            == other.getUnixTime());
-      }
-      result = result && (hasLight() == other.hasLight());
-      if (hasLight()) {
-        result = result && (getLight()
-            == other.getLight());
-      }
-      result = result && (hasTemperature() == other.hasTemperature());
-      if (hasTemperature()) {
-        result = result && (getTemperature()
-            == other.getTemperature());
-      }
-      result = result && (hasHumidity() == other.hasHumidity());
-      if (hasHumidity()) {
-        result = result && (getHumidity()
-            == other.getHumidity());
-      }
-      result = result && (hasDust() == other.hasDust());
-      if (hasDust()) {
-        result = result && (getDust()
-            == other.getDust());
-      }
-      result = result && (hasName() == other.hasName());
-      if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
-      }
-      result = result && (hasMac() == other.hasMac());
-      if (hasMac()) {
-        result = result && getMac()
-            .equals(other.getMac());
-      }
-      result = result && (hasLightVariability() == other.hasLightVariability());
-      if (hasLightVariability()) {
-        result = result && (getLightVariability()
-            == other.getLightVariability());
-      }
-      result = result && (hasLightTonality() == other.hasLightTonality());
-      if (hasLightTonality()) {
-        result = result && (getLightTonality()
-            == other.getLightTonality());
-      }
-      result = result && (hasFirmwareVersion() == other.hasFirmwareVersion());
-      if (hasFirmwareVersion()) {
-        result = result && (getFirmwareVersion()
-            == other.getFirmwareVersion());
-      }
-      result = result && (hasDeviceId() == other.hasDeviceId());
-      if (hasDeviceId()) {
-        result = result && getDeviceId()
-            .equals(other.getDeviceId());
-      }
-      result = result && (hasDustVariability() == other.hasDustVariability());
-      if (hasDustVariability()) {
-        result = result && (getDustVariability()
-            == other.getDustVariability());
-      }
-      result = result && (hasDustMax() == other.hasDustMax());
-      if (hasDustMax()) {
-        result = result && (getDustMax()
-            == other.getDustMax());
-      }
-      result = result && (hasDustMin() == other.hasDustMin());
-      if (hasDustMin()) {
-        result = result && (getDustMin()
-            == other.getDustMin());
-      }
-      result = result && (hasWaveCount() == other.hasWaveCount());
-      if (hasWaveCount()) {
-        result = result && (getWaveCount()
-            == other.getWaveCount());
-      }
-      result = result && (hasHoldCount() == other.hasHoldCount());
-      if (hasHoldCount()) {
-        result = result && (getHoldCount()
-            == other.getHoldCount());
-      }
-      result = result && (hasAudioNumDisturbances() == other.hasAudioNumDisturbances());
-      if (hasAudioNumDisturbances()) {
-        result = result && (getAudioNumDisturbances()
-            == other.getAudioNumDisturbances());
-      }
-      result = result && (hasAudioPeakDisturbanceEnergyDb() == other.hasAudioPeakDisturbanceEnergyDb());
-      if (hasAudioPeakDisturbanceEnergyDb()) {
-        result = result && (getAudioPeakDisturbanceEnergyDb()
-            == other.getAudioPeakDisturbanceEnergyDb());
-      }
-      result = result && (hasAudioPeakBackgroundEnergyDb() == other.hasAudioPeakBackgroundEnergyDb());
-      if (hasAudioPeakBackgroundEnergyDb()) {
-        result = result && (getAudioPeakBackgroundEnergyDb()
-            == other.getAudioPeakBackgroundEnergyDb());
-      }
-      result = result && (hasAudioPeakEnergyDb() == other.hasAudioPeakEnergyDb());
-      if (hasAudioPeakEnergyDb()) {
-        result = result && (getAudioPeakEnergyDb()
-            == other.getAudioPeakEnergyDb());
-      }
-      result = result && (hasPressure() == other.hasPressure());
-      if (hasPressure()) {
-        result = result && (getPressure()
-            == other.getPressure());
-      }
-      result = result && (hasTvoc() == other.hasTvoc());
-      if (hasTvoc()) {
-        result = result && (getTvoc()
-            == other.getTvoc());
-      }
-      result = result && (hasCo2() == other.hasCo2());
-      if (hasCo2()) {
-        result = result && (getCo2()
-            == other.getCo2());
-      }
-      result = result && (hasLightSensor() == other.hasLightSensor());
-      if (hasLightSensor()) {
-        result = result && getLightSensor()
-            .equals(other.getLightSensor());
-      }
-      result = result && (hasLightDurationMs() == other.hasLightDurationMs());
-      if (hasLightDurationMs()) {
-        result = result && (getLightDurationMs()
-            == other.getLightDurationMs());
-      }
-      result = result && (hasKeywordStats() == other.hasKeywordStats());
-      if (hasKeywordStats()) {
-        result = result && getKeywordStats()
-            .equals(other.getKeywordStats());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (hasUnixTime()) {
-        hash = (37 * hash) + UNIX_TIME_FIELD_NUMBER;
-        hash = (53 * hash) + getUnixTime();
-      }
-      if (hasLight()) {
-        hash = (37 * hash) + LIGHT_FIELD_NUMBER;
-        hash = (53 * hash) + getLight();
-      }
-      if (hasTemperature()) {
-        hash = (37 * hash) + TEMPERATURE_FIELD_NUMBER;
-        hash = (53 * hash) + getTemperature();
-      }
-      if (hasHumidity()) {
-        hash = (37 * hash) + HUMIDITY_FIELD_NUMBER;
-        hash = (53 * hash) + getHumidity();
-      }
-      if (hasDust()) {
-        hash = (37 * hash) + DUST_FIELD_NUMBER;
-        hash = (53 * hash) + getDust();
-      }
-      if (hasName()) {
-        hash = (37 * hash) + NAME_FIELD_NUMBER;
-        hash = (53 * hash) + getName().hashCode();
-      }
-      if (hasMac()) {
-        hash = (37 * hash) + MAC_FIELD_NUMBER;
-        hash = (53 * hash) + getMac().hashCode();
-      }
-      if (hasLightVariability()) {
-        hash = (37 * hash) + LIGHT_VARIABILITY_FIELD_NUMBER;
-        hash = (53 * hash) + getLightVariability();
-      }
-      if (hasLightTonality()) {
-        hash = (37 * hash) + LIGHT_TONALITY_FIELD_NUMBER;
-        hash = (53 * hash) + getLightTonality();
-      }
-      if (hasFirmwareVersion()) {
-        hash = (37 * hash) + FIRMWARE_VERSION_FIELD_NUMBER;
-        hash = (53 * hash) + getFirmwareVersion();
-      }
-      if (hasDeviceId()) {
-        hash = (37 * hash) + DEVICE_ID_FIELD_NUMBER;
-        hash = (53 * hash) + getDeviceId().hashCode();
-      }
-      if (hasDustVariability()) {
-        hash = (37 * hash) + DUST_VARIABILITY_FIELD_NUMBER;
-        hash = (53 * hash) + getDustVariability();
-      }
-      if (hasDustMax()) {
-        hash = (37 * hash) + DUST_MAX_FIELD_NUMBER;
-        hash = (53 * hash) + getDustMax();
-      }
-      if (hasDustMin()) {
-        hash = (37 * hash) + DUST_MIN_FIELD_NUMBER;
-        hash = (53 * hash) + getDustMin();
-      }
-      if (hasWaveCount()) {
-        hash = (37 * hash) + WAVE_COUNT_FIELD_NUMBER;
-        hash = (53 * hash) + getWaveCount();
-      }
-      if (hasHoldCount()) {
-        hash = (37 * hash) + HOLD_COUNT_FIELD_NUMBER;
-        hash = (53 * hash) + getHoldCount();
-      }
-      if (hasAudioNumDisturbances()) {
-        hash = (37 * hash) + AUDIO_NUM_DISTURBANCES_FIELD_NUMBER;
-        hash = (53 * hash) + getAudioNumDisturbances();
-      }
-      if (hasAudioPeakDisturbanceEnergyDb()) {
-        hash = (37 * hash) + AUDIO_PEAK_DISTURBANCE_ENERGY_DB_FIELD_NUMBER;
-        hash = (53 * hash) + getAudioPeakDisturbanceEnergyDb();
-      }
-      if (hasAudioPeakBackgroundEnergyDb()) {
-        hash = (37 * hash) + AUDIO_PEAK_BACKGROUND_ENERGY_DB_FIELD_NUMBER;
-        hash = (53 * hash) + getAudioPeakBackgroundEnergyDb();
-      }
-      if (hasAudioPeakEnergyDb()) {
-        hash = (37 * hash) + AUDIO_PEAK_ENERGY_DB_FIELD_NUMBER;
-        hash = (53 * hash) + getAudioPeakEnergyDb();
-      }
-      if (hasPressure()) {
-        hash = (37 * hash) + PRESSURE_FIELD_NUMBER;
-        hash = (53 * hash) + getPressure();
-      }
-      if (hasTvoc()) {
-        hash = (37 * hash) + TVOC_FIELD_NUMBER;
-        hash = (53 * hash) + getTvoc();
-      }
-      if (hasCo2()) {
-        hash = (37 * hash) + CO2_FIELD_NUMBER;
-        hash = (53 * hash) + getCo2();
-      }
-      if (hasLightSensor()) {
-        hash = (37 * hash) + LIGHT_SENSOR_FIELD_NUMBER;
-        hash = (53 * hash) + getLightSensor().hashCode();
-      }
-      if (hasLightDurationMs()) {
-        hash = (37 * hash) + LIGHT_DURATION_MS_FIELD_NUMBER;
-        hash = (53 * hash) + getLightDurationMs();
-      }
-      if (hasKeywordStats()) {
-        hash = (37 * hash) + KEYWORD_STATS_FIELD_NUMBER;
-        hash = (53 * hash) + getKeywordStats().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.hello.suripu.api.input.DataInputProtos.periodic_data parseFrom(
@@ -2542,57 +2194,46 @@ public final class DataInputProtos {
     }
     public static com.hello.suripu.api.input.DataInputProtos.periodic_data parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.periodic_data parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.periodic_data parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.periodic_data parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.periodic_data parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.periodic_data parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.periodic_data prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -2600,7 +2241,7 @@ public final class DataInputProtos {
      * Protobuf type {@code periodic_data}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:periodic_data)
         com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -2608,7 +2249,7 @@ public final class DataInputProtos {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_periodic_data_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -2621,17 +2262,20 @@ public final class DataInputProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getLightSensorFieldBuilder();
           getKeywordStatsFieldBuilder();
         }
       }
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         unixTime_ = 0;
@@ -2681,7 +2325,7 @@ public final class DataInputProtos {
         co2_ = 0;
         bitField0_ = (bitField0_ & ~0x00400000);
         if (lightSensorBuilder_ == null) {
-          lightSensor_ = null;
+          lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
         } else {
           lightSensorBuilder_.clear();
         }
@@ -2689,12 +2333,16 @@ public final class DataInputProtos {
         lightDurationMs_ = 0;
         bitField0_ = (bitField0_ & ~0x01000000);
         if (keywordStatsBuilder_ == null) {
-          keywordStats_ = null;
+          keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
         } else {
           keywordStatsBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x02000000);
         return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -2835,32 +2483,6 @@ public final class DataInputProtos {
         return result;
       }
 
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.hello.suripu.api.input.DataInputProtos.periodic_data) {
           return mergeFrom((com.hello.suripu.api.input.DataInputProtos.periodic_data)other);
@@ -2954,14 +2576,14 @@ public final class DataInputProtos {
         if (other.hasKeywordStats()) {
           mergeKeywordStats(other.getKeywordStats());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
         if (hasLightSensor()) {
           if (!getLightSensor().isInitialized()) {
+            
             return false;
           }
         }
@@ -2977,7 +2599,7 @@ public final class DataInputProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.hello.suripu.api.input.DataInputProtos.periodic_data) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -3356,21 +2978,21 @@ public final class DataInputProtos {
 
       private java.lang.Object deviceId_ = "";
       /**
+       * <code>optional string device_id = 12;</code>
+       *
        * <pre>
        * Please do not reuse index 11, it's for the removed pill_data.
        * </pre>
-       *
-       * <code>optional string device_id = 12;</code>
        */
       public boolean hasDeviceId() {
         return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
+       * <code>optional string device_id = 12;</code>
+       *
        * <pre>
        * Please do not reuse index 11, it's for the removed pill_data.
        * </pre>
-       *
-       * <code>optional string device_id = 12;</code>
        */
       public java.lang.String getDeviceId() {
         java.lang.Object ref = deviceId_;
@@ -3387,11 +3009,11 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>optional string device_id = 12;</code>
+       *
        * <pre>
        * Please do not reuse index 11, it's for the removed pill_data.
        * </pre>
-       *
-       * <code>optional string device_id = 12;</code>
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
@@ -3407,11 +3029,11 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>optional string device_id = 12;</code>
+       *
        * <pre>
        * Please do not reuse index 11, it's for the removed pill_data.
        * </pre>
-       *
-       * <code>optional string device_id = 12;</code>
        */
       public Builder setDeviceId(
           java.lang.String value) {
@@ -3424,11 +3046,11 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional string device_id = 12;</code>
+       *
        * <pre>
        * Please do not reuse index 11, it's for the removed pill_data.
        * </pre>
-       *
-       * <code>optional string device_id = 12;</code>
        */
       public Builder clearDeviceId() {
         bitField0_ = (bitField0_ & ~0x00000400);
@@ -3437,11 +3059,11 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional string device_id = 12;</code>
+       *
        * <pre>
        * Please do not reuse index 11, it's for the removed pill_data.
        * </pre>
-       *
-       * <code>optional string device_id = 12;</code>
        */
       public Builder setDeviceIdBytes(
           com.google.protobuf.ByteString value) {
@@ -3744,31 +3366,31 @@ public final class DataInputProtos {
 
       private int pressure_ ;
       /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
        * <pre>
        * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
        * </pre>
-       *
-       * <code>optional uint32 pressure = 22;</code>
        */
       public boolean hasPressure() {
         return ((bitField0_ & 0x00100000) == 0x00100000);
       }
       /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
        * <pre>
        * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
        * </pre>
-       *
-       * <code>optional uint32 pressure = 22;</code>
        */
       public int getPressure() {
         return pressure_;
       }
       /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
        * <pre>
        * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
        * </pre>
-       *
-       * <code>optional uint32 pressure = 22;</code>
        */
       public Builder setPressure(int value) {
         bitField0_ |= 0x00100000;
@@ -3777,11 +3399,11 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional uint32 pressure = 22;</code>
+       *
        * <pre>
        * in Q24.8 format (24 integer bits and 8 fractional bits). // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
        * </pre>
-       *
-       * <code>optional uint32 pressure = 22;</code>
        */
       public Builder clearPressure() {
         bitField0_ = (bitField0_ & ~0x00100000);
@@ -3792,31 +3414,31 @@ public final class DataInputProtos {
 
       private int tvoc_ ;
       /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
        * <pre>
        *from 0 - 1000 ppb
        * </pre>
-       *
-       * <code>optional int32 tvoc = 23;</code>
        */
       public boolean hasTvoc() {
         return ((bitField0_ & 0x00200000) == 0x00200000);
       }
       /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
        * <pre>
        *from 0 - 1000 ppb
        * </pre>
-       *
-       * <code>optional int32 tvoc = 23;</code>
        */
       public int getTvoc() {
         return tvoc_;
       }
       /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
        * <pre>
        *from 0 - 1000 ppb
        * </pre>
-       *
-       * <code>optional int32 tvoc = 23;</code>
        */
       public Builder setTvoc(int value) {
         bitField0_ |= 0x00200000;
@@ -3825,11 +3447,11 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional int32 tvoc = 23;</code>
+       *
        * <pre>
        *from 0 - 1000 ppb
        * </pre>
-       *
-       * <code>optional int32 tvoc = 23;</code>
        */
       public Builder clearTvoc() {
         bitField0_ = (bitField0_ & ~0x00200000);
@@ -3840,31 +3462,31 @@ public final class DataInputProtos {
 
       private int co2_ ;
       /**
+       * <code>optional int32 co2 = 24;</code>
+       *
        * <pre>
        *from 400 - 5000 ppm
        * </pre>
-       *
-       * <code>optional int32 co2 = 24;</code>
        */
       public boolean hasCo2() {
         return ((bitField0_ & 0x00400000) == 0x00400000);
       }
       /**
+       * <code>optional int32 co2 = 24;</code>
+       *
        * <pre>
        *from 400 - 5000 ppm
        * </pre>
-       *
-       * <code>optional int32 co2 = 24;</code>
        */
       public int getCo2() {
         return co2_;
       }
       /**
+       * <code>optional int32 co2 = 24;</code>
+       *
        * <pre>
        *from 400 - 5000 ppm
        * </pre>
-       *
-       * <code>optional int32 co2 = 24;</code>
        */
       public Builder setCo2(int value) {
         bitField0_ |= 0x00400000;
@@ -3873,11 +3495,11 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional int32 co2 = 24;</code>
+       *
        * <pre>
        *from 400 - 5000 ppm
        * </pre>
-       *
-       * <code>optional int32 co2 = 24;</code>
        */
       public Builder clearCo2() {
         bitField0_ = (bitField0_ & ~0x00400000);
@@ -3886,8 +3508,8 @@ public final class DataInputProtos {
         return this;
       }
 
-      private com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data lightSensor_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder> lightSensorBuilder_;
       /**
        * <code>optional .periodic_data.light_data light_sensor = 25;</code>
@@ -3900,7 +3522,7 @@ public final class DataInputProtos {
        */
       public com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data getLightSensor() {
         if (lightSensorBuilder_ == null) {
-          return lightSensor_ == null ? com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance() : lightSensor_;
+          return lightSensor_;
         } else {
           return lightSensorBuilder_.getMessage();
         }
@@ -3941,7 +3563,6 @@ public final class DataInputProtos {
       public Builder mergeLightSensor(com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data value) {
         if (lightSensorBuilder_ == null) {
           if (((bitField0_ & 0x00800000) == 0x00800000) &&
-              lightSensor_ != null &&
               lightSensor_ != com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance()) {
             lightSensor_ =
               com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.newBuilder(lightSensor_).mergeFrom(value).buildPartial();
@@ -3960,7 +3581,7 @@ public final class DataInputProtos {
        */
       public Builder clearLightSensor() {
         if (lightSensorBuilder_ == null) {
-          lightSensor_ = null;
+          lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
           onChanged();
         } else {
           lightSensorBuilder_.clear();
@@ -3983,18 +3604,17 @@ public final class DataInputProtos {
         if (lightSensorBuilder_ != null) {
           return lightSensorBuilder_.getMessageOrBuilder();
         } else {
-          return lightSensor_ == null ?
-              com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance() : lightSensor_;
+          return lightSensor_;
         }
       }
       /**
        * <code>optional .periodic_data.light_data light_sensor = 25;</code>
        */
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder> 
           getLightSensorFieldBuilder() {
         if (lightSensorBuilder_ == null) {
-          lightSensorBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          lightSensorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder>(
                   getLightSensor(),
                   getParentForChildren(),
@@ -4036,8 +3656,8 @@ public final class DataInputProtos {
         return this;
       }
 
-      private com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats keywordStats_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder> keywordStatsBuilder_;
       /**
        * <code>optional .KeywordStats keyword_stats = 27;</code>
@@ -4050,7 +3670,7 @@ public final class DataInputProtos {
        */
       public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats getKeywordStats() {
         if (keywordStatsBuilder_ == null) {
-          return keywordStats_ == null ? com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance() : keywordStats_;
+          return keywordStats_;
         } else {
           return keywordStatsBuilder_.getMessage();
         }
@@ -4091,7 +3711,6 @@ public final class DataInputProtos {
       public Builder mergeKeywordStats(com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats value) {
         if (keywordStatsBuilder_ == null) {
           if (((bitField0_ & 0x02000000) == 0x02000000) &&
-              keywordStats_ != null &&
               keywordStats_ != com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance()) {
             keywordStats_ =
               com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.newBuilder(keywordStats_).mergeFrom(value).buildPartial();
@@ -4110,7 +3729,7 @@ public final class DataInputProtos {
        */
       public Builder clearKeywordStats() {
         if (keywordStatsBuilder_ == null) {
-          keywordStats_ = null;
+          keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
           onChanged();
         } else {
           keywordStatsBuilder_.clear();
@@ -4133,18 +3752,17 @@ public final class DataInputProtos {
         if (keywordStatsBuilder_ != null) {
           return keywordStatsBuilder_.getMessageOrBuilder();
         } else {
-          return keywordStats_ == null ?
-              com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance() : keywordStats_;
+          return keywordStats_;
         }
       }
       /**
        * <code>optional .KeywordStats keyword_stats = 27;</code>
        */
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder> 
           getKeywordStatsFieldBuilder() {
         if (keywordStatsBuilder_ == null) {
-          keywordStatsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          keywordStatsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder>(
                   getKeywordStats(),
                   getParentForChildren(),
@@ -4153,53 +3771,16 @@ public final class DataInputProtos {
         }
         return keywordStatsBuilder_;
       }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:periodic_data)
     }
 
-    // @@protoc_insertion_point(class_scope:periodic_data)
-    private static final com.hello.suripu.api.input.DataInputProtos.periodic_data DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.hello.suripu.api.input.DataInputProtos.periodic_data();
+      defaultInstance = new periodic_data(true);
+      defaultInstance.initFields();
     }
 
-    public static com.hello.suripu.api.input.DataInputProtos.periodic_data getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<periodic_data>
-        PARSER = new com.google.protobuf.AbstractParser<periodic_data>() {
-      public periodic_data parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new periodic_data(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<periodic_data> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<periodic_data> getParserForType() {
-      return PARSER;
-    }
-
-    public com.hello.suripu.api.input.DataInputProtos.periodic_data getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:periodic_data)
   }
 
   public interface batched_periodic_dataOrBuilder extends
@@ -4254,95 +3835,95 @@ public final class DataInputProtos {
     int getFirmwareVersion();
 
     /**
+     * <code>optional int32 uptime_in_second = 4;</code>
+     *
      * <pre>
      * optional bool need_key = 5;  // this is no longer used on the FW
      * optional string serial = 6; // this is no longer used on the FW
      * </pre>
-     *
-     * <code>optional int32 uptime_in_second = 4;</code>
      */
     boolean hasUptimeInSecond();
     /**
+     * <code>optional int32 uptime_in_second = 4;</code>
+     *
      * <pre>
      * optional bool need_key = 5;  // this is no longer used on the FW
      * optional string serial = 6; // this is no longer used on the FW
      * </pre>
-     *
-     * <code>optional int32 uptime_in_second = 4;</code>
      */
     int getUptimeInSecond();
 
     /**
+     * <code>optional string connected_ssid = 7;</code>
+     *
      * <pre>
      * Commenting the following out until we figure why it fails to parse
      * </pre>
-     *
-     * <code>optional string connected_ssid = 7;</code>
      */
     boolean hasConnectedSsid();
     /**
+     * <code>optional string connected_ssid = 7;</code>
+     *
      * <pre>
      * Commenting the following out until we figure why it fails to parse
      * </pre>
-     *
-     * <code>optional string connected_ssid = 7;</code>
      */
     java.lang.String getConnectedSsid();
     /**
+     * <code>optional string connected_ssid = 7;</code>
+     *
      * <pre>
      * Commenting the following out until we figure why it fails to parse
      * </pre>
-     *
-     * <code>optional string connected_ssid = 7;</code>
      */
     com.google.protobuf.ByteString
         getConnectedSsidBytes();
 
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     java.util.List<com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point> 
         getScanList();
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point getScan(int index);
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     int getScanCount();
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder> 
         getScanOrBuilderList();
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder getScanOrBuilder(
         int index);
@@ -4359,34 +3940,37 @@ public final class DataInputProtos {
   /**
    * Protobuf type {@code batched_periodic_data}
    */
-  public  static final class batched_periodic_data extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class batched_periodic_data extends
+      com.google.protobuf.GeneratedMessage implements
       // @@protoc_insertion_point(message_implements:batched_periodic_data)
       batched_periodic_dataOrBuilder {
     // Use batched_periodic_data.newBuilder() to construct.
-    private batched_periodic_data(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private batched_periodic_data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private batched_periodic_data() {
-      data_ = java.util.Collections.emptyList();
-      deviceId_ = "";
-      firmwareVersion_ = 0;
-      uptimeInSecond_ = 0;
-      connectedSsid_ = "";
-      scan_ = java.util.Collections.emptyList();
-      messagesInQueue_ = 0;
+    private batched_periodic_data(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final batched_periodic_data defaultInstance;
+    public static batched_periodic_data getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public batched_periodic_data getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private batched_periodic_data(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4410,8 +3994,7 @@ public final class DataInputProtos {
                 data_ = new java.util.ArrayList<com.hello.suripu.api.input.DataInputProtos.periodic_data>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              data_.add(
-                  input.readMessage(com.hello.suripu.api.input.DataInputProtos.periodic_data.PARSER, extensionRegistry));
+              data_.add(input.readMessage(com.hello.suripu.api.input.DataInputProtos.periodic_data.PARSER, extensionRegistry));
               break;
             }
             case 18: {
@@ -4441,8 +4024,7 @@ public final class DataInputProtos {
                 scan_ = new java.util.ArrayList<com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point>();
                 mutable_bitField0_ |= 0x00000020;
               }
-              scan_.add(
-                  input.readMessage(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.PARSER, extensionRegistry));
+              scan_.add(input.readMessage(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.PARSER, extensionRegistry));
               break;
             }
             case 88: {
@@ -4456,7 +4038,7 @@ public final class DataInputProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           data_ = java.util.Collections.unmodifiableList(data_);
@@ -4473,11 +4055,26 @@ public final class DataInputProtos {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.class, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<batched_periodic_data> PARSER =
+        new com.google.protobuf.AbstractParser<batched_periodic_data>() {
+      public batched_periodic_data parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new batched_periodic_data(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<batched_periodic_data> getParserForType() {
+      return PARSER;
     }
 
     public interface wifi_access_pointOrBuilder extends
@@ -4519,30 +4116,37 @@ public final class DataInputProtos {
     /**
      * Protobuf type {@code batched_periodic_data.wifi_access_point}
      */
-    public  static final class wifi_access_point extends
-        com.google.protobuf.GeneratedMessageV3 implements
+    public static final class wifi_access_point extends
+        com.google.protobuf.GeneratedMessage implements
         // @@protoc_insertion_point(message_implements:batched_periodic_data.wifi_access_point)
         wifi_access_pointOrBuilder {
       // Use wifi_access_point.newBuilder() to construct.
-      private wifi_access_point(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      private wifi_access_point(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
+        this.unknownFields = builder.getUnknownFields();
       }
-      private wifi_access_point() {
-        ssid_ = "";
-        rssi_ = 0;
-        antenna_ = 1;
+      private wifi_access_point(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final wifi_access_point defaultInstance;
+      public static wifi_access_point getDefaultInstance() {
+        return defaultInstance;
       }
 
+      public wifi_access_point getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
       @java.lang.Override
       public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+          getUnknownFields() {
         return this.unknownFields;
       }
       private wifi_access_point(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        this();
+        initFields();
         int mutable_bitField0_ = 0;
         com.google.protobuf.UnknownFieldSet.Builder unknownFields =
             com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4579,7 +4183,7 @@ public final class DataInputProtos {
                   unknownFields.mergeVarintField(3, rawValue);
                 } else {
                   bitField0_ |= 0x00000004;
-                  antenna_ = rawValue;
+                  antenna_ = value;
                 }
                 break;
               }
@@ -4589,7 +4193,7 @@ public final class DataInputProtos {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
           throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+              e.getMessage()).setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
@@ -4600,11 +4204,26 @@ public final class DataInputProtos {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_wifi_access_point_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_wifi_access_point_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.class, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<wifi_access_point> PARSER =
+          new com.google.protobuf.AbstractParser<wifi_access_point>() {
+        public wifi_access_point parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new wifi_access_point(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<wifi_access_point> getParserForType() {
+        return PARSER;
       }
 
       /**
@@ -4615,11 +4234,11 @@ public final class DataInputProtos {
         /**
          * <code>IFA = 1;</code>
          */
-        IFA(1),
+        IFA(0, 1),
         /**
          * <code>PCB = 2;</code>
          */
-        PCB(2),
+        PCB(1, 2),
         ;
 
         /**
@@ -4632,19 +4251,9 @@ public final class DataInputProtos {
         public static final int PCB_VALUE = 2;
 
 
-        public final int getNumber() {
-          return value;
-        }
+        public final int getNumber() { return value; }
 
-        /**
-         * @deprecated Use {@link #forNumber(int)} instead.
-         */
-        @java.lang.Deprecated
         public static AntennaType valueOf(int value) {
-          return forNumber(value);
-        }
-
-        public static AntennaType forNumber(int value) {
           switch (value) {
             case 1: return IFA;
             case 2: return PCB;
@@ -4656,17 +4265,17 @@ public final class DataInputProtos {
             internalGetValueMap() {
           return internalValueMap;
         }
-        private static final com.google.protobuf.Internal.EnumLiteMap<
-            AntennaType> internalValueMap =
+        private static com.google.protobuf.Internal.EnumLiteMap<AntennaType>
+            internalValueMap =
               new com.google.protobuf.Internal.EnumLiteMap<AntennaType>() {
                 public AntennaType findValueByNumber(int number) {
-                  return AntennaType.forNumber(number);
+                  return AntennaType.valueOf(number);
                 }
               };
 
         public final com.google.protobuf.Descriptors.EnumValueDescriptor
             getValueDescriptor() {
-          return getDescriptor().getValues().get(ordinal());
+          return getDescriptor().getValues().get(index);
         }
         public final com.google.protobuf.Descriptors.EnumDescriptor
             getDescriptorForType() {
@@ -4688,9 +4297,11 @@ public final class DataInputProtos {
           return VALUES[desc.getIndex()];
         }
 
+        private final int index;
         private final int value;
 
-        private AntennaType(int value) {
+        private AntennaType(int index, int value) {
+          this.index = index;
           this.value = value;
         }
 
@@ -4699,7 +4310,7 @@ public final class DataInputProtos {
 
       private int bitField0_;
       public static final int SSID_FIELD_NUMBER = 1;
-      private volatile java.lang.Object ssid_;
+      private java.lang.Object ssid_;
       /**
        * <code>optional string ssid = 1;</code>
        */
@@ -4756,7 +4367,7 @@ public final class DataInputProtos {
       }
 
       public static final int ANTENNA_FIELD_NUMBER = 3;
-      private int antenna_;
+      private com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType antenna_;
       /**
        * <code>optional .batched_periodic_data.wifi_access_point.AntennaType antenna = 3;</code>
        */
@@ -4767,10 +4378,14 @@ public final class DataInputProtos {
        * <code>optional .batched_periodic_data.wifi_access_point.AntennaType antenna = 3;</code>
        */
       public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType getAntenna() {
-        com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType result = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.valueOf(antenna_);
-        return result == null ? com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.IFA : result;
+        return antenna_;
       }
 
+      private void initFields() {
+        ssid_ = "";
+        rssi_ = 0;
+        antenna_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.IFA;
+      }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -4783,25 +4398,28 @@ public final class DataInputProtos {
 
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
+        getSerializedSize();
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, ssid_);
+          output.writeBytes(1, getSsidBytes());
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
           output.writeInt32(2, rssi_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          output.writeEnum(3, antenna_);
+          output.writeEnum(3, antenna_.getNumber());
         }
-        unknownFields.writeTo(output);
+        getUnknownFields().writeTo(output);
       }
 
+      private int memoizedSerializedSize = -1;
       public int getSerializedSize() {
-        int size = memoizedSize;
+        int size = memoizedSerializedSize;
         if (size != -1) return size;
 
         size = 0;
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, ssid_);
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, getSsidBytes());
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
           size += com.google.protobuf.CodedOutputStream
@@ -4809,65 +4427,18 @@ public final class DataInputProtos {
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeEnumSize(3, antenna_);
+            .computeEnumSize(3, antenna_.getNumber());
         }
-        size += unknownFields.getSerializedSize();
-        memoizedSize = size;
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
         return size;
       }
 
       private static final long serialVersionUID = 0L;
       @java.lang.Override
-      public boolean equals(final java.lang.Object obj) {
-        if (obj == this) {
-         return true;
-        }
-        if (!(obj instanceof com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point)) {
-          return super.equals(obj);
-        }
-        com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point other = (com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point) obj;
-
-        boolean result = true;
-        result = result && (hasSsid() == other.hasSsid());
-        if (hasSsid()) {
-          result = result && getSsid()
-              .equals(other.getSsid());
-        }
-        result = result && (hasRssi() == other.hasRssi());
-        if (hasRssi()) {
-          result = result && (getRssi()
-              == other.getRssi());
-        }
-        result = result && (hasAntenna() == other.hasAntenna());
-        if (hasAntenna()) {
-          result = result && antenna_ == other.antenna_;
-        }
-        result = result && unknownFields.equals(other.unknownFields);
-        return result;
-      }
-
-      @java.lang.Override
-      public int hashCode() {
-        if (memoizedHashCode != 0) {
-          return memoizedHashCode;
-        }
-        int hash = 41;
-        hash = (19 * hash) + getDescriptorForType().hashCode();
-        if (hasSsid()) {
-          hash = (37 * hash) + SSID_FIELD_NUMBER;
-          hash = (53 * hash) + getSsid().hashCode();
-        }
-        if (hasRssi()) {
-          hash = (37 * hash) + RSSI_FIELD_NUMBER;
-          hash = (53 * hash) + getRssi();
-        }
-        if (hasAntenna()) {
-          hash = (37 * hash) + ANTENNA_FIELD_NUMBER;
-          hash = (53 * hash) + antenna_;
-        }
-        hash = (29 * hash) + unknownFields.hashCode();
-        memoizedHashCode = hash;
-        return hash;
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
       }
 
       public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point parseFrom(
@@ -4893,57 +4464,46 @@ public final class DataInputProtos {
       }
       public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return PARSER.parseFrom(input);
       }
       public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return PARSER.parseFrom(input, extensionRegistry);
       }
       public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
+        return PARSER.parseDelimitedFrom(input);
       }
       public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
       public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return PARSER.parseFrom(input);
       }
       public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return PARSER.parseFrom(input, extensionRegistry);
       }
 
+      public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder() {
-        return DEFAULT_INSTANCE.toBuilder();
-      }
       public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point prototype) {
-        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        return newBuilder().mergeFrom(prototype);
       }
-      public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
-      }
+      public Builder toBuilder() { return newBuilder(this); }
 
       @java.lang.Override
       protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -4951,7 +4511,7 @@ public final class DataInputProtos {
        * Protobuf type {@code batched_periodic_data.wifi_access_point}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:batched_periodic_data.wifi_access_point)
           com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
@@ -4959,7 +4519,7 @@ public final class DataInputProtos {
           return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_wifi_access_point_descriptor;
         }
 
-        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
           return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_wifi_access_point_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
@@ -4972,24 +4532,31 @@ public final class DataInputProtos {
         }
 
         private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           }
         }
+        private static Builder create() {
+          return new Builder();
+        }
+
         public Builder clear() {
           super.clear();
           ssid_ = "";
           bitField0_ = (bitField0_ & ~0x00000001);
           rssi_ = 0;
           bitField0_ = (bitField0_ & ~0x00000002);
-          antenna_ = 1;
+          antenna_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.IFA;
           bitField0_ = (bitField0_ & ~0x00000004);
           return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
         }
 
         public com.google.protobuf.Descriptors.Descriptor
@@ -5030,32 +4597,6 @@ public final class DataInputProtos {
           return result;
         }
 
-        public Builder clone() {
-          return (Builder) super.clone();
-        }
-        public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            Object value) {
-          return (Builder) super.setField(field, value);
-        }
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
-          return (Builder) super.clearField(field);
-        }
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-          return (Builder) super.clearOneof(oneof);
-        }
-        public Builder setRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, Object value) {
-          return (Builder) super.setRepeatedField(field, index, value);
-        }
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            Object value) {
-          return (Builder) super.addRepeatedField(field, value);
-        }
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point) {
             return mergeFrom((com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point)other);
@@ -5078,8 +4619,7 @@ public final class DataInputProtos {
           if (other.hasAntenna()) {
             setAntenna(other.getAntenna());
           }
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
+          this.mergeUnknownFields(other.getUnknownFields());
           return this;
         }
 
@@ -5096,7 +4636,7 @@ public final class DataInputProtos {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             parsedMessage = (com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point) e.getUnfinishedMessage();
-            throw e.unwrapIOException();
+            throw e;
           } finally {
             if (parsedMessage != null) {
               mergeFrom(parsedMessage);
@@ -5214,7 +4754,7 @@ public final class DataInputProtos {
           return this;
         }
 
-        private int antenna_ = 1;
+        private com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType antenna_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.IFA;
         /**
          * <code>optional .batched_periodic_data.wifi_access_point.AntennaType antenna = 3;</code>
          */
@@ -5225,8 +4765,7 @@ public final class DataInputProtos {
          * <code>optional .batched_periodic_data.wifi_access_point.AntennaType antenna = 3;</code>
          */
         public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType getAntenna() {
-          com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType result = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.valueOf(antenna_);
-          return result == null ? com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.IFA : result;
+          return antenna_;
         }
         /**
          * <code>optional .batched_periodic_data.wifi_access_point.AntennaType antenna = 3;</code>
@@ -5236,7 +4775,7 @@ public final class DataInputProtos {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000004;
-          antenna_ = value.getNumber();
+          antenna_ = value;
           onChanged();
           return this;
         }
@@ -5245,57 +4784,20 @@ public final class DataInputProtos {
          */
         public Builder clearAntenna() {
           bitField0_ = (bitField0_ & ~0x00000004);
-          antenna_ = 1;
+          antenna_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.AntennaType.IFA;
           onChanged();
           return this;
         }
-        public final Builder setUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.setUnknownFields(unknownFields);
-        }
-
-        public final Builder mergeUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.mergeUnknownFields(unknownFields);
-        }
-
 
         // @@protoc_insertion_point(builder_scope:batched_periodic_data.wifi_access_point)
       }
 
-      // @@protoc_insertion_point(class_scope:batched_periodic_data.wifi_access_point)
-      private static final com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point DEFAULT_INSTANCE;
       static {
-        DEFAULT_INSTANCE = new com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point();
+        defaultInstance = new wifi_access_point(true);
+        defaultInstance.initFields();
       }
 
-      public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point getDefaultInstance() {
-        return DEFAULT_INSTANCE;
-      }
-
-      @java.lang.Deprecated public static final com.google.protobuf.Parser<wifi_access_point>
-          PARSER = new com.google.protobuf.AbstractParser<wifi_access_point>() {
-        public wifi_access_point parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-            return new wifi_access_point(input, extensionRegistry);
-        }
-      };
-
-      public static com.google.protobuf.Parser<wifi_access_point> parser() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<wifi_access_point> getParserForType() {
-        return PARSER;
-      }
-
-      public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point getDefaultInstanceForType() {
-        return DEFAULT_INSTANCE;
-      }
-
+      // @@protoc_insertion_point(class_scope:batched_periodic_data.wifi_access_point)
     }
 
     private int bitField0_;
@@ -5335,7 +4837,7 @@ public final class DataInputProtos {
     }
 
     public static final int DEVICE_ID_FIELD_NUMBER = 2;
-    private volatile java.lang.Object deviceId_;
+    private java.lang.Object deviceId_;
     /**
      * <code>required string device_id = 2;</code>
      */
@@ -5394,46 +4896,46 @@ public final class DataInputProtos {
     public static final int UPTIME_IN_SECOND_FIELD_NUMBER = 4;
     private int uptimeInSecond_;
     /**
+     * <code>optional int32 uptime_in_second = 4;</code>
+     *
      * <pre>
      * optional bool need_key = 5;  // this is no longer used on the FW
      * optional string serial = 6; // this is no longer used on the FW
      * </pre>
-     *
-     * <code>optional int32 uptime_in_second = 4;</code>
      */
     public boolean hasUptimeInSecond() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
+     * <code>optional int32 uptime_in_second = 4;</code>
+     *
      * <pre>
      * optional bool need_key = 5;  // this is no longer used on the FW
      * optional string serial = 6; // this is no longer used on the FW
      * </pre>
-     *
-     * <code>optional int32 uptime_in_second = 4;</code>
      */
     public int getUptimeInSecond() {
       return uptimeInSecond_;
     }
 
     public static final int CONNECTED_SSID_FIELD_NUMBER = 7;
-    private volatile java.lang.Object connectedSsid_;
+    private java.lang.Object connectedSsid_;
     /**
+     * <code>optional string connected_ssid = 7;</code>
+     *
      * <pre>
      * Commenting the following out until we figure why it fails to parse
      * </pre>
-     *
-     * <code>optional string connected_ssid = 7;</code>
      */
     public boolean hasConnectedSsid() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
+     * <code>optional string connected_ssid = 7;</code>
+     *
      * <pre>
      * Commenting the following out until we figure why it fails to parse
      * </pre>
-     *
-     * <code>optional string connected_ssid = 7;</code>
      */
     public java.lang.String getConnectedSsid() {
       java.lang.Object ref = connectedSsid_;
@@ -5450,11 +4952,11 @@ public final class DataInputProtos {
       }
     }
     /**
+     * <code>optional string connected_ssid = 7;</code>
+     *
      * <pre>
      * Commenting the following out until we figure why it fails to parse
      * </pre>
-     *
-     * <code>optional string connected_ssid = 7;</code>
      */
     public com.google.protobuf.ByteString
         getConnectedSsidBytes() {
@@ -5473,57 +4975,57 @@ public final class DataInputProtos {
     public static final int SCAN_FIELD_NUMBER = 10;
     private java.util.List<com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point> scan_;
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     public java.util.List<com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point> getScanList() {
       return scan_;
     }
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     public java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder> 
         getScanOrBuilderList() {
       return scan_;
     }
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     public int getScanCount() {
       return scan_.size();
     }
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point getScan(int index) {
       return scan_.get(index);
     }
     /**
+     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+     *
      * <pre>
      * repeated wifi_access_point scan = 8;
      * optional string ring_time_ack = 9;
      * </pre>
-     *
-     * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
      */
     public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder getScanOrBuilder(
         int index) {
@@ -5545,6 +5047,15 @@ public final class DataInputProtos {
       return messagesInQueue_;
     }
 
+    private void initFields() {
+      data_ = java.util.Collections.emptyList();
+      deviceId_ = "";
+      firmwareVersion_ = 0;
+      uptimeInSecond_ = 0;
+      connectedSsid_ = "";
+      scan_ = java.util.Collections.emptyList();
+      messagesInQueue_ = 0;
+    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -5571,11 +5082,12 @@ public final class DataInputProtos {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       for (int i = 0; i < data_.size(); i++) {
         output.writeMessage(1, data_.get(i));
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, deviceId_);
+        output.writeBytes(2, getDeviceIdBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeInt32(3, firmwareVersion_);
@@ -5584,7 +5096,7 @@ public final class DataInputProtos {
         output.writeInt32(4, uptimeInSecond_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, connectedSsid_);
+        output.writeBytes(7, getConnectedSsidBytes());
       }
       for (int i = 0; i < scan_.size(); i++) {
         output.writeMessage(10, scan_.get(i));
@@ -5592,11 +5104,12 @@ public final class DataInputProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeInt32(11, messagesInQueue_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -5605,7 +5118,8 @@ public final class DataInputProtos {
           .computeMessageSize(1, data_.get(i));
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, deviceId_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getDeviceIdBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -5616,7 +5130,8 @@ public final class DataInputProtos {
           .computeInt32Size(4, uptimeInSecond_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, connectedSsid_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(7, getConnectedSsidBytes());
       }
       for (int i = 0; i < scan_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
@@ -5626,94 +5141,16 @@ public final class DataInputProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(11, messagesInQueue_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.hello.suripu.api.input.DataInputProtos.batched_periodic_data)) {
-        return super.equals(obj);
-      }
-      com.hello.suripu.api.input.DataInputProtos.batched_periodic_data other = (com.hello.suripu.api.input.DataInputProtos.batched_periodic_data) obj;
-
-      boolean result = true;
-      result = result && getDataList()
-          .equals(other.getDataList());
-      result = result && (hasDeviceId() == other.hasDeviceId());
-      if (hasDeviceId()) {
-        result = result && getDeviceId()
-            .equals(other.getDeviceId());
-      }
-      result = result && (hasFirmwareVersion() == other.hasFirmwareVersion());
-      if (hasFirmwareVersion()) {
-        result = result && (getFirmwareVersion()
-            == other.getFirmwareVersion());
-      }
-      result = result && (hasUptimeInSecond() == other.hasUptimeInSecond());
-      if (hasUptimeInSecond()) {
-        result = result && (getUptimeInSecond()
-            == other.getUptimeInSecond());
-      }
-      result = result && (hasConnectedSsid() == other.hasConnectedSsid());
-      if (hasConnectedSsid()) {
-        result = result && getConnectedSsid()
-            .equals(other.getConnectedSsid());
-      }
-      result = result && getScanList()
-          .equals(other.getScanList());
-      result = result && (hasMessagesInQueue() == other.hasMessagesInQueue());
-      if (hasMessagesInQueue()) {
-        result = result && (getMessagesInQueue()
-            == other.getMessagesInQueue());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (getDataCount() > 0) {
-        hash = (37 * hash) + DATA_FIELD_NUMBER;
-        hash = (53 * hash) + getDataList().hashCode();
-      }
-      if (hasDeviceId()) {
-        hash = (37 * hash) + DEVICE_ID_FIELD_NUMBER;
-        hash = (53 * hash) + getDeviceId().hashCode();
-      }
-      if (hasFirmwareVersion()) {
-        hash = (37 * hash) + FIRMWARE_VERSION_FIELD_NUMBER;
-        hash = (53 * hash) + getFirmwareVersion();
-      }
-      if (hasUptimeInSecond()) {
-        hash = (37 * hash) + UPTIME_IN_SECOND_FIELD_NUMBER;
-        hash = (53 * hash) + getUptimeInSecond();
-      }
-      if (hasConnectedSsid()) {
-        hash = (37 * hash) + CONNECTED_SSID_FIELD_NUMBER;
-        hash = (53 * hash) + getConnectedSsid().hashCode();
-      }
-      if (getScanCount() > 0) {
-        hash = (37 * hash) + SCAN_FIELD_NUMBER;
-        hash = (53 * hash) + getScanList().hashCode();
-      }
-      if (hasMessagesInQueue()) {
-        hash = (37 * hash) + MESSAGES_IN_QUEUE_FIELD_NUMBER;
-        hash = (53 * hash) + getMessagesInQueue();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
@@ -5739,57 +5176,46 @@ public final class DataInputProtos {
     }
     public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -5797,7 +5223,7 @@ public final class DataInputProtos {
      * Protobuf type {@code batched_periodic_data}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:batched_periodic_data)
         com.hello.suripu.api.input.DataInputProtos.batched_periodic_dataOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -5805,7 +5231,7 @@ public final class DataInputProtos {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -5818,17 +5244,20 @@ public final class DataInputProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getDataFieldBuilder();
           getScanFieldBuilder();
         }
       }
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         if (dataBuilder_ == null) {
@@ -5854,6 +5283,10 @@ public final class DataInputProtos {
         messagesInQueue_ = 0;
         bitField0_ = (bitField0_ & ~0x00000040);
         return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -5920,32 +5353,6 @@ public final class DataInputProtos {
         return result;
       }
 
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.hello.suripu.api.input.DataInputProtos.batched_periodic_data) {
           return mergeFrom((com.hello.suripu.api.input.DataInputProtos.batched_periodic_data)other);
@@ -5976,7 +5383,7 @@ public final class DataInputProtos {
               data_ = other.data_;
               bitField0_ = (bitField0_ & ~0x00000001);
               dataBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getDataFieldBuilder() : null;
             } else {
               dataBuilder_.addAllMessages(other.data_);
@@ -6018,7 +5425,7 @@ public final class DataInputProtos {
               scan_ = other.scan_;
               bitField0_ = (bitField0_ & ~0x00000020);
               scanBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getScanFieldBuilder() : null;
             } else {
               scanBuilder_.addAllMessages(other.scan_);
@@ -6028,20 +5435,22 @@ public final class DataInputProtos {
         if (other.hasMessagesInQueue()) {
           setMessagesInQueue(other.getMessagesInQueue());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
         if (!hasDeviceId()) {
+          
           return false;
         }
         if (!hasFirmwareVersion()) {
+          
           return false;
         }
         for (int i = 0; i < getDataCount(); i++) {
           if (!getData(i).isInitialized()) {
+            
             return false;
           }
         }
@@ -6057,7 +5466,7 @@ public final class DataInputProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.hello.suripu.api.input.DataInputProtos.batched_periodic_data) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -6076,7 +5485,7 @@ public final class DataInputProtos {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.periodic_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder> dataBuilder_;
 
       /**
@@ -6292,11 +5701,11 @@ public final class DataInputProtos {
            getDataBuilderList() {
         return getDataFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.periodic_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder> 
           getDataFieldBuilder() {
         if (dataBuilder_ == null) {
-          dataBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+          dataBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.input.DataInputProtos.periodic_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder>(
                   data_,
                   ((bitField0_ & 0x00000001) == 0x00000001),
@@ -6417,34 +5826,34 @@ public final class DataInputProtos {
 
       private int uptimeInSecond_ ;
       /**
+       * <code>optional int32 uptime_in_second = 4;</code>
+       *
        * <pre>
        * optional bool need_key = 5;  // this is no longer used on the FW
        * optional string serial = 6; // this is no longer used on the FW
        * </pre>
-       *
-       * <code>optional int32 uptime_in_second = 4;</code>
        */
       public boolean hasUptimeInSecond() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
+       * <code>optional int32 uptime_in_second = 4;</code>
+       *
        * <pre>
        * optional bool need_key = 5;  // this is no longer used on the FW
        * optional string serial = 6; // this is no longer used on the FW
        * </pre>
-       *
-       * <code>optional int32 uptime_in_second = 4;</code>
        */
       public int getUptimeInSecond() {
         return uptimeInSecond_;
       }
       /**
+       * <code>optional int32 uptime_in_second = 4;</code>
+       *
        * <pre>
        * optional bool need_key = 5;  // this is no longer used on the FW
        * optional string serial = 6; // this is no longer used on the FW
        * </pre>
-       *
-       * <code>optional int32 uptime_in_second = 4;</code>
        */
       public Builder setUptimeInSecond(int value) {
         bitField0_ |= 0x00000008;
@@ -6453,12 +5862,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional int32 uptime_in_second = 4;</code>
+       *
        * <pre>
        * optional bool need_key = 5;  // this is no longer used on the FW
        * optional string serial = 6; // this is no longer used on the FW
        * </pre>
-       *
-       * <code>optional int32 uptime_in_second = 4;</code>
        */
       public Builder clearUptimeInSecond() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -6469,21 +5878,21 @@ public final class DataInputProtos {
 
       private java.lang.Object connectedSsid_ = "";
       /**
+       * <code>optional string connected_ssid = 7;</code>
+       *
        * <pre>
        * Commenting the following out until we figure why it fails to parse
        * </pre>
-       *
-       * <code>optional string connected_ssid = 7;</code>
        */
       public boolean hasConnectedSsid() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
+       * <code>optional string connected_ssid = 7;</code>
+       *
        * <pre>
        * Commenting the following out until we figure why it fails to parse
        * </pre>
-       *
-       * <code>optional string connected_ssid = 7;</code>
        */
       public java.lang.String getConnectedSsid() {
         java.lang.Object ref = connectedSsid_;
@@ -6500,11 +5909,11 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>optional string connected_ssid = 7;</code>
+       *
        * <pre>
        * Commenting the following out until we figure why it fails to parse
        * </pre>
-       *
-       * <code>optional string connected_ssid = 7;</code>
        */
       public com.google.protobuf.ByteString
           getConnectedSsidBytes() {
@@ -6520,11 +5929,11 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>optional string connected_ssid = 7;</code>
+       *
        * <pre>
        * Commenting the following out until we figure why it fails to parse
        * </pre>
-       *
-       * <code>optional string connected_ssid = 7;</code>
        */
       public Builder setConnectedSsid(
           java.lang.String value) {
@@ -6537,11 +5946,11 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional string connected_ssid = 7;</code>
+       *
        * <pre>
        * Commenting the following out until we figure why it fails to parse
        * </pre>
-       *
-       * <code>optional string connected_ssid = 7;</code>
        */
       public Builder clearConnectedSsid() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -6550,11 +5959,11 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>optional string connected_ssid = 7;</code>
+       *
        * <pre>
        * Commenting the following out until we figure why it fails to parse
        * </pre>
-       *
-       * <code>optional string connected_ssid = 7;</code>
        */
       public Builder setConnectedSsidBytes(
           com.google.protobuf.ByteString value) {
@@ -6576,16 +5985,16 @@ public final class DataInputProtos {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder> scanBuilder_;
 
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public java.util.List<com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point> getScanList() {
         if (scanBuilder_ == null) {
@@ -6595,12 +6004,12 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public int getScanCount() {
         if (scanBuilder_ == null) {
@@ -6610,12 +6019,12 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point getScan(int index) {
         if (scanBuilder_ == null) {
@@ -6625,12 +6034,12 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder setScan(
           int index, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point value) {
@@ -6647,12 +6056,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder setScan(
           int index, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder builderForValue) {
@@ -6666,12 +6075,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder addScan(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point value) {
         if (scanBuilder_ == null) {
@@ -6687,12 +6096,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder addScan(
           int index, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point value) {
@@ -6709,12 +6118,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder addScan(
           com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder builderForValue) {
@@ -6728,12 +6137,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder addScan(
           int index, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder builderForValue) {
@@ -6747,12 +6156,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder addAllScan(
           java.lang.Iterable<? extends com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point> values) {
@@ -6767,12 +6176,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder clearScan() {
         if (scanBuilder_ == null) {
@@ -6785,12 +6194,12 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public Builder removeScan(int index) {
         if (scanBuilder_ == null) {
@@ -6803,24 +6212,24 @@ public final class DataInputProtos {
         return this;
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder getScanBuilder(
           int index) {
         return getScanFieldBuilder().getBuilder(index);
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder getScanOrBuilder(
           int index) {
@@ -6830,12 +6239,12 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder> 
            getScanOrBuilderList() {
@@ -6846,24 +6255,24 @@ public final class DataInputProtos {
         }
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder addScanBuilder() {
         return getScanFieldBuilder().addBuilder(
             com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.getDefaultInstance());
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder addScanBuilder(
           int index) {
@@ -6871,22 +6280,22 @@ public final class DataInputProtos {
             index, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.getDefaultInstance());
       }
       /**
+       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
+       *
        * <pre>
        * repeated wifi_access_point scan = 8;
        * optional string ring_time_ack = 9;
        * </pre>
-       *
-       * <code>repeated .batched_periodic_data.wifi_access_point scan = 10;</code>
        */
       public java.util.List<com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder> 
            getScanBuilderList() {
         return getScanFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder> 
           getScanFieldBuilder() {
         if (scanBuilder_ == null) {
-          scanBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+          scanBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.Builder, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder>(
                   scan_,
                   ((bitField0_ & 0x00000020) == 0x00000020),
@@ -6928,53 +6337,16 @@ public final class DataInputProtos {
         onChanged();
         return this;
       }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:batched_periodic_data)
     }
 
-    // @@protoc_insertion_point(class_scope:batched_periodic_data)
-    private static final com.hello.suripu.api.input.DataInputProtos.batched_periodic_data DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.hello.suripu.api.input.DataInputProtos.batched_periodic_data();
+      defaultInstance = new batched_periodic_data(true);
+      defaultInstance.initFields();
     }
 
-    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<batched_periodic_data>
-        PARSER = new com.google.protobuf.AbstractParser<batched_periodic_data>() {
-      public batched_periodic_data parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new batched_periodic_data(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<batched_periodic_data> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<batched_periodic_data> getParserForType() {
-      return PARSER;
-    }
-
-    public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:batched_periodic_data)
   }
 
   public interface AccountMetadataOrBuilder extends
@@ -7007,29 +6379,37 @@ public final class DataInputProtos {
   /**
    * Protobuf type {@code AccountMetadata}
    */
-  public  static final class AccountMetadata extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class AccountMetadata extends
+      com.google.protobuf.GeneratedMessage implements
       // @@protoc_insertion_point(message_implements:AccountMetadata)
       AccountMetadataOrBuilder {
     // Use AccountMetadata.newBuilder() to construct.
-    private AccountMetadata(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private AccountMetadata(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private AccountMetadata() {
-      accountId_ = 0L;
-      timezone_ = "";
+    private AccountMetadata(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final AccountMetadata defaultInstance;
+    public static AccountMetadata getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public AccountMetadata getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private AccountMetadata(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7065,7 +6445,7 @@ public final class DataInputProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -7076,11 +6456,26 @@ public final class DataInputProtos {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.hello.suripu.api.input.DataInputProtos.AccountMetadata.class, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<AccountMetadata> PARSER =
+        new com.google.protobuf.AbstractParser<AccountMetadata>() {
+      public AccountMetadata parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AccountMetadata(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AccountMetadata> getParserForType() {
+      return PARSER;
     }
 
     private int bitField0_;
@@ -7100,7 +6495,7 @@ public final class DataInputProtos {
     }
 
     public static final int TIMEZONE_FIELD_NUMBER = 2;
-    private volatile java.lang.Object timezone_;
+    private java.lang.Object timezone_;
     /**
      * <code>optional string timezone = 2;</code>
      */
@@ -7141,6 +6536,10 @@ public final class DataInputProtos {
       }
     }
 
+    private void initFields() {
+      accountId_ = 0L;
+      timezone_ = "";
+    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -7153,17 +6552,19 @@ public final class DataInputProtos {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt64(1, accountId_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, timezone_);
+        output.writeBytes(2, getTimezoneBytes());
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -7172,58 +6573,19 @@ public final class DataInputProtos {
           .computeInt64Size(1, accountId_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, timezone_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getTimezoneBytes());
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.hello.suripu.api.input.DataInputProtos.AccountMetadata)) {
-        return super.equals(obj);
-      }
-      com.hello.suripu.api.input.DataInputProtos.AccountMetadata other = (com.hello.suripu.api.input.DataInputProtos.AccountMetadata) obj;
-
-      boolean result = true;
-      result = result && (hasAccountId() == other.hasAccountId());
-      if (hasAccountId()) {
-        result = result && (getAccountId()
-            == other.getAccountId());
-      }
-      result = result && (hasTimezone() == other.hasTimezone());
-      if (hasTimezone()) {
-        result = result && getTimezone()
-            .equals(other.getTimezone());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (hasAccountId()) {
-        hash = (37 * hash) + ACCOUNT_ID_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getAccountId());
-      }
-      if (hasTimezone()) {
-        hash = (37 * hash) + TIMEZONE_FIELD_NUMBER;
-        hash = (53 * hash) + getTimezone().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
@@ -7249,57 +6611,46 @@ public final class DataInputProtos {
     }
     public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.AccountMetadata prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -7307,7 +6658,7 @@ public final class DataInputProtos {
      * Protobuf type {@code AccountMetadata}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:AccountMetadata)
         com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -7315,7 +6666,7 @@ public final class DataInputProtos {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -7328,15 +6679,18 @@ public final class DataInputProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
         }
       }
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         accountId_ = 0L;
@@ -7344,6 +6698,10 @@ public final class DataInputProtos {
         timezone_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -7380,32 +6738,6 @@ public final class DataInputProtos {
         return result;
       }
 
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.hello.suripu.api.input.DataInputProtos.AccountMetadata) {
           return mergeFrom((com.hello.suripu.api.input.DataInputProtos.AccountMetadata)other);
@@ -7425,8 +6757,7 @@ public final class DataInputProtos {
           timezone_ = other.timezone_;
           onChanged();
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
@@ -7443,7 +6774,7 @@ public final class DataInputProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.hello.suripu.api.input.DataInputProtos.AccountMetadata) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -7560,53 +6891,16 @@ public final class DataInputProtos {
         onChanged();
         return this;
       }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:AccountMetadata)
     }
 
-    // @@protoc_insertion_point(class_scope:AccountMetadata)
-    private static final com.hello.suripu.api.input.DataInputProtos.AccountMetadata DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.hello.suripu.api.input.DataInputProtos.AccountMetadata();
+      defaultInstance = new AccountMetadata(true);
+      defaultInstance.initFields();
     }
 
-    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<AccountMetadata>
-        PARSER = new com.google.protobuf.AbstractParser<AccountMetadata>() {
-      public AccountMetadata parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new AccountMetadata(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<AccountMetadata> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<AccountMetadata> getParserForType() {
-      return PARSER;
-    }
-
-    public com.hello.suripu.api.input.DataInputProtos.AccountMetadata getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:AccountMetadata)
   }
 
   public interface BatchPeriodicDataWorkerOrBuilder extends
@@ -7713,33 +7007,37 @@ public final class DataInputProtos {
   /**
    * Protobuf type {@code BatchPeriodicDataWorker}
    */
-  public  static final class BatchPeriodicDataWorker extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class BatchPeriodicDataWorker extends
+      com.google.protobuf.GeneratedMessage implements
       // @@protoc_insertion_point(message_implements:BatchPeriodicDataWorker)
       BatchPeriodicDataWorkerOrBuilder {
     // Use BatchPeriodicDataWorker.newBuilder() to construct.
-    private BatchPeriodicDataWorker(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private BatchPeriodicDataWorker(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private BatchPeriodicDataWorker() {
-      ipAddress_ = "";
-      receivedAt_ = 0L;
-      uptimeInSecond_ = 0;
-      timezones_ = java.util.Collections.emptyList();
-      firmwareMiddleVersion_ = "";
-      firmwareTopVersion_ = "";
+    private BatchPeriodicDataWorker(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final BatchPeriodicDataWorker defaultInstance;
+    public static BatchPeriodicDataWorker getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public BatchPeriodicDataWorker getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private BatchPeriodicDataWorker(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7792,8 +7090,7 @@ public final class DataInputProtos {
                 timezones_ = new java.util.ArrayList<com.hello.suripu.api.input.DataInputProtos.AccountMetadata>();
                 mutable_bitField0_ |= 0x00000010;
               }
-              timezones_.add(
-                  input.readMessage(com.hello.suripu.api.input.DataInputProtos.AccountMetadata.PARSER, extensionRegistry));
+              timezones_.add(input.readMessage(com.hello.suripu.api.input.DataInputProtos.AccountMetadata.PARSER, extensionRegistry));
               break;
             }
             case 50: {
@@ -7814,7 +7111,7 @@ public final class DataInputProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           timezones_ = java.util.Collections.unmodifiableList(timezones_);
@@ -7828,11 +7125,26 @@ public final class DataInputProtos {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_BatchPeriodicDataWorker_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.hello.suripu.api.input.DataInputProtos.internal_static_BatchPeriodicDataWorker_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker.class, com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<BatchPeriodicDataWorker> PARSER =
+        new com.google.protobuf.AbstractParser<BatchPeriodicDataWorker>() {
+      public BatchPeriodicDataWorker parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new BatchPeriodicDataWorker(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<BatchPeriodicDataWorker> getParserForType() {
+      return PARSER;
     }
 
     private int bitField0_;
@@ -7848,17 +7160,17 @@ public final class DataInputProtos {
      * <code>optional .batched_periodic_data data = 1;</code>
      */
     public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data getData() {
-      return data_ == null ? com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance() : data_;
+      return data_;
     }
     /**
      * <code>optional .batched_periodic_data data = 1;</code>
      */
     public com.hello.suripu.api.input.DataInputProtos.batched_periodic_dataOrBuilder getDataOrBuilder() {
-      return data_ == null ? com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance() : data_;
+      return data_;
     }
 
     public static final int IP_ADDRESS_FIELD_NUMBER = 2;
-    private volatile java.lang.Object ipAddress_;
+    private java.lang.Object ipAddress_;
     /**
      * <code>optional string ip_address = 2;</code>
      */
@@ -7965,7 +7277,7 @@ public final class DataInputProtos {
     }
 
     public static final int FIRMWARE_MIDDLE_VERSION_FIELD_NUMBER = 6;
-    private volatile java.lang.Object firmwareMiddleVersion_;
+    private java.lang.Object firmwareMiddleVersion_;
     /**
      * <code>optional string firmware_middle_version = 6;</code>
      */
@@ -8007,7 +7319,7 @@ public final class DataInputProtos {
     }
 
     public static final int FIRMWARE_TOP_VERSION_FIELD_NUMBER = 7;
-    private volatile java.lang.Object firmwareTopVersion_;
+    private java.lang.Object firmwareTopVersion_;
     /**
      * <code>optional string firmware_top_version = 7;</code>
      */
@@ -8048,6 +7360,15 @@ public final class DataInputProtos {
       }
     }
 
+    private void initFields() {
+      data_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance();
+      ipAddress_ = "";
+      receivedAt_ = 0L;
+      uptimeInSecond_ = 0;
+      timezones_ = java.util.Collections.emptyList();
+      firmwareMiddleVersion_ = "";
+      firmwareTopVersion_ = "";
+    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -8066,11 +7387,12 @@ public final class DataInputProtos {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getData());
+        output.writeMessage(1, data_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, ipAddress_);
+        output.writeBytes(2, getIpAddressBytes());
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt64(3, receivedAt_);
@@ -8082,25 +7404,27 @@ public final class DataInputProtos {
         output.writeMessage(5, timezones_.get(i));
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, firmwareMiddleVersion_);
+        output.writeBytes(6, getFirmwareMiddleVersionBytes());
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, firmwareTopVersion_);
+        output.writeBytes(7, getFirmwareTopVersionBytes());
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getData());
+          .computeMessageSize(1, data_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, ipAddress_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getIpAddressBytes());
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
@@ -8115,103 +7439,23 @@ public final class DataInputProtos {
           .computeMessageSize(5, timezones_.get(i));
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, firmwareMiddleVersion_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getFirmwareMiddleVersionBytes());
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, firmwareTopVersion_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(7, getFirmwareTopVersionBytes());
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker)) {
-        return super.equals(obj);
-      }
-      com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker other = (com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker) obj;
-
-      boolean result = true;
-      result = result && (hasData() == other.hasData());
-      if (hasData()) {
-        result = result && getData()
-            .equals(other.getData());
-      }
-      result = result && (hasIpAddress() == other.hasIpAddress());
-      if (hasIpAddress()) {
-        result = result && getIpAddress()
-            .equals(other.getIpAddress());
-      }
-      result = result && (hasReceivedAt() == other.hasReceivedAt());
-      if (hasReceivedAt()) {
-        result = result && (getReceivedAt()
-            == other.getReceivedAt());
-      }
-      result = result && (hasUptimeInSecond() == other.hasUptimeInSecond());
-      if (hasUptimeInSecond()) {
-        result = result && (getUptimeInSecond()
-            == other.getUptimeInSecond());
-      }
-      result = result && getTimezonesList()
-          .equals(other.getTimezonesList());
-      result = result && (hasFirmwareMiddleVersion() == other.hasFirmwareMiddleVersion());
-      if (hasFirmwareMiddleVersion()) {
-        result = result && getFirmwareMiddleVersion()
-            .equals(other.getFirmwareMiddleVersion());
-      }
-      result = result && (hasFirmwareTopVersion() == other.hasFirmwareTopVersion());
-      if (hasFirmwareTopVersion()) {
-        result = result && getFirmwareTopVersion()
-            .equals(other.getFirmwareTopVersion());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (hasData()) {
-        hash = (37 * hash) + DATA_FIELD_NUMBER;
-        hash = (53 * hash) + getData().hashCode();
-      }
-      if (hasIpAddress()) {
-        hash = (37 * hash) + IP_ADDRESS_FIELD_NUMBER;
-        hash = (53 * hash) + getIpAddress().hashCode();
-      }
-      if (hasReceivedAt()) {
-        hash = (37 * hash) + RECEIVED_AT_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            getReceivedAt());
-      }
-      if (hasUptimeInSecond()) {
-        hash = (37 * hash) + UPTIME_IN_SECOND_FIELD_NUMBER;
-        hash = (53 * hash) + getUptimeInSecond();
-      }
-      if (getTimezonesCount() > 0) {
-        hash = (37 * hash) + TIMEZONES_FIELD_NUMBER;
-        hash = (53 * hash) + getTimezonesList().hashCode();
-      }
-      if (hasFirmwareMiddleVersion()) {
-        hash = (37 * hash) + FIRMWARE_MIDDLE_VERSION_FIELD_NUMBER;
-        hash = (53 * hash) + getFirmwareMiddleVersion().hashCode();
-      }
-      if (hasFirmwareTopVersion()) {
-        hash = (37 * hash) + FIRMWARE_TOP_VERSION_FIELD_NUMBER;
-        hash = (53 * hash) + getFirmwareTopVersion().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker parseFrom(
@@ -8237,57 +7481,46 @@ public final class DataInputProtos {
     }
     public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -8295,7 +7528,7 @@ public final class DataInputProtos {
      * Protobuf type {@code BatchPeriodicDataWorker}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:BatchPeriodicDataWorker)
         com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorkerOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -8303,7 +7536,7 @@ public final class DataInputProtos {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_BatchPeriodicDataWorker_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return com.hello.suripu.api.input.DataInputProtos.internal_static_BatchPeriodicDataWorker_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -8316,21 +7549,24 @@ public final class DataInputProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getDataFieldBuilder();
           getTimezonesFieldBuilder();
         }
       }
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         if (dataBuilder_ == null) {
-          data_ = null;
+          data_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance();
         } else {
           dataBuilder_.clear();
         }
@@ -8352,6 +7588,10 @@ public final class DataInputProtos {
         firmwareTopVersion_ = "";
         bitField0_ = (bitField0_ & ~0x00000040);
         return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -8417,32 +7657,6 @@ public final class DataInputProtos {
         return result;
       }
 
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker) {
           return mergeFrom((com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker)other);
@@ -8487,7 +7701,7 @@ public final class DataInputProtos {
               timezones_ = other.timezones_;
               bitField0_ = (bitField0_ & ~0x00000010);
               timezonesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getTimezonesFieldBuilder() : null;
             } else {
               timezonesBuilder_.addAllMessages(other.timezones_);
@@ -8504,14 +7718,14 @@ public final class DataInputProtos {
           firmwareTopVersion_ = other.firmwareTopVersion_;
           onChanged();
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
         if (hasData()) {
           if (!getData().isInitialized()) {
+            
             return false;
           }
         }
@@ -8527,7 +7741,7 @@ public final class DataInputProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -8537,8 +7751,8 @@ public final class DataInputProtos {
       }
       private int bitField0_;
 
-      private com.hello.suripu.api.input.DataInputProtos.batched_periodic_data data_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.hello.suripu.api.input.DataInputProtos.batched_periodic_data data_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.batched_periodic_data, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.batched_periodic_dataOrBuilder> dataBuilder_;
       /**
        * <code>optional .batched_periodic_data data = 1;</code>
@@ -8551,7 +7765,7 @@ public final class DataInputProtos {
        */
       public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data getData() {
         if (dataBuilder_ == null) {
-          return data_ == null ? com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance() : data_;
+          return data_;
         } else {
           return dataBuilder_.getMessage();
         }
@@ -8592,7 +7806,6 @@ public final class DataInputProtos {
       public Builder mergeData(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data value) {
         if (dataBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              data_ != null &&
               data_ != com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance()) {
             data_ =
               com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.newBuilder(data_).mergeFrom(value).buildPartial();
@@ -8611,7 +7824,7 @@ public final class DataInputProtos {
        */
       public Builder clearData() {
         if (dataBuilder_ == null) {
-          data_ = null;
+          data_ = com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance();
           onChanged();
         } else {
           dataBuilder_.clear();
@@ -8634,18 +7847,17 @@ public final class DataInputProtos {
         if (dataBuilder_ != null) {
           return dataBuilder_.getMessageOrBuilder();
         } else {
-          return data_ == null ?
-              com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance() : data_;
+          return data_;
         }
       }
       /**
        * <code>optional .batched_periodic_data data = 1;</code>
        */
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.batched_periodic_data, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.batched_periodic_dataOrBuilder> 
           getDataFieldBuilder() {
         if (dataBuilder_ == null) {
-          dataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          dataBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.input.DataInputProtos.batched_periodic_data, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.batched_periodic_dataOrBuilder>(
                   getData(),
                   getParentForChildren(),
@@ -8804,7 +8016,7 @@ public final class DataInputProtos {
          }
       }
 
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.AccountMetadata, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder, com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder> timezonesBuilder_;
 
       /**
@@ -9020,11 +8232,11 @@ public final class DataInputProtos {
            getTimezonesBuilderList() {
         return getTimezonesFieldBuilder().getBuilderList();
       }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
+      private com.google.protobuf.RepeatedFieldBuilder<
           com.hello.suripu.api.input.DataInputProtos.AccountMetadata, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder, com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder> 
           getTimezonesFieldBuilder() {
         if (timezonesBuilder_ == null) {
-          timezonesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+          timezonesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.input.DataInputProtos.AccountMetadata, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder, com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder>(
                   timezones_,
                   ((bitField0_ & 0x00000010) == 0x00000010),
@@ -9186,91 +8398,54 @@ public final class DataInputProtos {
         onChanged();
         return this;
       }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:BatchPeriodicDataWorker)
     }
 
-    // @@protoc_insertion_point(class_scope:BatchPeriodicDataWorker)
-    private static final com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker();
+      defaultInstance = new BatchPeriodicDataWorker(true);
+      defaultInstance.initFields();
     }
 
-    public static com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<BatchPeriodicDataWorker>
-        PARSER = new com.google.protobuf.AbstractParser<BatchPeriodicDataWorker>() {
-      public BatchPeriodicDataWorker parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new BatchPeriodicDataWorker(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<BatchPeriodicDataWorker> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<BatchPeriodicDataWorker> getParserForType() {
-      return PARSER;
-    }
-
-    public com.hello.suripu.api.input.DataInputProtos.BatchPeriodicDataWorker getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:BatchPeriodicDataWorker)
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_periodic_data_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_periodic_data_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_periodic_data_light_data_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_periodic_data_light_data_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_batched_periodic_data_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_batched_periodic_data_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_batched_periodic_data_wifi_access_point_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_batched_periodic_data_wifi_access_point_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_AccountMetadata_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_AccountMetadata_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_BatchPeriodicDataWorker_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_BatchPeriodicDataWorker_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
+  private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
     java.lang.String[] descriptorData = {
@@ -9329,37 +8504,37 @@ public final class DataInputProtos {
     internal_static_periodic_data_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_periodic_data_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_periodic_data_descriptor,
         new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", "AudioNumDisturbances", "AudioPeakDisturbanceEnergyDb", "AudioPeakBackgroundEnergyDb", "AudioPeakEnergyDb", "Pressure", "Tvoc", "Co2", "LightSensor", "LightDurationMs", "KeywordStats", });
     internal_static_periodic_data_light_data_descriptor =
       internal_static_periodic_data_descriptor.getNestedTypes().get(0);
     internal_static_periodic_data_light_data_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_periodic_data_light_data_descriptor,
         new java.lang.String[] { "R", "G", "B", "Infrared", "Clear", "LuxCount", "UvCount", });
     internal_static_batched_periodic_data_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_batched_periodic_data_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_batched_periodic_data_descriptor,
         new java.lang.String[] { "Data", "DeviceId", "FirmwareVersion", "UptimeInSecond", "ConnectedSsid", "Scan", "MessagesInQueue", });
     internal_static_batched_periodic_data_wifi_access_point_descriptor =
       internal_static_batched_periodic_data_descriptor.getNestedTypes().get(0);
     internal_static_batched_periodic_data_wifi_access_point_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_batched_periodic_data_wifi_access_point_descriptor,
         new java.lang.String[] { "Ssid", "Rssi", "Antenna", });
     internal_static_AccountMetadata_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_AccountMetadata_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_AccountMetadata_descriptor,
         new java.lang.String[] { "AccountId", "Timezone", });
     internal_static_BatchPeriodicDataWorker_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_BatchPeriodicDataWorker_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_BatchPeriodicDataWorker_descriptor,
         new java.lang.String[] { "Data", "IpAddress", "ReceivedAt", "UptimeInSecond", "Timezones", "FirmwareMiddleVersion", "FirmwareTopVersion", });
     com.hello.suripu.api.input.KeywordStatsProtos.getDescriptor();
