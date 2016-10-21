@@ -199,16 +199,19 @@ public class RingProcessor {
         return isCurrentTimeWithinProcessRangeOfNextSmartAlarm && currentTimeNotTooCloseToRingTime;
     }
 
-    protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
+    protected static Optional<RingTime> getProgressiveRingTime(final UserInfo userInfo,
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
                                                                final PillDataDAODynamoDB pillDataDAODynamoDB){
 
+        final Long accountId = userInfo.accountId;
+        final DateTime nowAlignedToStartOfMinuteUTC = nowAlignedToStartOfMinute.withZone(DateTimeZone.UTC);
+
         Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
-        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(progressiveWindow);
+        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinuteUTC.minusMinutes(progressiveWindow);
 
         final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(accountId,
-                dataCollectionBeginTime, nowAlignedToStartOfMinute.plusMinutes(1));
+                dataCollectionBeginTime, nowAlignedToStartOfMinuteUTC.plusMinutes(1));
 
         if(motionWithinProgressiveWindow.isEmpty()){
             LOGGER.info("No motion data in last {} minutes for Account ID: {}. Not computing progressive alarm.", progressiveWindow, accountId);
@@ -266,7 +269,7 @@ public class RingProcessor {
             //removed FF, at 100 percent
             if(hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
 
-                final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
+                final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo,
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
                         pillDataDAODynamoDB);
