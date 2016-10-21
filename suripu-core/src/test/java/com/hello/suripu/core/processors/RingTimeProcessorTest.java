@@ -1,15 +1,20 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.io.Resources;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +30,45 @@ public class RingTimeProcessorTest {
     private final String senseId = "test sense";
     private final long accountId = 1L;
     private final long accountId2 = 2L;
+
+    private List<TrackerMotion> loadTrackerMotionFromCSV(final String resource, final boolean mockMM){
+        final URL fixtureCSVFile = Resources.getResource(resource);
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
+        try {
+            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(int i = 1; i < lines.length; i++){
+                final String[] columns = lines[i].split(",");
+                if (!mockMM) {
+                    final TrackerMotion trackerMotion = new TrackerMotion.Builder()
+                            .withAccountId(accountId)
+                            .withKickOffCounts(Long.valueOf(columns[4]))
+                            .withValue(Integer.valueOf(columns[11]))
+                            .withOnDurationInSeconds(Long.valueOf(columns[7]))
+                            .withTimestampMillis(Long.valueOf(columns[12]))
+                            .withOffsetMillis(Integer.valueOf(columns[9]))
+                            .build();
+                    trackerMotions.add(trackerMotion);
+
+                } else{
+                    final TrackerMotion trackerMotion = new TrackerMotion.Builder()
+                            .withAccountId(accountId)
+                            .withKickOffCounts(0L)
+                            .withValue(Integer.valueOf(columns[11]))
+                            .withOnDurationInSeconds(Long.valueOf(columns[7]))
+                            .withMotionMask(Long.valueOf(0L))
+                            .withTimestampMillis(Long.valueOf(columns[12]))
+                            .withOffsetMillis(Integer.valueOf(columns[9]))
+                            .build();
+                    trackerMotions.add(trackerMotion);
+                }
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
+
+        return trackerMotions;
+    }
 
     @Test
     public void testGetNextRingTimeForSenseFormOneUser(){
@@ -384,4 +428,77 @@ public class RingTimeProcessorTest {
         assertThat(new DateTime(ringTime.expectedRingTimeUTC, userTimeZone), is(new DateTime(2015,2,4,7,30,0,userTimeZone)));
         assertThat(ringTime.fromSmartAlarm, is(true));
     }
+
+    @Test
+    public void testGetProgressiveRingTime() {
+        final long updatedTimeAwake =  1476954780000000000L;
+        final long updatedTimeAsleep = 147695430000000000L;
+
+        final List<Alarm> alarmList = new ArrayList<>();
+        final HashSet<Integer> daysOfWeek = new HashSet<>();
+        daysOfWeek.add(DateTimeConstants.TUESDAY);
+        daysOfWeek.add(DateTimeConstants.WEDNESDAY);
+        daysOfWeek.add(DateTimeConstants.THURSDAY);
+
+        final DateTimeZone userTimeZone = DateTimeZone.forID("America/Vancouver");
+        DateTime now = new DateTime(2016, 10, 20, 2, 30, 00, userTimeZone);
+        alarmList.add(new Alarm.Builder().withDayOfWeek(daysOfWeek)
+                .withHour(2)
+                .withMinute(30)
+                .withId("1")
+                .withIsEditable(true)
+                .withIsEnabled(true)
+                .withIsRepeated(true)
+                .withIsSmart(true)
+                .build());
+
+        UserInfo userInfo = new UserInfo(this.senseId, this.accountId,
+                alarmList,
+                Optional.<RingTime>absent(),
+                Optional.of(userTimeZone),
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                now.minusMillis(100).getMillis());
+        final List<UserInfo> userInfoList = new ArrayList<>();
+        userInfoList.add(userInfo);
+
+        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+
+        List<TrackerMotion> trackerMotionsWithoutMM = loadTrackerMotionFromCSV("fixtures/tracker_motion/smart_alarm_test.csv", false);
+        List<TrackerMotion> trackerMotionsMockedMM = loadTrackerMotionFromCSV("fixtures/tracker_motion/smart_alarm_test.csv", true);
+        List<TrackerMotion> motionWithinWindow = new ArrayList<>();
+        for (TrackerMotion trackerMotion : trackerMotionsWithoutMM) {
+            if (trackerMotion.timestamp <= updatedTimeAsleep && trackerMotion.timestamp > updatedTimeAsleep - 60000000000L * RingProcessor.PROGRESSIVE_MOTION_WINDOW_MIN) {
+                motionWithinWindow.add(trackerMotion);
+            }
+        }
+        Optional<RingTime> testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 5, 0, userTimeZone), ringTime, motionWithinWindow);
+        assertThat(testRing.isPresent(), is(false));
+
+        motionWithinWindow = new ArrayList<>();
+        for (TrackerMotion trackerMotion : trackerMotionsWithoutMM) {
+            if (trackerMotion.timestamp <= updatedTimeAwake && trackerMotion.timestamp > updatedTimeAwake - 60000000000L * RingProcessor.PROGRESSIVE_MOTION_WINDOW_MIN) {
+                motionWithinWindow.add(trackerMotion);
+            }
+        }
+        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 12, 0, userTimeZone), ringTime, motionWithinWindow);
+        assertThat(testRing.isPresent(), is(true));
+
+        motionWithinWindow = new ArrayList<>();
+        for (TrackerMotion trackerMotion : trackerMotionsMockedMM) {
+            if (trackerMotion.timestamp <= updatedTimeAsleep && trackerMotion.timestamp > updatedTimeAsleep - 60000000000L * RingProcessor.PROGRESSIVE_MOTION_WINDOW_MIN) {
+                motionWithinWindow.add(trackerMotion);
+            }
+        }
+        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 5, 0, userTimeZone), ringTime, motionWithinWindow);
+        assertThat(testRing.isPresent(), is(false));
+
+        motionWithinWindow = new ArrayList<>();
+        for (TrackerMotion trackerMotion : trackerMotionsMockedMM) {
+            if (trackerMotion.timestamp <= updatedTimeAwake && trackerMotion.timestamp > updatedTimeAwake - 60000000000L * RingProcessor.PROGRESSIVE_MOTION_WINDOW_MIN) {
+                motionWithinWindow.add(trackerMotion);
+            }
+        }
+        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 12, 0, userTimeZone), ringTime, motionWithinWindow);
+        assertThat(testRing.isPresent(), is(true));
+        }
 }

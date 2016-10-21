@@ -199,19 +199,13 @@ public class RingProcessor {
         return isCurrentTimeWithinProcessRangeOfNextSmartAlarm && currentTimeNotTooCloseToRingTime;
     }
 
-    protected static Optional<RingTime> getProgressiveRingTime(final UserInfo userInfo,
+    protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
-                                                               final PillDataDAODynamoDB pillDataDAODynamoDB){
+                                                               final List<TrackerMotion> motionWithinProgressiveWindow){
 
-        final Long accountId = userInfo.accountId;
-        final DateTime nowAlignedToStartOfMinuteUTC = nowAlignedToStartOfMinute.withZone(DateTimeZone.UTC);
 
         Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
-        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinuteUTC.minusMinutes(progressiveWindow);
-
-        final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(accountId,
-                dataCollectionBeginTime, nowAlignedToStartOfMinuteUTC.plusMinutes(1));
 
         if(motionWithinProgressiveWindow.isEmpty()){
             LOGGER.info("No motion data in last {} minutes for Account ID: {}. Not computing progressive alarm.", progressiveWindow, accountId);
@@ -263,16 +257,24 @@ public class RingProcessor {
                                                                    final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                                                    final RolloutClient feature){
 
+        final DateTime currentTimeAlignedToStartOfMinuteUTC = currentTimeAlignedToStartOfMinute.withZone(DateTimeZone.UTC);
+        final Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
+        final DateTime dataCollectionBeginTimeUTC = currentTimeAlignedToStartOfMinuteUTC.minusMinutes(progressiveWindow);
+
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
-        if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
+        if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinuteUTC, nextRingTimeFromWorker)) {
             //removed FF, at 100 percent
             if(hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
 
-                final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo,
+                final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(userInfo.accountId,
+                        dataCollectionBeginTimeUTC, currentTimeAlignedToStartOfMinuteUTC.plusMinutes(1));
+
+                final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
-                        pillDataDAODynamoDB);
+                        motionWithinProgressiveWindow);
+
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
                     smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
@@ -374,7 +376,6 @@ public class RingProcessor {
 
         return nextRingTime;
     }
-
     public static RingTime getMostRecentRingTimeFromList(final List<RingTime> ringTimes){
         // Now we loop over all the users, we get a list of ring time for all users.
         // Let's pick the nearest one and tell morpheus what is the next ring time.
