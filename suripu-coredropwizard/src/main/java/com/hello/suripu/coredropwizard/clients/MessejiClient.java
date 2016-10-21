@@ -73,11 +73,23 @@ public abstract class MessejiClient implements MessejiApi {
 
     @Override
     public Optional<Long> mute(final String senseId, final Sender sender, final Long order, final boolean mute) {
-        return Optional.absent();
+        final Messeji.Message message = Messeji.Message.newBuilder()
+                .setOrder(order)
+                .setSenderId(sender.id())
+                .setType(Messeji.Message.Type.VOICE_CONTROL)
+                .setVoiceControl(AudioCommands.VoiceControl.newBuilder().setEnable(!mute).build())
+                .build();
+        return sendMessage(senseId, message);
     }
 
     @Override
     public Optional<Long> setSystemVolume(final String senseId, final Sender sender, final Long order, final int volume) {
-        return Optional.absent();
+        final Messeji.Message message = Messeji.Message.newBuilder()
+                .setOrder(order)
+                .setSenderId(sender.id())
+                .setType(Messeji.Message.Type.SET_VOLUME)
+                .setVolume(AudioCommands.Volume.newBuilder().setVolume(volume).build())
+                .build();
+        return sendMessage(senseId, message);
     }
 }

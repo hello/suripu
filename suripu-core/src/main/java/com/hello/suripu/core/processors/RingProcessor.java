@@ -237,7 +237,8 @@ public class RingProcessor {
                     nowAlignedToStartOfMinute.plusMinutes(PROGRESSIVE_SAFE_GAP_MIN).getMillis(),
                     nextRingTimeFromWorker.expectedRingTimeUTC,
                     nextRingTimeFromWorker.soundIds,
-                    true);
+                    true,
+                    nextRingTimeFromWorker.expansions);
             return Optional.of(progressiveRingTime);
         }
         LOGGER.info("User deemed 'not awake' in last {} minutes for Account ID: {}. Not computing progressive alarm.", progressiveWindow, accountId);
@@ -502,7 +503,8 @@ public class RingProcessor {
         return new RingTime(nextRingTimeMillis < nextRegularRingTime.expectedRingTimeUTC ? nextRingTimeMillis : nextRegularRingTime.expectedRingTimeUTC,  // double check
                 nextRegularRingTime.expectedRingTimeUTC,
                 nextRegularRingTime.soundIds,
-                nextRegularRingTime.fromSmartAlarm);
+                nextRegularRingTime.fromSmartAlarm,
+                nextRegularRingTime.expansions);
     }
 
     public static RingTime getNextRingTimeForSense(final String deviceId,
@@ -682,7 +684,7 @@ public class RingProcessor {
                     soundIds.add(soundId);
                 }
             }
-            ringTime = new RingTime(nextRingTime.actualRingTimeUTC, nextRingTime.expectedRingTimeUTC, soundIds.toArray(new Long[0]), nextRingTime.fromSmartAlarm);
+            ringTime = new RingTime(nextRingTime.actualRingTimeUTC, nextRingTime.expectedRingTimeUTC, soundIds.toArray(new Long[0]), nextRingTime.fromSmartAlarm, nextRingTime.expansions);
         }
 
         return ringTime;
