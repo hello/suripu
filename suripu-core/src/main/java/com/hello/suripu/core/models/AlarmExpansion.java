@@ -14,7 +14,7 @@ public class AlarmExpansion {
     public final Boolean enabled;
 
     @JsonProperty("category")
-    public final String category;
+    public String category;
 
     @JsonProperty("service_name")
     public String serviceName;
