@@ -264,9 +264,10 @@ public class RingProcessor {
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
+        //This will always fail the first time - userInfo.ringTime is empty so nextRingTimeFromWorker is set to 0 (or 1970)
         if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinuteUTC, nextRingTimeFromWorker)) {
             //removed FF, at 100 percent
-            if(hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
+            if(hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinuteUTC, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
 
                 final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(userInfo.accountId,
                         dataCollectionBeginTimeUTC, currentTimeAlignedToStartOfMinuteUTC.plusMinutes(1));
