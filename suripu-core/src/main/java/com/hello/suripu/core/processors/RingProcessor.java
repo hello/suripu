@@ -335,12 +335,7 @@ public class RingProcessor {
         }
 
         // previous ring time from worker expired, next alarm is a non-smart alarm, should use non-smart next ring time.
-        if(!nextRingTimeFromTemplate.fromSmartAlarm){
-            //update userInfo
-            mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTimeFromTemplate);
-            LOGGER.info("action=set-regular-alarm account_id={} device_id={} updated_ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
-            return nextRingTimeFromTemplate;
-        }
+
 
         // next ring time from template is smart
         RingTime nextRingTime = nextRingTimeFromTemplate;
@@ -350,7 +345,9 @@ public class RingProcessor {
             //update userInfo
             mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
         }else if(nextRingTimeFromWorker.expectedRingTimeUTC > nextRingTimeFromTemplate.expectedRingTimeUTC){
-            LOGGER.warn("warn=invalid-ring-time account_id={} device_id={} worker_ring_time={} template_ring_time", userInfo.accountId, userInfo.deviceId, nextRingTimeFromWorker.expectedRingTimeUTC, nextRingTimeFromTemplate.expectedRingTimeUTC);
+            LOGGER.warn("action=set-earlier-ring-time account_id={} device_id={} worker_ring_time={} updated_ring_time={}", userInfo.accountId, userInfo.deviceId, nextRingTimeFromWorker.expectedRingTimeUTC, nextRingTimeFromTemplate.expectedRingTimeUTC);
+            mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
+
         }
         return nextRingTime;
     }
