@@ -484,8 +484,10 @@ public class MergedUserInfoDynamoDB {
     private Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> ringTimeAttributes = new HashSet<String>();
         Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME, EXPANSIONS_ATTRIBUTE_NAME);
+
         final HashSet<String> requiredAttributes = new HashSet<String>();
-        Collections.addAll(requiredAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
+        Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
+
         if(!item.keySet().containsAll(requiredAttributes)){
             return Optional.absent();
         }

@@ -277,6 +277,28 @@ public final class DataInputProtos {
      * <code>optional .periodic_data.light_data light_sensor = 25;</code>
      */
     com.hello.suripu.api.input.DataInputProtos.periodic_data.light_dataOrBuilder getLightSensorOrBuilder();
+
+    /**
+     * <code>optional int32 light_duration_ms = 26;</code>
+     */
+    boolean hasLightDurationMs();
+    /**
+     * <code>optional int32 light_duration_ms = 26;</code>
+     */
+    int getLightDurationMs();
+
+    /**
+     * <code>optional .KeywordStats keyword_stats = 27;</code>
+     */
+    boolean hasKeywordStats();
+    /**
+     * <code>optional .KeywordStats keyword_stats = 27;</code>
+     */
+    com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats getKeywordStats();
+    /**
+     * <code>optional .KeywordStats keyword_stats = 27;</code>
+     */
+    com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder getKeywordStatsOrBuilder();
   }
   /**
    * Protobuf type {@code periodic_data}
@@ -458,6 +480,24 @@ public final class DataInputProtos {
                 lightSensor_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00800000;
+              break;
+            }
+            case 208: {
+              bitField0_ |= 0x01000000;
+              lightDurationMs_ = input.readInt32();
+              break;
+            }
+            case 218: {
+              com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder subBuilder = null;
+              if (((bitField0_ & 0x02000000) == 0x02000000)) {
+                subBuilder = keywordStats_.toBuilder();
+              }
+              keywordStats_ = input.readMessage(com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(keywordStats_);
+                keywordStats_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x02000000;
               break;
             }
           }
@@ -1845,6 +1885,42 @@ public final class DataInputProtos {
       return lightSensor_;
     }
 
+    public static final int LIGHT_DURATION_MS_FIELD_NUMBER = 26;
+    private int lightDurationMs_;
+    /**
+     * <code>optional int32 light_duration_ms = 26;</code>
+     */
+    public boolean hasLightDurationMs() {
+      return ((bitField0_ & 0x01000000) == 0x01000000);
+    }
+    /**
+     * <code>optional int32 light_duration_ms = 26;</code>
+     */
+    public int getLightDurationMs() {
+      return lightDurationMs_;
+    }
+
+    public static final int KEYWORD_STATS_FIELD_NUMBER = 27;
+    private com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats keywordStats_;
+    /**
+     * <code>optional .KeywordStats keyword_stats = 27;</code>
+     */
+    public boolean hasKeywordStats() {
+      return ((bitField0_ & 0x02000000) == 0x02000000);
+    }
+    /**
+     * <code>optional .KeywordStats keyword_stats = 27;</code>
+     */
+    public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats getKeywordStats() {
+      return keywordStats_;
+    }
+    /**
+     * <code>optional .KeywordStats keyword_stats = 27;</code>
+     */
+    public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder getKeywordStatsOrBuilder() {
+      return keywordStats_;
+    }
+
     private void initFields() {
       unixTime_ = 0;
       light_ = 0;
@@ -1870,6 +1946,8 @@ public final class DataInputProtos {
       tvoc_ = 0;
       co2_ = 0;
       lightSensor_ = com.hello.suripu.api.input.DataInputProtos.periodic_data.light_data.getDefaultInstance();
+      lightDurationMs_ = 0;
+      keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1961,6 +2039,12 @@ public final class DataInputProtos {
       }
       if (((bitField0_ & 0x00800000) == 0x00800000)) {
         output.writeMessage(25, lightSensor_);
+      }
+      if (((bitField0_ & 0x01000000) == 0x01000000)) {
+        output.writeInt32(26, lightDurationMs_);
+      }
+      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+        output.writeMessage(27, keywordStats_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2066,6 +2150,14 @@ public final class DataInputProtos {
       if (((bitField0_ & 0x00800000) == 0x00800000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(25, lightSensor_);
+      }
+      if (((bitField0_ & 0x01000000) == 0x01000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(26, lightDurationMs_);
+      }
+      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(27, keywordStats_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2177,6 +2269,7 @@ public final class DataInputProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getLightSensorFieldBuilder();
+          getKeywordStatsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -2237,6 +2330,14 @@ public final class DataInputProtos {
           lightSensorBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00800000);
+        lightDurationMs_ = 0;
+        bitField0_ = (bitField0_ & ~0x01000000);
+        if (keywordStatsBuilder_ == null) {
+          keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
+        } else {
+          keywordStatsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x02000000);
         return this;
       }
 
@@ -2365,6 +2466,18 @@ public final class DataInputProtos {
         } else {
           result.lightSensor_ = lightSensorBuilder_.build();
         }
+        if (((from_bitField0_ & 0x01000000) == 0x01000000)) {
+          to_bitField0_ |= 0x01000000;
+        }
+        result.lightDurationMs_ = lightDurationMs_;
+        if (((from_bitField0_ & 0x02000000) == 0x02000000)) {
+          to_bitField0_ |= 0x02000000;
+        }
+        if (keywordStatsBuilder_ == null) {
+          result.keywordStats_ = keywordStats_;
+        } else {
+          result.keywordStats_ = keywordStatsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2456,6 +2569,12 @@ public final class DataInputProtos {
         }
         if (other.hasLightSensor()) {
           mergeLightSensor(other.getLightSensor());
+        }
+        if (other.hasLightDurationMs()) {
+          setLightDurationMs(other.getLightDurationMs());
+        }
+        if (other.hasKeywordStats()) {
+          mergeKeywordStats(other.getKeywordStats());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -3503,6 +3622,154 @@ public final class DataInputProtos {
           lightSensor_ = null;
         }
         return lightSensorBuilder_;
+      }
+
+      private int lightDurationMs_ ;
+      /**
+       * <code>optional int32 light_duration_ms = 26;</code>
+       */
+      public boolean hasLightDurationMs() {
+        return ((bitField0_ & 0x01000000) == 0x01000000);
+      }
+      /**
+       * <code>optional int32 light_duration_ms = 26;</code>
+       */
+      public int getLightDurationMs() {
+        return lightDurationMs_;
+      }
+      /**
+       * <code>optional int32 light_duration_ms = 26;</code>
+       */
+      public Builder setLightDurationMs(int value) {
+        bitField0_ |= 0x01000000;
+        lightDurationMs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 light_duration_ms = 26;</code>
+       */
+      public Builder clearLightDurationMs() {
+        bitField0_ = (bitField0_ & ~0x01000000);
+        lightDurationMs_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder> keywordStatsBuilder_;
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public boolean hasKeywordStats() {
+        return ((bitField0_ & 0x02000000) == 0x02000000);
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats getKeywordStats() {
+        if (keywordStatsBuilder_ == null) {
+          return keywordStats_;
+        } else {
+          return keywordStatsBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public Builder setKeywordStats(com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats value) {
+        if (keywordStatsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          keywordStats_ = value;
+          onChanged();
+        } else {
+          keywordStatsBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x02000000;
+        return this;
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public Builder setKeywordStats(
+          com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder builderForValue) {
+        if (keywordStatsBuilder_ == null) {
+          keywordStats_ = builderForValue.build();
+          onChanged();
+        } else {
+          keywordStatsBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x02000000;
+        return this;
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public Builder mergeKeywordStats(com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats value) {
+        if (keywordStatsBuilder_ == null) {
+          if (((bitField0_ & 0x02000000) == 0x02000000) &&
+              keywordStats_ != com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance()) {
+            keywordStats_ =
+              com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.newBuilder(keywordStats_).mergeFrom(value).buildPartial();
+          } else {
+            keywordStats_ = value;
+          }
+          onChanged();
+        } else {
+          keywordStatsBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x02000000;
+        return this;
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public Builder clearKeywordStats() {
+        if (keywordStatsBuilder_ == null) {
+          keywordStats_ = com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.getDefaultInstance();
+          onChanged();
+        } else {
+          keywordStatsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x02000000);
+        return this;
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder getKeywordStatsBuilder() {
+        bitField0_ |= 0x02000000;
+        onChanged();
+        return getKeywordStatsFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      public com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder getKeywordStatsOrBuilder() {
+        if (keywordStatsBuilder_ != null) {
+          return keywordStatsBuilder_.getMessageOrBuilder();
+        } else {
+          return keywordStats_;
+        }
+      }
+      /**
+       * <code>optional .KeywordStats keyword_stats = 27;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder> 
+          getKeywordStatsFieldBuilder() {
+        if (keywordStatsBuilder_ == null) {
+          keywordStatsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStats.Builder, com.hello.suripu.api.input.KeywordStatsProtos.KeywordStatsOrBuilder>(
+                  getKeywordStats(),
+                  getParentForChildren(),
+                  isClean());
+          keywordStats_ = null;
+        }
+        return keywordStatsBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:periodic_data)
@@ -8182,42 +8449,44 @@ public final class DataInputProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\025periodic.server.proto\"\253\005\n\rperiodic_dat" +
-      "a\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013t" +
-      "emperature\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004du" +
-      "st\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021l" +
-      "ight_variability\030\010 \001(\005\022\026\n\016light_tonality" +
-      "\030\t \001(\005\022\030\n\020firmware_version\030\n \001(\005\022\021\n\tdevi" +
-      "ce_id\030\014 \001(\t\022\030\n\020dust_variability\030\r \001(\005\022\020\n" +
-      "\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017 \001(\005\022\022\n\nwav" +
-      "e_count\030\020 \001(\005\022\022\n\nhold_count\030\021 \001(\005\022\036\n\026aud" +
-      "io_num_disturbances\030\022 \001(\005\022(\n audio_peak_",
-      "disturbance_energy_db\030\023 \001(\005\022\'\n\037audio_pea" +
-      "k_background_energy_db\030\024 \001(\005\022\034\n\024audio_pe" +
-      "ak_energy_db\030\025 \001(\005\022\020\n\010pressure\030\026 \001(\r\022\014\n\004" +
-      "tvoc\030\027 \001(\005\022\013\n\003co2\030\030 \001(\005\022/\n\014light_sensor\030" +
-      "\031 \001(\0132\031.periodic_data.light_data\032s\n\nligh" +
-      "t_data\022\t\n\001r\030\001 \002(\005\022\t\n\001g\030\002 \002(\005\022\t\n\001b\030\003 \002(\005\022" +
-      "\020\n\010infrared\030\004 \001(\005\022\r\n\005clear\030\005 \001(\005\022\021\n\tlux_" +
-      "count\030\006 \001(\005\022\020\n\010uv_count\030\007 \001(\005\"\201\003\n\025batche" +
-      "d_periodic_data\022\034\n\004data\030\001 \003(\0132\016.periodic" +
-      "_data\022\021\n\tdevice_id\030\002 \002(\t\022\030\n\020firmware_ver",
-      "sion\030\003 \002(\005\022\030\n\020uptime_in_second\030\004 \001(\005\022\026\n\016" +
-      "connected_ssid\030\007 \001(\t\0226\n\004scan\030\n \003(\0132(.bat" +
-      "ched_periodic_data.wifi_access_point\022\031\n\021" +
-      "messages_in_queue\030\013 \001(\005\032\227\001\n\021wifi_access_" +
-      "point\022\014\n\004ssid\030\001 \001(\t\022\014\n\004rssi\030\002 \001(\005\022E\n\007ant" +
-      "enna\030\003 \001(\01624.batched_periodic_data.wifi_" +
-      "access_point.AntennaType\"\037\n\013AntennaType\022" +
-      "\007\n\003IFA\020\001\022\007\n\003PCB\020\002\"7\n\017AccountMetadata\022\022\n\n" +
-      "account_id\030\001 \001(\003\022\020\n\010timezone\030\002 \001(\t\"\346\001\n\027B" +
-      "atchPeriodicDataWorker\022$\n\004data\030\001 \001(\0132\026.b",
-      "atched_periodic_data\022\022\n\nip_address\030\002 \001(\t" +
-      "\022\023\n\013received_at\030\003 \001(\003\022\030\n\020uptime_in_secon" +
-      "d\030\004 \001(\005\022#\n\ttimezones\030\005 \003(\0132\020.AccountMeta" +
-      "data\022\037\n\027firmware_middle_version\030\006 \001(\t\022\034\n" +
-      "\024firmware_top_version\030\007 \001(\tB-\n\032com.hello" +
-      ".suripu.api.inputB\017DataInputProtos"
+      "\n\025periodic.server.proto\032\023keyword_stats.p" +
+      "roto\"\354\005\n\rperiodic_data\022\021\n\tunix_time\030\001 \001(" +
+      "\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020\n" +
+      "\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 " +
+      "\001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010 " +
+      "\001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware_" +
+      "version\030\n \001(\005\022\021\n\tdevice_id\030\014 \001(\t\022\030\n\020dust" +
+      "_variability\030\r \001(\005\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010" +
+      "dust_min\030\017 \001(\005\022\022\n\nwave_count\030\020 \001(\005\022\022\n\nho" +
+      "ld_count\030\021 \001(\005\022\036\n\026audio_num_disturbances",
+      "\030\022 \001(\005\022(\n audio_peak_disturbance_energy_" +
+      "db\030\023 \001(\005\022\'\n\037audio_peak_background_energy" +
+      "_db\030\024 \001(\005\022\034\n\024audio_peak_energy_db\030\025 \001(\005\022" +
+      "\020\n\010pressure\030\026 \001(\r\022\014\n\004tvoc\030\027 \001(\005\022\013\n\003co2\030\030" +
+      " \001(\005\022/\n\014light_sensor\030\031 \001(\0132\031.periodic_da" +
+      "ta.light_data\022\031\n\021light_duration_ms\030\032 \001(\005" +
+      "\022$\n\rkeyword_stats\030\033 \001(\0132\r.KeywordStats\032s" +
+      "\n\nlight_data\022\t\n\001r\030\001 \002(\005\022\t\n\001g\030\002 \002(\005\022\t\n\001b\030" +
+      "\003 \002(\005\022\020\n\010infrared\030\004 \001(\005\022\r\n\005clear\030\005 \001(\005\022\021" +
+      "\n\tlux_count\030\006 \001(\005\022\020\n\010uv_count\030\007 \001(\005\"\201\003\n\025",
+      "batched_periodic_data\022\034\n\004data\030\001 \003(\0132\016.pe" +
+      "riodic_data\022\021\n\tdevice_id\030\002 \002(\t\022\030\n\020firmwa" +
+      "re_version\030\003 \002(\005\022\030\n\020uptime_in_second\030\004 \001" +
+      "(\005\022\026\n\016connected_ssid\030\007 \001(\t\0226\n\004scan\030\n \003(\013" +
+      "2(.batched_periodic_data.wifi_access_poi" +
+      "nt\022\031\n\021messages_in_queue\030\013 \001(\005\032\227\001\n\021wifi_a" +
+      "ccess_point\022\014\n\004ssid\030\001 \001(\t\022\014\n\004rssi\030\002 \001(\005\022" +
+      "E\n\007antenna\030\003 \001(\01624.batched_periodic_data" +
+      ".wifi_access_point.AntennaType\"\037\n\013Antenn" +
+      "aType\022\007\n\003IFA\020\001\022\007\n\003PCB\020\002\"7\n\017AccountMetada",
+      "ta\022\022\n\naccount_id\030\001 \001(\003\022\020\n\010timezone\030\002 \001(\t" +
+      "\"\346\001\n\027BatchPeriodicDataWorker\022$\n\004data\030\001 \001" +
+      "(\0132\026.batched_periodic_data\022\022\n\nip_address" +
+      "\030\002 \001(\t\022\023\n\013received_at\030\003 \001(\003\022\030\n\020uptime_in" +
+      "_second\030\004 \001(\005\022#\n\ttimezones\030\005 \003(\0132\020.Accou" +
+      "ntMetadata\022\037\n\027firmware_middle_version\030\006 " +
+      "\001(\t\022\034\n\024firmware_top_version\030\007 \001(\tB-\n\032com" +
+      ".hello.suripu.api.inputB\017DataInputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8230,13 +8499,14 @@ public final class DataInputProtos {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          com.hello.suripu.api.input.KeywordStatsProtos.getDescriptor(),
         }, assigner);
     internal_static_periodic_data_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_periodic_data_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_periodic_data_descriptor,
-        new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", "AudioNumDisturbances", "AudioPeakDisturbanceEnergyDb", "AudioPeakBackgroundEnergyDb", "AudioPeakEnergyDb", "Pressure", "Tvoc", "Co2", "LightSensor", });
+        new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", "AudioNumDisturbances", "AudioPeakDisturbanceEnergyDb", "AudioPeakBackgroundEnergyDb", "AudioPeakEnergyDb", "Pressure", "Tvoc", "Co2", "LightSensor", "LightDurationMs", "KeywordStats", });
     internal_static_periodic_data_light_data_descriptor =
       internal_static_periodic_data_descriptor.getNestedTypes().get(0);
     internal_static_periodic_data_light_data_fieldAccessorTable = new
@@ -8267,6 +8537,7 @@ public final class DataInputProtos {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_BatchPeriodicDataWorker_descriptor,
         new java.lang.String[] { "Data", "IpAddress", "ReceivedAt", "UptimeInSecond", "Timezones", "FirmwareMiddleVersion", "FirmwareTopVersion", });
+    com.hello.suripu.api.input.KeywordStatsProtos.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
