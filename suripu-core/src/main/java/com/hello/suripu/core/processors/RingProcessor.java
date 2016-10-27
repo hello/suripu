@@ -122,13 +122,8 @@ public class RingProcessor {
             final RingTime nextRingTime;
             if(feature != null) {
                 if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, userInfo.accountId, Collections.<String>emptyList())) {
-                    nextRingTime = updateAndReturnNextProgressiveSmartRingTimeForUser(currentUserLocalTime,
-                            slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
-                            nextRingTimeFromWorker, nextRingTimeFromTemplate,
-                            userInfo,
-                            pillDataDAODynamoDB,
-                            mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB,
-                            feature);
+                    nextRingTime = updateAndReturnNextProgressiveSmartRingTimeForUser(currentUserLocalTime, smartAlarmProcessAheadInMinutes,
+                            nextRingTimeFromWorker, nextRingTimeFromTemplate, userInfo, pillDataDAODynamoDB,mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB);
                 }else {
                     nextRingTime = updateAndReturnNextSmartRingTimeForUser(currentUserLocalTime,
                             slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
@@ -263,39 +258,28 @@ public class RingProcessor {
     }
 
     public static RingTime updateAndReturnNextProgressiveSmartRingTimeForUser(final DateTime currentTimeAlignedToStartOfMinuteLocal,
-                                                                   final int slidingWindowSizeInMinutes,
-                                                                   final float lightSleepThreshold,
                                                                    final int smartAlarmProcessAheadInMinutes,
                                                                    final RingTime nextRingTimeFromWorker,
                                                                    final RingTime nextRingTimeFromTemplate,
                                                                    final UserInfo userInfo,
                                                                    final PillDataDAODynamoDB pillDataDAODynamoDB,
                                                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                                                   final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
-                                                                   final RolloutClient feature){
-        /*
-        Possible States
-        Current Alarm is a Smart Alarm
-            1. Within Appropriate Window Not Processed
-            2. Within Appropriate Window Processed but Not Triggered
-            3. Within Appropriate Window, Processed and Triggered - possible regular alarm set by user within remaining smart alarm window
-        Current Alarm is a Regular Alarm
-        Current Alarm has Expired => Current Alarm = next Alarm
-
-         ISSUE: If new smart alarm set within window of previously triggered smart alarm
-         */
+                                                                   final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB){
+        /* Possible States
+       1. Current Alarm is a Smart Alarm
+            a. Within Appropriate Window Not Processed
+            b. Within Appropriate Window Processed but Not Triggered
+            c. Within Appropriate Window, Processed and Triggered - possible regular alarm set by user within remaining smart alarm window
+       2. Current Alarm is a Regular Alarm
+       3. Current Alarm has Expired => Current Alarm = next Alarm
+         ISSUE: If new smart alarm set within window of previously triggered smart alarm*/
 
         final DateTime currentTimeAlignedToStartOfMinuteUTC = currentTimeAlignedToStartOfMinuteLocal.withZone(DateTimeZone.UTC);
-
-        LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
-
-        //is next alarm a smart alarm and within appropriate window and processed?
-        //check if next alarm is smart and before the expected ringtime
+        //is next alarm a smart alarm? within the appropriate time window? and processed?
         if (isRingTimeFromNextProgressiveSmartAlarm(currentTimeAlignedToStartOfMinuteUTC, nextRingTimeFromWorker)) {
-            //next ring is smart and within window (-30 to -2 mins) and not processed (processed means actual time != expected time)
+
             if(hasSufficientTimeToApplyNextProgressiveSmartAlarm(currentTimeAlignedToStartOfMinuteUTC, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
-                final Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
-                final DateTime dataCollectionBeginTimeUTC = currentTimeAlignedToStartOfMinuteUTC.minusMinutes(progressiveWindow);
+                final DateTime dataCollectionBeginTimeUTC = currentTimeAlignedToStartOfMinuteUTC.minusMinutes(PROGRESSIVE_MOTION_WINDOW_MIN);
                 final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(userInfo.accountId,
                         dataCollectionBeginTimeUTC, currentTimeAlignedToStartOfMinuteUTC.plusMinutes(1));
 
@@ -328,27 +312,27 @@ public class RingProcessor {
                     // DO NOT write this into merge user info table, it will mess up the states!
                     return nextRingTimeFromTemplate;  //return new regular alarm
                 }
+                LOGGER.debug("debug=smart-alarm-already-rang account_id={} device_id={} actual_ring_time={} expected_ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),new DateTime(nextRingTimeFromWorker.expectedRingTimeUTC, userInfo.timeZone.get()));
                 return RingTime.createEmpty(); //otherwise keep alarm silent
             }
             LOGGER.debug("debug=smart-alarm-already-set account_id={} device_id={} ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()));
             return nextRingTimeFromWorker;
         }
 
-        // previous ring time from worker expired, next alarm is a non-smart alarm, should use non-smart next ring time.
+        //non-smart alarm already set
+        if (nextRingTimeFromWorker.equals(nextRingTimeFromTemplate)){
+            return nextRingTimeFromWorker;
+        }
 
-
-        // next ring time from template is smart
         RingTime nextRingTime = nextRingTimeFromTemplate;
-        //check if nextRingTime is valid
+        //updated userInfo
+        mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
         if(nextRingTimeFromWorker.expectedRingTimeUTC < nextRingTimeFromTemplate.expectedRingTimeUTC){
             LOGGER.info("action=set-next-alarm account_id={} device_id={} updated_ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
-            //update userInfo
-            mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
         }else if(nextRingTimeFromWorker.expectedRingTimeUTC > nextRingTimeFromTemplate.expectedRingTimeUTC){
             LOGGER.warn("action=set-earlier-ring-time account_id={} device_id={} worker_ring_time={} updated_ring_time={}", userInfo.accountId, userInfo.deviceId, nextRingTimeFromWorker.expectedRingTimeUTC, nextRingTimeFromTemplate.expectedRingTimeUTC);
-            mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
-
         }
+
         return nextRingTime;
     }
 
