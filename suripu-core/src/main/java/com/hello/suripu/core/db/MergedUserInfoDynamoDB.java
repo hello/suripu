@@ -485,7 +485,10 @@ public class MergedUserInfoDynamoDB {
         final HashSet<String> ringTimeAttributes = new HashSet<String>();
         Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME, EXPANSIONS_ATTRIBUTE_NAME);
 
-        if(!item.keySet().containsAll(ringTimeAttributes)){
+        final HashSet<String> requiredAttributes = new HashSet<String>();
+        Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
+
+        if(!item.keySet().containsAll(requiredAttributes)){
             return Optional.absent();
         }
 
