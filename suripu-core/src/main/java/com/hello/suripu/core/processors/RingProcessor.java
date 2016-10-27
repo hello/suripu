@@ -308,14 +308,18 @@ public class RingProcessor {
                 LOGGER.debug("debug=smart-alarm-expired account_id={} device_id={} ring_time_expected={} ring_time_actual={}", userInfo.accountId, userInfo.deviceId,
                         new DateTime(nextRingTimeFromWorker.expectedRingTimeUTC, userInfo.timeZone.get()), new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
                 //check if user set new regular alarm within smart alarm window
-                if (nextRingTimeFromTemplate.fromSmartAlarm == false && nextRingTimeFromTemplate.actualRingTimeUTC <= nextRingTimeFromWorker.actualRingTimeUTC) {
+                if (nextRingTimeFromTemplate.fromSmartAlarm == false && nextRingTimeFromTemplate.expectedRingTimeUTC <= nextRingTimeFromWorker.expectedRingTimeUTC) {
                     // DO NOT write this into merge user info table, it will mess up the states!
                     return nextRingTimeFromTemplate;  //return new regular alarm
                 }
                 LOGGER.debug("debug=smart-alarm-already-rang account_id={} device_id={} actual_ring_time={} expected_ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),new DateTime(nextRingTimeFromWorker.expectedRingTimeUTC, userInfo.timeZone.get()));
                 return RingTime.createEmpty(); //otherwise keep alarm silent
             }
-            LOGGER.debug("debug=smart-alarm-already-set account_id={} device_id={} ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()));
+            if (!nextRingTimeFromWorker.processed()){
+                LOGGER.debug("debug=smart-alarm-not-triggered account_id={} device_id={} ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()));
+            } else {
+                LOGGER.debug("debug=smart-alarm-already-set account_id={} device_id={} ring_time={}", userInfo.accountId, userInfo.deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()));
+            }
             return nextRingTimeFromWorker;
         }
 
@@ -363,6 +367,7 @@ public class RingProcessor {
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
                         motionWithinProgressiveWindow);
+
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
                     smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
