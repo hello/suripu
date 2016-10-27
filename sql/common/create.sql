@@ -509,3 +509,8 @@ CREATE UNIQUE INDEX uniq_exp_app_device_id on expansion_data(app_id, device_id);
 
 GRANT ALL PRIVILEGES ON expansion_data TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE expansion_data_id_seq TO ingress_user;
+
+-- Added Oct 27th 2016
+ALTER TABLE expansions ADD COLUMN company_name VARCHAR (100);
+UPDATE expansions SET company_name='Phillips' WHERE service_name='HUE';
+UPDATE expansions SET company_name='Nest' WHERE service_name='NEST';
