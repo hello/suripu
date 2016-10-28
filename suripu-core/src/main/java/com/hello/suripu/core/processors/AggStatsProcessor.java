@@ -16,6 +16,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.AggStatsInputs;
+import com.hello.suripu.core.models.Insights.SumCountData;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.AggStatsComputer;
 import org.joda.time.DateTime;
@@ -43,6 +44,14 @@ public class AggStatsProcessor {
     private final int MIN_ALLOWED_LOCAL_HOUR = AggStats.DAY_START_END_HOUR + 1; //Perform computations between 1PM and 7PM
     private final int NUM_HOURS_WORKER_ON = 6;
     private final int MAX_ALLOWED_LOCAL_HOUR = MIN_ALLOWED_LOCAL_HOUR + NUM_HOURS_WORKER_ON;
+
+    //Anomaly thresholds
+    private final int MIN_REASONABLE_TEMP = 10; //50 F
+    private final int MAX_REASONABLE_TEMP = 35; //95 F
+    private final int MIN_REASONABLE_HUM = 5;
+    private final int MAX_REASONABLE_HUM = 95;
+    private final int MAX_REASONABLE_PARTICULATE = 90;
+    private final int MAX_REASONABLE_LUX = 30000; //full direct sun
 
     private AggStatsProcessor(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                              final PillDataDAODynamoDB pillDataDAODynamoDB,
@@ -234,7 +243,57 @@ public class AggStatsProcessor {
         //Compute aggregate stats
         final AggStatsInputs aggStatsInputs = AggStatsInputs.create(senseColorOptional, calibrationOptional, deviceDataListResponse, pillDataList);
         final Optional<AggStats> aggStats = AggStatsComputer.computeAggStats(accountId, deviceId, targetDateLocal, aggStatsInputs);
+
+        //Check for data anomalies
+        if (aggStats.isPresent()) {
+            checkAnomaly(aggStats.get());
+        }
+
         return aggStats;
+    }
+
+    private void checkAnomaly(final AggStats aggStats) {
+
+        //temp check
+        if (aggStats.minDailyTemp.isPresent()) {
+            if (fromMicroIntConversion(aggStats.minDailyTemp.get()) < MIN_REASONABLE_TEMP) {
+                LOGGER.info("anomaly=low-temp date_local={} account_id={} device_id={}", aggStats.dateLocal, aggStats.accountId, aggStats.externalDeviceId);
+            }
+        }
+
+        if (aggStats.maxDailyTemp.isPresent()) {
+            if (aggStats.maxDailyTemp.get() > MAX_REASONABLE_TEMP) {
+                LOGGER.info("anomaly=high-temp date_local={} account_id={} device_id={}", aggStats.dateLocal, aggStats.accountId, aggStats.externalDeviceId);
+            }
+        }
+
+        //humidity check
+        if (aggStats.avgDailyHumidity.isPresent()) {
+            if (fromMicroIntConversion(aggStats.avgDailyHumidity.get()) < MIN_REASONABLE_HUM) {
+                LOGGER.info("anomaly=low-hum date_local={} account_id={} device_id={}", aggStats.dateLocal, aggStats.accountId, aggStats.externalDeviceId);
+            } else if (fromMicroIntConversion(aggStats.avgDailyHumidity.get()) > MAX_REASONABLE_HUM) {
+                LOGGER.info("anomaly=high-hum date_local={} account_id={} device_id={}", aggStats.dateLocal, aggStats.accountId, aggStats.externalDeviceId);
+            }
+        }
+
+        //particulates check
+        if (aggStats.avgDailyDustDensity.isPresent()) {
+            if (fromMicroIntConversion(aggStats.avgDailyDustDensity.get()) > MAX_REASONABLE_PARTICULATE) {
+                LOGGER.info("anomaly=high-dust date_local={} account_id={} device_id={}", aggStats.dateLocal, aggStats.accountId, aggStats.externalDeviceId);
+            }
+        }
+
+        //light check
+        for (SumCountData sumCountData : aggStats.sumCountMicroLuxHourMap.values()) {
+            if (fromMicroIntConversion(sumCountData.sum) > MAX_REASONABLE_LUX) {
+                LOGGER.info("anomaly=high-lux date_local={} account_id={} device_id={}", aggStats.dateLocal, aggStats.accountId, aggStats.externalDeviceId);
+            }
+        }
+
+    }
+
+    private static int fromMicroIntConversion(final int data) {
+        return data / AggStatsComputer.TO_MICRO_CONVERSION;
     }
 
     public Optional<Device.Color> getSenseColorOptional(final SenseColorDAO senseColorDAO, final DeviceId deviceId) {
