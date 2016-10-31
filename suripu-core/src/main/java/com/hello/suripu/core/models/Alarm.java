@@ -560,5 +560,35 @@ public class Alarm {
 
             return "/RINGTONE/DIG001.raw";
         }
+
+        public static List<AlarmExpansion> getExpansionsAtExpectedTime(final DateTime expectedRingTime, final List<Alarm> alarmList) {
+            List<AlarmExpansion> expansions = Lists.newArrayList();
+
+            for(final Alarm alarm: alarmList){
+                if(alarm.expansions.isEmpty()) {
+                    continue;
+                }
+
+                //Reject if the hour & minute aren't the same
+                if(expectedRingTime.getHourOfDay() != alarm.hourOfDay ||
+                    expectedRingTime.getMinuteOfHour() != alarm.minuteOfHour) {
+                    continue;
+                }
+
+                //Non-repeating alarms
+                if(!alarm.isRepeated &&
+                    alarm.year == expectedRingTime.getYear() &&
+                    alarm.month == expectedRingTime.getMonthOfYear() &&
+                    alarm.day == expectedRingTime.getDayOfMonth()){
+                    expansions.addAll(alarm.expansions);
+                }
+
+                //repeating alarms
+                if(alarm.isRepeated && alarm.dayOfWeek.contains(expectedRingTime.getDayOfWeek())){
+                    expansions.addAll(alarm.expansions);
+                }
+            }
+            return expansions;
+        }
     }
 }

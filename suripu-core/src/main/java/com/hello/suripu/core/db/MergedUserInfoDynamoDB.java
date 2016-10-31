@@ -491,8 +491,8 @@ public class MergedUserInfoDynamoDB {
 
         final long expected = Long.valueOf(item.get(EXPECTED_RING_TIME_ATTRIBUTE_NAME).getN());
         final long actual = Long.valueOf(item.get(ACTUAL_RING_TIME_ATTRIBUTE_NAME).getN());
-
         final String soundArrayJSON = item.get(SOUND_IDS_ATTRIBUTE_NAME).getS();
+
         try {
             final long[] soundIds = this.objectMapper.readValue(soundArrayJSON, long[].class);
             boolean isSmart = false;
@@ -500,12 +500,20 @@ public class MergedUserInfoDynamoDB {
                isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();
             }
 
+            final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
             List<AlarmExpansion> expansions = Lists.newArrayList();
-            if(item.containsKey(EXPANSIONS_ATTRIBUTE_NAME)){
-                final String expansionsJSON = item.get(EXPANSIONS_ATTRIBUTE_NAME).getS();
-                expansions = this.objectMapper.readValue(expansionsJSON, new TypeReference<List<AlarmExpansion>>(){});
+            if(!dateTimeZoneOptional.isPresent()) {
+                return Optional.of(new RingTime(actual, expected, soundIds, isSmart, expansions));
             }
+
+            final DateTime expectedRingTime = new DateTime(expected, dateTimeZoneOptional.get());
+            final String alarmListJSON = item.get(ALARM_TEMPLATES_ATTRIBUTE_NAME).getS();
+            final List<Alarm> alarmList = this.objectMapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
+
+            expansions = Alarm.Utils.getExpansionsAtExpectedTime(expectedRingTime, alarmList);
+
             return Optional.of(new RingTime(actual, expected, soundIds, isSmart, expansions));
+
         } catch (IOException e) {
             LOGGER.error("Deserialize JSON for ring time failed {}, device {}, account id {}.", e.getMessage(), deviceId, accountId);
         }
