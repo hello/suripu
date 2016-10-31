@@ -120,8 +120,8 @@ public class RingProcessor {
             final RingTime nextRingTimeFromWorker = getRingTimeFromAlarmInfo(userInfo);
 
             final RingTime nextRingTime;
-            if(true){//feature != null) {
-                if (true){//feature.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, userInfo.accountId, Collections.<String>emptyList())) {
+            if(feature != null) {
+                if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, userInfo.accountId, Collections.<String>emptyList())) {
                     nextRingTime = updateAndReturnNextProgressiveSmartRingTimeForUser(currentUserLocalTime, smartAlarmProcessAheadInMinutes,
                             nextRingTimeFromWorker, nextRingTimeFromTemplate, userInfo, pillDataDAODynamoDB,mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB);
                 }else {
