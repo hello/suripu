@@ -77,7 +77,6 @@ public class MergedUserInfoDynamoDB {
     public static final String ACTUAL_RING_TIME_ATTRIBUTE_NAME = "actual_ring_at_utc";
     public static final String SOUND_IDS_ATTRIBUTE_NAME = "sound_ids";
     public static final String IS_SMART_ALARM_ATTRIBUTE_NAME = "is_smart";
-    public static final String EXPANSIONS_ATTRIBUTE_NAME = "expansions";
 
     // Timezone history
     public static final String TIMEZONE_ID_ATTRIBUTE_NAME = "timezone_id";
