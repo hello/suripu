@@ -438,4 +438,134 @@ public class AlarmUtilsTest {
         assertThat(AlarmUtils.isWithinReasonableBoundsApproximately(now, clientTimestamp), is(false));
         assertThat(AlarmUtils.isWithinReasonableBounds(now, clientTimestamp), is(false));
     }
+
+    @Test
+    public void testGetExpansionsAtExpectedTimeWithRepeatedAlarm() {
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+
+        final DateTime alarmTime = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
+
+        HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(alarmTime.getDayOfWeek());
+
+        final AlarmExpansion expansion = new AlarmExpansion(1L, true, "Lights", "HUE", new ValueRange(100, 100));
+        final List<AlarmExpansion> expansionsList = Lists.newArrayList(expansion);
+
+        final Alarm.Builder builder = new Alarm.Builder();
+        builder.withYear(alarmTime.getYear())
+            .withMonth(alarmTime.getMonthOfYear())
+            .withDay(alarmTime.getDayOfMonth())
+            .withDayOfWeek(dayOfWeek)
+            .withHour(alarmTime.getHourOfDay())
+            .withMinute(alarmTime.getMinuteOfHour())
+            .withIsRepeated(true)
+            .withIsEnabled(true)
+            .withIsEditable(true)
+            .withIsSmart(false)
+            .withExpansions(expansionsList)
+            .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        alarmList.add(builder.build());
+
+        final List<AlarmExpansion> alarmExpansions = Alarm.Utils.getExpansionsAtExpectedTime(alarmTime, alarmList);
+
+        assertThat(alarmExpansions.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testGetExpansionsAtExpectedTimeWithNonRepeatingAlarm() {
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+
+        final DateTime alarmTime = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
+
+        HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(alarmTime.getDayOfWeek());
+
+        final AlarmExpansion expansion = new AlarmExpansion(1L, true, "Lights", "HUE", new ValueRange(100, 100));
+        final List<AlarmExpansion> expansionsList = Lists.newArrayList(expansion);
+
+        final Alarm.Builder builder = new Alarm.Builder();
+        builder.withYear(alarmTime.getYear())
+            .withMonth(alarmTime.getMonthOfYear())
+            .withDay(alarmTime.getDayOfMonth())
+            .withDayOfWeek(dayOfWeek)
+            .withHour(alarmTime.getHourOfDay())
+            .withMinute(alarmTime.getMinuteOfHour())
+            .withIsRepeated(false)
+            .withIsEnabled(true)
+            .withIsEditable(true)
+            .withIsSmart(false)
+            .withExpansions(expansionsList)
+            .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        alarmList.add(builder.build());
+
+        final List<AlarmExpansion> alarmExpansions = Alarm.Utils.getExpansionsAtExpectedTime(alarmTime, alarmList);
+
+        assertThat(alarmExpansions.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testGetExpansionsAtExpectedTimeNoExpansions() {
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+
+        final DateTime alarmTime = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
+
+        HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(alarmTime.getDayOfWeek());
+
+
+
+        final Alarm.Builder builder = new Alarm.Builder();
+        builder.withYear(alarmTime.getYear())
+            .withMonth(alarmTime.getMonthOfYear())
+            .withDay(alarmTime.getDayOfMonth())
+            .withDayOfWeek(dayOfWeek)
+            .withHour(alarmTime.getHourOfDay())
+            .withMinute(alarmTime.getMinuteOfHour())
+            .withIsRepeated(false)
+            .withIsEnabled(true)
+            .withIsEditable(true)
+            .withIsSmart(false)
+            .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        alarmList.add(builder.build());
+
+        final List<AlarmExpansion> alarmExpansions = Alarm.Utils.getExpansionsAtExpectedTime(alarmTime, alarmList);
+
+        assertThat(alarmExpansions.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGetExpansionsAtExpectedTimeWrongTime() {
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+
+        final DateTime alarmTime = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
+
+        HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(alarmTime.getDayOfWeek());
+
+        final AlarmExpansion expansion = new AlarmExpansion(1L, true, "Lights", "HUE", new ValueRange(100, 100));
+        final List<AlarmExpansion> expansionsList = Lists.newArrayList(expansion);
+
+        final Alarm.Builder builder = new Alarm.Builder();
+        builder.withYear(alarmTime.getYear())
+            .withMonth(alarmTime.getMonthOfYear())
+            .withDay(alarmTime.getDayOfMonth())
+            .withDayOfWeek(dayOfWeek)
+            .withHour(alarmTime.getHourOfDay())
+            .withMinute(alarmTime.getMinuteOfHour())
+            .withIsRepeated(false)
+            .withIsEnabled(true)
+            .withIsEditable(true)
+            .withIsSmart(false)
+            .withExpansions(expansionsList)
+            .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        alarmList.add(builder.build());
+
+        final List<AlarmExpansion> alarmExpansions = Alarm.Utils.getExpansionsAtExpectedTime(alarmTime.minusMinutes(1), alarmList);
+
+        assertThat(alarmExpansions.isEmpty(), is(true));
+    }
 }
