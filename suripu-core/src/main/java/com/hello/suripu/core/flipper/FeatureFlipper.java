@@ -80,7 +80,6 @@ public class FeatureFlipper {
     public final static String PILL_PAIR_MOTION_FILTER = "pill_pair_motion_filter";
     public final static String PRINT_RAW_PB = "print_raw_pb";
     public final static String PROGRESSIVE_SMART_ALARM = "progressive_smart_alarm";
-    public final static String PROGRESSIVE_SMART_ALARM_TEST_VALUES = "progressive_smart_alarm_test_values";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
 
     public final static String QUESTION_ANOMALY_LIGHT_VISIBLE = "question_anomaly_light_enabled";
@@ -114,8 +113,8 @@ public class FeatureFlipper {
     public final static String SLEEP_SOUNDS_OVERRIDE_OTA = "sleep_sounds_override_ota";
     public final static String SLEEP_SEGMENT_OFFSET_REMAPPING = "sleep_segment_offset_remapping";
     public final static String SLEEP_STATS_MEDIUM_SLEEP = "sleep_stats_medium_sleep";
-    public final static String SMART_ALARM = "smart_alarm";
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
+    public final static String SMART_ALARM_REFACTORED = "smart_alarm_refactored";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
     public final static String SOUND_EVENTS_USE_HIGHER_THRESHOLD = "sound_events_use_higher_threshold";
     public final static String SOUND_INFO_TIMELINE = "sound_info_timeline";
