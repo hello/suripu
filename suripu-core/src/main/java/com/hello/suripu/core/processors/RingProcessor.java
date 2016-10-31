@@ -367,20 +367,17 @@ public class RingProcessor {
                                                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                                                    final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                                                    final RolloutClient feature){
+        final int progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
+        final DateTime dataCollectionBeginTime = currentTimeAlignedToStartOfMinute.minusMinutes(progressiveWindow);
 
-        final DateTime currentTimeAlignedToStartOfMinuteUTC = currentTimeAlignedToStartOfMinute.withZone(DateTimeZone.UTC);
-        final Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
-        final DateTime dataCollectionBeginTimeUTC = currentTimeAlignedToStartOfMinuteUTC.minusMinutes(progressiveWindow);
+        final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(userInfo.accountId,
+                dataCollectionBeginTime, currentTimeAlignedToStartOfMinute.plusMinutes(1));
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
-        //This will always fail the first time - userInfo.ringTime is empty so nextRingTimeFromWorker is set to 0 (or 1970)
-        if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinuteUTC, nextRingTimeFromWorker)) {
-            //removed FF, at 100 percent
-            if(hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinuteUTC, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
-
-                final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(userInfo.accountId,
-                        dataCollectionBeginTimeUTC, currentTimeAlignedToStartOfMinuteUTC.plusMinutes(1));
+        if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
+            if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
+                    hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
 
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
