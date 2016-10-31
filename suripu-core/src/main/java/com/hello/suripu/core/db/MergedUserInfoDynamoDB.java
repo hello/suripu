@@ -2,7 +2,6 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import com.amazonaws.AmazonServiceException;
@@ -500,16 +499,15 @@ public class MergedUserInfoDynamoDB {
             }
 
             final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
-            List<AlarmExpansion> expansions = Lists.newArrayList();
             if(!dateTimeZoneOptional.isPresent()) {
-                return Optional.of(new RingTime(actual, expected, soundIds, isSmart, expansions));
+                return Optional.of(new RingTime(actual, expected, soundIds, isSmart));
             }
 
             final DateTime expectedRingTime = new DateTime(expected, dateTimeZoneOptional.get());
             final String alarmListJSON = item.get(ALARM_TEMPLATES_ATTRIBUTE_NAME).getS();
             final List<Alarm> alarmList = this.objectMapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
 
-            expansions = Alarm.Utils.getExpansionsAtExpectedTime(expectedRingTime, alarmList);
+            final List<AlarmExpansion> expansions = Alarm.Utils.getExpansionsAtExpectedTime(expectedRingTime, alarmList);
 
             return Optional.of(new RingTime(actual, expected, soundIds, isSmart, expansions));
 

@@ -562,7 +562,7 @@ public class Alarm {
         }
 
         public static List<AlarmExpansion> getExpansionsAtExpectedTime(final DateTime expectedRingTime, final List<Alarm> alarmList) {
-            List<AlarmExpansion> expansions = Lists.newArrayList();
+            final List<AlarmExpansion> expansions = Lists.newArrayList();
 
             for(final Alarm alarm: alarmList){
                 if(alarm.expansions.isEmpty()) {
