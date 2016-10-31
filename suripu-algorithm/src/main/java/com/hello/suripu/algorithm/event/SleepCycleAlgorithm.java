@@ -283,6 +283,7 @@ public class SleepCycleAlgorithm {
 
         for(final AmplitudeData kickOff:kickOffCounts){
             if(kickOff.amplitude > awakeKickoffThreshold){
+                LOGGER.info("action=triggered-progressive-alarm-kickoff-counts kick_off_counts={}", kickOff.amplitude);
                 return true;
             }
         }
@@ -290,6 +291,7 @@ public class SleepCycleAlgorithm {
         if (useOnDuration) {
             for (final AmplitudeData onDuration : OnDurationSeconds) {
                 if (onDuration.amplitude > awakeOnDurationThreshold) {
+                    LOGGER.info("action=triggered-progressive-alarm-on-duration on_duration={}", onDuration.amplitude);
                     return true;
                 }
             }
@@ -302,6 +304,7 @@ public class SleepCycleAlgorithm {
             }
 
             if(count >= ampThresholdCountLimit){
+                LOGGER.info("action=triggered-progressive-alarm-amplitude-count amplitude_count={}", count);
                 return true;
             }
         }
