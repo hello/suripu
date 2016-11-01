@@ -26,6 +26,7 @@ import com.hello.suripu.core.db.SenseDataDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
@@ -47,6 +48,7 @@ import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
@@ -63,6 +65,7 @@ import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.SleepScoreUtils;
+import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
@@ -97,6 +100,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountReadDAO accountDAO;
     private final SleepStatsDAO sleepStatsDAODynamoDB;
+    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
     private final TimelineSafeguards timelineSafeguards;
@@ -132,6 +136,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                                                         final AccountReadDAO accountDAO,
                                                                         final SleepStatsDAO sleepStatsDAODynamoDB,
                                                                         final SenseDataDAO senseDataDAO,
+                                                                        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                                                                         final OnlineHmmModelsDAO priorsDAO,
                                                                         final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                                                                         final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
@@ -150,6 +155,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseDataDAO,
+                timeZoneHistoryDAODynamoDB,
                 Optional.<UUID>absent(),
                 userTimelineTestGroupDAO,
                 sleepScoreParametersDAO,
@@ -159,7 +165,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public InstrumentedTimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseDataDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseDataDAO, timeZoneHistoryDAODynamoDB, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
     }
 
     //private SessionLogDebug(final String)
@@ -173,6 +179,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                           final AccountReadDAO accountDAO,
                                           final SleepStatsDAO sleepStatsDAODynamoDB,
                                           final SenseDataDAO senseDataDAO,
+                                          final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                                           final Optional<UUID> uuid,
                                           final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                                           final SleepScoreParametersDAO sleepScoreParametersDAO,
@@ -187,6 +194,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.senseDataDAO = senseDataDAO;
+        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
         this.sleepScoreParametersDAO = sleepScoreParametersDAO;
         this.algorithmFactory = algorithmFactory;
@@ -368,14 +376,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
 
             resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged,featureFlips);
-
+            //tz offset set to sensor data offset - should take into account daylightsavings
             //got a valid result? poof, we're out.
             if (resultOptional.isPresent()) {
                 break;
             }
         }
 
-
+//
         //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
         if (!resultOptional.isPresent()) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms",accountId, targetDate.toDate());
@@ -393,8 +401,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (!this.hasExtraEventsEnabled(accountId)) {
             extraEvents = Collections.EMPTY_LIST;
         }
+        final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
 
-        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC, result, sensorData);
+        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneHistoryOptional, result, sensorData);
 
 
         if (!populateTimelines.isValidSleepScore) {
@@ -569,7 +578,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimelineAlgorithmResult result,
+    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final Optional<TimeZoneHistory> timeZoneHistoryOptional, final TimelineAlgorithmResult result,
                                                final OneDaysSensorData sensorData) {
 
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
@@ -577,21 +586,28 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
 
-
-        final SensorDataTimezoneMap sensorDataTimezoneMap = SensorDataTimezoneMap.create(sensorData.allSensorSampleList.get(Sensor.LIGHT));
-        //MOVE EVENTS BASED ON FEEDBACK
+        final TimeZoneOffsetMap timeZoneOffsetMap;
+        final DateTimeZone userTimeZone;
+        if (timeZoneHistoryOptional.isPresent()){
+            final String timeZoneId = timeZoneHistoryOptional.get().timeZoneId;
+            userTimeZone = DateTimeZone.forID(timeZoneId);
+            timeZoneOffsetMap = TimeZoneOffsetMap.create(timeZoneId, trackerMotions.get(0).timestamp, trackerMotions.get(-1).timestamp);
+         } else {
+            userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
+            timeZoneOffsetMap = TimeZoneOffsetMap.create(sensorData.timezoneOffsetMillis, trackerMotions.get(0).timestamp, trackerMotions.get(-1).timestamp);
+            //final SensorDataTimeZoneMap sensorDataTimeZoneMap = SensorDataTimezoneMap.create(sensorData.allSensorSampleList.get(Sensor.LIGHT));
+        }
+            //MOVE EVENTS BASED ON FEEDBACK
         FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
 
-        if (this.hasTimelineOrderEnforcement(accountId)) {
-            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, sensorData.timezoneOffsetMillis);
-        }
-        else {
-            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedbackTheOldWay(feedbackList, ImmutableList.copyOf(result.mainEvents.values()), ImmutableList.copyOf(result.extraEvents), sensorData.timezoneOffsetMillis);
-        }
+        //removed FF  TIMELINE_EVENT_ORDER_ENFORCEMENT - at 100 percent
+        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, sensorData.timezoneOffsetMillis);
+
 
         //GET SPECIFIC EVENTS
+        //Should have correct tz from NN
         final Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
         final Optional<Event> sleep = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.SLEEP));
         final Optional<Event> wake = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.WAKE_UP));
@@ -601,7 +617,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //CREATE SLEEP MOTION EVENTS
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
-        final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
+        //ts is now a long, need timezone
+        final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
         Optional<Long> sleepTime = Optional.absent();
         if (sleep.isPresent()){
@@ -616,6 +633,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         if (!allSensorSampleList.isEmpty()) {
             // Light
+            //tz offset should be correct
             lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT)));
             if (!lightEvents.isEmpty()){
                 lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
@@ -628,6 +646,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         // PARTNER MOTION
+        //tz offset should be correct
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleep, wake, ImmutableList.copyOf(motionEvents), partnerMotions);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
@@ -636,26 +655,27 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // SOUND
         int numSoundEvents = 0;
-        if (this.hasSoundInTimeline(accountId)) {
-            final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
+        //removed FF SOUND_EVENTS_IN_TIMELINE - at 100 percent
+        final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
 
-            LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
-            final List<Event> soundEvents = getSoundEvents(
-                    allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
-                    motionEvents,
-                    lightOutTimeOptional,
-                    sleepEventsFromAlgorithm,
-                    this.useHigherThesholdForSoundEvents(accountId));
+        LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
+        //tz offset should be correct
+        final List<Event> soundEvents = getSoundEvents(
+                allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
+                motionEvents,
+                lightOutTimeOptional,
+                sleepEventsFromAlgorithm,
+                this.useHigherThesholdForSoundEvents(accountId));
 
-            for (final Event event : soundEvents) {
-                timelineEvents.put(event.getStartTimestamp(), event);
-            }
-            numSoundEvents = soundEvents.size();
+        for (final Event event : soundEvents) {
+            timelineEvents.put(event.getStartTimestamp(), event);
         }
+        numSoundEvents = soundEvents.size();
+
 
         // ALARM
-        if(this.hasAlarmInTimeline(accountId) && trackerMotions.size() > 0) {
-            final DateTimeZone userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
+        //removed FF ALARM_IN_TIMELINE at 100 percent
+        if(trackerMotions.size() > 0) {
             final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
                     targetDate.getMonthOfYear(),
                     targetDate.getDayOfMonth(),
@@ -887,6 +907,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
+            //tz offset should be correct
             final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
 
             return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
@@ -988,6 +1009,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         float sleepScoreV4V5Weighting = SleepScoreUtils.getSleepScoreV4V5Weighting(targetDateEpoch);
 
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
         final SleepScoreParameters sleepScoreParameters= sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate);
 

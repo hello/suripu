@@ -23,7 +23,7 @@ public class TimelineRefactored {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Bucketing.class);
 
-    public static Map<Long, Event> populateTimeline(final List<MotionEvent> motionEventList) {
+    public static Map<Long, Event> populateTimeline(final List<MotionEvent> motionEventList, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
         final Map<Long, Event> map = Maps.newHashMap();
         if (motionEventList.isEmpty()) {
@@ -33,7 +33,6 @@ public class TimelineRefactored {
 
         final Long tsForFirstMotionEvent = motionEventList.get(0).getStartTimestamp();
         final Long tsForLastMotionEvent = motionEventList.get(motionEventList.size() -1).getStartTimestamp();
-        final Integer offset = motionEventList.get(0).getTimezoneOffset();
 
         final DateTime start = new DateTime(tsForFirstMotionEvent, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
         final DateTime end = new DateTime(tsForLastMotionEvent, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
@@ -41,6 +40,7 @@ public class TimelineRefactored {
 
         for(int i = 0; i < numberOfMinutes.getMinutes(); i++) {
             final DateTime key = start.plusMinutes(i);
+            final Integer offset = timeZoneOffsetMap.offsetByTimeUTC.get(key.getMillis());
             LOGGER.trace("Inserting {}", key);
             map.put(key.getMillis(), new SleepingEvent(key.getMillis(), key.plusMinutes(1).getMillis(), offset, 100));
         }

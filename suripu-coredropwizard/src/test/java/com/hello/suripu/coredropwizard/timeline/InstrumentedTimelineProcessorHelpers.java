@@ -20,6 +20,7 @@ import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.Account;
@@ -37,6 +38,7 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.device.v2.Sense;
@@ -48,6 +50,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.cert.PKIXRevocationChecker;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -286,6 +289,10 @@ public class InstrumentedTimelineProcessorHelpers {
         public FeatureExtractionModelData getLatestModelForDate(Long accountId, DateTime dateTimeLocalUTC, com.google.common.base.Optional<UUID> uuidForLogger) {
             return null;
         }
+    };
+
+    final public TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(){
+        public Optional<TimeZoneHistory>  getCurrentTimeZone(Long accountID){return Optional.absent();}
     };
 
     final public CalibrationDAO calibrationDAO = new CalibrationDAO() {
