@@ -122,7 +122,6 @@ public class QuestionSurveyProcessor {
     /*
     Insert questions
      */
-
     private void saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
         LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
         this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);

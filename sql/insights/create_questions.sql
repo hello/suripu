@@ -696,6 +696,126 @@ UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_cho
     WHERE question_text=ANY(ARRAY['How noticeable do you think the effects of your difficulty sleeping are to other people?',
                                   'How much does your difficulty sleeping interfere with the rest of your day? (e.g. daytime fatigue, mood, concentration, memory, mood, etc.)']);
 
+-- jyfan 2016-10-31 strict alarm questions
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 6:00 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 6:30 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 7:00 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 7:30 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 8:00 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 8:30 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 9:00 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 9:30 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'You could benefit from a consistent wake time. Set a recurring alarm for 10:00 AM? Existing alarms will be deleted.', -- text
+      'EN', -- lang
+      'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Yes", "No", "No, this time doesn''t work"}', --text responses
+      null, -- dependency
+      'anytime', -- ask_time
+      'insight' --category
+);
+
+INSERT INTO response_choices (question_id, response_text)
+    (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 9));
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 9) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
+
+
+
 
 
 

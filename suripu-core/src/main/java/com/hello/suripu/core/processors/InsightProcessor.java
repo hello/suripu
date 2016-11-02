@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccountReadDAO;
@@ -15,6 +16,8 @@ import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
+import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
@@ -24,6 +27,9 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.MarketingInsightsSeen;
+import com.hello.suripu.core.models.Insights.QuestionCard;
+import com.hello.suripu.core.models.Question;
+import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
@@ -42,6 +48,7 @@ import com.hello.suripu.core.processors.insights.SleepAlarm;
 import com.hello.suripu.core.processors.insights.SleepDeprivation;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.SoundDisturbance;
+import com.hello.suripu.core.processors.insights.StrictAlarm;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.processors.insights.WakeVariance;
@@ -99,6 +106,7 @@ public class InsightProcessor {
     private final AccountReadDAO accountReadDAO;
     private final CalibrationDAO calibrationDAO;
     private final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB;
+    private final QuestionResponseDAO questionResponseDAO;
 
     private static final ImmutableSet<InsightCard.Category> marketingInsightPool = ImmutableSet.copyOf(Sets.newHashSet(InsightCard.Category.DRIVE,
             InsightCard.Category.EAT,
@@ -108,6 +116,8 @@ public class InsightProcessor {
             InsightCard.Category.RUN,
             InsightCard.Category.SWIM,
             InsightCard.Category.WORK));
+
+    private final Map<String, Integer> strictAlarmTextQidMap;
 
     public InsightProcessor(@NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                             @NotNull final DeviceReadDAO deviceReadDAO,
@@ -122,7 +132,9 @@ public class InsightProcessor {
                             @NotNull final LightData lightData,
                             @NotNull final WakeStdDevData wakeStdDevData,
                             @NotNull final CalibrationDAO calibrationDAO,
-                            @NotNull final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB
+                            @NotNull final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB,
+                            @NotNull final QuestionResponseDAO questionResponseDAO,
+                            @NotNull final Map<String, Integer> strictAlarmTextQidMap
     ) {
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceReadDAO = deviceReadDAO;
@@ -138,6 +150,8 @@ public class InsightProcessor {
         this.accountReadDAO = accountReadDAO;
         this.calibrationDAO = calibrationDAO;
         this.marketingInsightsSeenDAODynamoDB = marketingInsightsSeenDAODynamoDB;
+        this.questionResponseDAO = questionResponseDAO;
+        this.strictAlarmTextQidMap = strictAlarmTextQidMap;
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
@@ -169,7 +183,7 @@ public class InsightProcessor {
         if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_LAST_SEEN, accountId, Collections.EMPTY_LIST)) {
             final List<InsightsLastSeen> insightsLastSeenList = this.insightsLastSeenDAO.getAll(accountId);
             recentCategories = InsightsLastSeen.getLastSeenInsights(insightsLastSeenList);
-        }else {
+        } else {
             recentCategories = this.getRecentInsightsCategories(accountId);
         }
         return generateNewUserInsights(accountId, accountAge, recentCategories);
@@ -464,7 +478,10 @@ public class InsightProcessor {
         final DateTimeFormatter timeFormat;
         final TemperatureUnit tempUnit;
 
+        final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+
         Optional<InsightCard> insightCardOptional = Optional.absent();
+        Optional<QuestionCard> questionCardOptional = Optional.absent();
         switch (category) {
             case AIR_QUALITY:
                 insightCardOptional = Particulates.getInsights(accountId, deviceAccountPair, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
@@ -538,6 +555,9 @@ public class InsightProcessor {
             case SOUND:
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceAccountPair, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
                 break;
+            case STRICT_ALARM:
+                questionCardOptional = StrictAlarm.getQuestion(sleepStatsDAODynamoDB, accountId, queryEndDate, DAYS_ONE_WEEK, strictAlarmTextQidMap);
+                break;
             case SWIM:
                 insightCardOptional = MarketingInsights.getSwimInsight(accountId);
                 break;
@@ -546,7 +566,6 @@ public class InsightProcessor {
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
                 break;
             case WAKE_VARIANCE:
-                final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
                 break;
             case WORK:
@@ -564,6 +583,15 @@ public class InsightProcessor {
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
             final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now(DateTimeZone.UTC));
             this.insightsLastSeenDAO.markLastSeen(newInsight);
+            return Optional.of(category);
+
+        } else if (questionCardOptional.isPresent()) {
+            final QuestionCard questionCard = questionCardOptional.get();
+
+            //insert question to postgres
+            this.questionResponseDAO.insertAccountQuestion(questionCard.accountId, questionCard.questionId, questionCard.startDate, questionCard.expireDate);
+            final InsightsLastSeen newMockInsight = new InsightsLastSeen(accountId, category, DateTime.now(DateTimeZone.UTC));
+            this.insightsLastSeenDAO.markLastSeen(newMockInsight);
             return Optional.of(category);
         }
 
@@ -664,6 +692,8 @@ public class InsightProcessor {
         private @Nullable AccountInfoProcessor accountInfoProcessor;
         private @Nullable CalibrationDAO calibrationDAO;
         private @Nullable MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB;
+        private @Nullable QuestionResponseDAO questionResponseDAO;
+        private @Nullable Map<String, Integer> strictAlarmTextQidMap;
 
         public Builder withMarketingInsightsSeenDAO(final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAO) {
             this.marketingInsightsSeenDAODynamoDB = marketingInsightsSeenDAO;
@@ -719,6 +749,25 @@ public class InsightProcessor {
             return this;
         }
 
+        public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
+            this.questionResponseDAO = questionResponseDAO;
+            return this;
+        }
+
+        public Builder withQuestions(final QuestionResponseDAO questionResponseDAO) {
+            this.strictAlarmTextQidMap = new HashMap<>();
+
+            final List<Question> allQuestions = questionResponseDAO.getAllQuestions();
+            for (final Question question : allQuestions) {
+                if (question.category != QuestionCategory.INSIGHT) {
+                    continue;
+                }
+                this.strictAlarmTextQidMap.put(question.text, question.id);
+            }
+
+            return this;
+        }
+
         public InsightProcessor build() {
             checkNotNull(deviceReadDAO, "deviceReadDAO can not be null");
             checkNotNull(trendsInsightsDAO, "trendsInsightsDAO can not be null");
@@ -733,8 +782,11 @@ public class InsightProcessor {
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
             checkNotNull(marketingInsightsSeenDAODynamoDB, "marketInsightsSeenDAO cannot be null");
+            checkNotNull(questionResponseDAO, "questionResponseDAO cannot be null");
+            checkNotNull(strictAlarmTextQidMap, "textQidMap cannot be null");
 
-            return new InsightProcessor(deviceDataDAODynamoDB,
+            return new InsightProcessor(
+                    deviceDataDAODynamoDB,
                     deviceReadDAO,
                     trendsInsightsDAO,
                     scoreDAODynamoDB,
@@ -747,7 +799,9 @@ public class InsightProcessor {
                     lightData,
                     wakeStdDevData,
                     calibrationDAO,
-                    marketingInsightsSeenDAODynamoDB);
+                    marketingInsightsSeenDAODynamoDB,
+                    questionResponseDAO,
+                    strictAlarmTextQidMap);
         }
     }
 }

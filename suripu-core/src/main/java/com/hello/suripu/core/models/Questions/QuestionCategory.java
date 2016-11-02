@@ -11,7 +11,8 @@ public enum QuestionCategory {
     ANOMALY_LIGHT("anomaly_light"),
     GOAL_GO_OUTSIDE("goal_go_outside"),
     GOAL("goal"),
-    SURVEY("survey");
+    SURVEY("survey"),
+    INSIGHT("insight"); //paired with insight, should be 1st priority
 
     private String value;
 
