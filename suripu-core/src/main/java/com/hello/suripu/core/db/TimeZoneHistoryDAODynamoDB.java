@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 6/13/14.
  */
-public class TimeZoneHistoryDAODynamoDB {
+public class TimeZoneHistoryDAODynamoDB implements TimeZoneHistoryDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneHistoryDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -57,7 +57,7 @@ public class TimeZoneHistoryDAODynamoDB {
         this.tableName = tableName;
     }
 
-
+    @Override
     public Optional<TimeZoneHistory> updateTimeZone(final long accountId, final DateTime updatedTime, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
 
         final long updatedAt = updatedTime.getMillis();
@@ -91,15 +91,17 @@ public class TimeZoneHistoryDAODynamoDB {
 
     }
 
-
+    @Override
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start) {
         return getTimeZoneHistory(accountId, HELLO_EPOCH, start, DEFAULT_LIMIT);
     }
 
+    @Override
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end) {
         return getTimeZoneHistory(accountId, start, end, DEFAULT_LIMIT);
     }
 
+    @Override
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end, int limit){
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final Condition selectDateCondition = new Condition()
@@ -163,7 +165,7 @@ public class TimeZoneHistoryDAODynamoDB {
         final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(updatedAt, offsetMillis, dateTimeZoneFromId.getID());
         return Optional.of(timeZoneHistory);
     }
-
+    @Override
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
         final DateTime now = DateTime.now();
         final List<TimeZoneHistory> lastTimeZones = getTimeZoneHistory(accountId, now);
@@ -175,6 +177,7 @@ public class TimeZoneHistoryDAODynamoDB {
 
     }
 
+    @Override
     public Map<DateTime, TimeZoneHistory> getAllTimeZones(final long accountId){
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final Condition selectAccountIdCondition = new Condition()

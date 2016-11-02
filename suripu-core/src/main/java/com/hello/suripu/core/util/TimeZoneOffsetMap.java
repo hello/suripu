@@ -1,9 +1,12 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.models.SleepSegment;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -33,6 +36,24 @@ public class TimeZoneOffsetMap {
 
     private TimeZoneOffsetMap(final TreeMap<Long, Integer> offsetByTimeUTC) {
         this.offsetByTimeUTC = offsetByTimeUTC;
+    }
+
+    public List<SleepSegment> remapSleepSegmentOffsets(final List<SleepSegment> segments) {
+
+        if (offsetByTimeUTC.isEmpty()) {
+            return segments;
+        }
+
+        final List<SleepSegment> newSegments = Lists.newArrayList();
+
+        for (final SleepSegment segment : segments) {
+
+            final int newOffset = this.get(segment.getTimestamp());
+
+            newSegments.add(segment.createCopyWithNewOffset(newOffset));
+        }
+
+        return newSegments;
     }
 
     /* Get offset that is nearest in time to the timestamp */

@@ -108,7 +108,7 @@ public class InstrumentedTimelineProcessorTest {
         instrumentedTimelineProcessor = InstrumentedTimelineProcessor.createTimelineProcessor(
                 helpers.pillDataReadDAO,helpers.deviceReadDAO,helpers.deviceDataReadAllSensorsDAO,
                 helpers.ringTimeHistoryDAODynamoDB,helpers.feedbackDAO, helpers.sleepHmmDAO,helpers.accountDAO,helpers.sleepStatsDAO,
-                new SenseDataDAODynamoDB(pairingDAO, helpers.deviceDataReadAllSensorsDAO, helpers.senseColorDAO, helpers.calibrationDAO),helpers.timeZoneHistoryDAODynamoDB, helpers.priorsDAO,helpers.featureExtractionModelsDAO,
+                new SenseDataDAODynamoDB(pairingDAO, helpers.deviceDataReadAllSensorsDAO, helpers.senseColorDAO, helpers.calibrationDAO),helpers.timeZoneHistoryDAO, helpers.priorsDAO,helpers.featureExtractionModelsDAO,
                 helpers.defaultModelEnsembleDAO,helpers.userTimelineTestGroupDAO,
                 helpers.sleepScoreParametersDAO,
                 helpers.neuralNetEndpoint,helpers.algorithmConfiguration, helpers.metric);

@@ -20,7 +20,7 @@ import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.Account;
@@ -50,7 +50,6 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.cert.PKIXRevocationChecker;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -240,6 +239,34 @@ public class InstrumentedTimelineProcessorHelpers {
         }
     };
 
+    final public TimeZoneHistoryDAO timeZoneHistoryDAO= new TimeZoneHistoryDAO(){
+        @Override
+        public Optional<TimeZoneHistory> updateTimeZone(final long accountId, final DateTime updatedTime, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
+            return null;
+        }
+        @Override
+        public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start){
+            return null;
+        }
+        @Override
+        public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end){
+            return null;
+        }
+        @Override
+        public  List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end, int limit){
+            return null;
+        }
+        @Override
+        public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
+            return Optional.absent();
+        }
+        @Override
+        public Map<DateTime, TimeZoneHistory> getAllTimeZones(final long accountId){
+            return null;
+        }
+
+    };
+
     final public SenseColorDAO senseColorDAO = new SenseColorDAO() {
         @Override
         public com.google.common.base.Optional<Device.Color> getColorForSense(String senseId) {
@@ -289,10 +316,6 @@ public class InstrumentedTimelineProcessorHelpers {
         public FeatureExtractionModelData getLatestModelForDate(Long accountId, DateTime dateTimeLocalUTC, com.google.common.base.Optional<UUID> uuidForLogger) {
             return null;
         }
-    };
-
-    final public TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(){
-        public Optional<TimeZoneHistory>  getCurrentTimeZone(Long accountID){return Optional.absent();}
     };
 
     final public CalibrationDAO calibrationDAO = new CalibrationDAO() {

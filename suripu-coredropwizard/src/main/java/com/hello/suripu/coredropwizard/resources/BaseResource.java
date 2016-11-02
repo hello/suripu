@@ -3,17 +3,15 @@ package com.hello.suripu.coredropwizard.resources;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.librato.rollout.RolloutClient;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 
 public class BaseResource {
 
@@ -118,10 +116,6 @@ public class BaseResource {
     // Calibration is enabled on a per device basis
     protected Boolean hasCalibrationEnabled(final String senseId) {
         return featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasTimelineOrderEnforcement(final long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasDustSmoothEnabled(final String senseId) {
