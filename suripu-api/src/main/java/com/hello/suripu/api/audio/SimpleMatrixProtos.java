@@ -132,6 +132,21 @@ public final class SimpleMatrixProtos {
      * <code>repeated bytes payload = 4;</code>
      */
     com.google.protobuf.ByteString getPayload(int index);
+
+    // optional string device_id = 5;
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
   }
   /**
    * Protobuf type {@code SimpleMatrix}
@@ -211,6 +226,11 @@ public final class SimpleMatrixProtos {
                 mutable_bitField0_ |= 0x00000008;
               }
               payload_.add(input.readBytes());
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000008;
+              deviceId_ = input.readBytes();
               break;
             }
           }
@@ -354,11 +374,55 @@ public final class SimpleMatrixProtos {
       return payload_.get(index);
     }
 
+    // optional string device_id = 5;
+    public static final int DEVICE_ID_FIELD_NUMBER = 5;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       id_ = "";
       numCols_ = 0;
       dataType_ = com.hello.suripu.api.audio.SimpleMatrixProtos.SimpleMatrixDataType.SINT8;
       payload_ = java.util.Collections.emptyList();
+      deviceId_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -383,6 +447,9 @@ public final class SimpleMatrixProtos {
       }
       for (int i = 0; i < payload_.size(); i++) {
         output.writeBytes(4, payload_.get(i));
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(5, getDeviceIdBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -413,6 +480,10 @@ public final class SimpleMatrixProtos {
         }
         size += dataSize;
         size += 1 * getPayloadList().size();
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getDeviceIdBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -538,6 +609,8 @@ public final class SimpleMatrixProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         payload_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000008);
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -583,6 +656,10 @@ public final class SimpleMatrixProtos {
           bitField0_ = (bitField0_ & ~0x00000008);
         }
         result.payload_ = payload_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.deviceId_ = deviceId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -618,6 +695,11 @@ public final class SimpleMatrixProtos {
             ensurePayloadIsMutable();
             payload_.addAll(other.payload_);
           }
+          onChanged();
+        }
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000010;
+          deviceId_ = other.deviceId_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -862,6 +944,80 @@ public final class SimpleMatrixProtos {
         return this;
       }
 
+      // optional string device_id = 5;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SimpleMatrix)
     }
 
@@ -887,12 +1043,12 @@ public final class SimpleMatrixProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\023simple_matrix.proto\"g\n\014SimpleMatrix\022\n\n" +
+      "\n\023simple_matrix.proto\"z\n\014SimpleMatrix\022\n\n" +
       "\002id\030\001 \001(\t\022\020\n\010num_cols\030\002 \001(\021\022(\n\tdata_type" +
       "\030\003 \001(\0162\025.SimpleMatrixDataType\022\017\n\007payload" +
-      "\030\004 \003(\014*!\n\024SimpleMatrixDataType\022\t\n\005SINT8\020" +
-      "\000B0\n\032com.hello.suripu.api.audioB\022SimpleM" +
-      "atrixProtos"
+      "\030\004 \003(\014\022\021\n\tdevice_id\030\005 \001(\t*!\n\024SimpleMatri" +
+      "xDataType\022\t\n\005SINT8\020\000B0\n\032com.hello.suripu" +
+      ".api.audioB\022SimpleMatrixProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -904,7 +1060,7 @@ public final class SimpleMatrixProtos {
           internal_static_SimpleMatrix_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SimpleMatrix_descriptor,
-              new java.lang.String[] { "Id", "NumCols", "DataType", "Payload", });
+              new java.lang.String[] { "Id", "NumCols", "DataType", "Payload", "DeviceId", });
           return null;
         }
       };
