@@ -592,8 +592,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final int intialOffset = trackerMotions.get(0).offsetMillis;
         final TimeZoneOffsetMap timeZoneOffsetMap;
         final DateTimeZone userTimeZone;
-        final Long startTimeUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(18).minusMillis(intialOffset).getMillis(); //feedback allows adjustemnts as early as 6pm.
-        final Long endTimeUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(17).minusMillis(intialOffset).getMillis(); //feedback allows adjustments up to 4 pm the next day (+ 1 hour for day light savings swing)
+        final Long startTimeUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(23).minusMillis(intialOffset).getMillis();
+        final Long endTimeUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(4).minusMillis(intialOffset).getMillis();
         if (timeZoneHistoryOptional.isPresent()){
             final String timeZoneId = timeZoneHistoryOptional.get().timeZoneId;
             userTimeZone = DateTimeZone.forID(timeZoneId);

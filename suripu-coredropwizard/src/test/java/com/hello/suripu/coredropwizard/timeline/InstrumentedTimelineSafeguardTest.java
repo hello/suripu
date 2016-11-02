@@ -352,8 +352,8 @@ public class InstrumentedTimelineSafeguardTest {
     @Test
     public void testTimezoneOffsetMapping() {
         final List<Sample> samples = Lists.newArrayList();
-        final long startUTC = 1478394000000L; //2016-11-05 18:00:00 local
-        final long endUTC = 1478476800000L; //2016-11-06 16:00:00 local
+        final long startUTC = 1478408400000L;//1478394000000L; //2016-11-05 18:00:00 local
+        final long endUTC = 1478433600000L; //2016-11-06 16:00:00 local
         final String timeZoneID = "America/Los_Angeles";
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(timeZoneID, startUTC, endUTC);
         int offsetA = -25200000;

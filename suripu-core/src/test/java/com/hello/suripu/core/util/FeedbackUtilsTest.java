@@ -388,9 +388,9 @@ public class FeedbackUtilsTest {
         final TimelineFeedback feedback1 = TimelineFeedback.create("2016-11-05","22:41","22:41",Event.Type.IN_BED.name());
         final TimelineFeedback feedback2 = TimelineFeedback.create("2016-11-05","22:42","22:42",Event.Type.SLEEP.name());
         final TimelineFeedback feedback3 = TimelineFeedback.create("2016-11-06","04:41","04:41",Event.Type.OUT_OF_BED.name());
-        final Event inBed = Event.createFromType(Event.Type.IN_BED,1478410860000L,1478410920000L,timeZoneOffsetMap.offsetByTimeUTC.get(1478410860000L),Optional.of("IN_BED"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
-        final Event sleep = Event.createFromType(Event.Type.SLEEP,1478410920000L,1478410980000L,timeZoneOffsetMap.offsetByTimeUTC.get(1478410920000L),Optional.of("SLEEP"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
-        final Event wake = Event.createFromType(Event.Type.WAKE_UP,1478436060000L,1478436060000L,timeZoneOffsetMap.offsetByTimeUTC.get(1478436060000L),Optional.of("WAKE_UP"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
+        final Event inBed = Event.createFromType(Event.Type.IN_BED,1478410860000L,1478410920000L,timeZoneOffsetMap.get(1478410860000L),Optional.of("IN_BED"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
+        final Event sleep = Event.createFromType(Event.Type.SLEEP,1478410920000L,1478410980000L,timeZoneOffsetMap.get(1478410920000L),Optional.of("SLEEP"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
+        final Event wake = Event.createFromType(Event.Type.WAKE_UP,1478436060000L,1478436060000L,timeZoneOffsetMap.get(1478436060000L),Optional.of("WAKE_UP"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
 
         final List<Event> events = new ArrayList<>();
         events.add(inBed); events.add(sleep); events.add(wake);
