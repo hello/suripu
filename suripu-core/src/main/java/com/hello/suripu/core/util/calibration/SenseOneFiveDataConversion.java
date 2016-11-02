@@ -103,8 +103,8 @@ public class SenseOneFiveDataConversion {
 
     //returns units in ppm
     public static float convertRawToCO2(final int co2Raw) {
-        if (co2Raw <= 0) {
-            return 0.0f;
+        if (co2Raw <= 400) {
+            return 400.0f; //400ppm lower bound is imposed by manufac, but we can report 0 at startup before sensor is ready
         }
 
         return (float) co2Raw;
