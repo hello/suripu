@@ -418,7 +418,7 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId) {
-            return null;
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 
         @Override
