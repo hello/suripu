@@ -375,7 +375,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
 
             resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged,featureFlips);
-            //tz offset set to sensor data offset - should take into account daylightsavings
             //got a valid result? poof, we're out.
             if (resultOptional.isPresent()) {
                 break;
@@ -400,7 +399,13 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (!this.hasExtraEventsEnabled(accountId)) {
             extraEvents = Collections.EMPTY_LIST;
         }
-        final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryDAO.getCurrentTimeZone(accountId);
+        final List<TimeZoneHistory> timeZoneHistoryList = timeZoneHistoryDAO.getTimeZoneHistory(accountId, targetDate);
+        final Optional<TimeZoneHistory> timeZoneHistoryOptional;
+        if (timeZoneHistoryList.isEmpty()){
+            timeZoneHistoryOptional = Optional.absent();
+        } else{
+            timeZoneHistoryOptional = Optional.of(timeZoneHistoryList.get(timeZoneHistoryList.size()-1));
+        }
 
         final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneHistoryOptional, result, sensorData);
 
@@ -584,11 +589,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
-
+        final int intialOffset = trackerMotions.get(0).offsetMillis;
         final TimeZoneOffsetMap timeZoneOffsetMap;
         final DateTimeZone userTimeZone;
-        final Long startTimeUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR).getMillis();
-        final Long endTimeUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR).getMillis();
+        final Long startTimeUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(18).minusMillis(intialOffset).getMillis(); //feedback allows adjustemnts as early as 6pm.
+        final Long endTimeUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(17).minusMillis(intialOffset).getMillis(); //feedback allows adjustments up to 4 pm the next day (+ 1 hour for day light savings swing)
         if (timeZoneHistoryOptional.isPresent()){
             final String timeZoneId = timeZoneHistoryOptional.get().timeZoneId;
             userTimeZone = DateTimeZone.forID(timeZoneId);
@@ -596,7 +601,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
          } else {
             userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
             timeZoneOffsetMap = TimeZoneOffsetMap.create(sensorData.timezoneOffsetMillis,startTimeUTC, endTimeUTC );
-            //final SensorDataTimeZoneMap sensorDataTimeZoneMap = SensorDataTimezoneMap.create(sensorData.allSensorSampleList.get(Sensor.LIGHT));
         }
             //MOVE EVENTS BASED ON FEEDBACK
         FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
@@ -609,7 +613,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         //GET SPECIFIC EVENTS
-        //Should have correct tz from NN
         final Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
         final Optional<Event> sleep = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.SLEEP));
         final Optional<Event> wake = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.WAKE_UP));
@@ -619,7 +622,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //CREATE SLEEP MOTION EVENTS
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
-        //ts is now a long, need timezone
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
         Optional<Long> sleepTime = Optional.absent();
@@ -635,7 +637,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         if (!allSensorSampleList.isEmpty()) {
             // Light
-            //tz offset should be correct
             lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT)));
             if (!lightEvents.isEmpty()){
                 lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
@@ -648,7 +649,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         // PARTNER MOTION
-        //tz offset should be correct
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleep, wake, ImmutableList.copyOf(motionEvents), partnerMotions);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
@@ -661,7 +661,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
 
         LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
-        //tz offset should be correct
         final List<Event> soundEvents = getSoundEvents(
                 allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
                 motionEvents,
@@ -789,11 +788,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
-
-        //should no longer have any effect
-        if (hasSleepSegmentOffsetRemapping(accountId)) {
-            reversedSegments = timeZoneOffsetMap.remapSleepSegmentOffsets(reversedSegments);
-        }
 
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 

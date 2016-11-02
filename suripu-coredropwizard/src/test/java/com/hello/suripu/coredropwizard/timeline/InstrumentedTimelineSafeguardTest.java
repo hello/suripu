@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
+import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import junit.framework.TestCase;
@@ -346,5 +347,30 @@ public class InstrumentedTimelineSafeguardTest {
 
 
 
+    }
+
+    @Test
+    public void testTimezoneOffsetMapping() {
+        final List<Sample> samples = Lists.newArrayList();
+        final long startUTC = 1478394000000L; //2016-11-05 18:00:00 local
+        final long endUTC = 1478476800000L; //2016-11-06 16:00:00 local
+        final String timeZoneID = "America/Los_Angeles";
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(timeZoneID, startUTC, endUTC);
+        int offsetA = -25200000;
+        int offsetB = -28800000;
+        long tf = 0;
+        long tOfChange = 1478422740000L;
+
+        final int offsetFirst = timeZoneOffsetMap.get(startUTC);
+        final int offsetBefore = timeZoneOffsetMap.get(startUTC - 60000L);
+        final int offsetAt = timeZoneOffsetMap.get(tOfChange);
+        final int offsetAfter = timeZoneOffsetMap.get(tOfChange + 60001L);
+        final int offsetLast = timeZoneOffsetMap.get(endUTC + 5*60000L);
+
+        TestCase.assertEquals(offsetA,offsetFirst);
+        TestCase.assertEquals(offsetA,offsetBefore);
+        TestCase.assertEquals(offsetA,offsetAt);
+        TestCase.assertEquals(offsetB,offsetAfter);
+        TestCase.assertEquals(offsetB,offsetLast);
     }
 }

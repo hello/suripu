@@ -246,7 +246,7 @@ public class InstrumentedTimelineProcessorHelpers {
         }
         @Override
         public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start){
-            return null;
+            return Collections.emptyList();
         }
         @Override
         public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end){
