@@ -604,7 +604,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
 
         //removed FF  TIMELINE_EVENT_ORDER_ENFORCEMENT - at 100 percent
-        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, sensorData.timezoneOffsetMillis);
+        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, timeZoneOffsetMap);
+
 
 
         //GET SPECIFIC EVENTS

@@ -33,9 +33,9 @@ public class FeedbackUtilsTest {
         final FeedbackUtils feedbackUtils = new FeedbackUtils();
 
         final int offset = 3600000; // + 1 hour
-
-        final TimelineFeedback feedback1 = TimelineFeedback.create("2015-04-15","22:41","22:45",Event.Type.IN_BED.name());
-        final TimelineFeedback feedback2 = TimelineFeedback.create("2015-04-15","22:42","22:46",Event.Type.SLEEP.name());
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(offset,1460649600000L,1460721600000L);
+        final TimelineFeedback feedback1 = TimelineFeedback.create("2015-04-14","22:41","22:45",Event.Type.IN_BED.name());
+        final TimelineFeedback feedback2 = TimelineFeedback.create("2015-04-14","22:42","22:46",Event.Type.SLEEP.name());
         final TimelineFeedback feedback4 = TimelineFeedback.create("2015-04-15","04:41","04:48",Event.Type.OUT_OF_BED.name());
 
         final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
@@ -110,7 +110,7 @@ public class FeedbackUtilsTest {
         final long t2 = t1 + 60000L;
         final int offset = 3600000; // + 1 hour
         final long expectedTime = t1 + 4 * 60000L;
-
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(offset,1460649600000L,1460721600000L);
 
         events.add(Event.createFromType(Event.Type.SLEEP,t1,t2,offset,Optional.of("FOOBARS"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
         events.add(Event.createFromType(Event.Type.WAKE_UP,t1 + 42,t2 + 42,offset,Optional.of("FOOBARS2"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
@@ -130,7 +130,7 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback);
 
         final FeedbackUtils utils = new FeedbackUtils();
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
 
         TestCase.assertTrue(newEvents.mainEvents.size() == 2);
@@ -154,6 +154,7 @@ public class FeedbackUtilsTest {
         final long t2 = t1 + 60000L;
         final int offset = 3600000; // + 1 hour
         final long expectedTime = t1 + 4 * 60000L;
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(offset,1460649600000L,1460721600000L);
 
 
         events.add(Event.createFromType(Event.Type.SLEEP,t1,t2,offset,Optional.of("FOOBARS"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
@@ -174,7 +175,7 @@ public class FeedbackUtilsTest {
 
         final FeedbackUtils utils = new FeedbackUtils();
 
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
 
         final long mysleeptime = newEvents.mainEvents.values().asList().get(0).getStartTimestamp();
@@ -196,6 +197,7 @@ public class FeedbackUtilsTest {
 
         final int offset = 3600000; // + 1 hour
         final long expectedTime = t1 + 4 * 60000L;
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(offset,1460649600000L,1460721600000L);
 
         final List<Event> events = new ArrayList<>();
         final List<Event> extraEvents = new ArrayList<>();
@@ -225,7 +227,7 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback2);
         timelineFeedbacks.add(feedback3);
 
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(extraEvents), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(extraEvents), timeZoneOffsetMap);
 
         final long ref = 1429134000000L; //Wed, 15 Apr 2015 21:40:00 GMT
 
@@ -337,6 +339,7 @@ public class FeedbackUtilsTest {
         final long t1 = 1429134060000L; //Wed, 15 Apr 2015 21:41:00 GMT
         final long t2 = t1 + 60000L;
         final int offset = 3600000; // + 1 hour
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(offset,1460649600000L,1460721600000L);
 
 
         events.add(Event.createFromType(Event.Type.IN_BED,t1 - DateTimeConstants.MILLIS_PER_HOUR,t2- DateTimeConstants.MILLIS_PER_HOUR,offset,Optional.of("IN_BEDszses"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
@@ -359,7 +362,7 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback);
 
         final FeedbackUtils utils = new FeedbackUtils();
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
 
         TestCase.assertTrue(newEvents.mainEvents.size() == 4);
@@ -371,6 +374,36 @@ public class FeedbackUtilsTest {
         TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.OUT_OF_BED).getStartTimestamp() == refTime+ 3 * DateTimeConstants.MILLIS_PER_MINUTE);
 
 
+
+    }
+
+    @Test
+    public void testDayLightSavingsFeedback(){
+        final FeedbackUtils utils = new FeedbackUtils();
+        //final int offset = 25200000;
+        //final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(offset , 1478401200000L, 1478462400000L );//Night of Nov 5
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create("America/Los_Angeles" , 1478401200000L, 1478462400000L );//Night of Nov 5
+
+
+        final TimelineFeedback feedback1 = TimelineFeedback.create("2016-11-05","22:41","22:41",Event.Type.IN_BED.name());
+        final TimelineFeedback feedback2 = TimelineFeedback.create("2016-11-05","22:42","22:42",Event.Type.SLEEP.name());
+        final TimelineFeedback feedback3 = TimelineFeedback.create("2016-11-06","04:41","04:41",Event.Type.OUT_OF_BED.name());
+        final Event inBed = Event.createFromType(Event.Type.IN_BED,1478410860000L,1478410920000L,timeZoneOffsetMap.offsetByTimeUTC.get(1478410860000L),Optional.of("IN_BED"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
+        final Event sleep = Event.createFromType(Event.Type.SLEEP,1478410920000L,1478410980000L,timeZoneOffsetMap.offsetByTimeUTC.get(1478410920000L),Optional.of("SLEEP"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
+        final Event wake = Event.createFromType(Event.Type.WAKE_UP,1478436060000L,1478436060000L,timeZoneOffsetMap.offsetByTimeUTC.get(1478436060000L),Optional.of("WAKE_UP"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent());
+
+        final List<Event> events = new ArrayList<>();
+        events.add(inBed); events.add(sleep); events.add(wake);
+
+        final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
+        timelineFeedbacks.add(feedback1); timelineFeedbacks.add(feedback2); timelineFeedbacks.add(feedback3);
+
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
+
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.IN_BED).getStartTimestamp() == inBed.getStartTimestamp());
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.IN_BED).getTimezoneOffset() == inBed.getTimezoneOffset());
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp() == wake.getStartTimestamp());
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.WAKE_UP).getTimezoneOffset() == wake.getTimezoneOffset());
 
     }
 }

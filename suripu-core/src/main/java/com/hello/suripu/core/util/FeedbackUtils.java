@@ -1,13 +1,11 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -154,7 +152,6 @@ public class FeedbackUtils {
             final Optional<DateTime> optionalDateTime = convertFeedbackToDateTimeByNewTime(timelineFeedback, offsetMillis);
 
             if(optionalDateTime.isPresent()) {
-
                 /* turn into event */
                 final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, optionalDateTime.get(), offsetMillis);
 
@@ -168,6 +165,34 @@ public class FeedbackUtils {
 
         return eventsByType;
     }
+
+    /* returns map of events by event type */
+    public static Map<Event.Type, Event> getFeedbackAsEventsByType(final ImmutableList<TimelineFeedback> timelineFeedbackList, final TimeZoneOffsetMap timeZoneOffsetMap) {
+        final Map<Event.Type, Event> eventsByType = Maps.newHashMap();
+        /* iterate through list*/
+        for(final TimelineFeedback timelineFeedback : timelineFeedbackList) {
+
+            /* get datetime of the new time */
+            final Optional<DateTime> optionalDateTime = convertFeedbackToDateTimeByNewTime(timelineFeedback, 0);
+
+            if(optionalDateTime.isPresent()) {
+                final int offset= timeZoneOffsetMap.getFromDateTime(optionalDateTime.get());
+                final DateTime dateTime = optionalDateTime.get().minusMillis(offset);
+                /* turn into event */
+                final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, dateTime, offset);
+
+                if (!event.isPresent()) {
+                    continue;
+                }
+
+                eventsByType.put(event.get().getType(), event.get());
+            }
+        }
+
+        return eventsByType;
+    }
+
+
 
     /* returns list of events by original event type */
     public static Map<Event.Type,Long> getTimesFromEventsMap(final Map<Event.Type, Event> eventsByType) {
@@ -314,11 +339,11 @@ public class FeedbackUtils {
         return newEvent;
     }
 
-    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableCollection<Event> algEvents, final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
+    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableCollection<Event> algEvents, final ImmutableList<Event> extraEvents, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
 
         /* get feedback events by time  */
-        final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(timelineFeedbackList, offsetMillis);
+        final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(timelineFeedbackList, timeZoneOffsetMap);
 
 
         for (final Event event : algEvents) {
@@ -329,7 +354,7 @@ public class FeedbackUtils {
             }
 
 
-            if (checkEventOrdering(eventsByType,event.getStartTimestamp(),event.getType(),offsetMillis)) {
+            if (checkEventOrdering(eventsByType,event.getStartTimestamp(),event.getType(), 0)) {
                 //alles ist gut jawohl, so insert event
                 eventsByType.put(event.getType(), event);
             }
@@ -346,7 +371,7 @@ public class FeedbackUtils {
                 //create new event
                 final Event newEvent = copyEventWithNewTime(event,newEventTimeOptional.get());
 
-                if (!checkEventOrdering(eventsByType,newEvent.getStartTimestamp(),newEvent.getType(),offsetMillis)) {
+                if (!checkEventOrdering(eventsByType,newEvent.getStartTimestamp(),newEvent.getType(), 0)) {
                     //this should not happen evar.
                     LOGGER.error("suggested event time is not consistent.  bad programmer!");
 

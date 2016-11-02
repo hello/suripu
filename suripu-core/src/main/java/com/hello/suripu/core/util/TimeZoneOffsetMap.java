@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.SleepSegment;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 
@@ -89,6 +90,17 @@ public class TimeZoneOffsetMap {
             return higherEntry.getValue();
         }
 
+    }
+    public int getFromDateTime(final DateTime dateTime){
+        //get first offset and epoch time in TimeZoneOffsetMap, while this time is < datetime, iterate through map
+        long timeUTC = offsetByTimeUTC.firstKey();
+        int offsetByDateTime = offsetByTimeUTC.get(timeUTC);
+        while (timeUTC < offsetByTimeUTC.lastKey() && dateTime.getMillis() > timeUTC + offsetByDateTime){
+            offsetByDateTime = offsetByTimeUTC.get(timeUTC);
+            timeUTC += DateTimeConstants.MILLIS_PER_MINUTE;
+        }
+
+        return offsetByDateTime;
     }
 
 }
