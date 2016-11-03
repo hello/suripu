@@ -176,20 +176,20 @@ public class FeedbackUtils {
             final Optional<DateTime> optionalDateTime = convertFeedbackToDateTimeByNewTime(timelineFeedback, 0);
 
             if(optionalDateTime.isPresent()) {
-                final Optional<Long> timeUTCOptional = timeZoneOffsetMap.getUTCFromLocalTime(optionalDateTime.get().getMillis());
-                if (timeUTCOptional.isPresent()) {
-                    final int offset = timeZoneOffsetMap.getOffsetWithDefaultAsZero(timeUTCOptional.get());
+                final Long timeUTC = timeZoneOffsetMap.getUTCFromLocalTime(optionalDateTime.get().getMillis());
 
-                    final DateTime dateTime = optionalDateTime.get().minusMillis(offset);
-                /* turn into event */
-                    final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, dateTime, offset);
+                final int offset = timeZoneOffsetMap.getOffsetWithDefaultAsZero(timeUTC);
 
-                    if (!event.isPresent()) {
-                        continue;
-                    }
+                final DateTime dateTime = optionalDateTime.get().minusMillis(offset);
+            /* turn into event */
+                final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, dateTime, offset);
 
-                    eventsByType.put(event.get().getType(), event.get());
+                if (!event.isPresent()) {
+                    continue;
                 }
+
+                eventsByType.put(event.get().getType(), event.get());
+
             }
         }
 

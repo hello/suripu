@@ -119,7 +119,7 @@ public class TimeZoneOffsetMap {
         return mappedDateTime.get();
     }
 
-    public Optional<Long> getUTCFromLocalTime(final long localTime) {
+    public Long getUTCFromLocalTime(final long localTime) {
 
         //NOTE this is not strictly kosher at all.
         //the correct way to fix this is to actually store offset when we store timeline feedback.
@@ -128,14 +128,14 @@ public class TimeZoneOffsetMap {
         final Map.Entry<Long,TimeZoneHistory> entry = timezoneIdHistories.floorEntry(localTime + DateTimeConstants.MILLIS_PER_HOUR * 12);
 
         if (entry == null) {
-            return Optional.absent();
+            return localTime;
         }
 
         if (entry.getValue() == null) {
-            return Optional.absent();
+            return localTime;
         }
 
-        return Optional.of(DateTimeZone.forID(entry.getValue().timeZoneId).convertLocalToUTC(localTime,false));
+        return DateTimeZone.forID(entry.getValue().timeZoneId).convertLocalToUTC(localTime,false);
 
 
     }
