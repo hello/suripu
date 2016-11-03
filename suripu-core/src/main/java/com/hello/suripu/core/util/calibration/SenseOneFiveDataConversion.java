@@ -5,8 +5,6 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.util.DataUtils;
 
-import javax.xml.crypto.Data;
-
 /**
  * Created by jyfan on 9/20/16.
  */
@@ -148,9 +146,7 @@ public class SenseOneFiveDataConversion {
 
     //units in % humidity
     public static float convertRawToHumidity(final int humidRaw) {
-        if (humidRaw < 0) {
-            return CLIENT_SENTINEL_NULL_VALUE;
-        } if (humidRaw > DataUtils.floatToDBInt(100.0f)) {
+        if (humidRaw < 0 || humidRaw > DataUtils.floatToDBInt(100.0f)) {
             return CLIENT_SENTINEL_NULL_VALUE;
         }
 
