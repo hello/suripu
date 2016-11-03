@@ -1,11 +1,9 @@
 package com.hello.suripu.coredropwizard.timeline;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
 import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.NeuralNetAlgorithmOutput;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
@@ -45,6 +43,7 @@ import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.device.v2.Sense;
+import com.hello.suripu.core.util.CSVLoader;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import org.joda.time.DateTime;
@@ -53,8 +52,6 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -68,65 +65,15 @@ import java.util.UUID;
 public class InstrumentedTimelineProcessorHelpers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessorHelpers.class);
-
-
-    private List<TrackerMotion> loadTrackerMotionFromCSV(final String resource){
-        final URL fixtureCSVFile = Resources.getResource(resource);
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(
-                        Long.parseLong(columns[0].trim()), //id
-                        Long.parseLong(columns[1].trim()), //account id
-                        0L, // tracker_id
-                        Long.parseLong(columns[3].trim()), //timestamp
-                        Integer.parseInt(columns[4].trim()), //value
-                        Integer.parseInt(columns[5].trim()), // offset
-                        Long.parseLong(columns[6].trim()), //motion_range
-                        Long.parseLong(columns[7].trim()), //kickoff count
-                        Long.parseLong(columns[8].trim()) //on duration
-                );
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
-
-        return trackerMotions;
-    }
-    private List<Sample> loadSensorDataFromCSV(final String resource) {
-        final URL fixtureCSVFile = Resources.getResource(resource);
-        final List<Sample> sampleList = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final Sample sensor = new Sample(
-                        Long.parseLong(columns[1].trim()), // long datetime
-                        Float.parseFloat(columns[2].trim()), // sensor value
-                        Integer.parseInt(columns[3].trim())  // Offset
-                );
-                sampleList.add(sensor);
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
-
-        return sampleList;
-    }
+    private static long ACCOUNT_ID_DST = 62801L;
 
     final public PillDataReadDAO pillDataReadDAO = new PillDataReadDAO() {
         @Override
         public ImmutableList<TrackerMotion> getBetweenLocalUTC(long accountId, DateTime startLocalTime, DateTime endLocalTime) {
             // from onlineHmmtest getTypicalDayofPill
-            if (accountId ==62801){
+            if (accountId == ACCOUNT_ID_DST){
                 //get from dst germany
-                final List<TrackerMotion> trackerMotions= loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv");
+                final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv");
                 return ImmutableList.copyOf(trackerMotions);
             }
             final int tzOffset = 0;
@@ -166,16 +113,13 @@ public class InstrumentedTimelineProcessorHelpers {
                 com.google.common.base.Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy) {
 
 
-            if (accountId ==62801){
+            if (accountId == ACCOUNT_ID_DST){
                 final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
-                final List<Sample> light = loadSensorDataFromCSV("fixtures/light_2016_10_29_dst.csv");
-                final List<Sample> sound = loadSensorDataFromCSV("fixtures/sound_2016_10_29_dst.csv");
-
-                final List<Sample> waves = loadSensorDataFromCSV("fixtures/waves_2016_10_29_dst.csv");
+                final List<Sample> light = CSVLoader.loadSensorDataFromCSV("fixtures/light_2016_10_29_dst.csv");
+                final List<Sample> sound =  CSVLoader.loadSensorDataFromCSV("fixtures/sound_2016_10_29_dst.csv");
                 allSensorSampleList.add(Sensor.LIGHT, light);
                 allSensorSampleList.add(Sensor.SOUND_PEAK_ENERGY, sound);
                 allSensorSampleList.add(Sensor.SOUND, sound);
-                //allSensorSampleList.add(Sensor.WAVE_COUNT, waves);
                 return allSensorSampleList;
             }
             // from OnlineHmmTest getTypicalDayOfSense
@@ -230,7 +174,7 @@ public class InstrumentedTimelineProcessorHelpers {
     final public RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB = new RingTimeHistoryReadDAO() {
         @Override
         public List<RingTime> getRingTimesBetween(String senseId, Long accountId, DateTime startTime, DateTime endTime) {
-            if (accountId == 62801){
+            if (accountId == ACCOUNT_ID_DST){
                 final List<RingTime> ringTimes = new ArrayList<>();
                 final RingTime ringTime = new RingTime(1477828740000L, 1477828800000L, 0, true);
                 ringTimes.add(ringTime);
@@ -243,7 +187,7 @@ public class InstrumentedTimelineProcessorHelpers {
     final public FeedbackReadDAO feedbackDAO = new FeedbackReadDAO() {
         @Override
         public ImmutableList<TimelineFeedback> getCorrectedForNight(Long accountId,DateTime dateOfNight) {
-            if (accountId == 62801){
+            if (accountId == ACCOUNT_ID_DST){
                 final TimelineFeedback feedback = TimelineFeedback.create("2016-10-29","08:30","08:30", Event.Type.WAKE_UP.name());
 
                 final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
@@ -336,7 +280,7 @@ public class InstrumentedTimelineProcessorHelpers {
         }
         @Override
         public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start){
-            if (accountId == 62801){
+            if (accountId == ACCOUNT_ID_DST){
                 final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(1470332074000L ,3600000, "Europe/Berlin");
                 final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
                 timeZoneHistoryList.add(timeZoneHistory);
