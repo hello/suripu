@@ -48,7 +48,6 @@ import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
-import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
@@ -399,15 +398,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (!this.hasExtraEventsEnabled(accountId)) {
             extraEvents = Collections.EMPTY_LIST;
         }
-        final List<TimeZoneHistory> timeZoneHistoryList = timeZoneHistoryDAO.getTimeZoneHistory(accountId, targetDate);
-        final Optional<TimeZoneHistory> timeZoneHistoryOptional;
-        if (timeZoneHistoryList.isEmpty()){
-            timeZoneHistoryOptional = Optional.absent();
-        } else{
-            timeZoneHistoryOptional = Optional.of(timeZoneHistoryList.get(timeZoneHistoryList.size()-1));
-        }
 
-        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneHistoryOptional, result, sensorData);
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getTimeZoneHistory(accountId, targetDate));
+
+
+        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneOffsetMap, result, sensorData);
 
 
         if (!populateTimelines.isValidSleepScore) {
@@ -582,7 +577,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final Optional<TimeZoneHistory> timeZoneHistoryOptional, final TimelineAlgorithmResult result,
+    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineAlgorithmResult result,
                                                final OneDaysSensorData sensorData) {
 
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
@@ -590,19 +585,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
         final int intialOffset = trackerMotions.get(0).offsetMillis;
-        final TimeZoneOffsetMap timeZoneOffsetMap;
-        final DateTimeZone userTimeZone;
         final Long startTimeUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(23).minusMillis(intialOffset).getMillis();
         final Long endTimeUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(4).minusMillis(intialOffset).getMillis();
-        if (timeZoneHistoryOptional.isPresent()){
-            final String timeZoneId = timeZoneHistoryOptional.get().timeZoneId;
-            userTimeZone = DateTimeZone.forID(timeZoneId);
-            timeZoneOffsetMap = TimeZoneOffsetMap.create(timeZoneId, startTimeUTC, endTimeUTC);
-         } else {
-            userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
-            timeZoneOffsetMap = TimeZoneOffsetMap.create(sensorData.timezoneOffsetMillis,startTimeUTC, endTimeUTC );
-        }
-            //MOVE EVENTS BASED ON FEEDBACK
+
+        //MOVE EVENTS BASED ON FEEDBACK
         FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
@@ -677,23 +663,24 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         // ALARM
         //removed FF ALARM_IN_TIMELINE at 100 percent
         if(trackerMotions.size() > 0) {
-            final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
-                    targetDate.getMonthOfYear(),
-                    targetDate.getDayOfMonth(),
-                    targetDate.getHourOfDay(),
-                    targetDate.getMinuteOfHour(),
-                    0,
-                    userTimeZone).minusMinutes(1);
 
-            final DateTime alarmQueryEndTime = new DateTime(endDate.getYear(),
-                    endDate.getMonthOfYear(),
-                    endDate.getDayOfMonth(),
-                    endDate.getHourOfDay(),
-                    endDate.getMinuteOfHour(),
-                    0,
-                    userTimeZone).plusMinutes(1);
+            final DateTime alarmQueryStartTime = timeZoneOffsetMap.mapDateTimeWithDefaultTimezoneAsUTC(
+                    new DateTime(targetDate.getYear(),
+                            targetDate.getMonthOfYear(),
+                            targetDate.getDayOfMonth(),
+                            targetDate.getHourOfDay(),
+                            targetDate.getMinuteOfHour()).minusMinutes(1));
 
-            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime, userTimeZone.getOffset(alarmQueryEndTime));
+            final DateTime alarmQueryEndTime = timeZoneOffsetMap.mapDateTimeWithDefaultTimezoneAsUTC(
+                    new DateTime(endDate.getYear(),
+                            endDate.getMonthOfYear(),
+                            endDate.getDayOfMonth(),
+                            endDate.getHourOfDay(),
+                            endDate.getMinuteOfHour()).plusMinutes(1));
+
+            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime,
+                    timeZoneOffsetMap.getOffsetWithDefaultAsZero((alarmQueryEndTime.getMillis())));
+
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
