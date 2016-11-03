@@ -56,8 +56,8 @@ public class RingProcessor {
                 if(lastTimestamp != 0){
                     // If there is gap in data.
                     if(motion.timestamp - lastTimestamp > 2 * DateTimeConstants.MILLIS_PER_MINUTE){
-                       long diff = motion.timestamp - lastTimestamp;
-                       long insertCount = diff / DateTimeConstants.MILLIS_PER_MINUTE;
+                        long diff = motion.timestamp - lastTimestamp;
+                        long insertCount = diff / DateTimeConstants.MILLIS_PER_MINUTE;
                         for(int i = 0; i < insertCount; i++){
                             this.motionAmplitudes.add(new AmplitudeData(lastTimestamp + (i+1) * DateTimeConstants.MILLIS_PER_MINUTE, 0, motion.offsetMillis));
                         }
@@ -232,6 +232,7 @@ public class RingProcessor {
                                                                final RingTime nextRingTimeFromWorker,
                                                                final List<TrackerMotion> motionWithinProgressiveWindow){
 
+
         Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
 
         if(motionWithinProgressiveWindow.isEmpty()){
@@ -240,8 +241,23 @@ public class RingProcessor {
         }
         final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionWithinProgressiveWindow);
         final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionWithinProgressiveWindow);
+        final List<AmplitudeData> onDurations = TrackerMotionUtils.trackerMotionToOnDuration(motionWithinProgressiveWindow);
+        //removed FF all users FF'd
 
-        Boolean isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts, SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT);
+        //checks if kick off count is valid. if pill data contains motion mask, then pill packet is version 4 and kick off count is set to 0
+        // if pill packet 4, then add on duration trigger to replace kick off count behavior
+        Boolean useOnDuration = false;
+        if (!motionWithinProgressiveWindow.isEmpty() && motionWithinProgressiveWindow.get(0).motionMask.isPresent()){
+            useOnDuration = true;
+        }
+
+
+        Boolean isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(
+                amplitudeData,
+                kickOffCounts,onDurations,
+                SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG,
+                SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT, SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD, useOnDuration
+        );
 
         if(isUserAwake){
             // TODO: STATE CHECK NEEDED FOR ROBUST IMPLEMENTATION
@@ -469,7 +485,6 @@ public class RingProcessor {
 
         return nextRingTime;
     }
-
     public static RingTime getMostRecentRingTimeFromList(final List<RingTime> ringTimes){
         // Now we loop over all the users, we get a list of ring time for all users.
         // Let's pick the nearest one and tell morpheus what is the next ring time.
