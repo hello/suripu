@@ -278,7 +278,7 @@ public class Vote {
                 getAggregatedFeatures(),
                 defaultEvents.wakeUp.getStartTimestamp());
         wakeUp = new Segment(wakeUpTimesMillis.getFirst(), wakeUpTimesMillis.getFirst() + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
-        outBed = new Segment(wakeUpTimesMillis.getSecond(), wakeUpTimesMillis.getSecond() + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
+        outBed = new Segment(wakeUpTimesMillis.getSecond(), wakeUpTimesMillis.getSecond() + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
 
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);

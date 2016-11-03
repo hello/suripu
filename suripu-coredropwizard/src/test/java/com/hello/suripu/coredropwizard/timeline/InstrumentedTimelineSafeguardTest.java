@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.TimeZoneOffsetMap;
@@ -355,17 +356,21 @@ public class InstrumentedTimelineSafeguardTest {
         final long startUTC = 1478408400000L;//1478394000000L; //2016-11-05 18:00:00 local
         final long endUTC = 1478433600000L; //2016-11-06 16:00:00 local
         final String timeZoneID = "America/Los_Angeles";
-        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.create(timeZoneID, startUTC, endUTC);
+        final TimeZoneHistory timeZoneHistory1 = new TimeZoneHistory(1468408400000L, -25200000, timeZoneID);
+        final TimeZoneHistory timeZoneHistory2 = new TimeZoneHistory(1428408400000L, 3600000, "Europe/Berlin");
+        final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
+        timeZoneHistoryList.add(timeZoneHistory1); timeZoneHistoryList.add(timeZoneHistory2);
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryList);
         int offsetA = -25200000;
         int offsetB = -28800000;
         long tf = 0;
         long tOfChange = 1478422740000L;
 
-        final int offsetFirst = timeZoneOffsetMap.get(startUTC);
-        final int offsetBefore = timeZoneOffsetMap.get(startUTC - 60000L);
-        final int offsetAt = timeZoneOffsetMap.get(tOfChange);
-        final int offsetAfter = timeZoneOffsetMap.get(tOfChange + 60001L);
-        final int offsetLast = timeZoneOffsetMap.get(endUTC + 5*60000L);
+        final int offsetFirst = timeZoneOffsetMap.getOffsetWithDefaultAsZero(startUTC);
+        final int offsetBefore = timeZoneOffsetMap.getOffsetWithDefaultAsZero(startUTC - 60000L);
+        final int offsetAt = timeZoneOffsetMap.getOffsetWithDefaultAsZero(tOfChange);
+        final int offsetAfter = timeZoneOffsetMap.getOffsetWithDefaultAsZero(tOfChange + 60001L);
+        final int offsetLast = timeZoneOffsetMap.getOffsetWithDefaultAsZero(endUTC + 5*60000L);
 
         TestCase.assertEquals(offsetA,offsetFirst);
         TestCase.assertEquals(offsetA,offsetBefore);

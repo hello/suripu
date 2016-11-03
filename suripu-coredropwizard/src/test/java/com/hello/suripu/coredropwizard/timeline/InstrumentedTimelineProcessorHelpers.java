@@ -174,7 +174,8 @@ public class InstrumentedTimelineProcessorHelpers {
                 final List<Sample> waves = loadSensorDataFromCSV("fixtures/waves_2016_10_29_dst.csv");
                 allSensorSampleList.add(Sensor.LIGHT, light);
                 allSensorSampleList.add(Sensor.SOUND_PEAK_ENERGY, sound);
-                allSensorSampleList.add(Sensor.WAVE_COUNT, waves);
+                allSensorSampleList.add(Sensor.SOUND, sound);
+                //allSensorSampleList.add(Sensor.WAVE_COUNT, waves);
                 return allSensorSampleList;
             }
             // from OnlineHmmTest getTypicalDayOfSense
@@ -249,6 +250,7 @@ public class InstrumentedTimelineProcessorHelpers {
                 timelineFeedbacks.add(feedback);
 
                 return ImmutableList.copyOf(timelineFeedbacks);
+
             }
             return null;
         }
