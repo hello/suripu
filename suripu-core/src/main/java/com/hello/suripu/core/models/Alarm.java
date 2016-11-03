@@ -565,6 +565,11 @@ public class Alarm {
             final List<AlarmExpansion> expansions = Lists.newArrayList();
 
             for(final Alarm alarm: alarmList){
+
+                if(!alarm.isEnabled) {
+                    continue;
+                }
+
                 if(alarm.expansions.isEmpty()) {
                     continue;
                 }
