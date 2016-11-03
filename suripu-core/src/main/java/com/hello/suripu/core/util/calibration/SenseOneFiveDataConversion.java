@@ -5,6 +5,8 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.util.DataUtils;
 
+import javax.xml.crypto.Data;
+
 /**
  * Created by jyfan on 9/20/16.
  */
@@ -38,6 +40,8 @@ public class SenseOneFiveDataConversion {
     private static final int TEMP_MAX_DERIV = 20;
     private static final int TEMP_ALPHA_ONE = -20;
     private static final int TEMP_ALPHA_TWO = 600;
+
+    private static float CLIENT_SENTINEL_NULL_VALUE = -1.0f;
 
     public static float convertRawRGBCToAmbientLight(final int rRaw, final int gRaw, final int bRaw, final int clear, final Device.Color color) {
 
@@ -120,6 +124,10 @@ public class SenseOneFiveDataConversion {
 
     //Note: should smooth by 5 min buckets before presenting data to user
     public static float convertRawToCelsius(final int tempRaw, final Optional<Integer> tempRawLastMinOptional) {
+        if (tempRaw < 0) {
+            return CLIENT_SENTINEL_NULL_VALUE;
+        }
+
         if (!tempRawLastMinOptional.isPresent()) {
             return DataUtils.dbIntToFloat(tempRaw - TEMP_ALPHA_TWO); //If T(last min) DNE, assume no change in temp: T(now) = T(last min)
         }
@@ -140,6 +148,12 @@ public class SenseOneFiveDataConversion {
 
     //units in % humidity
     public static float convertRawToHumidity(final int humidRaw) {
+        if (humidRaw < 0) {
+            return CLIENT_SENTINEL_NULL_VALUE;
+        } if (humidRaw > DataUtils.floatToDBInt(100.0f)) {
+            return CLIENT_SENTINEL_NULL_VALUE;
+        }
+
         return DataUtils.dbIntToFloat(humidRaw);
     }
 }
