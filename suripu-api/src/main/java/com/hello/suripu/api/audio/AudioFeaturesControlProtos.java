@@ -8,10 +8,10 @@ public final class AudioFeaturesControlProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface AudioFeaturesControlOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface AudioFeaturesControlOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:AudioFeaturesControl)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional bool enable_keyword_features = 1;
     /**
      * <code>optional bool enable_keyword_features = 1;</code>
      */
@@ -25,8 +25,9 @@ public final class AudioFeaturesControlProtos {
    * Protobuf type {@code AudioFeaturesControl}
    */
   public static final class AudioFeaturesControl extends
-      com.google.protobuf.GeneratedMessage
-      implements AudioFeaturesControlOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:AudioFeaturesControl)
+      AudioFeaturesControlOrBuilder {
     // Use AudioFeaturesControl.newBuilder() to construct.
     private AudioFeaturesControl(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -117,7 +118,6 @@ public final class AudioFeaturesControlProtos {
     }
 
     private int bitField0_;
-    // optional bool enable_keyword_features = 1;
     public static final int ENABLE_KEYWORD_FEATURES_FIELD_NUMBER = 1;
     private boolean enableKeywordFeatures_;
     /**
@@ -139,7 +139,8 @@ public final class AudioFeaturesControlProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -246,8 +247,9 @@ public final class AudioFeaturesControlProtos {
      * Protobuf type {@code AudioFeaturesControl}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControlOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:AudioFeaturesControl)
+        com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControlOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.audio.AudioFeaturesControlProtos.internal_static_AudioFeaturesControl_descriptor;
@@ -360,7 +362,6 @@ public final class AudioFeaturesControlProtos {
       }
       private int bitField0_;
 
-      // optional bool enable_keyword_features = 1;
       private boolean enableKeywordFeatures_ ;
       /**
        * <code>optional bool enable_keyword_features = 1;</code>
@@ -404,7 +405,7 @@ public final class AudioFeaturesControlProtos {
     // @@protoc_insertion_point(class_scope:AudioFeaturesControl)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_AudioFeaturesControl_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -424,23 +425,23 @@ public final class AudioFeaturesControlProtos {
       "udioFeaturesControlProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_AudioFeaturesControl_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_AudioFeaturesControl_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_AudioFeaturesControl_descriptor,
-              new java.lang.String[] { "EnableKeywordFeatures", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_AudioFeaturesControl_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_AudioFeaturesControl_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_AudioFeaturesControl_descriptor,
+        new java.lang.String[] { "EnableKeywordFeatures", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

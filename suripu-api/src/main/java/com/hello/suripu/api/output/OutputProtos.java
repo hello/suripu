@@ -8,10 +8,10 @@ public final class OutputProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface SyncResponseOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface SyncResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SyncResponse)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional .SyncResponse.Alarm alarm = 6;
     /**
      * <code>optional .SyncResponse.Alarm alarm = 6;</code>
      *
@@ -49,7 +49,6 @@ public final class OutputProtos {
      */
     com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder getAlarmOrBuilder();
 
-    // optional .SyncResponse.WhiteNoise white_noise = 8;
     /**
      * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
      *
@@ -75,7 +74,6 @@ public final class OutputProtos {
      */
     com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder getWhiteNoiseOrBuilder();
 
-    // optional bool reset_device = 10;
     /**
      * <code>optional bool reset_device = 10;</code>
      *
@@ -93,7 +91,6 @@ public final class OutputProtos {
      */
     boolean getResetDevice();
 
-    // optional .SyncResponse.RoomConditions room_conditions = 12;
     /**
      * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
      */
@@ -103,7 +100,6 @@ public final class OutputProtos {
      */
     com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditions();
 
-    // repeated .SyncResponse.FileDownload files = 13;
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
@@ -128,7 +124,6 @@ public final class OutputProtos {
     com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
         int index);
 
-    // optional bool reset_to_factory_fw = 14;
     /**
      * <code>optional bool reset_to_factory_fw = 14;</code>
      */
@@ -138,7 +133,6 @@ public final class OutputProtos {
      */
     boolean getResetToFactoryFw();
 
-    // optional .AudioControl audio_control = 15;
     /**
      * <code>optional .AudioControl audio_control = 15;</code>
      */
@@ -152,7 +146,6 @@ public final class OutputProtos {
      */
     com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder getAudioControlOrBuilder();
 
-    // optional bytes mac = 18;
     /**
      * <code>optional bytes mac = 18;</code>
      *
@@ -172,7 +165,6 @@ public final class OutputProtos {
      */
     com.google.protobuf.ByteString getMac();
 
-    // optional int32 batch_size = 19;
     /**
      * <code>optional int32 batch_size = 19;</code>
      */
@@ -182,7 +174,6 @@ public final class OutputProtos {
      */
     int getBatchSize();
 
-    // repeated .SyncResponse.PillSettings pill_settings = 20;
     /**
      * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
      */
@@ -207,7 +198,6 @@ public final class OutputProtos {
     com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettingsOrBuilder getPillSettingsOrBuilder(
         int index);
 
-    // optional bool reset_mcu = 21;
     /**
      * <code>optional bool reset_mcu = 21;</code>
      */
@@ -217,7 +207,6 @@ public final class OutputProtos {
      */
     boolean getResetMcu();
 
-    // optional uint32 upload_log_level = 22;
     /**
      * <code>optional uint32 upload_log_level = 22;</code>
      */
@@ -227,7 +216,6 @@ public final class OutputProtos {
      */
     int getUploadLogLevel();
 
-    // optional uint32 pill_batch_size = 23;
     /**
      * <code>optional uint32 pill_batch_size = 23;</code>
      */
@@ -237,7 +225,6 @@ public final class OutputProtos {
      */
     int getPillBatchSize();
 
-    // optional string ring_time_ack = 24;
     /**
      * <code>optional string ring_time_ack = 24;</code>
      */
@@ -252,7 +239,6 @@ public final class OutputProtos {
     com.google.protobuf.ByteString
         getRingTimeAckBytes();
 
-    // optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;
     /**
      * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
      */
@@ -262,7 +248,6 @@ public final class OutputProtos {
      */
     com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditionsLightsOff();
 
-    // optional .AudioFeaturesControl audio_features_control = 26;
     /**
      * <code>optional .AudioFeaturesControl audio_features_control = 26;</code>
      *
@@ -292,8 +277,9 @@ public final class OutputProtos {
    * Protobuf type {@code SyncResponse}
    */
   public static final class SyncResponse extends
-      com.google.protobuf.GeneratedMessage
-      implements SyncResponseOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:SyncResponse)
+      SyncResponseOrBuilder {
     // Use SyncResponse.newBuilder() to construct.
     private SyncResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -441,8 +427,9 @@ public final class OutputProtos {
               break;
             }
             case 194: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000800;
-              ringTimeAck_ = input.readBytes();
+              ringTimeAck_ = bs;
               break;
             }
             case 200: {
@@ -614,10 +601,10 @@ public final class OutputProtos {
       // @@protoc_insertion_point(enum_scope:SyncResponse.RoomConditions)
     }
 
-    public interface FileDownloadOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface FileDownloadOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:SyncResponse.FileDownload)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional string host = 1;
       /**
        * <code>optional string host = 1;</code>
        */
@@ -632,7 +619,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getHostBytes();
 
-      // optional string url = 2;
       /**
        * <code>optional string url = 2;</code>
        */
@@ -647,7 +633,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getUrlBytes();
 
-      // optional bool copy_to_serial_flash = 4;
       /**
        * <code>optional bool copy_to_serial_flash = 4;</code>
        */
@@ -657,7 +642,6 @@ public final class OutputProtos {
        */
       boolean getCopyToSerialFlash();
 
-      // optional bool reset_network_processor = 5;
       /**
        * <code>optional bool reset_network_processor = 5;</code>
        */
@@ -667,7 +651,6 @@ public final class OutputProtos {
        */
       boolean getResetNetworkProcessor();
 
-      // optional bool reset_application_processor = 6;
       /**
        * <code>optional bool reset_application_processor = 6;</code>
        */
@@ -677,7 +660,6 @@ public final class OutputProtos {
        */
       boolean getResetApplicationProcessor();
 
-      // optional string serial_flash_filename = 7;
       /**
        * <code>optional string serial_flash_filename = 7;</code>
        */
@@ -692,7 +674,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getSerialFlashFilenameBytes();
 
-      // optional string serial_flash_path = 8;
       /**
        * <code>optional string serial_flash_path = 8;</code>
        */
@@ -707,7 +688,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getSerialFlashPathBytes();
 
-      // optional string sd_card_filename = 3;
       /**
        * <code>optional string sd_card_filename = 3;</code>
        */
@@ -722,7 +702,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getSdCardFilenameBytes();
 
-      // optional string sd_card_path = 9;
       /**
        * <code>optional string sd_card_path = 9;</code>
        */
@@ -737,7 +716,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getSdCardPathBytes();
 
-      // optional bytes sha1 = 10;
       /**
        * <code>optional bytes sha1 = 10;</code>
        */
@@ -747,7 +725,6 @@ public final class OutputProtos {
        */
       com.google.protobuf.ByteString getSha1();
 
-      // optional int32 file_size = 11;
       /**
        * <code>optional int32 file_size = 11;</code>
        */
@@ -761,8 +738,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse.FileDownload}
      */
     public static final class FileDownload extends
-        com.google.protobuf.GeneratedMessage
-        implements FileDownloadOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:SyncResponse.FileDownload)
+        FileDownloadOrBuilder {
       // Use FileDownload.newBuilder() to construct.
       private FileDownload(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -809,18 +787,21 @@ public final class OutputProtos {
                 break;
               }
               case 10: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000001;
-                host_ = input.readBytes();
+                host_ = bs;
                 break;
               }
               case 18: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000002;
-                url_ = input.readBytes();
+                url_ = bs;
                 break;
               }
               case 26: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000080;
-                sdCardFilename_ = input.readBytes();
+                sdCardFilename_ = bs;
                 break;
               }
               case 32: {
@@ -839,18 +820,21 @@ public final class OutputProtos {
                 break;
               }
               case 58: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000020;
-                serialFlashFilename_ = input.readBytes();
+                serialFlashFilename_ = bs;
                 break;
               }
               case 66: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000040;
-                serialFlashPath_ = input.readBytes();
+                serialFlashPath_ = bs;
                 break;
               }
               case 74: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000100;
-                sdCardPath_ = input.readBytes();
+                sdCardPath_ = bs;
                 break;
               }
               case 82: {
@@ -903,7 +887,6 @@ public final class OutputProtos {
       }
 
       private int bitField0_;
-      // optional string host = 1;
       public static final int HOST_FIELD_NUMBER = 1;
       private java.lang.Object host_;
       /**
@@ -946,7 +929,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional string url = 2;
       public static final int URL_FIELD_NUMBER = 2;
       private java.lang.Object url_;
       /**
@@ -989,7 +971,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional bool copy_to_serial_flash = 4;
       public static final int COPY_TO_SERIAL_FLASH_FIELD_NUMBER = 4;
       private boolean copyToSerialFlash_;
       /**
@@ -1005,7 +986,6 @@ public final class OutputProtos {
         return copyToSerialFlash_;
       }
 
-      // optional bool reset_network_processor = 5;
       public static final int RESET_NETWORK_PROCESSOR_FIELD_NUMBER = 5;
       private boolean resetNetworkProcessor_;
       /**
@@ -1021,7 +1001,6 @@ public final class OutputProtos {
         return resetNetworkProcessor_;
       }
 
-      // optional bool reset_application_processor = 6;
       public static final int RESET_APPLICATION_PROCESSOR_FIELD_NUMBER = 6;
       private boolean resetApplicationProcessor_;
       /**
@@ -1037,7 +1016,6 @@ public final class OutputProtos {
         return resetApplicationProcessor_;
       }
 
-      // optional string serial_flash_filename = 7;
       public static final int SERIAL_FLASH_FILENAME_FIELD_NUMBER = 7;
       private java.lang.Object serialFlashFilename_;
       /**
@@ -1080,7 +1058,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional string serial_flash_path = 8;
       public static final int SERIAL_FLASH_PATH_FIELD_NUMBER = 8;
       private java.lang.Object serialFlashPath_;
       /**
@@ -1123,7 +1100,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional string sd_card_filename = 3;
       public static final int SD_CARD_FILENAME_FIELD_NUMBER = 3;
       private java.lang.Object sdCardFilename_;
       /**
@@ -1166,7 +1142,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional string sd_card_path = 9;
       public static final int SD_CARD_PATH_FIELD_NUMBER = 9;
       private java.lang.Object sdCardPath_;
       /**
@@ -1209,7 +1184,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional bytes sha1 = 10;
       public static final int SHA1_FIELD_NUMBER = 10;
       private com.google.protobuf.ByteString sha1_;
       /**
@@ -1225,7 +1199,6 @@ public final class OutputProtos {
         return sha1_;
       }
 
-      // optional int32 file_size = 11;
       public static final int FILE_SIZE_FIELD_NUMBER = 11;
       private int fileSize_;
       /**
@@ -1257,7 +1230,8 @@ public final class OutputProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -1434,8 +1408,9 @@ public final class OutputProtos {
        * Protobuf type {@code SyncResponse.FileDownload}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:SyncResponse.FileDownload)
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FileDownload_descriptor;
@@ -1650,7 +1625,6 @@ public final class OutputProtos {
         }
         private int bitField0_;
 
-        // optional string host = 1;
         private java.lang.Object host_ = "";
         /**
          * <code>optional string host = 1;</code>
@@ -1664,9 +1638,12 @@ public final class OutputProtos {
         public java.lang.String getHost() {
           java.lang.Object ref = host_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            host_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              host_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -1724,7 +1701,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional string url = 2;
         private java.lang.Object url_ = "";
         /**
          * <code>optional string url = 2;</code>
@@ -1738,9 +1714,12 @@ public final class OutputProtos {
         public java.lang.String getUrl() {
           java.lang.Object ref = url_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            url_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              url_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -1798,7 +1777,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional bool copy_to_serial_flash = 4;
         private boolean copyToSerialFlash_ ;
         /**
          * <code>optional bool copy_to_serial_flash = 4;</code>
@@ -1831,7 +1809,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional bool reset_network_processor = 5;
         private boolean resetNetworkProcessor_ ;
         /**
          * <code>optional bool reset_network_processor = 5;</code>
@@ -1864,7 +1841,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional bool reset_application_processor = 6;
         private boolean resetApplicationProcessor_ ;
         /**
          * <code>optional bool reset_application_processor = 6;</code>
@@ -1897,7 +1873,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional string serial_flash_filename = 7;
         private java.lang.Object serialFlashFilename_ = "";
         /**
          * <code>optional string serial_flash_filename = 7;</code>
@@ -1911,9 +1886,12 @@ public final class OutputProtos {
         public java.lang.String getSerialFlashFilename() {
           java.lang.Object ref = serialFlashFilename_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            serialFlashFilename_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              serialFlashFilename_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -1971,7 +1949,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional string serial_flash_path = 8;
         private java.lang.Object serialFlashPath_ = "";
         /**
          * <code>optional string serial_flash_path = 8;</code>
@@ -1985,9 +1962,12 @@ public final class OutputProtos {
         public java.lang.String getSerialFlashPath() {
           java.lang.Object ref = serialFlashPath_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            serialFlashPath_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              serialFlashPath_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -2045,7 +2025,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional string sd_card_filename = 3;
         private java.lang.Object sdCardFilename_ = "";
         /**
          * <code>optional string sd_card_filename = 3;</code>
@@ -2059,9 +2038,12 @@ public final class OutputProtos {
         public java.lang.String getSdCardFilename() {
           java.lang.Object ref = sdCardFilename_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            sdCardFilename_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              sdCardFilename_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -2119,7 +2101,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional string sd_card_path = 9;
         private java.lang.Object sdCardPath_ = "";
         /**
          * <code>optional string sd_card_path = 9;</code>
@@ -2133,9 +2114,12 @@ public final class OutputProtos {
         public java.lang.String getSdCardPath() {
           java.lang.Object ref = sdCardPath_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            sdCardPath_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              sdCardPath_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -2193,7 +2177,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional bytes sha1 = 10;
         private com.google.protobuf.ByteString sha1_ = com.google.protobuf.ByteString.EMPTY;
         /**
          * <code>optional bytes sha1 = 10;</code>
@@ -2229,7 +2212,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 file_size = 11;
         private int fileSize_ ;
         /**
          * <code>optional int32 file_size = 11;</code>
@@ -2273,10 +2255,10 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.FileDownload)
     }
 
-    public interface AlarmOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface AlarmOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:SyncResponse.Alarm)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional uint32 start_time = 1;
       /**
        * <code>optional uint32 start_time = 1;</code>
        *
@@ -2294,7 +2276,6 @@ public final class OutputProtos {
        */
       int getStartTime();
 
-      // optional uint32 end_time = 2;
       /**
        * <code>optional uint32 end_time = 2;</code>
        *
@@ -2312,7 +2293,6 @@ public final class OutputProtos {
        */
       int getEndTime();
 
-      // optional int32 ringtone_id = 3 [default = 1];
       /**
        * <code>optional int32 ringtone_id = 3 [default = 1];</code>
        */
@@ -2322,7 +2302,6 @@ public final class OutputProtos {
        */
       int getRingtoneId();
 
-      // optional int32 ring_offset_from_now_in_second = 4;
       /**
        * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
        *
@@ -2340,7 +2319,6 @@ public final class OutputProtos {
        */
       int getRingOffsetFromNowInSecond();
 
-      // optional int32 ring_duration_in_second = 5;
       /**
        * <code>optional int32 ring_duration_in_second = 5;</code>
        */
@@ -2350,7 +2328,6 @@ public final class OutputProtos {
        */
       int getRingDurationInSecond();
 
-      // optional string ringtone_path = 6;
       /**
        * <code>optional string ringtone_path = 6;</code>
        */
@@ -2369,8 +2346,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse.Alarm}
      */
     public static final class Alarm extends
-        com.google.protobuf.GeneratedMessage
-        implements AlarmOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:SyncResponse.Alarm)
+        AlarmOrBuilder {
       // Use Alarm.newBuilder() to construct.
       private Alarm(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -2442,8 +2420,9 @@ public final class OutputProtos {
                 break;
               }
               case 50: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000020;
-                ringtonePath_ = input.readBytes();
+                ringtonePath_ = bs;
                 break;
               }
             }
@@ -2486,7 +2465,6 @@ public final class OutputProtos {
       }
 
       private int bitField0_;
-      // optional uint32 start_time = 1;
       public static final int START_TIME_FIELD_NUMBER = 1;
       private int startTime_;
       /**
@@ -2510,7 +2488,6 @@ public final class OutputProtos {
         return startTime_;
       }
 
-      // optional uint32 end_time = 2;
       public static final int END_TIME_FIELD_NUMBER = 2;
       private int endTime_;
       /**
@@ -2534,7 +2511,6 @@ public final class OutputProtos {
         return endTime_;
       }
 
-      // optional int32 ringtone_id = 3 [default = 1];
       public static final int RINGTONE_ID_FIELD_NUMBER = 3;
       private int ringtoneId_;
       /**
@@ -2550,7 +2526,6 @@ public final class OutputProtos {
         return ringtoneId_;
       }
 
-      // optional int32 ring_offset_from_now_in_second = 4;
       public static final int RING_OFFSET_FROM_NOW_IN_SECOND_FIELD_NUMBER = 4;
       private int ringOffsetFromNowInSecond_;
       /**
@@ -2574,7 +2549,6 @@ public final class OutputProtos {
         return ringOffsetFromNowInSecond_;
       }
 
-      // optional int32 ring_duration_in_second = 5;
       public static final int RING_DURATION_IN_SECOND_FIELD_NUMBER = 5;
       private int ringDurationInSecond_;
       /**
@@ -2590,7 +2564,6 @@ public final class OutputProtos {
         return ringDurationInSecond_;
       }
 
-      // optional string ringtone_path = 6;
       public static final int RINGTONE_PATH_FIELD_NUMBER = 6;
       private java.lang.Object ringtonePath_;
       /**
@@ -2644,7 +2617,8 @@ public final class OutputProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -2786,8 +2760,9 @@ public final class OutputProtos {
        * Protobuf type {@code SyncResponse.Alarm}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:SyncResponse.Alarm)
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_Alarm_descriptor;
@@ -2947,7 +2922,6 @@ public final class OutputProtos {
         }
         private int bitField0_;
 
-        // optional uint32 start_time = 1;
         private int startTime_ ;
         /**
          * <code>optional uint32 start_time = 1;</code>
@@ -2996,7 +2970,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional uint32 end_time = 2;
         private int endTime_ ;
         /**
          * <code>optional uint32 end_time = 2;</code>
@@ -3045,7 +3018,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 ringtone_id = 3 [default = 1];
         private int ringtoneId_ = 1;
         /**
          * <code>optional int32 ringtone_id = 3 [default = 1];</code>
@@ -3078,7 +3050,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 ring_offset_from_now_in_second = 4;
         private int ringOffsetFromNowInSecond_ ;
         /**
          * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
@@ -3127,7 +3098,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 ring_duration_in_second = 5;
         private int ringDurationInSecond_ ;
         /**
          * <code>optional int32 ring_duration_in_second = 5;</code>
@@ -3160,7 +3130,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional string ringtone_path = 6;
         private java.lang.Object ringtonePath_ = "";
         /**
          * <code>optional string ringtone_path = 6;</code>
@@ -3174,9 +3143,12 @@ public final class OutputProtos {
         public java.lang.String getRingtonePath() {
           java.lang.Object ref = ringtonePath_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            ringtonePath_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              ringtonePath_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -3245,10 +3217,10 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.Alarm)
     }
 
-    public interface PairingActionOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface PairingActionOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:SyncResponse.PairingAction)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional string ssid = 1;
       /**
        * <code>optional string ssid = 1;</code>
        */
@@ -3263,7 +3235,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getSsidBytes();
 
-      // optional .SyncResponse.PairingAction.ActionType type = 2;
       /**
        * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
        */
@@ -3277,8 +3248,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse.PairingAction}
      */
     public static final class PairingAction extends
-        com.google.protobuf.GeneratedMessage
-        implements PairingActionOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:SyncResponse.PairingAction)
+        PairingActionOrBuilder {
       // Use PairingAction.newBuilder() to construct.
       private PairingAction(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -3325,8 +3297,9 @@ public final class OutputProtos {
                 break;
               }
               case 10: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000001;
-                ssid_ = input.readBytes();
+                ssid_ = bs;
                 break;
               }
               case 16: {
@@ -3462,7 +3435,6 @@ public final class OutputProtos {
       }
 
       private int bitField0_;
-      // optional string ssid = 1;
       public static final int SSID_FIELD_NUMBER = 1;
       private java.lang.Object ssid_;
       /**
@@ -3505,7 +3477,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional .SyncResponse.PairingAction.ActionType type = 2;
       public static final int TYPE_FIELD_NUMBER = 2;
       private com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType type_;
       /**
@@ -3528,7 +3499,8 @@ public final class OutputProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -3642,8 +3614,9 @@ public final class OutputProtos {
        * Protobuf type {@code SyncResponse.PairingAction}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:SyncResponse.PairingAction)
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_PairingAction_descriptor;
@@ -3767,7 +3740,6 @@ public final class OutputProtos {
         }
         private int bitField0_;
 
-        // optional string ssid = 1;
         private java.lang.Object ssid_ = "";
         /**
          * <code>optional string ssid = 1;</code>
@@ -3781,9 +3753,12 @@ public final class OutputProtos {
         public java.lang.String getSsid() {
           java.lang.Object ref = ssid_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            ssid_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              ssid_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -3841,7 +3816,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional .SyncResponse.PairingAction.ActionType type = 2;
         private com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType type_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType.PAIR;
         /**
          * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
@@ -3888,10 +3862,10 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.PairingAction)
     }
 
-    public interface WhiteNoiseOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface WhiteNoiseOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:SyncResponse.WhiteNoise)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional int32 start_time = 1;
       /**
        * <code>optional int32 start_time = 1;</code>
        */
@@ -3901,7 +3875,6 @@ public final class OutputProtos {
        */
       int getStartTime();
 
-      // optional int32 end_time = 2;
       /**
        * <code>optional int32 end_time = 2;</code>
        */
@@ -3911,7 +3884,6 @@ public final class OutputProtos {
        */
       int getEndTime();
 
-      // optional int32 sound_id = 3;
       /**
        * <code>optional int32 sound_id = 3;</code>
        */
@@ -3925,8 +3897,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse.WhiteNoise}
      */
     public static final class WhiteNoise extends
-        com.google.protobuf.GeneratedMessage
-        implements WhiteNoiseOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:SyncResponse.WhiteNoise)
+        WhiteNoiseOrBuilder {
       // Use WhiteNoise.newBuilder() to construct.
       private WhiteNoise(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -4027,7 +4000,6 @@ public final class OutputProtos {
       }
 
       private int bitField0_;
-      // optional int32 start_time = 1;
       public static final int START_TIME_FIELD_NUMBER = 1;
       private int startTime_;
       /**
@@ -4043,7 +4015,6 @@ public final class OutputProtos {
         return startTime_;
       }
 
-      // optional int32 end_time = 2;
       public static final int END_TIME_FIELD_NUMBER = 2;
       private int endTime_;
       /**
@@ -4059,7 +4030,6 @@ public final class OutputProtos {
         return endTime_;
       }
 
-      // optional int32 sound_id = 3;
       public static final int SOUND_ID_FIELD_NUMBER = 3;
       private int soundId_;
       /**
@@ -4083,7 +4053,8 @@ public final class OutputProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -4204,8 +4175,9 @@ public final class OutputProtos {
        * Protobuf type {@code SyncResponse.WhiteNoise}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:SyncResponse.WhiteNoise)
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_WhiteNoise_descriptor;
@@ -4336,7 +4308,6 @@ public final class OutputProtos {
         }
         private int bitField0_;
 
-        // optional int32 start_time = 1;
         private int startTime_ ;
         /**
          * <code>optional int32 start_time = 1;</code>
@@ -4369,7 +4340,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 end_time = 2;
         private int endTime_ ;
         /**
          * <code>optional int32 end_time = 2;</code>
@@ -4402,7 +4372,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 sound_id = 3;
         private int soundId_ ;
         /**
          * <code>optional int32 sound_id = 3;</code>
@@ -4446,10 +4415,10 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.WhiteNoise)
     }
 
-    public interface FlashActionOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface FlashActionOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:SyncResponse.FlashAction)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional int32 red = 1;
       /**
        * <code>optional int32 red = 1;</code>
        */
@@ -4459,7 +4428,6 @@ public final class OutputProtos {
        */
       int getRed();
 
-      // optional int32 green = 2;
       /**
        * <code>optional int32 green = 2;</code>
        */
@@ -4469,7 +4437,6 @@ public final class OutputProtos {
        */
       int getGreen();
 
-      // optional int32 blue = 3;
       /**
        * <code>optional int32 blue = 3;</code>
        */
@@ -4479,7 +4446,6 @@ public final class OutputProtos {
        */
       int getBlue();
 
-      // optional int32 delay_milliseconds = 4;
       /**
        * <code>optional int32 delay_milliseconds = 4;</code>
        */
@@ -4489,7 +4455,6 @@ public final class OutputProtos {
        */
       int getDelayMilliseconds();
 
-      // optional bool fade_in = 5;
       /**
        * <code>optional bool fade_in = 5;</code>
        */
@@ -4499,7 +4464,6 @@ public final class OutputProtos {
        */
       boolean getFadeIn();
 
-      // optional bool fade_out = 6;
       /**
        * <code>optional bool fade_out = 6;</code>
        */
@@ -4509,7 +4473,6 @@ public final class OutputProtos {
        */
       boolean getFadeOut();
 
-      // optional bool rotate = 7;
       /**
        * <code>optional bool rotate = 7;</code>
        */
@@ -4519,7 +4482,6 @@ public final class OutputProtos {
        */
       boolean getRotate();
 
-      // optional int32 alpha = 8;
       /**
        * <code>optional int32 alpha = 8;</code>
        */
@@ -4533,8 +4495,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse.FlashAction}
      */
     public static final class FlashAction extends
-        com.google.protobuf.GeneratedMessage
-        implements FlashActionOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:SyncResponse.FlashAction)
+        FlashActionOrBuilder {
       // Use FlashAction.newBuilder() to construct.
       private FlashAction(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -4660,7 +4623,6 @@ public final class OutputProtos {
       }
 
       private int bitField0_;
-      // optional int32 red = 1;
       public static final int RED_FIELD_NUMBER = 1;
       private int red_;
       /**
@@ -4676,7 +4638,6 @@ public final class OutputProtos {
         return red_;
       }
 
-      // optional int32 green = 2;
       public static final int GREEN_FIELD_NUMBER = 2;
       private int green_;
       /**
@@ -4692,7 +4653,6 @@ public final class OutputProtos {
         return green_;
       }
 
-      // optional int32 blue = 3;
       public static final int BLUE_FIELD_NUMBER = 3;
       private int blue_;
       /**
@@ -4708,7 +4668,6 @@ public final class OutputProtos {
         return blue_;
       }
 
-      // optional int32 delay_milliseconds = 4;
       public static final int DELAY_MILLISECONDS_FIELD_NUMBER = 4;
       private int delayMilliseconds_;
       /**
@@ -4724,7 +4683,6 @@ public final class OutputProtos {
         return delayMilliseconds_;
       }
 
-      // optional bool fade_in = 5;
       public static final int FADE_IN_FIELD_NUMBER = 5;
       private boolean fadeIn_;
       /**
@@ -4740,7 +4698,6 @@ public final class OutputProtos {
         return fadeIn_;
       }
 
-      // optional bool fade_out = 6;
       public static final int FADE_OUT_FIELD_NUMBER = 6;
       private boolean fadeOut_;
       /**
@@ -4756,7 +4713,6 @@ public final class OutputProtos {
         return fadeOut_;
       }
 
-      // optional bool rotate = 7;
       public static final int ROTATE_FIELD_NUMBER = 7;
       private boolean rotate_;
       /**
@@ -4772,7 +4728,6 @@ public final class OutputProtos {
         return rotate_;
       }
 
-      // optional int32 alpha = 8;
       public static final int ALPHA_FIELD_NUMBER = 8;
       private int alpha_;
       /**
@@ -4801,7 +4756,8 @@ public final class OutputProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -4957,8 +4913,9 @@ public final class OutputProtos {
        * Protobuf type {@code SyncResponse.FlashAction}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:SyncResponse.FlashAction)
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FlashAction_descriptor;
@@ -5134,7 +5091,6 @@ public final class OutputProtos {
         }
         private int bitField0_;
 
-        // optional int32 red = 1;
         private int red_ ;
         /**
          * <code>optional int32 red = 1;</code>
@@ -5167,7 +5123,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 green = 2;
         private int green_ ;
         /**
          * <code>optional int32 green = 2;</code>
@@ -5200,7 +5155,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 blue = 3;
         private int blue_ ;
         /**
          * <code>optional int32 blue = 3;</code>
@@ -5233,7 +5187,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 delay_milliseconds = 4;
         private int delayMilliseconds_ ;
         /**
          * <code>optional int32 delay_milliseconds = 4;</code>
@@ -5266,7 +5219,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional bool fade_in = 5;
         private boolean fadeIn_ ;
         /**
          * <code>optional bool fade_in = 5;</code>
@@ -5299,7 +5251,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional bool fade_out = 6;
         private boolean fadeOut_ ;
         /**
          * <code>optional bool fade_out = 6;</code>
@@ -5332,7 +5283,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional bool rotate = 7;
         private boolean rotate_ ;
         /**
          * <code>optional bool rotate = 7;</code>
@@ -5365,7 +5315,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 alpha = 8;
         private int alpha_ ;
         /**
          * <code>optional int32 alpha = 8;</code>
@@ -5409,10 +5358,10 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.FlashAction)
     }
 
-    public interface LEDActionOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface LEDActionOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:SyncResponse.LEDAction)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional .SyncResponse.LEDAction.LEDActionType type = 1;
       /**
        * <code>optional .SyncResponse.LEDAction.LEDActionType type = 1;</code>
        *
@@ -5430,7 +5379,6 @@ public final class OutputProtos {
        */
       com.hello.suripu.api.output.OutputProtos.SyncResponse.LEDAction.LEDActionType getType();
 
-      // optional string url = 2;
       /**
        * <code>optional string url = 2;</code>
        *
@@ -5457,7 +5405,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getUrlBytes();
 
-      // optional uint32 color = 3;
       /**
        * <code>optional uint32 color = 3;</code>
        *
@@ -5475,7 +5422,6 @@ public final class OutputProtos {
        */
       int getColor();
 
-      // optional uint32 alt_color = 4;
       /**
        * <code>optional uint32 alt_color = 4;</code>
        *
@@ -5493,7 +5439,6 @@ public final class OutputProtos {
        */
       int getAltColor();
 
-      // optional int32 duration_seconds = 6;
       /**
        * <code>optional int32 duration_seconds = 6;</code>
        *
@@ -5515,8 +5460,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse.LEDAction}
      */
     public static final class LEDAction extends
-        com.google.protobuf.GeneratedMessage
-        implements LEDActionOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:SyncResponse.LEDAction)
+        LEDActionOrBuilder {
       // Use LEDAction.newBuilder() to construct.
       private LEDAction(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -5574,8 +5520,9 @@ public final class OutputProtos {
                 break;
               }
               case 18: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000002;
-                url_ = input.readBytes();
+                url_ = bs;
                 break;
               }
               case 24: {
@@ -5850,7 +5797,6 @@ public final class OutputProtos {
       }
 
       private int bitField0_;
-      // optional .SyncResponse.LEDAction.LEDActionType type = 1;
       public static final int TYPE_FIELD_NUMBER = 1;
       private com.hello.suripu.api.output.OutputProtos.SyncResponse.LEDAction.LEDActionType type_;
       /**
@@ -5874,7 +5820,6 @@ public final class OutputProtos {
         return type_;
       }
 
-      // optional string url = 2;
       public static final int URL_FIELD_NUMBER = 2;
       private java.lang.Object url_;
       /**
@@ -5929,7 +5874,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional uint32 color = 3;
       public static final int COLOR_FIELD_NUMBER = 3;
       private int color_;
       /**
@@ -5953,7 +5897,6 @@ public final class OutputProtos {
         return color_;
       }
 
-      // optional uint32 alt_color = 4;
       public static final int ALT_COLOR_FIELD_NUMBER = 4;
       private int altColor_;
       /**
@@ -5977,7 +5920,6 @@ public final class OutputProtos {
         return altColor_;
       }
 
-      // optional int32 duration_seconds = 6;
       public static final int DURATION_SECONDS_FIELD_NUMBER = 6;
       private int durationSeconds_;
       /**
@@ -6011,7 +5953,8 @@ public final class OutputProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -6146,8 +6089,9 @@ public final class OutputProtos {
        * Protobuf type {@code SyncResponse.LEDAction}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.LEDActionOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:SyncResponse.LEDAction)
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.LEDActionOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_LEDAction_descriptor;
@@ -6298,7 +6242,6 @@ public final class OutputProtos {
         }
         private int bitField0_;
 
-        // optional .SyncResponse.LEDAction.LEDActionType type = 1;
         private com.hello.suripu.api.output.OutputProtos.SyncResponse.LEDAction.LEDActionType type_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.LEDAction.LEDActionType.FADEIO;
         /**
          * <code>optional .SyncResponse.LEDAction.LEDActionType type = 1;</code>
@@ -6350,7 +6293,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional string url = 2;
         private java.lang.Object url_ = "";
         /**
          * <code>optional string url = 2;</code>
@@ -6372,9 +6314,12 @@ public final class OutputProtos {
         public java.lang.String getUrl() {
           java.lang.Object ref = url_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            url_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              url_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -6448,7 +6393,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional uint32 color = 3;
         private int color_ ;
         /**
          * <code>optional uint32 color = 3;</code>
@@ -6497,7 +6441,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional uint32 alt_color = 4;
         private int altColor_ ;
         /**
          * <code>optional uint32 alt_color = 4;</code>
@@ -6546,7 +6489,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional int32 duration_seconds = 6;
         private int durationSeconds_ ;
         /**
          * <code>optional int32 duration_seconds = 6;</code>
@@ -6606,10 +6548,10 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.LEDAction)
     }
 
-    public interface PillSettingsOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface PillSettingsOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:SyncResponse.PillSettings)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional string pill_id = 1;
       /**
        * <code>optional string pill_id = 1;</code>
        */
@@ -6624,7 +6566,6 @@ public final class OutputProtos {
       com.google.protobuf.ByteString
           getPillIdBytes();
 
-      // optional uint32 pill_color = 2;
       /**
        * <code>optional uint32 pill_color = 2;</code>
        */
@@ -6638,8 +6579,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse.PillSettings}
      */
     public static final class PillSettings extends
-        com.google.protobuf.GeneratedMessage
-        implements PillSettingsOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:SyncResponse.PillSettings)
+        PillSettingsOrBuilder {
       // Use PillSettings.newBuilder() to construct.
       private PillSettings(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -6686,8 +6628,9 @@ public final class OutputProtos {
                 break;
               }
               case 10: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000001;
-                pillId_ = input.readBytes();
+                pillId_ = bs;
                 break;
               }
               case 16: {
@@ -6735,7 +6678,6 @@ public final class OutputProtos {
       }
 
       private int bitField0_;
-      // optional string pill_id = 1;
       public static final int PILL_ID_FIELD_NUMBER = 1;
       private java.lang.Object pillId_;
       /**
@@ -6778,7 +6720,6 @@ public final class OutputProtos {
         }
       }
 
-      // optional uint32 pill_color = 2;
       public static final int PILL_COLOR_FIELD_NUMBER = 2;
       private int pillColor_;
       /**
@@ -6801,7 +6742,8 @@ public final class OutputProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -6915,8 +6857,9 @@ public final class OutputProtos {
        * Protobuf type {@code SyncResponse.PillSettings}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettingsOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:SyncResponse.PillSettings)
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettingsOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_PillSettings_descriptor;
@@ -7040,7 +6983,6 @@ public final class OutputProtos {
         }
         private int bitField0_;
 
-        // optional string pill_id = 1;
         private java.lang.Object pillId_ = "";
         /**
          * <code>optional string pill_id = 1;</code>
@@ -7054,9 +6996,12 @@ public final class OutputProtos {
         public java.lang.String getPillId() {
           java.lang.Object ref = pillId_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            pillId_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              pillId_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -7114,7 +7059,6 @@ public final class OutputProtos {
           return this;
         }
 
-        // optional uint32 pill_color = 2;
         private int pillColor_ ;
         /**
          * <code>optional uint32 pill_color = 2;</code>
@@ -7159,7 +7103,6 @@ public final class OutputProtos {
     }
 
     private int bitField0_;
-    // optional .SyncResponse.Alarm alarm = 6;
     public static final int ALARM_FIELD_NUMBER = 6;
     private com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm alarm_;
     /**
@@ -7205,7 +7148,6 @@ public final class OutputProtos {
       return alarm_;
     }
 
-    // optional .SyncResponse.WhiteNoise white_noise = 8;
     public static final int WHITE_NOISE_FIELD_NUMBER = 8;
     private com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise whiteNoise_;
     /**
@@ -7239,7 +7181,6 @@ public final class OutputProtos {
       return whiteNoise_;
     }
 
-    // optional bool reset_device = 10;
     public static final int RESET_DEVICE_FIELD_NUMBER = 10;
     private boolean resetDevice_;
     /**
@@ -7263,7 +7204,6 @@ public final class OutputProtos {
       return resetDevice_;
     }
 
-    // optional .SyncResponse.RoomConditions room_conditions = 12;
     public static final int ROOM_CONDITIONS_FIELD_NUMBER = 12;
     private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditions_;
     /**
@@ -7279,7 +7219,6 @@ public final class OutputProtos {
       return roomConditions_;
     }
 
-    // repeated .SyncResponse.FileDownload files = 13;
     public static final int FILES_FIELD_NUMBER = 13;
     private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> files_;
     /**
@@ -7315,7 +7254,6 @@ public final class OutputProtos {
       return files_.get(index);
     }
 
-    // optional bool reset_to_factory_fw = 14;
     public static final int RESET_TO_FACTORY_FW_FIELD_NUMBER = 14;
     private boolean resetToFactoryFw_;
     /**
@@ -7331,7 +7269,6 @@ public final class OutputProtos {
       return resetToFactoryFw_;
     }
 
-    // optional .AudioControl audio_control = 15;
     public static final int AUDIO_CONTROL_FIELD_NUMBER = 15;
     private com.hello.suripu.api.audio.AudioControlProtos.AudioControl audioControl_;
     /**
@@ -7353,7 +7290,6 @@ public final class OutputProtos {
       return audioControl_;
     }
 
-    // optional bytes mac = 18;
     public static final int MAC_FIELD_NUMBER = 18;
     private com.google.protobuf.ByteString mac_;
     /**
@@ -7379,7 +7315,6 @@ public final class OutputProtos {
       return mac_;
     }
 
-    // optional int32 batch_size = 19;
     public static final int BATCH_SIZE_FIELD_NUMBER = 19;
     private int batchSize_;
     /**
@@ -7395,7 +7330,6 @@ public final class OutputProtos {
       return batchSize_;
     }
 
-    // repeated .SyncResponse.PillSettings pill_settings = 20;
     public static final int PILL_SETTINGS_FIELD_NUMBER = 20;
     private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettings> pillSettings_;
     /**
@@ -7431,7 +7365,6 @@ public final class OutputProtos {
       return pillSettings_.get(index);
     }
 
-    // optional bool reset_mcu = 21;
     public static final int RESET_MCU_FIELD_NUMBER = 21;
     private boolean resetMcu_;
     /**
@@ -7447,7 +7380,6 @@ public final class OutputProtos {
       return resetMcu_;
     }
 
-    // optional uint32 upload_log_level = 22;
     public static final int UPLOAD_LOG_LEVEL_FIELD_NUMBER = 22;
     private int uploadLogLevel_;
     /**
@@ -7463,7 +7395,6 @@ public final class OutputProtos {
       return uploadLogLevel_;
     }
 
-    // optional uint32 pill_batch_size = 23;
     public static final int PILL_BATCH_SIZE_FIELD_NUMBER = 23;
     private int pillBatchSize_;
     /**
@@ -7479,7 +7410,6 @@ public final class OutputProtos {
       return pillBatchSize_;
     }
 
-    // optional string ring_time_ack = 24;
     public static final int RING_TIME_ACK_FIELD_NUMBER = 24;
     private java.lang.Object ringTimeAck_;
     /**
@@ -7522,7 +7452,6 @@ public final class OutputProtos {
       }
     }
 
-    // optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;
     public static final int ROOM_CONDITIONS_LIGHTS_OFF_FIELD_NUMBER = 25;
     private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditionsLightsOff_;
     /**
@@ -7538,7 +7467,6 @@ public final class OutputProtos {
       return roomConditionsLightsOff_;
     }
 
-    // optional .AudioFeaturesControl audio_features_control = 26;
     public static final int AUDIO_FEATURES_CONTROL_FIELD_NUMBER = 26;
     private com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl audioFeaturesControl_;
     /**
@@ -7593,7 +7521,8 @@ public final class OutputProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -7805,8 +7734,9 @@ public final class OutputProtos {
      * Protobuf type {@code SyncResponse}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.output.OutputProtos.SyncResponseOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:SyncResponse)
+        com.hello.suripu.api.output.OutputProtos.SyncResponseOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_descriptor;
@@ -8158,7 +8088,6 @@ public final class OutputProtos {
       }
       private int bitField0_;
 
-      // optional .SyncResponse.Alarm alarm = 6;
       private com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm alarm_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm, com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder> alarmBuilder_;
@@ -8339,7 +8268,7 @@ public final class OutputProtos {
         if (alarmBuilder_ == null) {
           alarmBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm, com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder>(
-                  alarm_,
+                  getAlarm(),
                   getParentForChildren(),
                   isClean());
           alarm_ = null;
@@ -8347,7 +8276,6 @@ public final class OutputProtos {
         return alarmBuilder_;
       }
 
-      // optional .SyncResponse.WhiteNoise white_noise = 8;
       private com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise whiteNoise_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder> whiteNoiseBuilder_;
@@ -8492,7 +8420,7 @@ public final class OutputProtos {
         if (whiteNoiseBuilder_ == null) {
           whiteNoiseBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder>(
-                  whiteNoise_,
+                  getWhiteNoise(),
                   getParentForChildren(),
                   isClean());
           whiteNoise_ = null;
@@ -8500,7 +8428,6 @@ public final class OutputProtos {
         return whiteNoiseBuilder_;
       }
 
-      // optional bool reset_device = 10;
       private boolean resetDevice_ ;
       /**
        * <code>optional bool reset_device = 10;</code>
@@ -8549,7 +8476,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional .SyncResponse.RoomConditions room_conditions = 12;
       private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditions_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
       /**
        * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
@@ -8585,7 +8511,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // repeated .SyncResponse.FileDownload files = 13;
       private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> files_ =
         java.util.Collections.emptyList();
       private void ensureFilesIsMutable() {
@@ -8727,7 +8652,8 @@ public final class OutputProtos {
           java.lang.Iterable<? extends com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> values) {
         if (filesBuilder_ == null) {
           ensureFilesIsMutable();
-          super.addAll(values, files_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, files_);
           onChanged();
         } else {
           filesBuilder_.addAllMessages(values);
@@ -8825,7 +8751,6 @@ public final class OutputProtos {
         return filesBuilder_;
       }
 
-      // optional bool reset_to_factory_fw = 14;
       private boolean resetToFactoryFw_ ;
       /**
        * <code>optional bool reset_to_factory_fw = 14;</code>
@@ -8858,7 +8783,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional .AudioControl audio_control = 15;
       private com.hello.suripu.api.audio.AudioControlProtos.AudioControl audioControl_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.audio.AudioControlProtos.AudioControl, com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder, com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder> audioControlBuilder_;
@@ -8967,7 +8891,7 @@ public final class OutputProtos {
         if (audioControlBuilder_ == null) {
           audioControlBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.audio.AudioControlProtos.AudioControl, com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder, com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder>(
-                  audioControl_,
+                  getAudioControl(),
                   getParentForChildren(),
                   isClean());
           audioControl_ = null;
@@ -8975,7 +8899,6 @@ public final class OutputProtos {
         return audioControlBuilder_;
       }
 
-      // optional bytes mac = 18;
       private com.google.protobuf.ByteString mac_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes mac = 18;</code>
@@ -9031,7 +8954,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional int32 batch_size = 19;
       private int batchSize_ ;
       /**
        * <code>optional int32 batch_size = 19;</code>
@@ -9064,7 +8986,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // repeated .SyncResponse.PillSettings pill_settings = 20;
       private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettings> pillSettings_ =
         java.util.Collections.emptyList();
       private void ensurePillSettingsIsMutable() {
@@ -9206,7 +9127,8 @@ public final class OutputProtos {
           java.lang.Iterable<? extends com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettings> values) {
         if (pillSettingsBuilder_ == null) {
           ensurePillSettingsIsMutable();
-          super.addAll(values, pillSettings_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, pillSettings_);
           onChanged();
         } else {
           pillSettingsBuilder_.addAllMessages(values);
@@ -9304,7 +9226,6 @@ public final class OutputProtos {
         return pillSettingsBuilder_;
       }
 
-      // optional bool reset_mcu = 21;
       private boolean resetMcu_ ;
       /**
        * <code>optional bool reset_mcu = 21;</code>
@@ -9337,7 +9258,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional uint32 upload_log_level = 22;
       private int uploadLogLevel_ ;
       /**
        * <code>optional uint32 upload_log_level = 22;</code>
@@ -9370,7 +9290,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional uint32 pill_batch_size = 23;
       private int pillBatchSize_ ;
       /**
        * <code>optional uint32 pill_batch_size = 23;</code>
@@ -9403,7 +9322,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional string ring_time_ack = 24;
       private java.lang.Object ringTimeAck_ = "";
       /**
        * <code>optional string ring_time_ack = 24;</code>
@@ -9417,9 +9335,12 @@ public final class OutputProtos {
       public java.lang.String getRingTimeAck() {
         java.lang.Object ref = ringTimeAck_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          ringTimeAck_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            ringTimeAck_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -9477,7 +9398,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;
       private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditionsLightsOff_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
       /**
        * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
@@ -9513,7 +9433,6 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional .AudioFeaturesControl audio_features_control = 26;
       private com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl audioFeaturesControl_ = com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl, com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl.Builder, com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControlOrBuilder> audioFeaturesControlBuilder_;
@@ -9658,7 +9577,7 @@ public final class OutputProtos {
         if (audioFeaturesControlBuilder_ == null) {
           audioFeaturesControlBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl, com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl.Builder, com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControlOrBuilder>(
-                  audioFeaturesControl_,
+                  getAudioFeaturesControl(),
                   getParentForChildren(),
                   isClean());
           audioFeaturesControl_ = null;
@@ -9677,10 +9596,10 @@ public final class OutputProtos {
     // @@protoc_insertion_point(class_scope:SyncResponse)
   }
 
-  public interface BatchedPillSettingsOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface BatchedPillSettingsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:BatchedPillSettings)
+      com.google.protobuf.MessageOrBuilder {
 
-    // repeated .SyncResponse.PillSettings pill_settings = 1;
     /**
      * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
      */
@@ -9709,8 +9628,9 @@ public final class OutputProtos {
    * Protobuf type {@code BatchedPillSettings}
    */
   public static final class BatchedPillSettings extends
-      com.google.protobuf.GeneratedMessage
-      implements BatchedPillSettingsOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:BatchedPillSettings)
+      BatchedPillSettingsOrBuilder {
     // Use BatchedPillSettings.newBuilder() to construct.
     private BatchedPillSettings(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -9806,7 +9726,6 @@ public final class OutputProtos {
       return PARSER;
     }
 
-    // repeated .SyncResponse.PillSettings pill_settings = 1;
     public static final int PILL_SETTINGS_FIELD_NUMBER = 1;
     private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettings> pillSettings_;
     /**
@@ -9848,7 +9767,8 @@ public final class OutputProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -9955,8 +9875,9 @@ public final class OutputProtos {
      * Protobuf type {@code BatchedPillSettings}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.output.OutputProtos.BatchedPillSettingsOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:BatchedPillSettings)
+        com.hello.suripu.api.output.OutputProtos.BatchedPillSettingsOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.output.OutputProtos.internal_static_BatchedPillSettings_descriptor;
@@ -10100,7 +10021,6 @@ public final class OutputProtos {
       }
       private int bitField0_;
 
-      // repeated .SyncResponse.PillSettings pill_settings = 1;
       private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettings> pillSettings_ =
         java.util.Collections.emptyList();
       private void ensurePillSettingsIsMutable() {
@@ -10242,7 +10162,8 @@ public final class OutputProtos {
           java.lang.Iterable<? extends com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettings> values) {
         if (pillSettingsBuilder_ == null) {
           ensurePillSettingsIsMutable();
-          super.addAll(values, pillSettings_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, pillSettings_);
           onChanged();
         } else {
           pillSettingsBuilder_.addAllMessages(values);
@@ -10351,47 +10272,47 @@ public final class OutputProtos {
     // @@protoc_insertion_point(class_scope:BatchedPillSettings)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_FileDownload_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_FileDownload_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_Alarm_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_Alarm_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_PairingAction_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_PairingAction_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_WhiteNoise_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_WhiteNoise_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_FlashAction_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_FlashAction_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_LEDAction_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_LEDAction_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SyncResponse_PillSettings_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_PillSettings_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_BatchedPillSettings_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -10456,73 +10377,75 @@ public final class OutputProtos {
       "om.hello.suripu.api.outputB\014OutputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_SyncResponse_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_SyncResponse_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_descriptor,
-              new java.lang.String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "Mac", "BatchSize", "PillSettings", "ResetMcu", "UploadLogLevel", "PillBatchSize", "RingTimeAck", "RoomConditionsLightsOff", "AudioFeaturesControl", });
-          internal_static_SyncResponse_FileDownload_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(0);
-          internal_static_SyncResponse_FileDownload_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_FileDownload_descriptor,
-              new java.lang.String[] { "Host", "Url", "CopyToSerialFlash", "ResetNetworkProcessor", "ResetApplicationProcessor", "SerialFlashFilename", "SerialFlashPath", "SdCardFilename", "SdCardPath", "Sha1", "FileSize", });
-          internal_static_SyncResponse_Alarm_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(1);
-          internal_static_SyncResponse_Alarm_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_Alarm_descriptor,
-              new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", "RingtonePath", });
-          internal_static_SyncResponse_PairingAction_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(2);
-          internal_static_SyncResponse_PairingAction_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_PairingAction_descriptor,
-              new java.lang.String[] { "Ssid", "Type", });
-          internal_static_SyncResponse_WhiteNoise_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(3);
-          internal_static_SyncResponse_WhiteNoise_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_WhiteNoise_descriptor,
-              new java.lang.String[] { "StartTime", "EndTime", "SoundId", });
-          internal_static_SyncResponse_FlashAction_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(4);
-          internal_static_SyncResponse_FlashAction_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_FlashAction_descriptor,
-              new java.lang.String[] { "Red", "Green", "Blue", "DelayMilliseconds", "FadeIn", "FadeOut", "Rotate", "Alpha", });
-          internal_static_SyncResponse_LEDAction_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(5);
-          internal_static_SyncResponse_LEDAction_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_LEDAction_descriptor,
-              new java.lang.String[] { "Type", "Url", "Color", "AltColor", "DurationSeconds", });
-          internal_static_SyncResponse_PillSettings_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(6);
-          internal_static_SyncResponse_PillSettings_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_PillSettings_descriptor,
-              new java.lang.String[] { "PillId", "PillColor", });
-          internal_static_BatchedPillSettings_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_BatchedPillSettings_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_BatchedPillSettings_descriptor,
-              new java.lang.String[] { "PillSettings", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           com.hello.suripu.api.audio.AudioControlProtos.getDescriptor(),
           com.hello.suripu.api.audio.AudioFeaturesControlProtos.getDescriptor(),
         }, assigner);
+    internal_static_SyncResponse_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_SyncResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_descriptor,
+        new java.lang.String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "Mac", "BatchSize", "PillSettings", "ResetMcu", "UploadLogLevel", "PillBatchSize", "RingTimeAck", "RoomConditionsLightsOff", "AudioFeaturesControl", });
+    internal_static_SyncResponse_FileDownload_descriptor =
+      internal_static_SyncResponse_descriptor.getNestedTypes().get(0);
+    internal_static_SyncResponse_FileDownload_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_FileDownload_descriptor,
+        new java.lang.String[] { "Host", "Url", "CopyToSerialFlash", "ResetNetworkProcessor", "ResetApplicationProcessor", "SerialFlashFilename", "SerialFlashPath", "SdCardFilename", "SdCardPath", "Sha1", "FileSize", });
+    internal_static_SyncResponse_Alarm_descriptor =
+      internal_static_SyncResponse_descriptor.getNestedTypes().get(1);
+    internal_static_SyncResponse_Alarm_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_Alarm_descriptor,
+        new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", "RingtonePath", });
+    internal_static_SyncResponse_PairingAction_descriptor =
+      internal_static_SyncResponse_descriptor.getNestedTypes().get(2);
+    internal_static_SyncResponse_PairingAction_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_PairingAction_descriptor,
+        new java.lang.String[] { "Ssid", "Type", });
+    internal_static_SyncResponse_WhiteNoise_descriptor =
+      internal_static_SyncResponse_descriptor.getNestedTypes().get(3);
+    internal_static_SyncResponse_WhiteNoise_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_WhiteNoise_descriptor,
+        new java.lang.String[] { "StartTime", "EndTime", "SoundId", });
+    internal_static_SyncResponse_FlashAction_descriptor =
+      internal_static_SyncResponse_descriptor.getNestedTypes().get(4);
+    internal_static_SyncResponse_FlashAction_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_FlashAction_descriptor,
+        new java.lang.String[] { "Red", "Green", "Blue", "DelayMilliseconds", "FadeIn", "FadeOut", "Rotate", "Alpha", });
+    internal_static_SyncResponse_LEDAction_descriptor =
+      internal_static_SyncResponse_descriptor.getNestedTypes().get(5);
+    internal_static_SyncResponse_LEDAction_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_LEDAction_descriptor,
+        new java.lang.String[] { "Type", "Url", "Color", "AltColor", "DurationSeconds", });
+    internal_static_SyncResponse_PillSettings_descriptor =
+      internal_static_SyncResponse_descriptor.getNestedTypes().get(6);
+    internal_static_SyncResponse_PillSettings_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SyncResponse_PillSettings_descriptor,
+        new java.lang.String[] { "PillId", "PillColor", });
+    internal_static_BatchedPillSettings_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_BatchedPillSettings_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_BatchedPillSettings_descriptor,
+        new java.lang.String[] { "PillSettings", });
+    com.hello.suripu.api.audio.AudioControlProtos.getDescriptor();
+    com.hello.suripu.api.audio.AudioFeaturesControlProtos.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
