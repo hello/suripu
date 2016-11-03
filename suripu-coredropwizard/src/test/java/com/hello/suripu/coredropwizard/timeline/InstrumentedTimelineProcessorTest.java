@@ -115,9 +115,9 @@ public class InstrumentedTimelineProcessorTest {
     }
 
 
-    final public static List<LoggingProtos.TimelineLog> getLogsFromTimeline(InstrumentedTimelineProcessor timelineProcessor) {
+    final public static List<LoggingProtos.TimelineLog> getLogsFromTimeline(InstrumentedTimelineProcessor timelineProcessor, final Long accountId, final DateTime dateTime, final) {
 
-        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(accountId,dateTime,Optional.<TimelineFeedback>absent());
 
         TestCase.assertTrue(timelineResult.timelines.size() > 0);
         TestCase.assertTrue(timelineResult.logV2.isPresent());
@@ -142,7 +142,7 @@ public class InstrumentedTimelineProcessorTest {
     public void testTimelineProcessorSimple() {
 
         {
-            final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline(instrumentedTimelineProcessor);
+            final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline(instrumentedTimelineProcessor, 0L, DateTime.now());
 
             TestCase.assertTrue(logs.size() >= 2);
 
@@ -150,17 +150,38 @@ public class InstrumentedTimelineProcessorTest {
             TestCase.assertTrue(logs.get(0).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.HMM));
             TestCase.assertTrue(logs.get(1).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
         }
-
+    
         features.put(FeatureFlipper.ONLINE_HMM_ALGORITHM,true);
         features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
 
         {
-            final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline(instrumentedTimelineProcessor);
+            final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline(instrumentedTimelineProcessor, 0L, DateTime.now());
             TestCase.assertTrue(logs.size() >= 3);
 
             TestCase.assertTrue(logs.get(0).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.ONLINE_HMM));
             TestCase.assertTrue(logs.get(1).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.HMM));
             TestCase.assertTrue(logs.get(2).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
+        }
+
+    }
+
+
+    @Test
+    public void testTimelineProcessorSimple2() {
+        final DateTime targetDate = DateTime.parse("2016-10-29");
+        final long accountId = 62801L;
+
+
+        features.put(FeatureFlipper.ONLINE_HMM_ALGORITHM,true);
+        features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
+
+        {
+            final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline(instrumentedTimelineProcessor, accountId, targetDate);
+            TestCase.assertTrue(logs.size() >= 3);
+
+            //TestCase.assertTrue(logs.get(0).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.ONLINE_HMM));
+            //TestCase.assertTrue(logs.get(1).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.HMM));
+            //TestCase.assertTrue(logs.get(2).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
         }
 
     }
