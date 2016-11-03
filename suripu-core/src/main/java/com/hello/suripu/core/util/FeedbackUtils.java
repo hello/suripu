@@ -176,7 +176,7 @@ public class FeedbackUtils {
             final Optional<DateTime> optionalDateTime = convertFeedbackToDateTimeByNewTime(timelineFeedback, 0);
 
             if(optionalDateTime.isPresent()) {
-                final int offset= timeZoneOffsetMap.getFromDateTime(optionalDateTime.get());
+                final int offset= timeZoneOffsetMap.getOffsetWithDefaultAsZero(optionalDateTime.get().getMillis());
                 final DateTime dateTime = optionalDateTime.get().minusMillis(offset);
                 /* turn into event */
                 final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, dateTime, offset);

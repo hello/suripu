@@ -40,7 +40,7 @@ public class TimelineRefactored {
 
         for(int i = 0; i < numberOfMinutes.getMinutes(); i++) {
             final DateTime key = start.plusMinutes(i);
-            final Integer offset = timeZoneOffsetMap.get(key.getMillis());
+            final Integer offset = timeZoneOffsetMap.getOffsetWithDefaultAsZero(key.getMillis());
             LOGGER.trace("Inserting {}", key);
             map.put(key.getMillis(), new SleepingEvent(key.getMillis(), key.plusMinutes(1).getMillis(), offset, 100));
         }
