@@ -218,7 +218,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return TimelineLog.DEFAULT_TEST_GROUP;
     }
 
-    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId,final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult) {
+    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId,final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
         //return original if not enabled
         if (!this.hasInBedSearchEnabled(accountId)) {
@@ -260,14 +260,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> origEvents = origResult.mainEvents.values().asList();
 
         final List<Event> newEvents = Lists.newArrayList();
-        newEvents.add(inBedEvent);
+        newEvents.add(timeZoneOffsetMap.getEventWithCorrectOffset(inBedEvent));
 
         for (final Event event : origEvents) {
             if (event.getType().equals(Event.Type.IN_BED)) {
                 continue;
             }
 
-            newEvents.add(event);
+            newEvents.add(timeZoneOffsetMap.getEventWithCorrectOffset(event));
         }
 
         //sanity check
@@ -390,8 +390,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         //get result, and refine (optional feature) in-bed time for online HMM
-        final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get());
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getTimeZoneHistory(accountId, targetDate));
 
+        final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get(), timeZoneOffsetMap);
         List<Event> extraEvents = result.extraEvents;
 
             /* FEATURE FLIP EXTRA EVENTS */
@@ -399,7 +400,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             extraEvents = Collections.EMPTY_LIST;
         }
 
-        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getTimeZoneHistory(accountId, targetDate));
+
 
 
         final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneOffsetMap, result, sensorData);
@@ -442,7 +443,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
+    protected TimelineAlgorithmResult remapEventOffset(final TimelineAlgorithmResult result, final TimeZoneOffsetMap timeZoneOffsetMap){
 
+
+        return result;
+    }
 
     protected ImmutableList<TrackerMotion> filterPillPairingMotions(final ImmutableList<TrackerMotion> motions, final long accountId) {
         final List<DateTime> pairTimes =  Lists.newArrayList();
@@ -598,12 +603,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         Optional<Event> wake= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.WAKE_UP));
         Optional<Event> outOfBed= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
 
-        if (inBed.isPresent() && sleep.isPresent() && wake.isPresent() && outOfBed.isPresent()){
-            inBed = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(inBed.get()));
-            sleep = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(sleep.get()));
-            wake = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(wake.get()));
-            outOfBed = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(outOfBed.get()));
-        }
         //CREATE SLEEP MOTION EVENTS
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
@@ -686,14 +685,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         /* add main events  */
-        for (Event event : reprocessedEvents.mainEvents.values()) {
-            event = timeZoneOffsetMap.getEventWithCorrectOffset(event);
+        for (final Event event : reprocessedEvents.mainEvents.values()) {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
         /*  add "additional" events -- which is wake/sleep/get up to pee events */
-        for (Event event : reprocessedEvents.extraEvents) {
-            event = timeZoneOffsetMap.getEventWithCorrectOffset(event);
+        for (final Event event : reprocessedEvents.extraEvents) {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
