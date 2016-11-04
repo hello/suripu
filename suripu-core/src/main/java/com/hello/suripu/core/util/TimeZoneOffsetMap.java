@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import org.joda.time.DateTime;
@@ -138,6 +139,12 @@ public class TimeZoneOffsetMap {
         return DateTimeZone.forID(entry.getValue().timeZoneId).convertLocalToUTC(localTime,false);
 
 
+    }
+    public Event getEventWithCorrectOffset(final Event event){
+        final int offset = getOffsetWithDefaultAsZero(event.getStartTimestamp());
+
+        final Event eventWithCorrectoffset = Event.createFromType(event.getType(), event.getStartTimestamp(), event.getEndTimestamp(), offset, event.getDescription(), event.getSoundInfo(), event.getSleepDepth());
+        return eventWithCorrectoffset;
     }
 
 }

@@ -584,27 +584,26 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
-        final int intialOffset = trackerMotions.get(0).offsetMillis;
-        final Long startTimeUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(23).minusMillis(intialOffset).getMillis();
-        final Long endTimeUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(4).minusMillis(intialOffset).getMillis();
 
         //MOVE EVENTS BASED ON FEEDBACK
         FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
-
         //removed FF  TIMELINE_EVENT_ORDER_ENFORCEMENT - at 100 percent
         reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, timeZoneOffsetMap);
 
-
-
         //GET SPECIFIC EVENTS
-        final Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
-        final Optional<Event> sleep = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.SLEEP));
-        final Optional<Event> wake = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.WAKE_UP));
-        final Optional<Event> outOfBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
+        Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
+        Optional<Event> sleep = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.SLEEP));
+        Optional<Event> wake= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.WAKE_UP));
+        Optional<Event> outOfBed= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
 
-
+        if (inBed.isPresent() && sleep.isPresent() && wake.isPresent() && outOfBed.isPresent()){
+            inBed = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(inBed.get()));
+            sleep = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(sleep.get()));
+            wake = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(wake.get()));
+            outOfBed = Optional.of(timeZoneOffsetMap.getEventWithCorrectOffset(outOfBed.get()));
+        }
         //CREATE SLEEP MOTION EVENTS
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
@@ -687,12 +686,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         /* add main events  */
-        for (final Event event : reprocessedEvents.mainEvents.values()) {
+        for (Event event : reprocessedEvents.mainEvents.values()) {
+            event = timeZoneOffsetMap.getEventWithCorrectOffset(event);
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
         /*  add "additional" events -- which is wake/sleep/get up to pee events */
-        for (final Event event : reprocessedEvents.extraEvents) {
+        for (Event event : reprocessedEvents.extraEvents) {
+            event = timeZoneOffsetMap.getEventWithCorrectOffset(event);
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
