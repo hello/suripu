@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Device;
+import com.hello.suripu.core.models.device.v2.Sense;
 import com.hello.suripu.core.util.calibration.SenseOneFiveDataConversion;
 import org.junit.Test;
 
@@ -211,12 +212,34 @@ public class SenseOneFiveDataConversionTest {
     }
 
     @Test
+    public void testVOC_two() {
+
+        List<Integer> sense15tvoc_raw = Lists.newArrayList(3000, 3500, 4000, 5000);
+        for (final int tvoc_raw : sense15tvoc_raw) {
+            final float mugMcube = SenseOneFiveDataConversion.convertRawToVOC(tvoc_raw);
+            assertThat(mugMcube < 4000, is(Boolean.TRUE));
+            assertThat(mugMcube > 2500, is(Boolean.TRUE));
+        }
+    }
+
+    @Test
     public void testCO2_one() throws IOException {
 
         final List<Integer> sense15co2_raw = readSenseData("fixtures/calibration/sense15co2_raw.csv", "sense 1.5");
         for (final int co2_raw : sense15co2_raw) {
             final float ppm = SenseOneFiveDataConversion.convertRawToCO2(co2_raw);
             assertThat(ppm < ALERT_CO2_HIGH, is(Boolean.TRUE));
+        }
+    }
+
+    @Test
+    public void testCO2_two() {
+
+        List<Integer> sense15co2_raw = Lists.newArrayList(1800, 2000, 2500, 5000);
+        for (final int co2_raw : sense15co2_raw) {
+            final float ppm = SenseOneFiveDataConversion.convertRawToCO2(co2_raw);
+            assertThat(ppm < 2000, is(Boolean.TRUE));
+            assertThat(ppm > 1600, is(Boolean.TRUE));
         }
     }
 
@@ -354,6 +377,25 @@ public class SenseOneFiveDataConversionTest {
 
     }
 
+    @Test
+    public void testAudioConvert_one() throws IOException {
+        final float AUDIOMETER_GOLDSTANDARD_MIN = 50;
+        final float AUDIOMETER_GOLDSTANDARD_MAX = 80;
+        final float MAX_ERROR_RATE = 0.10f;
+
+        int errorCount = 0;
+
+        final List<Integer> audioAPBGData = readSenseData("fixtures/calibration/sense15audio_apbg_60db.csv", "sense 1.5");
+        for (final Integer datum : audioAPBGData) {
+            final float db = SenseOneFiveDataConversion.convertRawAudioToDb(datum);
+            if (db > AUDIOMETER_GOLDSTANDARD_MAX || db < AUDIOMETER_GOLDSTANDARD_MIN) {
+                errorCount += 1;
+            }
+        }
+
+        final float errorRate = (float) errorCount / audioAPBGData.size();
+        assertThat( errorRate < MAX_ERROR_RATE, is(Boolean.TRUE));
+    }
 
     @Test
     public void testNumerical_random() {
@@ -384,6 +426,7 @@ public class SenseOneFiveDataConversionTest {
             SenseOneFiveDataConversion.convertRawToCelsius(int1, Optional.of(int2));
             SenseOneFiveDataConversion.getTempCalibration(int1, int2);
             SenseOneFiveDataConversion.convertRawToHumidity(int1);
+            SenseOneFiveDataConversion.convertRawAudioToDb(int1);
 
         }
 
