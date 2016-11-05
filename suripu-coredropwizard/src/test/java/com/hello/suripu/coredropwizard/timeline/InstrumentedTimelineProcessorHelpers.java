@@ -20,6 +20,7 @@ import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.Account;
@@ -28,6 +29,7 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
@@ -37,9 +39,11 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.device.v2.Sense;
+import com.hello.suripu.core.util.CSVLoader;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import org.joda.time.DateTime;
@@ -48,6 +52,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,11 +65,17 @@ import java.util.UUID;
 public class InstrumentedTimelineProcessorHelpers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessorHelpers.class);
+    private static long ACCOUNT_ID_DST = 62801L;
 
     final public PillDataReadDAO pillDataReadDAO = new PillDataReadDAO() {
         @Override
         public ImmutableList<TrackerMotion> getBetweenLocalUTC(long accountId, DateTime startLocalTime, DateTime endLocalTime) {
             // from onlineHmmtest getTypicalDayofPill
+            if (accountId == ACCOUNT_ID_DST){
+                //get from dst germany
+                final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv");
+                return ImmutableList.copyOf(trackerMotions);
+            }
             final int tzOffset = 0;
             final List<TrackerMotion> trackerMotions = Lists.newArrayList();
             final long tstart = startLocalTime.withZone(DateTimeZone.UTC).getMillis();
@@ -101,6 +112,16 @@ public class InstrumentedTimelineProcessorHelpers {
                 int slotDurationInMinutes, Integer missingDataDefaultValue, com.google.common.base.Optional<Device.Color> color,
                 com.google.common.base.Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy) {
 
+
+            if (accountId == ACCOUNT_ID_DST){
+                final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+                final List<Sample> light = CSVLoader.loadSensorDataFromCSV("fixtures/light_2016_10_29_dst.csv");
+                final List<Sample> sound =  CSVLoader.loadSensorDataFromCSV("fixtures/sound_2016_10_29_dst.csv");
+                allSensorSampleList.add(Sensor.LIGHT, light);
+                allSensorSampleList.add(Sensor.SOUND_PEAK_ENERGY, sound);
+                allSensorSampleList.add(Sensor.SOUND, sound);
+                return allSensorSampleList;
+            }
             // from OnlineHmmTest getTypicalDayOfSense
             final DateTime startLocalTime = new DateTime(queryStartTimestampInUTC).withZone(DateTimeZone.UTC);
             final DateTime endLocalTime  = new DateTime(queryEndTimestampInUTC).withZone(DateTimeZone.UTC);
@@ -153,6 +174,12 @@ public class InstrumentedTimelineProcessorHelpers {
     final public RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB = new RingTimeHistoryReadDAO() {
         @Override
         public List<RingTime> getRingTimesBetween(String senseId, Long accountId, DateTime startTime, DateTime endTime) {
+            if (accountId == ACCOUNT_ID_DST){
+                final List<RingTime> ringTimes = new ArrayList<>();
+                final RingTime ringTime = new RingTime(1477828740000L, 1477828800000L, 0, true);
+                ringTimes.add(ringTime);
+                return ringTimes;
+            }
             return null;
         }
     };
@@ -160,6 +187,15 @@ public class InstrumentedTimelineProcessorHelpers {
     final public FeedbackReadDAO feedbackDAO = new FeedbackReadDAO() {
         @Override
         public ImmutableList<TimelineFeedback> getCorrectedForNight(Long accountId,DateTime dateOfNight) {
+            if (accountId == ACCOUNT_ID_DST){
+                final TimelineFeedback feedback = TimelineFeedback.create("2016-10-29","08:30","08:30", Event.Type.WAKE_UP.name());
+
+                final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
+                timelineFeedbacks.add(feedback);
+
+                return ImmutableList.copyOf(timelineFeedbacks);
+
+            }
             return null;
         }
 
@@ -235,6 +271,40 @@ public class InstrumentedTimelineProcessorHelpers {
         public ImmutableList<AggregateSleepStats> getBatchStats(Long accountId, String startDate, String endDate) {
             return null;
         }
+    };
+
+    final public TimeZoneHistoryDAO timeZoneHistoryDAO= new TimeZoneHistoryDAO(){
+        @Override
+        public Optional<TimeZoneHistory> updateTimeZone(final long accountId, final DateTime updatedTime, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
+            return null;
+        }
+        @Override
+        public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start){
+            if (accountId == ACCOUNT_ID_DST){
+                final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(1470332074000L ,3600000, "Europe/Berlin");
+                final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
+                timeZoneHistoryList.add(timeZoneHistory);
+                return timeZoneHistoryList;
+            }
+            return Collections.emptyList();
+        }
+        @Override
+        public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end){
+            return null;
+        }
+        @Override
+        public  List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end, int limit){
+            return null;
+        }
+        @Override
+        public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
+            return null;
+        }
+        @Override
+        public Map<DateTime, TimeZoneHistory> getAllTimeZones(final long accountId){
+            return null;
+        }
+
     };
 
     final public SenseColorDAO senseColorDAO = new SenseColorDAO() {
@@ -388,7 +458,7 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId) {
-            return null;
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 
         @Override

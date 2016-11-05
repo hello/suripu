@@ -23,12 +23,6 @@ public class FeatureFlippedProcessor {
         return (active) ? -1 : 0;
     }
 
-    protected Boolean hasAlarmInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.ALARM_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
-    }
-    protected Boolean hasSoundInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
-    }
     protected Boolean hasEnvironmentInTimelineScore(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, Collections.EMPTY_LIST);
     }
@@ -88,10 +82,6 @@ public class FeatureFlippedProcessor {
 
     protected Boolean hasCalibrationEnabled(final String senseId) {
         return featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasTimelineOrderEnforcement(final long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasInvalidSleepScoreFromFeedbackChecking(final long accountId) {
