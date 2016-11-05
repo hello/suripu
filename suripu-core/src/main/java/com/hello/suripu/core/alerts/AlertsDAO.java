@@ -18,10 +18,13 @@ public interface AlertsDAO {
     List<Alert> since(@Bind("account_id") Long accountId, @Bind("ts") DateTime ts);
 
     @SingleValueResult(Alert.class)
-    @SqlQuery("SELECT * FROM alerts where account_id= :account_id order by id desc limit 1;")
-    Optional<Alert> mostRecent(@Bind("account_id") Long accountId);
+    @SqlQuery("SELECT * FROM alerts where account_id= :account_id and seen=false order by id desc limit 1;")
+    Optional<Alert> mostRecentNotSeen(@Bind("account_id") Long accountId);
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO alerts (account_id, title, body, created_at) VALUES(:account_id,:title, :body, :created_at);")
     long insert(@BindAlert Alert alert);
+
+    @SqlUpdate("UPDATE alerts set seen=true where id = :id")
+    void seen(@Bind("id") Long id);
 }

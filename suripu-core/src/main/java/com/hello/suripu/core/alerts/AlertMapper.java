@@ -11,6 +11,12 @@ import java.sql.SQLException;
 public class AlertMapper implements ResultSetMapper<Alert> {
     @Override
     public Alert map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-        return Alert.create(r.getLong("account_id"), r.getString("title"), r.getString("body"), new DateTime(r.getTimestamp("created_at"), DateTimeZone.UTC));
+        return Alert.create(
+                r.getLong("id"),
+                r.getLong("account_id"),
+                r.getString("title"),
+                r.getString("body"),
+                new DateTime(r.getTimestamp("created_at"), DateTimeZone.UTC)
+        );
     }
 }
