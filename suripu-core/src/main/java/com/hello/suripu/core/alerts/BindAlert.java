@@ -21,7 +21,7 @@ public @interface BindAlert{
             return new Binder<BindAlert, Alert>() {
                 public void bind(SQLStatement q, BindAlert bind, Alert arg) {
 
-                    q.bind("account_id", arg.accountId());
+                    q.bind("account_id", arg.accountId);
                     q.bind("created_at", arg.createdAt);
                     q.bind("title", arg.title);
                     q.bind("body", arg.body);

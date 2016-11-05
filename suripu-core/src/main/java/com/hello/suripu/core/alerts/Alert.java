@@ -1,5 +1,6 @@
 package com.hello.suripu.core.alerts;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
 public class Alert {
@@ -20,16 +21,13 @@ public class Alert {
         return new Alert(accountId, title, body, createdAt);
     }
 
+    @JsonProperty("title")
     public String title() {
         return title;
     }
 
-    public String text() {
+    @JsonProperty("body")
+    public String body() {
         return body;
     }
-
-    public Long accountId() {
-        return accountId;
-    }
-
 }
