@@ -50,7 +50,8 @@ public enum OAuthScope {
     PROFILE_PHOTO_UPLOAD(36),
     SPEECH_COMMAND(37),
     EXTERNAL_APPLICATION_READ(38),
-    EXTERNAL_APPLICATION_WRITE(39);
+    EXTERNAL_APPLICATION_WRITE(39),
+    ALERTS_READ(40);
 
     private int value;
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuthScope.class);
