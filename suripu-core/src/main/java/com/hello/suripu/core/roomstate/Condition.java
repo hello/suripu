@@ -5,7 +5,8 @@ public enum Condition {
     IDEAL(1),
     WARNING(2),
     ALERT(3),
-    IDEAL_EXCLUDING_LIGHT(4);
+    IDEAL_EXCLUDING_LIGHT(4),
+    CALIBRATING(5);
 
     private final int value;
 
