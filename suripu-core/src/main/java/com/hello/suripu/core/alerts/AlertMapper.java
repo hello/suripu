@@ -11,7 +11,7 @@ import java.sql.SQLException;
 public class AlertMapper implements ResultSetMapper<Alert> {
     @Override
     public Alert map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-        return Alert.create(
+        return Alert.unreachable(
                 r.getLong("id"),
                 r.getLong("account_id"),
                 r.getString("title"),

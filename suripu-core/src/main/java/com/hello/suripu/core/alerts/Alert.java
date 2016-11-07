@@ -10,18 +10,24 @@ public class Alert {
     final Long accountId;
     final String title;
     final String body;
+    final AlertCategory category;
     final DateTime createdAt;
 
-    private Alert(Long id, Long accountId, String title, String body, final DateTime createdAt) {
+    private Alert(final Long id, final Long accountId, final String title, final String body, final AlertCategory category, final DateTime createdAt) {
         this.id = id;
         this.accountId = accountId;
         this.title = title;
         this.body = body;
+        this.category = category;
         this.createdAt = createdAt;
     }
 
-    public static Alert create(Long id, Long accountId, String title, String body, final DateTime createdAt) {
-        return new Alert(id, accountId, title, body, createdAt);
+    public static Alert create(Long id, Long accountId, String title, String body, final AlertCategory category, final DateTime createdAt) {
+        return new Alert(id, accountId, title, body, category,createdAt);
+    }
+
+    public static Alert unreachable(Long id, Long accountId, String title, String body, final DateTime createdAt) {
+        return new Alert(id, accountId, title, body, AlertCategory.EXPANSION_UNREACHABLE,createdAt);
     }
 
     @JsonProperty("title")
@@ -32,6 +38,12 @@ public class Alert {
     @JsonProperty("body")
     public String body() {
         return body;
+    }
+
+
+    @JsonProperty("category")
+    public AlertCategory category() {
+        return category;
     }
 
     @JsonIgnore
