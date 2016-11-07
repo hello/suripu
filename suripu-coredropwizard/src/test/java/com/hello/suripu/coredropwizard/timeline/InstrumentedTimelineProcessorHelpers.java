@@ -174,9 +174,9 @@ public class InstrumentedTimelineProcessorHelpers {
     final public RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB = new RingTimeHistoryReadDAO() {
         @Override
         public List<RingTime> getRingTimesBetween(String senseId, Long accountId, DateTime startTime, DateTime endTime) {
-            if (accountId == ACCOUNT_ID_DST){
+            if (accountId == ACCOUNT_ID_DST && startTime.getMillis() < 1477817940000L && endTime.getMillis() > 1477817940000L ){
                 final List<RingTime> ringTimes = new ArrayList<>();
-                final RingTime ringTime = new RingTime(1477828740000L, 1477828800000L, 0, true);
+                final RingTime ringTime = new RingTime(1477817940000L, 1477818000000L, 0, true);
                 ringTimes.add(ringTime);
                 return ringTimes;
             }
@@ -458,6 +458,12 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId) {
+            if (accountId == ACCOUNT_ID_DST){
+                final DeviceAccountPair deviceAccountPair = new DeviceAccountPair(accountId,0L, "foobars",DateTime.now().minusMonths(1));
+                final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<>();
+                deviceAccountPairs.add(deviceAccountPair);
+                return ImmutableList.copyOf(deviceAccountPairs);
+            }
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 

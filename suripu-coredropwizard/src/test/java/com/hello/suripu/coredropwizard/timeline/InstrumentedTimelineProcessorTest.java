@@ -11,6 +11,7 @@ import com.hello.suripu.core.db.HistoricalPairingDAO;
 import com.hello.suripu.core.db.PairingDAO;
 import com.hello.suripu.core.db.SenseDataDAODynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepSegment;
@@ -173,9 +174,16 @@ public class InstrumentedTimelineProcessorTest {
 
     @Test
     public void testTimelineWithDayLightSavings() {
-        final DateTime targetDate = DateTime.parse("2016-10-29");
         final String timeZoneId = "Europe/Berlin";
+        final DateTime targetDate = DateTime.parse("2016-10-29").withZone(DateTimeZone.forID(timeZoneId));
+
         final long accountId = 62801L;
+        boolean inBedEvent = false;
+        boolean asleepEvent = false;
+        boolean wakeEvent = false;
+        boolean outOfBedEvent = false;
+        boolean alarmEvent = false;
+
         features.put(FeatureFlipper.ONLINE_HMM_ALGORITHM,true);
         features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
         FeedbackReadDAO feedbackReadDAO = helpers.feedbackDAO;
@@ -185,10 +193,31 @@ public class InstrumentedTimelineProcessorTest {
         for (final SleepSegment segment: timelineResult.timelines.get(0).events) {
             final int offset = segment.getOffsetMillis();
             final long timeUTC = segment.getTimestamp();
+            final Event.Type eventType = segment.getEvent().getType();
+            switch (eventType){
+                case IN_BED:
+                    inBedEvent = true;
+                    continue;
+                case SLEEP:
+                    asleepEvent = true;
+                    continue;
+                case WAKE_UP:
+                    wakeEvent = true;
+                    continue;
+                case OUT_OF_BED:
+                    outOfBedEvent = true;
+                    continue;
+                case ALARM:
+                    alarmEvent = true;
+                    continue;
 
+            }
             TestCase.assertTrue(offset == DateTimeZone.forID(timeZoneId).getOffset(timeUTC));
         }
-
+        TestCase.assertTrue(inBedEvent);
+        TestCase.assertTrue(outOfBedEvent);
+        TestCase.assertTrue(asleepEvent);
+        TestCase.assertTrue(wakeEvent);TestCase.assertTrue(alarmEvent);
     }
 
     @Test

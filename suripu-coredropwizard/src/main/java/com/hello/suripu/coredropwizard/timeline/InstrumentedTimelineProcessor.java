@@ -425,7 +425,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
+    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
         if(pairs.size() > 1) {
@@ -440,7 +440,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, accountId, startQueryTime, endQueryTime);
 
-        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, timeZoneOffsetMap, DateTime.now(DateTimeZone.UTC));
     }
 
     protected TimelineAlgorithmResult remapEventOffset(final TimelineAlgorithmResult result, final TimeZoneOffsetMap timeZoneOffsetMap){
@@ -662,22 +662,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //removed FF ALARM_IN_TIMELINE at 100 percent
         if(trackerMotions.size() > 0) {
 
-            final DateTime alarmQueryStartTime = timeZoneOffsetMap.mapDateTimeWithDefaultTimezoneAsUTC(
-                    new DateTime(targetDate.getYear(),
-                            targetDate.getMonthOfYear(),
-                            targetDate.getDayOfMonth(),
-                            targetDate.getHourOfDay(),
-                            targetDate.getMinuteOfHour()).minusMinutes(1));
-
-            final DateTime alarmQueryEndTime = timeZoneOffsetMap.mapDateTimeWithDefaultTimezoneAsUTC(
-                    new DateTime(endDate.getYear(),
-                            endDate.getMonthOfYear(),
-                            endDate.getDayOfMonth(),
-                            endDate.getHourOfDay(),
-                            endDate.getMinuteOfHour()).plusMinutes(1));
-
-            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime,
-                    timeZoneOffsetMap.getOffsetWithDefaultAsZero((alarmQueryEndTime.getMillis())));
+            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate,
+                    timeZoneOffsetMap);
 
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
@@ -707,19 +693,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // 1. remove motion & null events outside sleep/in-bed period
         List<Event> cleanedUpEvents;
-        if (this.hasRemoveMotionEventsOutsideSleep(accountId)) {
-            // remove motion events outside of sleep and awake
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents, sleep, wake);
-        } else {
-            // remove motion events outside of in-bed and out-bed
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, inBed, outOfBed);
-        }
+        cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents, sleep, wake);
 
         // 2. Grey out events outside in-bed time
-        final Boolean removeGreyOutEvents = this.hasRemoveGreyOutEvents(accountId); // rm grey events totally
 
         final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                inBed, outOfBed, removeGreyOutEvents);
+                inBed, outOfBed);
 
         // 3. remove non-significant that are more than 1/3 of the entire night's time-span
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);

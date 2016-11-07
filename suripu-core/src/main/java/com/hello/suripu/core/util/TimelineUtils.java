@@ -334,8 +334,7 @@ public class TimelineUtils {
 
     public List<Event> greyNullEventsOutsideBedPeriod(final List<Event> events,
                                                                  final Optional<Event> inBedEventOptional,
-                                                                 final Optional<Event> outOfBedEventOptional,
-                                                                 final Boolean removeGreyOutEvents){
+                                                                 final Optional<Event> outOfBedEventOptional){
         final LinkedList<Event> newEventList = new LinkedList<>();
 
         // State is harmful, shall avoid it like plague
@@ -343,7 +342,7 @@ public class TimelineUtils {
 
             final Event.Type eventType = event.getType();
             if (eventType != Event.Type.NONE) {
-                if (removeGreyOutEvents && eventType != Event.Type.MOTION && eventType != Event.Type.PARTNER_MOTION) {
+                if (eventType != Event.Type.MOTION && eventType != Event.Type.PARTNER_MOTION) {
                     newEventList.add(event);
                     continue;
                 } else {
@@ -353,21 +352,6 @@ public class TimelineUtils {
                 }
             }
 
-
-            // This is a null event, shall we keep it as it is?
-            if(inBedEventOptional.isPresent() && event.getEndTimestamp() <= inBedEventOptional.get().getStartTimestamp()){
-                if (!removeGreyOutEvents) {
-                    newEventList.add(event);  // Null event before in bed, grey
-                }
-                continue;
-            }
-
-            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() >= outOfBedEventOptional.get().getEndTimestamp()){
-                if (!removeGreyOutEvents) {
-                    newEventList.add(event);  // Null event after out of bed, grey
-                }
-                continue;
-            }
 
             // Null event inside bed period, or
             // Null event after in bed but no out of bed event presents, or
@@ -1413,10 +1397,10 @@ public class TimelineUtils {
      * @param ringTimes
      * @param queryStartTime
      * @param queryEndTime
-     * @param offsetMillis
+     * @param timeZoneOffsetMap
      * @return
      */
-    public List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime queryStartTime, final DateTime queryEndTime, final Integer offsetMillis, final DateTime nowInUTC) {
+    public List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime queryStartTime, final DateTime queryEndTime, final TimeZoneOffsetMap timeZoneOffsetMap, final DateTime nowInUTC) {
         final List<Event> events = Lists.newArrayList();
 
         for(final RingTime ringTime : ringTimes) {
@@ -1425,6 +1409,7 @@ public class TimelineUtils {
             }
             
             final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC);
+            final int offsetMillis = timeZoneOffsetMap.getOffsetWithDefaultAsZero(ringTime.actualRingTimeUTC);
 
             final DateTime localNow = nowInUTC.plusMillis(offsetMillis);
             if(actualRingTime.isAfter(nowInUTC)) {
