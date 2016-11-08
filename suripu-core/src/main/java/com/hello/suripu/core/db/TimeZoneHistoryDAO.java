@@ -13,6 +13,7 @@ import java.util.Map;
 public interface TimeZoneHistoryDAO {
     Optional<TimeZoneHistory> updateTimeZone(final long accountId, final DateTime updatedTime, final String clientTimeZoneId, int clientTimeZoneOffsetMillis);
     List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start);
+    List<TimeZoneHistory> getMostRecentTimeZoneHistory(final long accountId, final DateTime start, int limit);
     List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end);
     List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end, int limit);
     Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId);

@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
@@ -168,5 +170,24 @@ public class TimeZoneHistoryDAODynamoDBIT {
         final Optional<TimeZoneHistory> optional = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
         assertThat(optional.isPresent(), is(false));
 
+    }
+
+    @Test
+    public void testTimeZoneQueryLimit(){
+        final long accountId = 1;
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  now, now.getZone().getID(), now.getZone().getOffset(now));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  now.minusDays(10), now.getZone().getID(), now.getZone().getOffset(now.minusDays(10)));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  now.minusDays(20), now.getZone().getID(), now.getZone().getOffset(now.minusDays(20)));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  now.minusDays(30), now.getZone().getID(), now.getZone().getOffset(now.minusDays(30)));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  now.minusDays(40), now.getZone().getID(), now.getZone().getOffset(now.minusDays(40)));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  now.minusDays(50), now.getZone().getID(), now.getZone().getOffset(now.minusDays(50)));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  now.minusDays(60), now.getZone().getID(), now.getZone().getOffset(now.minusDays(60)));
+
+
+        List<TimeZoneHistory> timeZoneHistorylist= this.timeZoneHistoryDAODynamoDB.getMostRecentTimeZoneHistory(accountId, now.minusDays(3), 1);
+        assertThat(timeZoneHistorylist.get(0).updatedAt, is(now.minusDays(10).getMillis()));
+        timeZoneHistorylist= this.timeZoneHistoryDAODynamoDB.getMostRecentTimeZoneHistory(accountId, now.minusDays(13), 1);
+        assertThat(timeZoneHistorylist.get(0).updatedAt, is(now.minusDays(20).getMillis()));
     }
 }

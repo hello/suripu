@@ -315,7 +315,7 @@ public class InstrumentedTimelineProcessorHelpers {
             return null;
         }
         @Override
-        public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start){
+        public List<TimeZoneHistory> getMostRecentTimeZoneHistory(final long accountId, final DateTime start, final int limit){
             if (accountId == ACCOUNT_ID_DST_2){
                 final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(1470332074000L ,-25200000, "America/Los_Angeles");
                 final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
@@ -329,6 +329,10 @@ public class InstrumentedTimelineProcessorHelpers {
                 return timeZoneHistoryList;
             }
             return Collections.emptyList();
+        }
+        @Override
+        public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start){
+            return null;
         }
         @Override
         public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end){
