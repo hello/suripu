@@ -121,6 +121,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
     public final static int MIN_MOTION_AMPLITUDE = 500;
+    public final static int TIMEZONE_HISTORY_LIMIT = 5;
     final static long OUTLIER_GUARD_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
     final static long DOMINANT_GROUP_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
 
@@ -390,7 +391,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         //get result, and refine (optional feature) in-bed time for online HMM
-        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getTimeZoneHistory(accountId, targetDate));
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
 
         final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get(), timeZoneOffsetMap);
         List<Event> extraEvents = result.extraEvents;
@@ -425,7 +426,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
+    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
         if(pairs.size() > 1) {
@@ -440,7 +441,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, accountId, startQueryTime, endQueryTime);
 
-        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, timeZoneOffsetMap, DateTime.now(DateTimeZone.UTC));
     }
 
     protected TimelineAlgorithmResult remapEventOffset(final TimelineAlgorithmResult result, final TimeZoneOffsetMap timeZoneOffsetMap){
@@ -661,23 +662,21 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         // ALARM
         //removed FF ALARM_IN_TIMELINE at 100 percent
         if(trackerMotions.size() > 0) {
+            final DateTimeZone timeZone = DateTimeZone.forID(timeZoneOffsetMap.getTimeZoneIdWithUTCDefault(targetDate.getMillis()));
+            final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
+                    targetDate.getMonthOfYear(),
+                    targetDate.getDayOfMonth(),
+                    targetDate.getHourOfDay(),
+                    targetDate.getMinuteOfHour(), timeZone).minusMinutes(1);
 
-            final DateTime alarmQueryStartTime = timeZoneOffsetMap.mapDateTimeWithDefaultTimezoneAsUTC(
-                    new DateTime(targetDate.getYear(),
-                            targetDate.getMonthOfYear(),
-                            targetDate.getDayOfMonth(),
-                            targetDate.getHourOfDay(),
-                            targetDate.getMinuteOfHour()).minusMinutes(1));
-
-            final DateTime alarmQueryEndTime = timeZoneOffsetMap.mapDateTimeWithDefaultTimezoneAsUTC(
-                    new DateTime(endDate.getYear(),
-                            endDate.getMonthOfYear(),
-                            endDate.getDayOfMonth(),
-                            endDate.getHourOfDay(),
-                            endDate.getMinuteOfHour()).plusMinutes(1));
+            final DateTime alarmQueryEndTime = new DateTime(endDate.getYear(),
+                    endDate.getMonthOfYear(),
+                    endDate.getDayOfMonth(),
+                    endDate.getHourOfDay(),
+                    endDate.getMinuteOfHour(), timeZone).plusMinutes(1);
 
             final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime,
-                    timeZoneOffsetMap.getOffsetWithDefaultAsZero((alarmQueryEndTime.getMillis())));
+                    timeZoneOffsetMap);
 
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
@@ -707,19 +706,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // 1. remove motion & null events outside sleep/in-bed period
         List<Event> cleanedUpEvents;
-        if (this.hasRemoveMotionEventsOutsideSleep(accountId)) {
-            // remove motion events outside of sleep and awake
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents, sleep, wake);
-        } else {
-            // remove motion events outside of in-bed and out-bed
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, inBed, outOfBed);
-        }
+        cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents, sleep, wake);
 
         // 2. Grey out events outside in-bed time
-        final Boolean removeGreyOutEvents = this.hasRemoveGreyOutEvents(accountId); // rm grey events totally
 
         final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                inBed, outOfBed, removeGreyOutEvents);
+                inBed, outOfBed);
 
         // 3. remove non-significant that are more than 1/3 of the entire night's time-span
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
@@ -1015,9 +1007,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         SleepScore sleepScore = sleepScoreV2;
 
         if (usesV5){
-        //calculates sleep duration score v5 and sleep score
+            //calculates sleep duration score v5 and sleep score
             sleepScore = sleepScoreV5;
-        //calculates sleep score v4 and v5 linear blend score
+            //calculates sleep score v4 and v5 linear blend score
         } else if (isInTransitionV4V5){
             //full v5 for users who are FF v5
             if (useSleepScoreV5(accountId)){
@@ -1029,7 +1021,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             final int sleepScoreDiff = sleepScoreV5.value - sleepScoreV4.value;
             STATIC_LOGGER.info("action=sleep-score-v4-v5-difference night_of={} account_id={} v4={} v5={} difference={}", targetDateStr, accountId, sleepScoreV4, sleepScoreV5, sleepScoreDiff);
             scoreDiff.update(sleepScoreDiff);
-        //calculates sleep duration score v4
+            //calculates sleep duration score v4
         } else if (usesV4){
             sleepScore = sleepScoreV4;
             //calculates sleep score v4 and v2 linear blend score

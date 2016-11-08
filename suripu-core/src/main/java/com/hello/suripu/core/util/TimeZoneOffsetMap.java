@@ -61,6 +61,25 @@ public class TimeZoneOffsetMap {
         return newSegments;
     }
 
+    /* Get timezone id that is nearest in time to the timestamp */
+    public String getTimeZoneIdWithUTCDefault(final long timestampUTC) {
+
+        //floorEntry -- Returns a key-value mapping associated with
+        // the greatest key less than or equal to the given key,
+        // or null if there is no such key.
+        final Map.Entry<Long,TimeZoneHistory> entry = timezoneIdHistories.floorEntry(timestampUTC+ DateTimeConstants.MILLIS_PER_HOUR * 12);
+
+        if (entry == null) {
+            return "UTC";
+        }
+
+        if (entry.getValue() == null) {
+            return "UTC";
+        }
+
+        return entry.getValue().timeZoneId;
+    }
+
     /* Get offset that is nearest in time to the timestamp */
     public Optional<Integer> getOffset(final long timestampUTC) {
 
