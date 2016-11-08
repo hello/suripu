@@ -66,11 +66,19 @@ public class InstrumentedTimelineProcessorHelpers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessorHelpers.class);
     private static long ACCOUNT_ID_DST = 62801L;
+    private static long ACCOUNT_ID_DST_2 = 66376L;
+
 
     final public PillDataReadDAO pillDataReadDAO = new PillDataReadDAO() {
         @Override
         public ImmutableList<TrackerMotion> getBetweenLocalUTC(long accountId, DateTime startLocalTime, DateTime endLocalTime) {
             // from onlineHmmtest getTypicalDayofPill
+            if (accountId == ACCOUNT_ID_DST_2){
+                //get from dst germany
+                final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_11_05_dst.csv");
+                return ImmutableList.copyOf(trackerMotions);
+            }
+
             if (accountId == ACCOUNT_ID_DST){
                 //get from dst germany
                 final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv");
@@ -112,6 +120,15 @@ public class InstrumentedTimelineProcessorHelpers {
                 int slotDurationInMinutes, Integer missingDataDefaultValue, com.google.common.base.Optional<Device.Color> color,
                 com.google.common.base.Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy) {
 
+            if (accountId == ACCOUNT_ID_DST_2){
+                final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+                final List<Sample> light = CSVLoader.loadSensorDataFromCSV("fixtures/light_2016_11_05_dst.csv");
+                final List<Sample> sound =  CSVLoader.loadSensorDataFromCSV("fixtures/sound_2016_11_05_dst.csv");
+                allSensorSampleList.add(Sensor.LIGHT, light);
+                allSensorSampleList.add(Sensor.SOUND_PEAK_ENERGY, sound);
+                allSensorSampleList.add(Sensor.SOUND, sound);
+                return allSensorSampleList;
+            }
 
             if (accountId == ACCOUNT_ID_DST){
                 final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
@@ -174,6 +191,15 @@ public class InstrumentedTimelineProcessorHelpers {
     final public RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB = new RingTimeHistoryReadDAO() {
         @Override
         public List<RingTime> getRingTimesBetween(String senseId, Long accountId, DateTime startTime, DateTime endTime) {
+
+            if (accountId == ACCOUNT_ID_DST_2 && startTime.getMillis() < 1478444400000L && endTime.getMillis() > 1478444400000L){
+                final List<RingTime> ringTimes = new ArrayList<>();
+                final RingTime ringTime1 = new RingTime(1478444400000L, 1478444400000L, 0, false);
+                final RingTime ringTime2 = new RingTime(1478401200000L, 1478401200000L, 0, false);
+                final RingTime ringTime3 = new RingTime(1478372400000L, 1478372400000L, 0, false);
+                ringTimes.add(ringTime1);ringTimes.add(ringTime2);ringTimes.add(ringTime3);
+                return ringTimes;
+            }
             if (accountId == ACCOUNT_ID_DST && startTime.getMillis() < 1477817940000L && endTime.getMillis() > 1477817940000L ){
                 final List<RingTime> ringTimes = new ArrayList<>();
                 final RingTime ringTime = new RingTime(1477817940000L, 1477818000000L, 0, true);
@@ -187,6 +213,16 @@ public class InstrumentedTimelineProcessorHelpers {
     final public FeedbackReadDAO feedbackDAO = new FeedbackReadDAO() {
         @Override
         public ImmutableList<TimelineFeedback> getCorrectedForNight(Long accountId,DateTime dateOfNight) {
+            if (accountId == ACCOUNT_ID_DST_2){
+                final TimelineFeedback feedback = TimelineFeedback.create("2016-11-05","07:15","07:01", Event.Type.WAKE_UP.name());
+
+                final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
+                timelineFeedbacks.add(feedback);
+
+                return ImmutableList.copyOf(timelineFeedbacks);
+
+            }
+
             if (accountId == ACCOUNT_ID_DST){
                 final TimelineFeedback feedback = TimelineFeedback.create("2016-10-29","08:30","08:30", Event.Type.WAKE_UP.name());
 
@@ -280,6 +316,12 @@ public class InstrumentedTimelineProcessorHelpers {
         }
         @Override
         public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start){
+            if (accountId == ACCOUNT_ID_DST_2){
+                final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(1470332074000L ,-25200000, "America/Los_Angeles");
+                final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
+                timeZoneHistoryList.add(timeZoneHistory);
+                return timeZoneHistoryList;
+            }
             if (accountId == ACCOUNT_ID_DST){
                 final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(1470332074000L ,3600000, "Europe/Berlin");
                 final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
@@ -458,12 +500,13 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId) {
-            if (accountId == ACCOUNT_ID_DST){
+            if (accountId == ACCOUNT_ID_DST || accountId == ACCOUNT_ID_DST_2){
                 final DeviceAccountPair deviceAccountPair = new DeviceAccountPair(accountId,0L, "foobars",DateTime.now().minusMonths(1));
                 final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<>();
                 deviceAccountPairs.add(deviceAccountPair);
                 return ImmutableList.copyOf(deviceAccountPairs);
             }
+
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 

@@ -17,6 +17,7 @@ import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
 import dagger.Module;
@@ -144,7 +145,7 @@ public class InstrumentedTimelineProcessorTest {
 
 
 
-    @Test
+   // @Test
     public void testTimelineProcessorSimple() {
 
         {
@@ -156,7 +157,7 @@ public class InstrumentedTimelineProcessorTest {
             TestCase.assertTrue(logs.get(0).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.HMM));
             TestCase.assertTrue(logs.get(1).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
         }
-    
+
         features.put(FeatureFlipper.ONLINE_HMM_ALGORITHM,true);
         features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
 
@@ -173,10 +174,9 @@ public class InstrumentedTimelineProcessorTest {
 
 
     @Test
-    public void testTimelineWithDayLightSavings() {
+    public void testTimelineWithDayLightSavings1() {
         final String timeZoneId = "Europe/Berlin";
-        final DateTime targetDate = DateTime.parse("2016-10-29").withZone(DateTimeZone.forID(timeZoneId));
-
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime("2016-10-29");
         final long accountId = 62801L;
         boolean inBedEvent = false;
         boolean asleepEvent = false;
@@ -221,6 +221,53 @@ public class InstrumentedTimelineProcessorTest {
     }
 
     @Test
+    public void testTimelineWithDayLightSavings2() {
+        final String timeZoneId = "America/Los_Angeles";
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime("2016-11-05");
+        final long accountId = 66376L;
+        boolean inBedEvent = false;
+        boolean asleepEvent = false;
+        boolean wakeEvent = false;
+        boolean outOfBedEvent = false;
+        boolean alarmEvent = false;
+
+        features.put(FeatureFlipper.ONLINE_HMM_ALGORITHM,true);
+        features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
+        FeedbackReadDAO feedbackReadDAO = helpers.feedbackDAO;
+        final Optional <TimelineFeedback> timelineFeedback;
+        timelineFeedback = Optional.of(feedbackReadDAO.getCorrectedForNight(accountId, targetDate).get(0));
+        final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,timelineFeedback);
+        for (final SleepSegment segment: timelineResult.timelines.get(0).events) {
+            final int offset = segment.getOffsetMillis();
+            final long timeUTC = segment.getTimestamp();
+            final Event.Type eventType = segment.getEvent().getType();
+            switch (eventType){
+                case IN_BED:
+                    inBedEvent = true;
+                    continue;
+                case SLEEP:
+                    asleepEvent = true;
+                    continue;
+                case WAKE_UP:
+                    wakeEvent = true;
+                    continue;
+                case OUT_OF_BED:
+                    outOfBedEvent = true;
+                    continue;
+                case ALARM:
+                    alarmEvent = true;
+                    continue;
+
+            }
+            TestCase.assertTrue(offset == DateTimeZone.forID(timeZoneId).getOffset(timeUTC));
+        }
+        TestCase.assertTrue(inBedEvent);
+        TestCase.assertTrue(outOfBedEvent);
+        TestCase.assertTrue(asleepEvent);
+        TestCase.assertTrue(wakeEvent);TestCase.assertTrue(alarmEvent);
+    }
+
+    //@Test
     public void testcomputeSleepScoreVersionTransition(){
         final MotionScore testMotionScore = new MotionScore(19, 20, 3500F, 25000, 75);
         final SleepScore testSleepScoreV2 = new SleepScore(88, testMotionScore, 89, 100, 0, "v2");

@@ -661,8 +661,20 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         // ALARM
         //removed FF ALARM_IN_TIMELINE at 100 percent
         if(trackerMotions.size() > 0) {
+            final DateTimeZone timeZone = DateTimeZone.forID(timeZoneOffsetMap.getTimeZoneIdWithUTCDefault(targetDate.getMillis()));
+            final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
+                    targetDate.getMonthOfYear(),
+                    targetDate.getDayOfMonth(),
+                    targetDate.getHourOfDay(),
+                    targetDate.getMinuteOfHour(), timeZone).minusMinutes(1);
 
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate,
+            final DateTime alarmQueryEndTime = new DateTime(endDate.getYear(),
+                    endDate.getMonthOfYear(),
+                    endDate.getDayOfMonth(),
+                    endDate.getHourOfDay(),
+                    endDate.getMinuteOfHour(), timeZone).plusMinutes(1);
+
+            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime,
                     timeZoneOffsetMap);
 
             for(final Event event : alarmEvents) {
@@ -994,9 +1006,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         SleepScore sleepScore = sleepScoreV2;
 
         if (usesV5){
-        //calculates sleep duration score v5 and sleep score
+            //calculates sleep duration score v5 and sleep score
             sleepScore = sleepScoreV5;
-        //calculates sleep score v4 and v5 linear blend score
+            //calculates sleep score v4 and v5 linear blend score
         } else if (isInTransitionV4V5){
             //full v5 for users who are FF v5
             if (useSleepScoreV5(accountId)){
@@ -1008,7 +1020,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             final int sleepScoreDiff = sleepScoreV5.value - sleepScoreV4.value;
             STATIC_LOGGER.info("action=sleep-score-v4-v5-difference night_of={} account_id={} v4={} v5={} difference={}", targetDateStr, accountId, sleepScoreV4, sleepScoreV5, sleepScoreDiff);
             scoreDiff.update(sleepScoreDiff);
-        //calculates sleep duration score v4
+            //calculates sleep duration score v4
         } else if (usesV4){
             sleepScore = sleepScoreV4;
             //calculates sleep score v4 and v2 linear blend score
