@@ -68,14 +68,6 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.ALL_SENSOR_QUERY_USE_UTC_TS, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasRemoveMotionEventsOutsideSleep(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
-    }
-
     protected Boolean hasSleepScoreDurationWeighting(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_WEIGHTING, accountId, Collections.EMPTY_LIST);
     }
