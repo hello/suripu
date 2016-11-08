@@ -6,11 +6,11 @@ package com.hello.suripu.core.models.Insights.Message;
 public class SleepDeprivationMsgEN {
 
     public static Text getSleepDeprivationMessage(final int idealDuration, final int avgSleepDebtDuration) {
-        final float avgSleepDebtHour = ((float) (avgSleepDebtDuration / 30) ) / 2;
-        if (avgSleepDebtHour == 1) {
+        final float avgSleepDebtHour = ((float) (avgSleepDebtDuration / 30) ) / 2.0f;
+        if (avgSleepDebtHour == 1.0f) {
             return new Text("The importance of sleep",
                     String.format("For the last four nights, you got less than your ideal %d hours of sleep. ", idealDuration)
-                            + String.format("During those nights, you slept %.1f hour less than your nightly average.", avgSleepDebtHour));
+                            + String.format("During those nights, you slept %.0f hour less than your nightly average.", avgSleepDebtHour));
         }
         return new Text("The importance of sleep",
                 String.format("For the last four nights, you got less than your ideal %d hours of sleep. ", idealDuration)
