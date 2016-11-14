@@ -190,7 +190,7 @@ public class KeyStoreDynamoDB implements KeyStore {
             itemKeys.add(attributeValueMap);
         }
 
-        final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(DEVICE_ID_ATTRIBUTE_NAME, AES_KEY_ATTRIBUTE_NAME, METADATA, CREATED_AT_ATTRIBUTE_NAME);
+        final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(DEVICE_ID_ATTRIBUTE_NAME, AES_KEY_ATTRIBUTE_NAME, METADATA, CREATED_AT_ATTRIBUTE_NAME, HARDWARE_VERSION_ATTRIBUTE_NAME);
         final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
         requestItems.put(keyStoreTableName, key);
 
