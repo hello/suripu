@@ -100,6 +100,10 @@ public class SenseOneFiveDataConversion {
             return 0.0f;
         }
 
+        if (vocRaw >= 4000) {
+            return 4000.0f; //safeguard for sensor self-calibration malfunction
+        }
+
         return (float) vocRaw;
     }
 
@@ -107,6 +111,10 @@ public class SenseOneFiveDataConversion {
     public static float convertRawToCO2(final int co2Raw) {
         if (co2Raw <= 400) {
             return 400.0f; //400ppm lower bound is imposed by manufac, but we can report 0 at startup before sensor is ready
+        }
+
+        if (co2Raw >= 2000) {
+            return 2000.0f; //safeguard for sensor self-calibration malfunction
         }
 
         return (float) co2Raw;
