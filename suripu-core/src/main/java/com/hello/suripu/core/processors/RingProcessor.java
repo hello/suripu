@@ -41,6 +41,10 @@ public class RingProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessor.class);
     private final static int SMART_ALARM_MIN_DELAY_MILLIS = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  // This must be >= 2 * max possible data upload interval
+    private final static float KICKOFF_COUNT_DECAY_RATE = 0.10f; //kickoff count decays to 3 with 10 minutes left
+    private final static int AMPLITUDE_DECAY_RATE=  140; // amplitude threshold decays to 3000 with 10 minutes left
+    private final static float AMPLITUDE_COUNT_DECAY_RATE=  0.04f; // required count decays to 1 with 5 minutes left
+    private final static float ON_DURATION_DECAY_RATE= 0.2f; //od threshold decays to 5 with 10 minutes left.
     public final static int PROGRESSIVE_SAFE_GAP_MIN = 2;
     public final static int PROGRESSIVE_MOTION_WINDOW_MIN = 7;
 
@@ -278,15 +282,11 @@ public class RingProcessor {
         if (!useDecayingThresholds || elapsedMinutes <= 20){
             return new ProgressiveAlarmThresholds(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT, SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD, SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD);
         }
-        final float kickoffCountDecayRate = 0.10f; //kickoff count decays to 3 with 10 minutes left
-        final int amplitudeDecayRate =  140; // amplitude threshold decays to 3000 with 10 minutes left
-        final float amplitudeCountLimitDecayRate =  0.04f; // required count decays to 1 with 5 minutes left
-        final float onDurationDecayRate = 0.2f; //od threshold decays to 5 with 10 minutes left.
 
-        final int kickOffCountDecay = (int) (kickoffCountDecayRate * elapsedMinutes);
-        final int amplitudeDecay =  amplitudeDecayRate * elapsedMinutes;
-        final int amplitudeCountDecay = (int) (amplitudeCountLimitDecayRate * elapsedMinutes);
-        final int onDurationDecay = (int) (onDurationDecayRate * elapsedMinutes);
+        final int kickOffCountDecay = (int) (KICKOFF_COUNT_DECAY_RATE * elapsedMinutes);
+        final int amplitudeDecay =  AMPLITUDE_DECAY_RATE* elapsedMinutes;
+        final int amplitudeCountDecay = (int) (AMPLITUDE_COUNT_DECAY_RATE* elapsedMinutes);
+        final int onDurationDecay = (int) (ON_DURATION_DECAY_RATE* elapsedMinutes);
 
         final int kickoffCountThreshold =  SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD - kickOffCountDecay;
         final int amplitudeThreshold = SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG - amplitudeDecay;
