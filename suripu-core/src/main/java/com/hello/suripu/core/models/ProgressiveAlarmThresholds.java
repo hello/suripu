@@ -36,7 +36,7 @@ public class ProgressiveAlarmThresholds {
 
         final int elapsedMinutes = 30 - (int) (nextRingTime - currentTime)/ DateTimeConstants.MILLIS_PER_MINUTE;
 
-        if (!useDecayingThresholds || elapsedMinutes <= 20){
+        if (!useDecayingThresholds || elapsedMinutes <= 10){
             return new ProgressiveAlarmThresholds();
         }
 
