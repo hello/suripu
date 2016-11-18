@@ -22,6 +22,7 @@ public class FeatureFlipper {
     public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
 
     public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
+    public final static String DECAYING_SMART_ALARM_THRESHOLD = "decaying-smart-alarm_threshold";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String DUST_SMOOTH = "dust_smooth";
     public final static String DYNAMODB_DEVICE_DATA = "dynamodb_device_data";

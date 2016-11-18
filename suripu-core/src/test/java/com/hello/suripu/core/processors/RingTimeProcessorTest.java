@@ -4,8 +4,10 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Resources;
 import com.google.common.collect.Lists;
+import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.ProgressiveAlarmThresholds;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
@@ -475,7 +477,7 @@ public class RingTimeProcessorTest {
                 motionWithinWindow.add(trackerMotion);
             }
         }
-        Optional<RingTime> testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 5, 0, userTimeZone), ringTime, motionWithinWindow);
+        Optional<RingTime> testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 5, 0, userTimeZone), ringTime, motionWithinWindow, false);
         assertThat(testRing.isPresent(), is(false));
 
         motionWithinWindow = new ArrayList<>();
@@ -484,7 +486,7 @@ public class RingTimeProcessorTest {
                 motionWithinWindow.add(trackerMotion);
             }
         }
-        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 12, 0, userTimeZone), ringTime, motionWithinWindow);
+        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 12, 0, userTimeZone), ringTime, motionWithinWindow, false);
         assertThat(testRing.isPresent(), is(true));
 
         motionWithinWindow = new ArrayList<>();
@@ -493,7 +495,7 @@ public class RingTimeProcessorTest {
                 motionWithinWindow.add(trackerMotion);
             }
         }
-        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 5, 0, userTimeZone), ringTime, motionWithinWindow);
+        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 5, 0, userTimeZone), ringTime, motionWithinWindow, false);
         assertThat(testRing.isPresent(), is(false));
 
         motionWithinWindow = new ArrayList<>();
@@ -502,7 +504,42 @@ public class RingTimeProcessorTest {
                 motionWithinWindow.add(trackerMotion);
             }
         }
-        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 12, 0, userTimeZone), ringTime, motionWithinWindow);
+        testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 12, 0, userTimeZone), ringTime, motionWithinWindow, false);
         assertThat(testRing.isPresent(), is(true));
         }
+
+    @Test
+    public void testDecayThreshold(){
+        final long ringTime = 1479420000000L;
+        long currentTime = 1479418200000L;
+
+        ProgressiveAlarmThresholds progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, false);
+        assertThat(progressiveThreshold.amplitudeThreshold, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG));
+        assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT));
+        assertThat(progressiveThreshold.kickoffCountThreshold, is(SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD));
+        assertThat(progressiveThreshold.onDurationThreshold, is(SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD));
+
+        currentTime = currentTime + 10 * DateTimeConstants.MILLIS_PER_MINUTE;
+
+        progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, true);
+        assertThat(progressiveThreshold.amplitudeThreshold, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG));
+        assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT));
+        assertThat(progressiveThreshold.kickoffCountThreshold, is(SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD));
+        assertThat(progressiveThreshold.onDurationThreshold, is(SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD));
+
+        currentTime = currentTime + 16 * DateTimeConstants.MILLIS_PER_MINUTE;
+        progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, true);
+        assertThat(progressiveThreshold.amplitudeThreshold, is(860));
+        assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(1));
+        assertThat(progressiveThreshold.kickoffCountThreshold, is(3));
+        assertThat(progressiveThreshold.onDurationThreshold, is(4));
+
+        currentTime = currentTime + 2 * DateTimeConstants.MILLIS_PER_MINUTE;
+        progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, true);
+        assertThat(progressiveThreshold.amplitudeThreshold, is(580));
+        assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(1));
+        assertThat(progressiveThreshold.kickoffCountThreshold, is(3));
+        assertThat(progressiveThreshold.onDurationThreshold, is(4));
+    }
+
 }

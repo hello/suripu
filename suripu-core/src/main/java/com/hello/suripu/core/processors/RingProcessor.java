@@ -1,9 +1,8 @@
 package com.hello.suripu.core.processors;
 
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
-import com.amazonaws.AmazonServiceException;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
@@ -14,12 +13,12 @@ import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.ProgressiveAlarmThresholds;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.librato.rollout.RolloutClient;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -42,6 +41,10 @@ public class RingProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessor.class);
     private final static int SMART_ALARM_MIN_DELAY_MILLIS = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  // This must be >= 2 * max possible data upload interval
+    private final static float KICKOFF_COUNT_DECAY_RATE = 0.10f; //kickoff count decays to 3 with 10 minutes left
+    private final static int AMPLITUDE_DECAY_RATE=  140; // amplitude threshold decays to 3000 with 10 minutes left
+    private final static float AMPLITUDE_COUNT_DECAY_RATE=  0.04f; // required count decays to 1 with 5 minutes left
+    private final static float ON_DURATION_DECAY_RATE= 0.2f; //od threshold decays to 5 with 10 minutes left.
     public final static int PROGRESSIVE_SAFE_GAP_MIN = 2;
     public final static int PROGRESSIVE_MOTION_WINDOW_MIN = 7;
 
@@ -123,7 +126,7 @@ public class RingProcessor {
             if(feature != null) {
                 if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, userInfo.accountId, Collections.<String>emptyList())) {
                     nextRingTime = updateAndReturnNextProgressiveSmartRingTimeForUser(currentUserLocalTime, smartAlarmProcessAheadInMinutes,
-                            nextRingTimeFromWorker, nextRingTimeFromTemplate, userInfo, pillDataDAODynamoDB,mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB);
+                            nextRingTimeFromWorker, nextRingTimeFromTemplate, userInfo, pillDataDAODynamoDB,mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB, feature);
                 }else {
                     nextRingTime = updateAndReturnNextSmartRingTimeForUser(currentUserLocalTime,
                             slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
@@ -230,10 +233,14 @@ public class RingProcessor {
     protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
-                                                               final List<TrackerMotion> motionWithinProgressiveWindow){
+                                                               final List<TrackerMotion> motionWithinProgressiveWindow,
+                                                               final boolean useDecayingThreshold){
 
 
         Integer progressiveWindow = PROGRESSIVE_MOTION_WINDOW_MIN;
+
+
+        final ProgressiveAlarmThresholds progressiveAlarmThresholds = getProgressiveThreshold(nowAlignedToStartOfMinute.getMillis(), nextRingTimeFromWorker.expectedRingTimeUTC, useDecayingThreshold);
 
         if(motionWithinProgressiveWindow.isEmpty()){
             LOGGER.info("No motion data in last {} minutes for Account ID: {}. Not computing progressive alarm.", progressiveWindow, accountId);
@@ -252,12 +259,7 @@ public class RingProcessor {
         }
 
 
-        Boolean isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(
-                amplitudeData,
-                kickOffCounts,onDurations,
-                SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG,
-                SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT, SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD, useOnDuration
-        );
+        Boolean isUserAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts,onDurations, progressiveAlarmThresholds.kickoffCountThreshold, progressiveAlarmThresholds.amplitudeThreshold, progressiveAlarmThresholds.amplitudeThresholdCountLimit, progressiveAlarmThresholds.onDurationThreshold, useOnDuration);
 
         if(isUserAwake){
             // TODO: STATE CHECK NEEDED FOR ROBUST IMPLEMENTATION
@@ -273,6 +275,27 @@ public class RingProcessor {
         return Optional.absent();
     }
 
+    public static ProgressiveAlarmThresholds getProgressiveThreshold(final long currentTime, final long nextRingTime, final boolean useDecayingThresholds){
+
+        final int elapsedMinutes = 30 - (int) (nextRingTime - currentTime)/ DateTimeConstants.MILLIS_PER_MINUTE;
+
+        if (!useDecayingThresholds || elapsedMinutes <= 20){
+            return new ProgressiveAlarmThresholds(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT, SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD, SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD);
+        }
+
+        final int kickOffCountDecay = (int) (KICKOFF_COUNT_DECAY_RATE * elapsedMinutes);
+        final int amplitudeDecay =  AMPLITUDE_DECAY_RATE* elapsedMinutes;
+        final int amplitudeCountDecay = (int) (AMPLITUDE_COUNT_DECAY_RATE* elapsedMinutes);
+        final int onDurationDecay = (int) (ON_DURATION_DECAY_RATE* elapsedMinutes);
+
+        final int kickoffCountThreshold =  SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD - kickOffCountDecay;
+        final int amplitudeThreshold = SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG - amplitudeDecay;
+        final int amplitudeThresholdCountLimit = SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT - amplitudeCountDecay ;
+        final int onDurationThreshold = SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD - onDurationDecay;
+
+        return new ProgressiveAlarmThresholds(amplitudeThreshold, amplitudeThresholdCountLimit, kickoffCountThreshold, onDurationThreshold);
+    }
+
     public static RingTime updateAndReturnNextProgressiveSmartRingTimeForUser(final DateTime currentTimeAlignedToStartOfMinuteLocal,
                                                                    final int smartAlarmProcessAheadInMinutes,
                                                                    final RingTime nextRingTimeFromWorker,
@@ -280,7 +303,8 @@ public class RingProcessor {
                                                                    final UserInfo userInfo,
                                                                    final PillDataDAODynamoDB pillDataDAODynamoDB,
                                                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                                                   final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB){
+                                                                   final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
+                                                                   final RolloutClient feature){
         /* Possible States
        1. Current Alarm is a Smart Alarm
             a. Within Appropriate Window Not Processed
@@ -299,7 +323,8 @@ public class RingProcessor {
                 final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(userInfo.accountId,
                         dataCollectionBeginTimeUTC, currentTimeAlignedToStartOfMinuteUTC.plusMinutes(1));
 
-                final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId, currentTimeAlignedToStartOfMinuteLocal, nextRingTimeFromWorker, motionWithinProgressiveWindow);
+                final boolean useDecayingThreshold = feature.userFeatureActive(FeatureFlipper.DECAYING_SMART_ALARM_THRESHOLD, userInfo.accountId, Collections.<String>emptyList());
+                final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId, currentTimeAlignedToStartOfMinuteLocal, nextRingTimeFromWorker, motionWithinProgressiveWindow, useDecayingThreshold);
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
                     smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
@@ -382,7 +407,7 @@ public class RingProcessor {
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
-                        motionWithinProgressiveWindow);
+                        motionWithinProgressiveWindow, false);
 
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
