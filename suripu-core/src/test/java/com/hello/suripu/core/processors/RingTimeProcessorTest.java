@@ -513,7 +513,7 @@ public class RingTimeProcessorTest {
         final long ringTime = 1479420000000L;
         long currentTime = 1479418200000L;
 
-        ProgressiveAlarmThresholds progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, false);
+        ProgressiveAlarmThresholds progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, false);
         assertThat(progressiveThreshold.amplitudeThreshold, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG));
         assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT));
         assertThat(progressiveThreshold.kickoffCountThreshold, is(SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD));
@@ -521,21 +521,21 @@ public class RingTimeProcessorTest {
 
         currentTime = currentTime + 10 * DateTimeConstants.MILLIS_PER_MINUTE;
 
-        progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, true);
+        progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, true);
         assertThat(progressiveThreshold.amplitudeThreshold, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG));
         assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT));
         assertThat(progressiveThreshold.kickoffCountThreshold, is(SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD));
         assertThat(progressiveThreshold.onDurationThreshold, is(SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD));
 
         currentTime = currentTime + 16 * DateTimeConstants.MILLIS_PER_MINUTE;
-        progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, true);
+        progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, true);
         assertThat(progressiveThreshold.amplitudeThreshold, is(860));
         assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(1));
         assertThat(progressiveThreshold.kickoffCountThreshold, is(3));
         assertThat(progressiveThreshold.onDurationThreshold, is(4));
 
         currentTime = currentTime + 2 * DateTimeConstants.MILLIS_PER_MINUTE;
-        progressiveThreshold = RingProcessor.getProgressiveThreshold(currentTime, ringTime, true);
+        progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, true);
         assertThat(progressiveThreshold.amplitudeThreshold, is(580));
         assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(1));
         assertThat(progressiveThreshold.kickoffCountThreshold, is(3));
