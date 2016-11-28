@@ -30,6 +30,10 @@ public class Alert {
         return new Alert(id, accountId, title, body, AlertCategory.EXPANSION_UNREACHABLE,createdAt);
     }
 
+    public static Alert muted(final Long accountId, final DateTime createdAt) {
+        return new Alert(0L, accountId, "Sense Muted", "Sense is currently muted, and will not respond to Voice commands until unmuted.", AlertCategory.SENSE_MUTED, createdAt);
+    }
+
     @JsonProperty("title")
     public String title() {
         return title;
