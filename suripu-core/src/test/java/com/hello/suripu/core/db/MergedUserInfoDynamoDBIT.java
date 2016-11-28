@@ -1,8 +1,5 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -14,12 +11,13 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.PillColorUtil;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -28,9 +26,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.Color;
+import java.awt.*;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -100,11 +99,19 @@ public class MergedUserInfoDynamoDBIT {
 
     @Test
     public void testUpdateNotAppend(){
-        final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L}, false);
-
+        final DateTime now = DateTime.now();
+        final DateTime previousRing = now.plusHours(1);
+        final RingTime ringTime = new RingTime(previousRing.getMillis(), previousRing.getMillis(), new long[]{1L}, false);
+        final List<Alarm> alarmListPrevious = new ArrayList<>();
+        final List<Alarm> alarmListCurrent = new ArrayList<>();
+        alarmListCurrent.add(new Alarm(previousRing.minusMinutes(5).getYear(), previousRing.minusMinutes(5).getMonthOfYear(), previousRing.minusMinutes(5).getDayOfMonth(), previousRing.minusMinutes(5).getHourOfDay(), previousRing.minusMinutes(5).getMinuteOfHour(), new HashSet<Integer>(Arrays.asList(previousRing.minusMinutes(5).getDayOfWeek())),
+                false, true, true, true,
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
+        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(this.deviceId, this.accountId, DateTimeZone.UTC);
         this.mergedUserInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);  // Timezone must set first, or ringtime will be reset
         this.mergedUserInfoDynamoDB.setRingTime(this.deviceId, this.accountId, ringTime);
         this.mergedUserInfoDynamoDB.setPillColor(this.deviceId, this.accountId, "Pang's Pill", new Color(0xFE, 0x00, 0x00));
+        this.mergedUserInfoDynamoDB.setAlarms(deviceId, accountId, DateTime.now().minusHours(1).getMillis(), alarmListPrevious, alarmListCurrent, DateTimeZone.UTC);
 
         final List<UserInfo> userInfoList = this.mergedUserInfoDynamoDB.getInfo(this.deviceId);
         assertThat(userInfoList.size(), is(1));
@@ -236,6 +243,8 @@ public class MergedUserInfoDynamoDBIT {
 
         final DateTime now = DateTime.now();
         final DateTime previousRing = now.plusHours(1);
+        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(senseId,accountId, DateTimeZone.getDefault());
+
         this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
                 previousRing.getMillis(), new long[0], true, Lists.newArrayList()));
@@ -264,12 +273,22 @@ public class MergedUserInfoDynamoDBIT {
 
     @Test
     public void testUpdateTheSameAlarmShouldNotUpdateRingTime(){
-        final String senseId = "Sense";
-        final long accountId  = 1;
+        final String senseId = deviceId;
+        final long accountId  = 1L;
 
         final DateTime now = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
         final DateTime previousRing = now.plusHours(1);
+        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(senseId,accountId, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, DateTimeZone.getDefault());
+        final List<Alarm> alarmListPrevious = new ArrayList<>();
+        alarmListPrevious.add(new Alarm(previousRing.getYear(), previousRing.getMonthOfYear(), previousRing.getDayOfMonth(), previousRing.getHourOfDay(), previousRing.getMinuteOfHour(), new HashSet<Integer>(Arrays.asList(previousRing.getDayOfWeek())),
+                false, true, true, true,
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
+        final List<Alarm> alarmListCurrent = new ArrayList<>();
+        alarmListCurrent.add(new Alarm(previousRing.minusMinutes(5).getYear(), previousRing.minusMinutes(5).getMonthOfYear(), previousRing.minusMinutes(5).getDayOfMonth(), previousRing.minusMinutes(5).getHourOfDay(), previousRing.minusMinutes(5).getMinuteOfHour(), new HashSet<Integer>(Arrays.asList(previousRing.minusMinutes(5).getDayOfWeek())),
+                false, true, true, true,
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
+        final boolean updateAlarmList = this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId, DateTime.now().minusHours(1).getMillis(), alarmListPrevious, alarmListCurrent, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
                 previousRing.getMillis(), new long[0], true, Lists.newArrayList()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
@@ -299,6 +318,7 @@ public class MergedUserInfoDynamoDBIT {
         final long accountId  = 1;
 
         final DateTimeZone userTimeZone1 = DateTimeZone.forID("America/Los_Angeles");
+        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(senseId,accountId, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, userTimeZone1);
         final DateTime now = DateTime.now();
         final DateTime previousRing = now.plusHours(1);
