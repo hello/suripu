@@ -145,8 +145,4 @@ public class BaseResource {
     protected Boolean hasQuestionSurveyProcessorEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_SURVEY_PROCESSOR_ENABLED, accountId, Collections.EMPTY_LIST);
     }
-
-    protected Boolean pollyResponseService(final String senseId) {
-        return featureFlipper.deviceFeatureActive(FeatureFlipper.POLLY_RESPONSE_SERVICE, senseId, Collections.EMPTY_LIST);
-    }
 }
