@@ -55,7 +55,7 @@ public class KinesisLogger implements DataLogger {
         kinesisClient.putRecordAsync(putRecordRequest, new AsyncHandler<PutRecordRequest, PutRecordResult>() {
             @Override
             public void onError(final Exception exception) {
-                LOGGER.error("Error sending to Kinesis for stream: {}", streamName, exception.getMessage());
+                LOGGER.error("error=sending-to-kinesis stream={} err_msg={}", streamName, exception.getMessage());
             }
 
             @Override
