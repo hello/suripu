@@ -536,7 +536,7 @@ public class RingTimeProcessorTest {
 
         currentTime = currentTime + 6 * DateTimeConstants.MILLIS_PER_MINUTE;
         progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, true);
-        assertThat(progressiveThreshold.amplitudeThreshold, is(400));
+        assertThat(progressiveThreshold.amplitudeThreshold, is(228));
         assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(1));
         assertThat(progressiveThreshold.kickoffCountThreshold, is(2));
         assertThat(progressiveThreshold.onDurationThreshold, is(2));

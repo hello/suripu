@@ -16,7 +16,7 @@ public class ProgressiveAlarmThresholds {
     private final static int AMPLITUDE_DECAY_RATE =  267; // amplitude threshold decays to 500 with 15 minutes left
     private final static float AMPLITUDE_COUNT_DECAY_RATE =  0.07f; // required count decays to 1 with 15 minutes left
     private final static float ON_DURATION_DECAY_RATE = 0.45f; //od threshold decays to 2 with 15 minutes left.
-    private final static int AMPLITUDE_MIN_THRESHOLD = 400;
+    private final static int AMPLITUDE_MIN_THRESHOLD = 0;
     private final static int ON_DURATION_MIN_THRESHOLD = 2;
     private final static int KICKOFF_COUNT_MIN_THREHSOLD = 2;
     private final static int AMPLITUDE_MIN_COUNT = 1;
