@@ -84,14 +84,14 @@ public class RingTimeProcessorTest {
         final DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         DateTime now = new DateTime(2015, 2, 3, 7, 0, 10, userTimeZone);
         alarmList.add(new Alarm.Builder().withDayOfWeek(daysOfWeek)
-                        .withHour(7)
-                        .withMinute(30)
-                        .withId("1")
-                        .withIsEditable(true)
-                        .withIsEnabled(true)
-                        .withIsRepeated(true)
-                        .withIsSmart(true)
-                        .build());
+                .withHour(7)
+                .withMinute(30)
+                .withId("1")
+                .withIsEditable(true)
+                .withIsEnabled(true)
+                .withIsRepeated(true)
+                .withIsSmart(true)
+                .build());
 
         alarmList.add(new Alarm.Builder().withDayOfWeek(daysOfWeek)
                 .withHour(8)
@@ -130,11 +130,11 @@ public class RingTimeProcessorTest {
                         new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis(),
                         new long[0],
                         true,
-                    Lists.newArrayList())),
+                        Lists.newArrayList())),
                 Optional.of(userTimeZone),
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
                 now.minusMillis(100).getMillis()
-                );
+        );
         userInfoList.set(0, userInfo);
         ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015,2,3,7,21,0,userTimeZone).getMillis()));
@@ -259,7 +259,7 @@ public class RingTimeProcessorTest {
                         new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis(),
                         new long[0],
                         true,
-                    Lists.newArrayList())),
+                        Lists.newArrayList())),
                 Optional.of(userTimeZone),
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
                 now.minusMillis(100).getMillis()
@@ -384,7 +384,7 @@ public class RingTimeProcessorTest {
                         new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis(),
                         new long[0],
                         true,
-                    Lists.newArrayList())),
+                        Lists.newArrayList())),
                 Optional.of(userTimeZone),
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
                 now.minusMillis(100).getMillis()
@@ -506,7 +506,7 @@ public class RingTimeProcessorTest {
         }
         testRing = RingProcessor.getProgressiveRingTime(userInfo.accountId, new DateTime(2016, 10, 20, 2, 12, 0, userTimeZone), ringTime, motionWithinWindow, false);
         assertThat(testRing.isPresent(), is(true));
-        }
+    }
 
     @Test
     public void testDecayThreshold(){
@@ -519,7 +519,7 @@ public class RingTimeProcessorTest {
         assertThat(progressiveThreshold.kickoffCountThreshold, is(SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD));
         assertThat(progressiveThreshold.onDurationThreshold, is(SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD));
 
-        currentTime = currentTime + 10 * DateTimeConstants.MILLIS_PER_MINUTE;
+        currentTime = currentTime + 4 * DateTimeConstants.MILLIS_PER_MINUTE;
 
         progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, true);
         assertThat(progressiveThreshold.amplitudeThreshold, is(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG));
@@ -527,19 +527,19 @@ public class RingTimeProcessorTest {
         assertThat(progressiveThreshold.kickoffCountThreshold, is(SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD));
         assertThat(progressiveThreshold.onDurationThreshold, is(SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD));
 
-        currentTime = currentTime + 16 * DateTimeConstants.MILLIS_PER_MINUTE;
+        currentTime = currentTime + 6 * DateTimeConstants.MILLIS_PER_MINUTE;
         progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, true);
-        assertThat(progressiveThreshold.amplitudeThreshold, is(860));
-        assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(1));
+        assertThat(progressiveThreshold.amplitudeThreshold, is(1830));
+        assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(2));
         assertThat(progressiveThreshold.kickoffCountThreshold, is(3));
-        assertThat(progressiveThreshold.onDurationThreshold, is(4));
+        assertThat(progressiveThreshold.onDurationThreshold, is(5));
 
-        currentTime = currentTime + 2 * DateTimeConstants.MILLIS_PER_MINUTE;
+        currentTime = currentTime + 6 * DateTimeConstants.MILLIS_PER_MINUTE;
         progressiveThreshold = ProgressiveAlarmThresholds.getDecayingThreshold(currentTime, ringTime, true);
-        assertThat(progressiveThreshold.amplitudeThreshold, is(580));
+        assertThat(progressiveThreshold.amplitudeThreshold, is(228));
         assertThat(progressiveThreshold.amplitudeThresholdCountLimit, is(1));
-        assertThat(progressiveThreshold.kickoffCountThreshold, is(3));
-        assertThat(progressiveThreshold.onDurationThreshold, is(4));
+        assertThat(progressiveThreshold.kickoffCountThreshold, is(2));
+        assertThat(progressiveThreshold.onDurationThreshold, is(2));
     }
 
 }
