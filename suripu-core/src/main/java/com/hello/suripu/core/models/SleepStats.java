@@ -41,9 +41,12 @@ public class SleepStats {
     public SleepStats(final Integer soundSleepDurationInMinutes,
                       final Integer mediumSleepDurationInMinutes,
                       final Integer lightSleepDurationInMinutes,
-                      final Integer sleepDurationInMinutes, final boolean isInBedDuration,
+                      final Integer sleepDurationInMinutes,
+                      final boolean isInBedDuration,
                       final Integer numberOfMotionEvents,
-                      final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMinutes) {
+                      final Long sleepTime,
+                      final Long wakeTime,
+                      final Integer sleepOnsetTimeMinutes) {
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
         this.mediumSleepDurationInMinutes = mediumSleepDurationInMinutes;
         this.lightSleepDurationInMinutes = lightSleepDurationInMinutes;
