@@ -38,6 +38,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
+import com.hello.suripu.core.models.Gender;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.MotionFrequency;
 import com.hello.suripu.core.models.MotionScore;
@@ -469,6 +470,50 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     protected Optional<OneDaysSensorData> getSensorData(final long accountId,final DateTime date, final DateTime starteTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,final Optional<TimelineFeedback> newFeedback) {
 
+        final Optional<Account> accountOptional = accountDAO.getById(accountId);
+        final int age, male, female, partner;
+        final double bmi;
+        if (accountOptional.isPresent()){
+            final int userAge = DateTimeUtil.getDateDiffFromNowInDays(accountOptional.get().DOB) / 365;
+            final int height = accountOptional.get().height;
+            final int weight= accountOptional.get().weight;
+            if (userAge >=18){
+                age = userAge;
+            } else {
+                age = 0;
+            }
+
+            if(height > 0 && weight > 0){
+                final double userBMI = ((double) weight) / (height * height);
+                if (userBMI > 5 && userBMI < 40){
+                    bmi = userBMI;
+                } else{
+                    bmi = 0;
+                }
+            } else {
+                bmi = 0;
+            }
+
+            final Gender gender = accountOptional.get().gender;
+            if (gender == Gender.MALE){
+                male = 1;
+                female = 0;
+            } else if (gender == Gender.FEMALE){
+                male = 0;
+                female = 1;
+            } else {
+                male = 0;
+                female = 0;
+            }
+
+
+        } else {
+            age = 0;
+            male = 0;
+            female = 0;
+            bmi = 0;
+        }
+
 
         ImmutableList<TrackerMotion> originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, starteTimeLocalUTC, endTimeLocalUTC);
 
@@ -481,6 +526,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // get partner tracker motion, if available
         ImmutableList<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+        if(!originalPartnerMotions.isEmpty()){
+            partner = 1;
+        } else {
+            partner = 0;
+        }
 
         //filter pairing motions for a good first night's experience
         if (this.hasRemovePairingMotions(accountId)) {
@@ -499,10 +549,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
 
         //removes motion events less than 2 seconds and < 300 val. groups the remaining motions into groups separated by 2 hours. If largest motion groups is greater than 6 hours hours, drop all motions afterward this motion group.
-        if (this.hasOutlierFilterEnabled(accountId)) {
-            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-        }
+        filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
+        filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
 
 
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
@@ -569,7 +617,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 ImmutableList.copyOf(feedbackList),
                 ImmutableList.copyOf(filteredOriginalMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
                 date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
-                tzOffsetMillis));
+                tzOffsetMillis, age, male, female, bmi, partner));
     }
 
     private static class PopulatedTimelines {

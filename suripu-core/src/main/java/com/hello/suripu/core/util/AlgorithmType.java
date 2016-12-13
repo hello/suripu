@@ -10,7 +10,8 @@ public enum AlgorithmType {
     HMM("hmm"),
     ONLINE_HMM("online_hmm"),
     BAYES_NET("bayes_net"),
-    NEURAL_NET("neural_net");
+    NEURAL_NET("neural_net"),
+    NEURAL_NET_FOUR_EVENT("neural_net_four_event");
 
 
     private final String name;
