@@ -58,7 +58,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     //as long as index is right, the order shouldn't matter
     //but why would you mess with the order anyway?
     public enum SensorIndices {
-        LIGHT(0),
+        LIGHT(0), //including natural light
         DIFFLIGHT(1),
         WAVES(2),
         SOUND_DISTURBANCE(3),
@@ -66,21 +66,32 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         MY_MOTION_DURATION(5),
         PARTNER_MOTION_DURATION(6),
         MY_MOTION_MAX_AMPLITUDE(7),
-        PARTNER(8),
-        AGE(9),
-        BMI(10),
-        MALE(11),
-        FEMALE(12),
-        DIFFLIGHTSMOOTHED(13),
-        LIGHTVAR(14),
-        LIGHT_NODAYLIGHT(15);
-
-
+        PARTNER(8), //1: partner tracker motion data present; 0: partner tracker motion data absent
+        AGE(9), // default= 0 for missing age / user age < 18
+        BMI(10),   // default = 0 for missing or extreme bmi (< 5 or > 40)
+        MALE(11), //1:male; 0:female / unknown
+        FEMALE(12), //1: female; 0: male / unknown
+        DIFFLIGHTSMOOTHED(13), //rolling mean (30 minute window) of difference of mean light
+        LIGHTVAR(14), //rolling variance - 10 minute window
+        LIGHT_NODAYLIGHT(15); //excluding natural light
 
         private final int index;
         SensorIndices(int index) { this.index = index; }
         public int index() { return index; }
         final static int MAX_NUM_INDICES = 16;
+    }
+
+    private enum PartialSensorIndices{
+        MY_MOTION_DURATION(0),
+        MY_MOTION_MAX_AMPLITUDE(1),
+        DIFFLIGHTSMOOTHED(2),
+        SOUND_VOLUME(3),
+        WAVES(4);
+
+        private final int index;
+        PartialSensorIndices(int index) { this.index = index; }
+        public int index() { return index; }
+        final static int MAX_NUM_INDICES = 5;
     }
 
     private final NeuralNetEndpoint endpoint;
@@ -232,7 +243,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 continue;
             }
 
-            x[SensorIndices.WAVES.index()][idx.get()]=s.value;
+            x[SensorIndices.WAVES.index()][idx.get()]=s.value / 2;
         }
 
         /* SOUND DISTURBANCES */
@@ -392,11 +403,11 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final int iEnd = (int)(tf - t0) / DateTimeConstants.MILLIS_PER_MINUTE + 1;
 
             final double [][] xPartial= new double[5][iEnd];
-            xPartial[0] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_DURATION.index()],0,iEnd);
-            xPartial[1] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()],0,iEnd);
-            xPartial[2] = Arrays.copyOfRange(x[SensorIndices.DIFFLIGHTSMOOTHED.index()], 0, iEnd);
-            xPartial[3] = Arrays.copyOfRange(x[SensorIndices.SOUND_VOLUME.index()], 0, iEnd);
-            xPartial[4] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, iEnd);
+            xPartial[PartialSensorIndices.MY_MOTION_DURATION.index()] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_DURATION.index()],0,iEnd);
+            xPartial[PartialSensorIndices.MY_MOTION_MAX_AMPLITUDE.index()] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()],0,iEnd);
+            xPartial[PartialSensorIndices.DIFFLIGHTSMOOTHED.index()] = Arrays.copyOfRange(x[SensorIndices.DIFFLIGHTSMOOTHED.index()], 0, iEnd);
+            xPartial[PartialSensorIndices.SOUND_VOLUME.index()] = Arrays.copyOfRange(x[SensorIndices.SOUND_VOLUME.index()], 0, iEnd);
+            xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, iEnd);
 
 
             final int [] sleepSegments = getSleepSegments(algorithmOutput.output);
@@ -445,9 +456,9 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
     static protected List<Event> getEventTimes(final TreeMap<Long,Integer> offsetMap, final long t0, final int[] sleepSegments, final double[][] xPartial) {
         final int timeSteps = xPartial[0].length;
-        final int sleepSegmentWindowSize = 30;//minutes
-        final int inBedPadding = 3;
-        final int outOfBedPadding = 1;
+        final int sleepSegmentWindowSize = 30;//target time for heuristic search window (+/- 15 minutes)
+        final int inBedPadding = 3; //minimal difference between in bed time and sleep time
+        final int outOfBedPadding = 1; // minimal difference between awake and out of bed time
 
         final int[] inBedWindow = getSleepSegmentWindow(sleepSegments[0], sleepSegmentWindowSize,  0, timeSteps);
         final int inBedIndex = getInBedIndex(Arrays.copyOfRange(xPartial, inBedWindow[0], inBedWindow[1]), inBedWindow[0]);
@@ -506,18 +517,17 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return events;
     }
 
+    //Searches for first motion event. If there is a 10 minute gap in motion events, finds next "first motion event".
+    //If no first motion event is found, defaults to center of search window
     static int getInBedIndex(final double [][] xWindow, final int indexOffset){
         final int windowSize = xWindow[0].length;
         final double onDurationThreshold = 1.0;
         final int noMotionThreshold = 10;
         final List<Integer> motionEventIndices = new ArrayList<Integer>();
         int i = 0;
-
-        int lastMotionIndex = 0;
         for (final double od : xWindow[0]){
             if (od >= onDurationThreshold){
                 motionEventIndices.add(i);
-                lastMotionIndex = i;
             }
             i ++;
         }
@@ -539,43 +549,61 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 return motionEventIndex + indexOffset;
             }
         }
-        return xWindow[0].length / 2 + indexOffset;
+        return windowSize/ 2 + indexOffset;
     }
 
+    //Finds the latest occurrence of lights out, loud noise, large motion event as a starting point to look for last motion event.
+    //Then searches for last motion followed by no motion interval.
     static int getAsleepIndex(final double [][] xWindow, final int indexOffset){
+        final int windowSize = xWindow[0].length;
+        final double lightsOutThreshold = -1.0;
+        final int lightsOffset = -13;
+        final int defaultOffset = 0;
+        final double noiseThreshold = 4.0;
+        final double motionAmpThreshold = 0.625;
 
-        final int lightsOutIndex = getLightsOut(xWindow);
-        final int lastLoudNoiseIndex = getLastLoudNoiseIndex(xWindow);
-        final int lastLargeMotionEventIndex = getLastLargeMotionIndex(xWindow);
+        final int lightsOutIndex = getLastEvent(xWindow[PartialSensorIndices.DIFFLIGHTSMOOTHED.index()], lightsOutThreshold,false,lightsOffset);
+        final int lastLoudNoiseIndex = getLastEvent(xWindow[PartialSensorIndices.SOUND_VOLUME.index()], noiseThreshold, true, defaultOffset);
+        final int lastLargeMotionEventIndex = getLastEvent(xWindow[PartialSensorIndices.MY_MOTION_MAX_AMPLITUDE.index()], motionAmpThreshold, true, defaultOffset );
         int startLastMotionSearchIndex = Math.max(Math.max(lightsOutIndex, lastLoudNoiseIndex), lastLargeMotionEventIndex);
-
-        final int lastMotionIndex = getLastMotionIndex(xWindow, startLastMotionSearchIndex);
-        return lastMotionIndex + indexOffset;
+        final int lastMotionIndex = getLastMotionIndex(Arrays.copyOfRange(xWindow[PartialSensorIndices.MY_MOTION_DURATION.index()],startLastMotionSearchIndex,windowSize), startLastMotionSearchIndex);
+        return lastMotionIndex + startLastMotionSearchIndex + indexOffset;
     }
 
+    //Finds the first occurrence of the following events: loud noise, lights on, wave, large motion, long motion, sustained motion.
+    // If no event found, defaults to center of search window
     static int getAwakeIndex(final double [][] xWindow, final int indexOffset){
+        final int windowSize = xWindow[0].length;
         final int  wakeDefault = 15;
-        final int loudNoiseIndex = getFirstNoiseIndex(xWindow);
-        final int lightsOnIndex = getLightsOnIndex(xWindow);
-        final int waveIndex = getWaveIndex(xWindow);
-        final int largeMotionEventIndex = getFirstLargeMotionIndex(xWindow);
-        final int longMotionEventIndex = getFirstLongMotionIndex(xWindow);
-        final int sustainedMotionIndex = getSustainedMotionIndex(xWindow);
+        final double noiseThreshold = 1;
+        final double lightsOnThreshold = 1.15;
+        final double waveThreshold =  0.5;
+        final double motionAmpThreshold = 0.8;
+        final double onDurThreshold = 1.4;
+        final int loudNoiseIndex = getFirstEvent(xWindow[PartialSensorIndices.SOUND_VOLUME.index()], noiseThreshold);
+        final int lightsOnIndex = getFirstEvent(xWindow[PartialSensorIndices.DIFFLIGHTSMOOTHED.index()], lightsOnThreshold);
+        final int waveIndex = getFirstEvent(xWindow[PartialSensorIndices.WAVES.index()], waveThreshold);
+        final int motionAmpEventIndex = getFirstEvent(xWindow[PartialSensorIndices.MY_MOTION_MAX_AMPLITUDE.index()], motionAmpThreshold);
+        final int onDurEventIndex = getFirstEvent(xWindow[PartialSensorIndices.MY_MOTION_DURATION.index()], onDurThreshold);
+        final int sustainedMotionIndex = getSustainedMotionIndex(xWindow[PartialSensorIndices.MY_MOTION_DURATION.index()]);
         //get first event as wake event
-        int wakeIndex = Math.min(lightsOnIndex, Math.min(loudNoiseIndex,Math.min(waveIndex,Math.min(largeMotionEventIndex, Math.min(longMotionEventIndex, sustainedMotionIndex)))));
-        if (wakeIndex == xWindow[0].length - 1){
+        int wakeIndex = Math.min(lightsOnIndex, Math.min(loudNoiseIndex,Math.min(waveIndex,Math.min(motionAmpEventIndex, Math.min(onDurEventIndex, sustainedMotionIndex)))));
+        if (wakeIndex == windowSize - 1){
             wakeIndex = wakeDefault;
         }
         return wakeIndex + indexOffset;
     }
 
+    //Searches motion event followed by 15 minutes of no motion - or the end of the search window.
+    // Finds long or last motion gap
     static int getOutOfBedIndex(final double [][] xWindow, final int indexOffset){
+        final int windowSize = xWindow[0].length;
         final int noMotionThreshold = 15; //minutes
         final int outOfBedDefault = 15;
         int noMotionCount = 0;
         int outOfBedIndex = 0;
 
-        for ( int i = 0; i < xWindow[0].length; i++){
+        for ( int i = 0; i < windowSize; i++){
             if (xWindow[0][i] == 0){
                 noMotionCount ++;
             } else{
@@ -594,47 +622,31 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return outOfBedIndex + indexOffset;
     }
 
-    static int getLightsOut(final double [][] xWindow){
-        final int lightsOutThreshold = -1;
-        final int lightsOffset = 13;
-        int lightsOutIndex = 0;
-        for (int i = 0;i <= xWindow[0].length;i++){
-            if (xWindow[2][i]<= lightsOutThreshold){
-                lightsOutIndex = i;
+    //gets last event of feature above/below threshold
+    static int getLastEvent(final double[] xSensorWindow, final double threshold, final boolean isGreater, final int offset){
+        final int windowSize = xSensorWindow.length;
+        int modifier = 1;
+        int eventIndex = 0;
+        if (!isGreater){
+            modifier = -1;
+        }
+        for (int i = 0; i < windowSize; i++){
+            if (xSensorWindow[i] * modifier >+ threshold * modifier){
+                eventIndex = i;
             }
         }
-        return Math.max(lightsOutIndex - lightsOffset, 0);
+        return Math.min(Math.max(eventIndex + offset, 0), windowSize);
     }
 
-    static int getLastLoudNoiseIndex(final double [][] xWindow){
-        final int noiseThreshold = 4;
-        int lastLoudNoiseIndex = 0;
-        for (int i = 0;i < xWindow[0].length;i++){
-            if (xWindow[2][i] >= noiseThreshold){
-                lastLoudNoiseIndex = i;
-            }
-        }
-        return lastLoudNoiseIndex;
-    }
-
-    static int getLastLargeMotionIndex(final double [][] xWindow){
-        final double motionThreshold  = 0.625;
-        int lastMotionIndex = 0;
-
-        for (int i = 0; i < xWindow[0].length; i++){
-
-            if (xWindow[1][i] > motionThreshold){
-                lastMotionIndex = i;
-            }
-        }
-        return lastMotionIndex;
-    }
-
-    static int getLastMotionIndex(final double [][] xWindow, final int startIndex){
+    //looks for motion event followed by 8 minutes of no motion starting at startLastMotionIndex
+    //does not reset no motion count with motion events, but subtracts from the count
+    //defaults to startLastMotionIndex if no motion gap found
+    static int getLastMotionIndex(final double [] xODWindow, final int startIndex){
+        final int windowSize = xODWindow.length;
         final int noMotionCountThreshold = 8; //8 minutes
         int noMotionCount = 0;
-        for (int i = 0; i < xWindow[0].length; i++){
-            if (xWindow[0][i] == 0){
+        for (int i = 0; i < windowSize; i++){
+            if (xODWindow[i] == 0){
                 noMotionCount ++;
             } else {
                 noMotionCount = Math.max(0, noMotionCount - 1);
@@ -643,65 +655,31 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 return i - noMotionCount;
             }
         }
-        return startIndex;
+        return 0;
     }
 
-    static int getFirstLongMotionIndex(final double [][] xWindow){
-        final double onDurThreshold = 1.4;
-        for (int i = 0; i < xWindow[0].length; i++){
-            if (xWindow[0][i] > onDurThreshold){
+    //
+    static int getFirstEvent(final double [] xSensorWindow, final double threshold){
+        final int windowSize = xSensorWindow.length;
+        for (int i = 0; i < windowSize; i ++){
+            if (xSensorWindow[i] >= threshold){
                 return i;
             }
         }
-        return xWindow[0].length;
+        return windowSize;
+
     }
-
-    static int getFirstLargeMotionIndex(final double [][] xWindow){
-        final double motionThreshold = 0.8;
-        for (int i = 0; i < xWindow[0].length; i++){
-            if (xWindow[1][i] > motionThreshold){
-                return i;
-            }
-        }
-        return xWindow[0].length;
-    }
-
-    static int getFirstNoiseIndex(final double [][] xWindow){
-        final int noiseThreshold = 1;
-        for (int i = 0; i < xWindow[0].length; i ++)
-            if (xWindow[3][i] > noiseThreshold){
-                return i;
-            }
-        return xWindow[0].length;
-    }
-
-
-    static int getLightsOnIndex(final double [][] xWindow){
-        final double lightsDiffThreshold = 1.15;
-        for (int i = 0; i < xWindow[0].length; i ++)
-            if (xWindow[2][i] > lightsDiffThreshold){
-                return i;
-            }
-        return xWindow[0].length;
-    }
-
-    static int getWaveIndex(final double [][] xWindow){
-        for (int i = 0; i < xWindow[0].length; i ++)
-            if (xWindow[4][i] > 0){
-                return i;
-            }
-        return xWindow[0].length;
-    }
-
-    static int getSustainedMotionIndex(final double [][] xWindow){
+    
+    static int getSustainedMotionIndex(final double []xOnDurWindow){
+        final int windowSize = xOnDurWindow.length;
         final int motionCountThreshold = 4;
         int motionCount = 0;
         int sustainedMotionIndex = 0;
-        for(int i = 0; i < xWindow[0].length; i ++){
+        for(int i = 0; i < windowSize; i ++){
            if (motionCount == 0){
                sustainedMotionIndex = i;
            }
-           if (xWindow[0][i] > 0 ){
+           if (xOnDurWindow[i] > 0 ){
                motionCount++;
            } else {
                motionCount = Math.max(motionCount - 1, 0);
@@ -711,7 +689,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
            }
 
         }
-        return xWindow[0].length;
+        return windowSize;
     }
 
     static int[] getSleepSegmentWindow(final int sleepSegment, final int sleepSegmentWindowSize, final int associatedEventIndex, final int timeSteps){
