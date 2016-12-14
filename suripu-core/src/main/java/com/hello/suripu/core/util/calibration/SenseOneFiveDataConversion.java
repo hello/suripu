@@ -39,6 +39,8 @@ public class SenseOneFiveDataConversion {
     private static final int TEMP_ALPHA_ONE = -20;
     private static final int TEMP_ALPHA_TWO = 600;
 
+    private static float CLIENT_SENTINEL_NULL_VALUE = -1.0f;
+
     public static float convertRawRGBCToAmbientLight(final int rRaw, final int gRaw, final int bRaw, final int clear, final Device.Color color) {
 
         //Remove IR component
@@ -98,13 +100,21 @@ public class SenseOneFiveDataConversion {
             return 0.0f;
         }
 
+        if (vocRaw >= 4000) {
+            return 4000.0f; //safeguard for sensor self-calibration malfunction
+        }
+
         return (float) vocRaw;
     }
 
     //returns units in ppm
     public static float convertRawToCO2(final int co2Raw) {
-        if (co2Raw <= 0) {
-            return 0.0f;
+        if (co2Raw <= 400) {
+            return 400.0f; //400ppm lower bound is imposed by manufac, but we can report 0 at startup before sensor is ready
+        }
+
+        if (co2Raw >= 2000) {
+            return 2000.0f; //safeguard for sensor self-calibration malfunction
         }
 
         return (float) co2Raw;
@@ -120,6 +130,10 @@ public class SenseOneFiveDataConversion {
 
     //Note: should smooth by 5 min buckets before presenting data to user
     public static float convertRawToCelsius(final int tempRaw, final Optional<Integer> tempRawLastMinOptional) {
+        if (tempRaw < 0) {
+            return CLIENT_SENTINEL_NULL_VALUE;
+        }
+
         if (!tempRawLastMinOptional.isPresent()) {
             return DataUtils.dbIntToFloat(tempRaw - TEMP_ALPHA_TWO); //If T(last min) DNE, assume no change in temp: T(now) = T(last min)
         }
@@ -140,6 +154,10 @@ public class SenseOneFiveDataConversion {
 
     //units in % humidity
     public static float convertRawToHumidity(final int humidRaw) {
+        if (humidRaw < 0 || humidRaw > DataUtils.floatToDBInt(100.0f)) {
+            return CLIENT_SENTINEL_NULL_VALUE;
+        }
+
         return DataUtils.dbIntToFloat(humidRaw);
     }
 }

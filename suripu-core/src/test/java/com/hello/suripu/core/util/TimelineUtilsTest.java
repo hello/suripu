@@ -7,6 +7,7 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
 import org.junit.Test;
@@ -57,6 +58,10 @@ public class TimelineUtilsTest {
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
         final long sleepTime = trackerMotions.get(0).timestamp;
         final long wakeTime = trackerMotions.get(0).timestamp + 24000000L;
+        final TimeZoneHistory timeZoneHistory1 = new TimeZoneHistory(1428408400000L, 3600000, "America/Los_Angeles");
+        final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
+        timeZoneHistoryList.add(timeZoneHistory1);
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryList);
 
         final Optional<Event> sleep = Optional.of(Event.createFromType(Event.Type.SLEEP, sleepTime, sleepTime, -25200000, Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
         final Optional<Event> wake = Optional.of(Event.createFromType(Event.Type.WAKE_UP, wakeTime, wakeTime, -25200000, Optional.of(English.OUT_OF_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
@@ -67,7 +72,7 @@ public class TimelineUtilsTest {
         mainEvents.add(wake.get());
 
 
-        final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
+        final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
         for (final Event event : mainEvents) {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
@@ -76,7 +81,7 @@ public class TimelineUtilsTest {
 
         List<Event> cleanedUpEvents;
         cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, sleep, wake);
-        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents, sleep, wake, true);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents, sleep, wake);
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
         final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, trackerMotions, 70, true);

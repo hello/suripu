@@ -1423,6 +1423,816 @@ public final class AudioCommands {
     // @@protoc_insertion_point(class_scope:PlayAudio)
   }
 
+  public interface VolumeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Volume)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required uint32 volume = 1;</code>
+     */
+    boolean hasVolume();
+    /**
+     * <code>required uint32 volume = 1;</code>
+     */
+    int getVolume();
+  }
+  /**
+   * Protobuf type {@code Volume}
+   */
+  public static final class Volume extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:Volume)
+      VolumeOrBuilder {
+    // Use Volume.newBuilder() to construct.
+    private Volume(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Volume(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Volume defaultInstance;
+    public static Volume getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Volume getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Volume(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              volume_ = input.readUInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.messeji.api.AudioCommands.internal_static_Volume_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.messeji.api.AudioCommands.internal_static_Volume_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.messeji.api.AudioCommands.Volume.class, com.hello.messeji.api.AudioCommands.Volume.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Volume> PARSER =
+        new com.google.protobuf.AbstractParser<Volume>() {
+      public Volume parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Volume(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Volume> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int VOLUME_FIELD_NUMBER = 1;
+    private int volume_;
+    /**
+     * <code>required uint32 volume = 1;</code>
+     */
+    public boolean hasVolume() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required uint32 volume = 1;</code>
+     */
+    public int getVolume() {
+      return volume_;
+    }
+
+    private void initFields() {
+      volume_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasVolume()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeUInt32(1, volume_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(1, volume_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.Volume parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.messeji.api.AudioCommands.Volume prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Volume}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Volume)
+        com.hello.messeji.api.AudioCommands.VolumeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.messeji.api.AudioCommands.internal_static_Volume_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.messeji.api.AudioCommands.internal_static_Volume_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.messeji.api.AudioCommands.Volume.class, com.hello.messeji.api.AudioCommands.Volume.Builder.class);
+      }
+
+      // Construct using com.hello.messeji.api.AudioCommands.Volume.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        volume_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.messeji.api.AudioCommands.internal_static_Volume_descriptor;
+      }
+
+      public com.hello.messeji.api.AudioCommands.Volume getDefaultInstanceForType() {
+        return com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance();
+      }
+
+      public com.hello.messeji.api.AudioCommands.Volume build() {
+        com.hello.messeji.api.AudioCommands.Volume result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.messeji.api.AudioCommands.Volume buildPartial() {
+        com.hello.messeji.api.AudioCommands.Volume result = new com.hello.messeji.api.AudioCommands.Volume(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.volume_ = volume_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.messeji.api.AudioCommands.Volume) {
+          return mergeFrom((com.hello.messeji.api.AudioCommands.Volume)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.messeji.api.AudioCommands.Volume other) {
+        if (other == com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance()) return this;
+        if (other.hasVolume()) {
+          setVolume(other.getVolume());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasVolume()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.messeji.api.AudioCommands.Volume parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.messeji.api.AudioCommands.Volume) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int volume_ ;
+      /**
+       * <code>required uint32 volume = 1;</code>
+       */
+      public boolean hasVolume() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required uint32 volume = 1;</code>
+       */
+      public int getVolume() {
+        return volume_;
+      }
+      /**
+       * <code>required uint32 volume = 1;</code>
+       */
+      public Builder setVolume(int value) {
+        bitField0_ |= 0x00000001;
+        volume_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint32 volume = 1;</code>
+       */
+      public Builder clearVolume() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        volume_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:Volume)
+    }
+
+    static {
+      defaultInstance = new Volume(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:Volume)
+  }
+
+  public interface VoiceControlOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:VoiceControl)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bool enable = 1;</code>
+     */
+    boolean hasEnable();
+    /**
+     * <code>required bool enable = 1;</code>
+     */
+    boolean getEnable();
+  }
+  /**
+   * Protobuf type {@code VoiceControl}
+   */
+  public static final class VoiceControl extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:VoiceControl)
+      VoiceControlOrBuilder {
+    // Use VoiceControl.newBuilder() to construct.
+    private VoiceControl(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private VoiceControl(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final VoiceControl defaultInstance;
+    public static VoiceControl getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public VoiceControl getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private VoiceControl(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              enable_ = input.readBool();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.messeji.api.AudioCommands.internal_static_VoiceControl_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.messeji.api.AudioCommands.internal_static_VoiceControl_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.messeji.api.AudioCommands.VoiceControl.class, com.hello.messeji.api.AudioCommands.VoiceControl.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<VoiceControl> PARSER =
+        new com.google.protobuf.AbstractParser<VoiceControl>() {
+      public VoiceControl parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new VoiceControl(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<VoiceControl> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int ENABLE_FIELD_NUMBER = 1;
+    private boolean enable_;
+    /**
+     * <code>required bool enable = 1;</code>
+     */
+    public boolean hasEnable() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bool enable = 1;</code>
+     */
+    public boolean getEnable() {
+      return enable_;
+    }
+
+    private void initFields() {
+      enable_ = false;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasEnable()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBool(1, enable_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(1, enable_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.VoiceControl parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.messeji.api.AudioCommands.VoiceControl prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code VoiceControl}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:VoiceControl)
+        com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.messeji.api.AudioCommands.internal_static_VoiceControl_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.messeji.api.AudioCommands.internal_static_VoiceControl_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.messeji.api.AudioCommands.VoiceControl.class, com.hello.messeji.api.AudioCommands.VoiceControl.Builder.class);
+      }
+
+      // Construct using com.hello.messeji.api.AudioCommands.VoiceControl.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        enable_ = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.messeji.api.AudioCommands.internal_static_VoiceControl_descriptor;
+      }
+
+      public com.hello.messeji.api.AudioCommands.VoiceControl getDefaultInstanceForType() {
+        return com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance();
+      }
+
+      public com.hello.messeji.api.AudioCommands.VoiceControl build() {
+        com.hello.messeji.api.AudioCommands.VoiceControl result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.messeji.api.AudioCommands.VoiceControl buildPartial() {
+        com.hello.messeji.api.AudioCommands.VoiceControl result = new com.hello.messeji.api.AudioCommands.VoiceControl(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.enable_ = enable_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.messeji.api.AudioCommands.VoiceControl) {
+          return mergeFrom((com.hello.messeji.api.AudioCommands.VoiceControl)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.messeji.api.AudioCommands.VoiceControl other) {
+        if (other == com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance()) return this;
+        if (other.hasEnable()) {
+          setEnable(other.getEnable());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasEnable()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.messeji.api.AudioCommands.VoiceControl parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.messeji.api.AudioCommands.VoiceControl) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private boolean enable_ ;
+      /**
+       * <code>required bool enable = 1;</code>
+       */
+      public boolean hasEnable() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bool enable = 1;</code>
+       */
+      public boolean getEnable() {
+        return enable_;
+      }
+      /**
+       * <code>required bool enable = 1;</code>
+       */
+      public Builder setEnable(boolean value) {
+        bitField0_ |= 0x00000001;
+        enable_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bool enable = 1;</code>
+       */
+      public Builder clearEnable() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        enable_ = false;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:VoiceControl)
+    }
+
+    static {
+      defaultInstance = new VoiceControl(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:VoiceControl)
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_StopAudio_descriptor;
   private static
@@ -1433,6 +2243,16 @@ public final class AudioCommands {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_PlayAudio_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Volume_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_Volume_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_VoiceControl_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_VoiceControl_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1448,8 +2268,9 @@ public final class AudioCommands {
       "t\030\002 \002(\r\022\030\n\020duration_seconds\030\003 \001(\r\022 \n\030fad" +
       "e_in_duration_seconds\030\004 \002(\r\022!\n\031fade_out_" +
       "duration_seconds\030\005 \002(\r\022)\n!timeout_fade_o" +
-      "ut_duration_seconds\030\006 \001(\rB\027\n\025com.hello.m" +
-      "esseji.api"
+      "ut_duration_seconds\030\006 \001(\r\"\030\n\006Volume\022\016\n\006v" +
+      "olume\030\001 \002(\r\"\036\n\014VoiceControl\022\016\n\006enable\030\001 " +
+      "\002(\010B\027\n\025com.hello.messeji.api"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1475,6 +2296,18 @@ public final class AudioCommands {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_PlayAudio_descriptor,
         new java.lang.String[] { "FilePath", "VolumePercent", "DurationSeconds", "FadeInDurationSeconds", "FadeOutDurationSeconds", "TimeoutFadeOutDurationSeconds", });
+    internal_static_Volume_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_Volume_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_Volume_descriptor,
+        new java.lang.String[] { "Volume", });
+    internal_static_VoiceControl_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_VoiceControl_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_VoiceControl_descriptor,
+        new java.lang.String[] { "Enable", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

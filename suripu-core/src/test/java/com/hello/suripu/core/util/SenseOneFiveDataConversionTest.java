@@ -354,6 +354,28 @@ public class SenseOneFiveDataConversionTest {
 
     }
 
+    @Test
+    public void testSentinelValues() {
+        final int lowTempRaw = -200;
+        final float lowTemp = SenseOneFiveDataConversion.convertRawToCelsius(lowTempRaw, Optional.absent());
+        assertThat(lowTemp, is(-1.0f));
+
+        final int lowTempRaw2 = -200;
+        final float lowTemp2 = SenseOneFiveDataConversion.convertRawToCelsius(lowTempRaw2, Optional.of(10));
+        assertThat(lowTemp2, is(-1.0f));
+
+        final int lowHumRaw = -2; // -2 %
+        final float lowHum = SenseOneFiveDataConversion.convertRawToHumidity(lowHumRaw);
+        assertThat(lowHum, is(-1.0f));
+
+        final int okHumRaw = 5000; // 50 %
+        final float okHum = SenseOneFiveDataConversion.convertRawToHumidity(okHumRaw);
+        assertThat(okHum, is(50.0f));
+
+        final int highHumRaw = -20000; //200 %
+        final float highHum = SenseOneFiveDataConversion.convertRawToHumidity(highHumRaw);
+        assertThat(highHum, is(-1.0f));
+    }
 
     @Test
     public void testNumerical_random() {

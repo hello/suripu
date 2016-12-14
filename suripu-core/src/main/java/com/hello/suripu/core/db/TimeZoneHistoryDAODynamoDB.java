@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 6/13/14.
  */
-public class TimeZoneHistoryDAODynamoDB {
+public class TimeZoneHistoryDAODynamoDB implements TimeZoneHistoryDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneHistoryDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -57,7 +57,7 @@ public class TimeZoneHistoryDAODynamoDB {
         this.tableName = tableName;
     }
 
-
+    @Override
     public Optional<TimeZoneHistory> updateTimeZone(final long accountId, final DateTime updatedTime, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
 
         final long updatedAt = updatedTime.getMillis();
@@ -91,15 +91,17 @@ public class TimeZoneHistoryDAODynamoDB {
 
     }
 
-
+    @Override
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start) {
         return getTimeZoneHistory(accountId, HELLO_EPOCH, start, DEFAULT_LIMIT);
     }
 
+    @Override
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end) {
         return getTimeZoneHistory(accountId, start, end, DEFAULT_LIMIT);
     }
 
+    @Override
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end, int limit){
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final Condition selectDateCondition = new Condition()
@@ -145,6 +147,52 @@ public class TimeZoneHistoryDAODynamoDB {
         return history;
     }
 
+    @Override
+    public List<TimeZoneHistory> getMostRecentTimeZoneHistory(final long accountId, final DateTime start, int limit){
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+        final Condition selectDateCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.LE.toString())
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(start.getMillis())));
+
+        queryConditions.put(UPDATED_AT_ATTRIBUTE_NAME, selectDateCondition);
+
+        // AND accound_id = :accound_id
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+
+        Map<String, AttributeValue> lastEvaluatedKey = null;
+        final List<TimeZoneHistory> history = Lists.newArrayList();
+        final Collection<String> targetAttributeSet = Sets.newHashSet(UPDATED_AT_ATTRIBUTE_NAME, TIMEZONE_NAME_ATTRIBUTE_NAME);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributeSet)
+                .withLimit(limit)
+                .withExclusiveStartKey(lastEvaluatedKey)
+                .withScanIndexForward(false);
+
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+        for (final Map<String, AttributeValue> item : items) {
+            final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryFromAttributeValues(item);
+            if(timeZoneHistoryOptional.isPresent()){
+                history.add(timeZoneHistoryOptional.get());
+            }
+        }
+
+
+        if (history.isEmpty()) {
+            LOGGER.warn("warning=get-timezone-failed account_id={} error=no-data-or-aws-error", accountId);
+        }
+        return history;
+    }
+
+
     private Optional<TimeZoneHistory> timeZoneHistoryFromAttributeValues(final Map<String, AttributeValue> item){
         final Collection<String> targetAttributeSet = new HashSet<String>();
         Collections.addAll(targetAttributeSet,
@@ -163,7 +211,7 @@ public class TimeZoneHistoryDAODynamoDB {
         final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(updatedAt, offsetMillis, dateTimeZoneFromId.getID());
         return Optional.of(timeZoneHistory);
     }
-
+    @Override
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
         final DateTime now = DateTime.now();
         final List<TimeZoneHistory> lastTimeZones = getTimeZoneHistory(accountId, now);
@@ -175,6 +223,7 @@ public class TimeZoneHistoryDAODynamoDB {
 
     }
 
+    @Override
     public Map<DateTime, TimeZoneHistory> getAllTimeZones(final long accountId){
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final Condition selectAccountIdCondition = new Condition()

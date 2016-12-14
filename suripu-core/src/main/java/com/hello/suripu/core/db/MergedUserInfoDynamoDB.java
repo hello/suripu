@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.AlarmExpansion;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.PillColorUtil;
@@ -479,24 +480,37 @@ public class MergedUserInfoDynamoDB {
 
 
     private Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
-        final HashSet<String> ringTimeAttributes = new HashSet<String>();
-        Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
+        final HashSet<String> requiredAttributes = new HashSet<String>();
+        Collections.addAll(requiredAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
 
-        if(!item.keySet().containsAll(ringTimeAttributes)){
+        if(!item.keySet().containsAll(requiredAttributes)){
             return Optional.absent();
         }
 
         final long expected = Long.valueOf(item.get(EXPECTED_RING_TIME_ATTRIBUTE_NAME).getN());
         final long actual = Long.valueOf(item.get(ACTUAL_RING_TIME_ATTRIBUTE_NAME).getN());
-
         final String soundArrayJSON = item.get(SOUND_IDS_ATTRIBUTE_NAME).getS();
+
         try {
             final long[] soundIds = this.objectMapper.readValue(soundArrayJSON, long[].class);
             boolean isSmart = false;
             if(item.containsKey(IS_SMART_ALARM_ATTRIBUTE_NAME)){
                isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();
             }
-            return Optional.of(new RingTime(actual, expected, soundIds, isSmart));
+
+            final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
+            if(!dateTimeZoneOptional.isPresent()) {
+                return Optional.of(new RingTime(actual, expected, soundIds, isSmart));
+            }
+
+            final DateTime expectedRingTime = new DateTime(expected, dateTimeZoneOptional.get());
+            final String alarmListJSON = item.get(ALARM_TEMPLATES_ATTRIBUTE_NAME).getS();
+            final List<Alarm> alarmList = this.objectMapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
+
+            final List<AlarmExpansion> expansions = Alarm.Utils.getExpansionsAtExpectedTime(expectedRingTime, alarmList);
+
+            return Optional.of(new RingTime(actual, expected, soundIds, isSmart, expansions));
+
         } catch (IOException e) {
             LOGGER.error("Deserialize JSON for ring time failed {}, device {}, account id {}.", e.getMessage(), deviceId, accountId);
         }

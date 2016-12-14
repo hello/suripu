@@ -509,3 +509,22 @@ CREATE UNIQUE INDEX uniq_exp_app_device_id on expansion_data(app_id, device_id);
 
 GRANT ALL PRIVILEGES ON expansion_data TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE expansion_data_id_seq TO ingress_user;
+
+
+-- Added Oct 27th 2016
+ALTER TABLE expansions ADD COLUMN company_name VARCHAR (100);
+UPDATE expansions SET company_name='Phillips' WHERE service_name='HUE';
+UPDATE expansions SET company_name='Nest' WHERE service_name='NEST';
+
+
+CREATE TABLE alerts (
+    id SERIAL,
+    account_id bigint,
+    title text,
+    body text,
+    created_at timestamp without time zone DEFAULT timezone('utc'::text, now()),
+    seen boolean DEFAULT false
+);
+
+GRANT ALL PRIVILEGES ON alerts TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE alerts_id_seq TO ingress_user;

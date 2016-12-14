@@ -4,7 +4,6 @@ public class FeatureFlipper {
 
     // PLEASE, KEEP CONSTANTS IN ALPHABETICAL ORDER!
 
-    public final static String ALARM_IN_TIMELINE = "alarm_in_timeline";
     public final static String ALARM_WORKER_DROP_IF_TOO_OLD = "alarm_worker_drop_if_too_old";
     public final static String ALL_SENSOR_QUERY_USE_UTC_TS = "all_sensor_query_user_utc_ts";
     public final static String ALLOW_RESPONSE_COMMANDS = "allow_response_commands";
@@ -23,6 +22,7 @@ public class FeatureFlipper {
     public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
 
     public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
+    public final static String DECAYING_SMART_ALARM_THRESHOLD = "decaying-smart-alarm_threshold";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String DUST_SMOOTH = "dust_smooth";
     public final static String DYNAMODB_DEVICE_DATA = "dynamodb_device_data";
@@ -80,7 +80,6 @@ public class FeatureFlipper {
     public final static String PILL_PAIR_MOTION_FILTER = "pill_pair_motion_filter";
     public final static String PRINT_RAW_PB = "print_raw_pb";
     public final static String PROGRESSIVE_SMART_ALARM = "progressive_smart_alarm";
-    public final static String PROGRESSIVE_SMART_ALARM_TEST_VALUES = "progressive_smart_alarm_test_values";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
 
     public final static String QUESTION_ANOMALY_LIGHT_VISIBLE = "question_anomaly_light_enabled";
@@ -89,8 +88,6 @@ public class FeatureFlipper {
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";
-    public final static String REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP = "remove_motion_events_outside_sleep";
-    public final static String REMOVE_GREY_OUT_EVENTS = "remove_grey_out_events";
     public final static String RING_DURATION_FROM_CONFIG = "ring_duration_from_config";
 
     public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB = "sense_last_seen_view_dynamodb";
@@ -116,13 +113,13 @@ public class FeatureFlipper {
     public final static String SLEEP_STATS_MEDIUM_SLEEP = "sleep_stats_medium_sleep";
     public final static String SLEEP_STATS_UNINTERRUPTED_SLEEP = "sleep_stats_uninterrupted_sleep";
     public final static String SMART_ALARM = "smart_alarm";
+
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
-    public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
+    public final static String SMART_ALARM_REFACTORED = "smart_alarm_refactored";
     public final static String SOUND_EVENTS_USE_HIGHER_THRESHOLD = "sound_events_use_higher_threshold";
     public final static String SOUND_INFO_TIMELINE = "sound_info_timeline";
     public final static String STOP_PROCESS_TIMELINE_FROM_WORKER = "stop_process_timeline_from_worker";
 
-    public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
     public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
@@ -12,10 +13,12 @@ import com.hello.suripu.core.util.QuestionSurveyUtils;
 import com.hello.suripu.core.util.QuestionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.regex.Matcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -122,10 +125,16 @@ public class QuestionSurveyProcessor {
     /*
     Insert questions
      */
-
     private void saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
-        LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
-        this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
+        try {
+            LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
+            this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if (!matcher.find()) {
+                LOGGER.debug("exception={} account_id={}", exception.toString(), accountId);
+            }
+        }
     }
 
     private Boolean savedAccountQuestion(final Long accountId, final Question question, final DateTime created) {
