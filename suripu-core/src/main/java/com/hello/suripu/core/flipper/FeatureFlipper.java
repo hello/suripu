@@ -111,6 +111,9 @@ public class FeatureFlipper {
     public final static String SLEEP_SOUNDS_OVERRIDE_OTA = "sleep_sounds_override_ota";
     public final static String SLEEP_SEGMENT_OFFSET_REMAPPING = "sleep_segment_offset_remapping";
     public final static String SLEEP_STATS_MEDIUM_SLEEP = "sleep_stats_medium_sleep";
+    public final static String SLEEP_STATS_UNINTERRUPTED_SLEEP = "sleep_stats_uninterrupted_sleep";
+    public final static String SMART_ALARM = "smart_alarm";
+
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
     public final static String SMART_ALARM_REFACTORED = "smart_alarm_refactored";
     public final static String SOUND_EVENTS_USE_HIGHER_THRESHOLD = "sound_events_use_higher_threshold";

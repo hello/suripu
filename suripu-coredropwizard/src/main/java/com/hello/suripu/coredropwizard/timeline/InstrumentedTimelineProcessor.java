@@ -722,7 +722,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
-        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, lightSleepThreshold, hasSleepStatMediumSleep(accountId));
+        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId));
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
@@ -750,7 +750,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             isValidSleepScore = true;
         }
 
-        final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
+        final boolean useUninterruptedDuration = useUninterruptedDuration(accountId);
+        final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents, useUninterruptedDuration);
 
         LOGGER.info("action=compute_sleep_score score={} account_id={}", sleepScore,accountId);
 

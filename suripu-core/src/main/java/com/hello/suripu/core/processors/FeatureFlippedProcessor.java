@@ -180,9 +180,11 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V5, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useUninterruptedDuration(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_STATS_UNINTERRUPTED_SLEEP, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean useSmartAlarmRefactored(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, accountId, Collections.EMPTY_LIST);
     }
-
-
 }

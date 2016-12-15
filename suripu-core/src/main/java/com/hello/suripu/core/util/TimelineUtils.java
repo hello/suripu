@@ -20,6 +20,7 @@ import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
+import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.AlarmEvent;
@@ -657,7 +658,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold, final boolean hasMediumSleep) {
+    public static SleepStats computeStats(final List<SleepSegment> segments, final List<TrackerMotion> trackerMotions, final int lightSleepThreshold, final boolean hasMediumSleep) {
         Integer soundSleepDurationInSecs = 0;
         Integer mediumSleepDurationInSecs = 0;
         Integer lightSleepDurationInSecs = 0;
@@ -734,7 +735,7 @@ public class TimelineUtils {
             if(segment.getType() == Event.Type.MOTION){
                 numberOfMotionEvents++;
             }
-            LOGGER.trace("duration in seconds = {}", segment.getDurationInSeconds());
+            //LOGGER.trace("duration in seconds = {}", segment.getDurationInSeconds());
         }
 
         if(sleepDurationInSecs == 0 && inBedDurationInSecs == 0 && segments.size() > 0){
@@ -760,11 +761,13 @@ public class TimelineUtils {
         if (firstInBedTimestampMillis > 0 && firstInBedTimestampMillis < firstSleepTimestampMillis) {
             sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis)/MINUTE_IN_MILLIS);
         }
-
+        final AgitatedSleep agitatedSleep = SleepScoreUtils.getAgitatedSleep(trackerMotions, sleepTimestampMillis, wakeUpTimestampMillis);
+        final Integer uninterruptedSleepDurationInMinutes = Math.max(agitatedSleep.uninterruptedSleepMins - 20, 0);
         final SleepStats sleepStats = new SleepStats(
                 soundSleepDurationInMinutes,
                 mediumSleepDurationInMinutes,
                 lightSleepDurationInMinutes,
+                uninterruptedSleepDurationInMinutes,
                 sleepDurationInMinutes == 0 ? inBedDurationInMinutes : sleepDurationInMinutes,
                 sleepDurationInMinutes == 0,
                 numberOfMotionEvents,
@@ -772,7 +775,7 @@ public class TimelineUtils {
                 wakeUpTimestampMillis,
                 sleepOnsetTimeMinutes
         );
-        LOGGER.debug("Sleepstats = {}", sleepStats);
+        //LOGGER.debug("Sleepstats = {}", sleepStats);
 
         return sleepStats;
     }
@@ -783,12 +786,14 @@ public class TimelineUtils {
      * @param sleepStats
      * @return
      */
-    public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents) {
+    public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents, final boolean useUninterruptedDuration) {
 
         final Integer percentageOfSoundSleep = Math.round((float) sleepStats.soundSleepDurationInMinutes /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
-        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
-
+        double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double) DateTimeConstants.MINUTES_PER_HOUR;
+        if (useUninterruptedDuration) {
+            soundDurationInHours = sleepStats.uninterruptedSleepDurationInMinutes / (double) DateTimeConstants.MINUTES_PER_HOUR;
+        }
         // report in-bed time
         String message = String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
         if(!sleepStats.isInBedDuration){
