@@ -35,7 +35,7 @@ import java.util.UUID;
 public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
     public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
-
+    public static final int ZERO_PADDING = 120;
     private final int startMinuteOfArtificalLight;
     private final int stopMinuteOfArtificalLight;
 
@@ -43,15 +43,15 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
 
     private static final float[][] LOG_REG_COEFS= {
-            {-12.70396615f,16.47156896f, -0.70026347f, 9.81588636f, 10.93182064f, 7.49249313f, 13.26656004f, -14.99817079f, -67.23055287f, 12.24668456f},
-            {-4.86146879f, 0.87862504f, 14.02283871f, 4.8567298f, 0.72371229f, -1.22904787f, -8.7893782f, -5.85255041f, -0.98252416f, -8.48987515f},
-            {-5.94178465f, 0.88973046f, -4.54957249f, 8.16073007f, 0.8865088f, 0.94846862f, -5.20884595f, 3.71380632f, -2.67867639f, -8.1039263f},
-            {-5.83208241f, 0.7131686f, 9.64108381f, 5.55667835f, 10.33827963f, 1.42633132f, -18.84869548f, -11.75191131f, 1.75550476f, -4.66252723f},
-            {-1.66586387f, -3.16735819f, 0.85292951f, -0.84439642f, -0.69779908f, 5.44305782f, -0.86904775f, 0.06884078f, 0.81954587f, -3.27163618f},
+            {-12.70396615f, 16.47156896f,-0.70026347f, 9.81588636f, 10.93182064f, 7.49249313f, 13.26656004f, -14.99817079f, -67.23055287f, 12.24668456f},
+            {-4.86146879f,  0.87862504f,  14.02283871f, 4.8567298f, 0.72371229f, -1.22904787f, -8.7893782f, -5.85255041f, -0.98252416f, -8.48987515f},
+            {-5.94178465f,  0.88973046f, -4.54957249f, 8.16073007f, 0.8865088f, 0.94846862f, -5.20884595f, 3.71380632f, -2.67867639f, -8.1039263f},
+            {-5.83208241f,  0.7131686f,   9.64108381f, 5.55667835f, 10.33827963f, 1.42633132f, -18.84869548f, -11.75191131f, 1.75550476f, -4.66252723f},
+            {-1.66586387f, -3.16735819f,  0.85292951f, -0.84439642f, -0.69779908f, 5.44305782f, -0.86904775f, 0.06884078f, 0.81954587f, -3.27163618f},
             {-8.64036305f, -2.45618041f, -1.14602329f, -16.79151638f, -15.93192807f, 4.11165991f, 9.02440491f, 10.52865278f, 1.34638061f, 2.67418785f},
-            {-8.10222516f, -4.5871558f, -0.54902291f, -7.53428814f, -10.77699021f, 2.61912995f, 2.70533692f, 12.2725388f, -4.49195264f, 2.24017869f},
-            {-3.85318262f, -5.340134f, -1.14491125f, -10.42432379f, -13.11311129f, -1.39511142f, 4.80125726f, 4.75610756f, 18.20060452f, -0.1935579f},
-            {-4.283177f, -3.28554649f, 0.36573255f, -3.60031365f, -7.74112037f, -0.51765022f, 1.06486657f, 5.45591162f, -0.97619659f, 4.95113903f}
+            {-8.10222516f, -4.5871558f,  -0.54902291f, -7.53428814f, -10.77699021f, 2.61912995f, 2.70533692f, 12.2725388f, -4.49195264f, 2.24017869f},
+            {-3.85318262f, -5.340134f,   -1.14491125f, -10.42432379f, -13.11311129f, -1.39511142f, 4.80125726f, 4.75610756f, 18.20060452f, -0.1935579f},
+            {-4.283177f,   -3.28554649f,  0.36573255f, -3.60031365f, -7.74112037f, -0.51765022f, 1.06486657f, 5.45591162f, -0.97619659f, 4.95113903f}
     };
 
     //DO NOT CHANGE THE INDICES
@@ -81,7 +81,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final static int MAX_NUM_INDICES = 16;
     }
 
-    private enum PartialSensorIndices{
+    public enum PartialSensorIndices{
         MY_MOTION_DURATION(0),
         MY_MOTION_MAX_AMPLITUDE(1),
         DIFFLIGHTSMOOTHED(2),
@@ -115,7 +115,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
 
     private static Optional<Integer> getIndex(final long t0, final long t, final int maxIdx) {
-        int idx =  (int) ((t - t0) / (DateTimeConstants.MILLIS_PER_MINUTE));
+        int idx =  (int) ((t - t0) / (DateTimeConstants.MILLIS_PER_MINUTE)) + ZERO_PADDING;
 
         if (idx < 0) {
             return Optional.absent();
@@ -166,10 +166,10 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final long durationMillis =  oneDaysSensorData.endTimeLocalUTC.getMillis() - oneDaysSensorData.startTimeLocalUTC.getMillis();
 
         final long t0 = oneDaysSensorData.startTimeLocalUTC.getMillis() - light.get(0).offsetMillis; //LOCAL ---> UTC
-        final int T = (int)durationMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1;
+        final int T = (int)durationMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1 ;
         final int N = SensorIndices.MAX_NUM_INDICES;
 
-        final double [][] x = new double[N][T];
+        final double [][] x = new double[N][T + 2 * ZERO_PADDING];
 
         /*********** LOG  LIGHT, DIFF LOG LIGHT, VAR LOG LIGHT, SMOOTHED DIFF LOG LIGHT and LOG LIGHT NO DAYLIGHT *************/
         for (final Sample s : light) {
@@ -191,7 +191,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         //diff light
-        for (int t = 1; t < x[0].length; t++) {
+        for (int t = 1 + ZERO_PADDING; t < x[0].length; t++) {
             x[SensorIndices.DIFFLIGHT.index()][t] = x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1];
         }
 
@@ -214,21 +214,21 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             }
         }
         //varLight and smoothedLightDiff
-        final double [] varLight  = new double[T];
+        final double [] varLight  = new double[T + 2*ZERO_PADDING];
         final double [] meanLight  = new double[T];
         final double [] diffMeanLight = new double[T];
-        final double [] smoothedLightDiff = new double[T];
+        final double [] smoothedLightDiff = new double[T + 2*ZERO_PADDING ];
         final int rollingWindowLight = 10;
         final int smoothedWindowLight = 30;
-        final int windowSize = x[0].length;
-        for (int idx = 0; idx < windowSize-1; idx++){
+        final int windowSize = x[0].length - 2*ZERO_PADDING;
+        for (int idx = 0; idx < windowSize-1 ; idx++){
             final int idxCeiling = idx + 1;
             final int idxFloor= Math.max(idx - rollingWindowLight, 0);
             final int idxFloorDiff= Math.max(idx - smoothedWindowLight, 0);
-            varLight[idx] = getVariance(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
+            varLight[idx+ ZERO_PADDING] = getVariance(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
             meanLight[idx] = getMean(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
             diffMeanLight[idx] = meanLight[idx] - meanLight[idxFloor];
-            smoothedLightDiff[idx] = getMean(Arrays.copyOfRange(diffMeanLight, idxFloorDiff, idxCeiling));
+            smoothedLightDiff[idx + ZERO_PADDING] = getMean(Arrays.copyOfRange(diffMeanLight, idxFloorDiff, idxCeiling));
 
         }
 
@@ -330,6 +330,19 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         Arrays.fill(x[SensorIndices.MALE.index()], (double) oneDaysSensorData.male);
         Arrays.fill(x[SensorIndices.FEMALE.index()], (double) oneDaysSensorData.female);
 
+        //zero pad
+        for (int idx = 0; idx < ZERO_PADDING; idx ++){
+            for (int col = 0; col < SensorIndices.MAX_NUM_INDICES; col ++){
+                x[col][idx] = 0;
+            }
+        }
+        for (int idx = T; idx < T+ 2*ZERO_PADDING; idx ++){
+            for (int col = 0; col < SensorIndices.MAX_NUM_INDICES; col ++){
+                x[col][idx] = 0;
+            }
+
+        }
+
         return x;
     }
 
@@ -401,7 +414,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
             //get the earlier of the current time or the end of day time
             final long tf = tEnd < oneDaysSensorData.currentTimeUTC.getMillis() ? tEnd : oneDaysSensorData.currentTimeUTC.getMillis();
-            final int iEnd = (int)(tf - t0) / DateTimeConstants.MILLIS_PER_MINUTE + 1;
+            final int iEnd = (int)(tf - t0) / DateTimeConstants.MILLIS_PER_MINUTE + 1 + 2*ZERO_PADDING;
 
             final double [][] xPartial= new double[5][iEnd];
             xPartial[PartialSensorIndices.MY_MOTION_DURATION.index()] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_DURATION.index()],0,iEnd);
@@ -413,7 +426,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
             final int [] sleepSegments = getSleepSegments(algorithmOutput.output);
 
-            final List<Event> events = getEventTimes(offsetMap,t0, sleepSegments,xPartial);
+            final List<Event> events = getEventTimes(offsetMap,t0, sleepSegments, xPartial);
 
             final Map<Event.Type,Event> eventMap = Maps.newHashMap();
             for (final Event event : events) {
@@ -462,23 +475,23 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int outOfBedPadding = 1; // minimal difference between awake and out of bed time
 
         final int[] inBedWindow = getSleepSegmentWindow(sleepSegments[0], sleepSegmentWindowSize,  0, timeSteps);
-        final int inBedIndex = getInBedIndex(Arrays.copyOfRange(xPartial, inBedWindow[0], inBedWindow[1]), inBedWindow[0]);
+        final int inBedIndex = getInBedIndex(getCopyOfRange(xPartial, inBedWindow[0], inBedWindow[1]), inBedWindow[0]);
 
         final int[] asleepWindow = getSleepSegmentWindow(sleepSegments[1], sleepSegmentWindowSize,  inBedIndex + inBedPadding, timeSteps);
-        final int asleepIndex = getAsleepIndex(Arrays.copyOfRange(xPartial, asleepWindow[0], asleepWindow[1]), asleepWindow[0]);
+        final int asleepIndex = getAsleepIndex(getCopyOfRange(xPartial, asleepWindow[0], asleepWindow[1]), asleepWindow[0]);
 
         final int[] awakeWindow = getSleepSegmentWindow(sleepSegments[2], sleepSegmentWindowSize,  0, timeSteps);
-        final int awakeIndex= getAwakeIndex(Arrays.copyOfRange(xPartial, awakeWindow[0], awakeWindow[1]), awakeWindow[0]);
+        final int awakeIndex= getAwakeIndex(getCopyOfRange(xPartial, awakeWindow[0], awakeWindow[1]), awakeWindow[0]);
 
         final int[] outOfBedWindow = getSleepSegmentWindow(sleepSegments[3], sleepSegmentWindowSize,  awakeIndex + outOfBedPadding, timeSteps);
-        final int outOfBedIndex= getOutOfBedIndex(Arrays.copyOfRange(xPartial, outOfBedWindow[0], outOfBedWindow[1]), outOfBedWindow[0]);
+        final int outOfBedIndex= getOutOfBedIndex(getCopyOfRange(xPartial, outOfBedWindow[0], outOfBedWindow[1]), outOfBedWindow[0]);
 
 
 
-        final long inBedTime = getTime(t0,inBedIndex);
-        final long sleepTime = getTime(t0,asleepIndex);
-        final long wakeTime = getTime(t0,awakeIndex);
-        final long outOfBedTime = getTime(t0,outOfBedIndex);
+        final long inBedTime = getTime(t0,inBedIndex - ZERO_PADDING);
+        final long sleepTime = getTime(t0,asleepIndex - ZERO_PADDING);
+        final long wakeTime = getTime(t0,awakeIndex - ZERO_PADDING);
+        final long outOfBedTime = getTime(t0,outOfBedIndex - ZERO_PADDING);
 
         final List<Event> events = Lists.newArrayList();
         //create all events
@@ -700,7 +713,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         if (associatedEventIndex > 0){
             sleepSegmentFloor =associatedEventIndex;
         } else {
-            sleepSegmentFloor = Math.min( (int) (sleepSegment - .5 * sleepSegmentCeiling), 0);
+            sleepSegmentFloor = Math.max( (int) (sleepSegment - .5 * sleepSegmentWindowSize), 0);
         }
 
         return new int[] {sleepSegmentFloor, sleepSegmentCeiling};
@@ -726,14 +739,14 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 sleepSegments[2] = Math.min(idx + uncertaintyCorrection, timeSteps);
             }
             if (sleepState == 8 && sleepSegments[3] == 0){
-                sleepSegments[3] = Math.max(idx - flexCorrection,sleepSegments[2]);
+                sleepSegments[3] = Math.max(idx,sleepSegments[2]);
             }
             idx ++;
         }
-        if (sleepSegments[1] < sleepSegments[0]){
+        if (sleepSegments[1] <= sleepSegments[0]){
             sleepSegments[1] = sleepSegments[0] + 1;
         }
-        if (sleepSegments[3]<sleepSegments[2]){
+        if (sleepSegments[3]<=sleepSegments[2]){
             sleepSegments[3] = sleepSegments[2] + 1;
         }
 
@@ -748,11 +761,11 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         for (int idx = 0; idx < timeSteps; idx ++){
              int idMax = 0;
              double maxProb = 0;
-             for (int i = 0; i < outputDim; i ++){
-                 final double exp = Math.exp((double)(LOG_REG_COEFS[i][0] +  LOG_REG_COEFS[i][1]*nnOutput[idx][0] +
-                                 LOG_REG_COEFS[i][2]*nnOutput[idx][1] + LOG_REG_COEFS[i][3]*nnOutput[idx][2] + LOG_REG_COEFS[i][4]*nnOutput[idx][3] +
-                                 LOG_REG_COEFS[i][5]*nnOutput[idx][4] + LOG_REG_COEFS[i][6]*nnOutput[idx][5] + LOG_REG_COEFS[i][7]*nnOutput[idx][6] +
-                                 LOG_REG_COEFS[i][8]*nnOutput[idx][7] + LOG_REG_COEFS[i][9]*nnOutput[idx][8]));
+             for (int i = 0; i < outputDim ; i ++){
+                 final double exp = Math.exp((double)(LOG_REG_COEFS[i][0] +  LOG_REG_COEFS[i][1]*nnOutput[0][idx] +
+                                 LOG_REG_COEFS[i][2]*nnOutput[1][idx] + LOG_REG_COEFS[i][3]*nnOutput[2][idx] + LOG_REG_COEFS[i][4]*nnOutput[3][idx] +
+                                 LOG_REG_COEFS[i][5]*nnOutput[4][idx] + LOG_REG_COEFS[i][6]*nnOutput[5][idx] + LOG_REG_COEFS[i][7]*nnOutput[6][idx] +
+                                 LOG_REG_COEFS[i][8]*nnOutput[7][idx] + LOG_REG_COEFS[i][9]*nnOutput[8][idx]));
                  stateProb[i] = exp / (1 + exp);
                  if ( i == 0){
                      maxProb = stateProb[i];
@@ -782,6 +795,14 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         for(double a : data)
             sum += a;
         return sum/nSamples;
+    }
+
+    static double [][] getCopyOfRange(final double [][] data, final int idxStart, final int  idxEnd){
+        final double [][] subArray = new double[data.length][idxEnd - idxStart];
+        for (int i = 0; i < data.length; i ++) {
+            subArray[i] = Arrays.copyOfRange(data[i], idxStart, idxEnd);
+        }
+        return subArray;
     }
 
     @Override

@@ -3,8 +3,7 @@ package com.hello.suripu.core.algorithmintegration;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
@@ -12,20 +11,17 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.models.timeline.v2.TimelineLog;
-import com.hello.suripu.core.processors.OnlineHmmTest;
 import com.hello.suripu.core.util.CSVLoader;
-import com.hello.suripu.core.util.DateTimeUtil;
-import junit.framework.TestCase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.TreeMap;
 
 /**
  * Created by benjo on 4/11/16.
@@ -46,14 +42,14 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
 
     private static double [][] getNNOutput(){
         final int nbClasses = 9;
-        final int timeSteps = 961;
+        final int timeSteps = 1201;
         final double[][] y = new double[nbClasses][timeSteps];
 
-        final URL fixtureCSVFile = Resources.getResource("fixtures/neuralNetFourEventOutput.csv");
+        final URL fixtureCSVFile = Resources.getResource("fixtures/neuralNet/neuralNetFourEventOutput.csv");
         try{
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
             final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++) {
+            for(int i = 0; i < timeSteps; i++) {
                 final String[] columns = lines[i].split(",");
                 for (int colIndex = 0; colIndex < nbClasses; colIndex++) {
                     y[colIndex][i] = Float.parseFloat(columns[colIndex + 1].trim());
@@ -123,100 +119,40 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
     public void testGetSensorData() throws Exception{
         final OneDaysSensorData oneDaysSensorData = getOneDaySensorData();
         final double [][] x = getSensorData(oneDaysSensorData);
-        int i = 2;
 
     }
 
     @Test
-    public void testGetPredictionWithPastTime() throws Exception {
-        DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
-        DateTime startTime = date.withHourOfDay(18);
-        DateTime endTime = startTime.plusHours(16);
-        DateTime currentTime = endTime.plusHours(1);
+    public void testGetEventTimes() throws Exception {
+        final OneDaysSensorData oneDaysSensorData = getOneDaySensorData();
+        final double[][] x = getSensorData(oneDaysSensorData);
+        final double[][] output = getNNOutput();
+        final DateTime date = DateTime.parse("2016-05-20").withZone(DateTimeZone.UTC);
+        final int tzOffsetMillis = -25200000;
+        final DateTime startTimeLocalUTC = date.withHourOfDay(20);
+        final DateTime endTimeLocalUTC = date.plusDays(1).withHourOfDay(12);
+        final DateTime currentTimeUTC = date.plusDays(1).withHourOfDay(13);
+
+        final List<Sample> light = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT);
+        final TreeMap<Long, Integer> offsetMap = Maps.newTreeMap();
+
+        final double[][] xPartial = new double[5][1201];
+        xPartial[PartialSensorIndices.MY_MOTION_DURATION.index()] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_DURATION.index()], 0, 1201);
+        xPartial[PartialSensorIndices.MY_MOTION_MAX_AMPLITUDE.index()] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()], 0, 1201);
+        xPartial[PartialSensorIndices.DIFFLIGHTSMOOTHED.index()] = Arrays.copyOfRange(x[SensorIndices.DIFFLIGHTSMOOTHED.index()], 0, 1201);
+        xPartial[PartialSensorIndices.SOUND_VOLUME.index()] = Arrays.copyOfRange(x[SensorIndices.SOUND_VOLUME.index()], 0, 1201);
+        xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, 1201);
 
 
-        AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime, endTime, 0);
-        ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4), endTime.plusHours(4), 0);
-        final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, pillData, emptyFeedback, pillData, pillData, date, startTime, endTime, currentTime, DateTimeConstants.MILLIS_PER_HOUR);
+        final int[] sleepSegments = getSleepSegments(output);
 
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData, new TimelineLog(0L, 0L), 0L, false,Sets.<String>newHashSet());
-
-        TestCase.assertTrue(resultOptional.isPresent());
-
-        final TimelineAlgorithmResult result = resultOptional.get();
-        TestCase.assertTrue(result.mainEvents.size() == 4);
-
-        TestCase.assertEquals(endTime.getMillis(), resultOptional.get().mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp(), 5 * DateTimeConstants.MILLIS_PER_MINUTE);
-
-    }
-
-    @Test
-    public void testGetPredictionWithAtTime() throws Exception {
-        DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
-        DateTime startTime = date.withHourOfDay(18);
-        DateTime endTime = startTime.plusHours(16);
-        DateTime currentTime = endTime;
+        for (final Sample s : light) {
+            offsetMap.put(s.dateTime, s.offsetMillis);
+        }
 
 
-        AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
-        ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
-        final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
-
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false,Sets.<String>newHashSet());
-
-        TestCase.assertTrue(resultOptional.isPresent());
-
-        final TimelineAlgorithmResult result = resultOptional.get();
-        TestCase.assertTrue(result.mainEvents.size() == 4);
-
-        TestCase.assertEquals(currentTime.getMillis(),resultOptional.get().mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp(),5*DateTimeConstants.MILLIS_PER_MINUTE);
+        final List<Event> eventTimes = getEventTimes(offsetMap, startTimeLocalUTC.getMillis(), sleepSegments, xPartial);
 
     }
 
-    @Test
-    public void testGetPredictionWithShortenedTime() throws Exception {
-        DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
-        DateTime startTime = date.withHourOfDay(18);
-        DateTime endTime = startTime.plusHours(16);
-        DateTime currentTime = startTime.plusHours(13);
-
-
-        AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
-        ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
-        final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
-
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false, Sets.<String>newHashSet());
-
-        TestCase.assertTrue(resultOptional.isPresent());
-
-        final TimelineAlgorithmResult result = resultOptional.get();
-        TestCase.assertTrue(result.mainEvents.size() == 4);
-
-        TestCase.assertEquals(currentTime.getMillis(),resultOptional.get().mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp(),5*DateTimeConstants.MILLIS_PER_MINUTE);
-
-    }
-
-
-    @Test
-    public void testDurationSafeguard() throws Exception {
-        DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
-        DateTime startTime = date.withHourOfDay(18);
-        DateTime endTime = startTime.plusHours(16);
-        DateTime currentTime = startTime.plusHours(2).plusMillis(30);
-
-
-        AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
-        ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
-        final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
-
-        final TimelineLog log = new TimelineLog(0L,0L);
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,log,0L,false, Sets.<String>newHashSet());
-
-        TestCase.assertFalse(resultOptional.isPresent());
-
-    }
 }
