@@ -684,7 +684,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
     }
 
-    static int getSustainedMotionIndex(final double []xOnDurWindow){
+    static int getSustainedMotionIndex(final double [] xOnDurWindow){
         final int windowSize = xOnDurWindow.length;
         final int motionCountThreshold = 4;
         int motionCount = 0;
@@ -784,7 +784,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int nSamples = data.length;
         final double mean = getMean(data);
         double temp = 0;
-        for(double a :data)
+        for(final  double a :data)
             temp += (a-mean)*(a-mean);
         return temp/nSamples;
     }
@@ -792,7 +792,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     static double getMean(final double [] data){
         final int nSamples = data.length;
         double sum = 0.0;
-        for(double a : data)
+        for(final double a : data)
             sum += a;
         return sum/nSamples;
     }
