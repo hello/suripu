@@ -475,8 +475,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final double age, bmi;
         if (accountOptional.isPresent()){
             final double userAge = DateTimeUtil.getDateDiffFromNowInDays(accountOptional.get().DOB) / 365;
-            final int height = accountOptional.get().height;
-            final int weight= accountOptional.get().weight;
+            final double height = ((double) accountOptional.get().height) / 100;
+            final double weight= ((double)accountOptional.get().weight) / 1000;
             if (userAge >=18){
                 age = userAge;
             } else {
