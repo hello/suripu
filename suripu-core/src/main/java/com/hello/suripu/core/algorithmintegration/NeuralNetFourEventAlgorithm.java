@@ -71,8 +71,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         BMI(10),   // default = 0 for missing or extreme bmi (< 5 or > 40)
         MALE(11), //1:male; 0:female / unknown
         FEMALE(12), //1: female; 0: male / unknown
-        DIFFLIGHTSMOOTHED(13), //rolling mean (30 minute window) of difference of mean light
-        LIGHTVAR(14), //rolling variance - 10 minute window
+        LIGHTVAR(13), //rolling variance - 10 minute window
+        DIFFLIGHTSMOOTHED(14), //rolling mean (30 minute window) of difference of mean light
         LIGHT_NODAYLIGHT(15); //excluding natural light
 
         private final int index;
@@ -220,17 +220,18 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final double [] smoothedLightDiff = new double[T];
         final int rollingWindowLight = 10;
         final int smoothedWindowLight = 30;
-        for (int idx = 0; idx < x[0].length; idx++){
-            final int idxCeiling = Math.min(idx + rollingWindowLight, x[0].length - 1);
-            final int idxFloorDiff = Math.max(idx - 1, 0);
-            varLight[idx] = getVariance(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idx, idxCeiling));
-            meanLight[idx] = getMean(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idx, idxCeiling));
-            diffMeanLight[idx] = meanLight[idx] - meanLight[idxFloorDiff];
+        final int windowSize = x[0].length;
+        for (int idx = 0; idx < windowSize-1; idx++){
+            final int idxCeiling = idx + 1;
+            final int idxFloor= Math.max(idx - rollingWindowLight, 0);
+            final int idxFloorDiff= Math.max(idx - smoothedWindowLight, 0);
+            varLight[idx] = getVariance(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
+            meanLight[idx] = getMean(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
+            diffMeanLight[idx] = meanLight[idx] - meanLight[idxFloor];
+            smoothedLightDiff[idx] = getMean(Arrays.copyOfRange(diffMeanLight, idxFloorDiff, idxCeiling));
+
         }
-        for (int idx = 0; idx < x[0].length; idx++){
-            final int idxCeiling = Math.min(idx + smoothedWindowLight, x[0].length - 1);
-            smoothedLightDiff[idx] = getMean(Arrays.copyOfRange(diffMeanLight, idx, idxCeiling));
-        }
+
         x[SensorIndices.LIGHTVAR.index()] = varLight;
         x[SensorIndices.DIFFLIGHTSMOOTHED.index()] = smoothedLightDiff;
 
@@ -248,7 +249,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
         /* SOUND DISTURBANCES */
         for (final Sample s : soundcount) {
-            double value = Math.log(s.value + 1.0) / Math.log(2);
+            double value = s.value /2 ;
 
             if (Double.isNaN(value) || value < 0.0) {
                 value = 0.0;
@@ -266,7 +267,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
         /* SOUND VOLUME */
         for (final Sample s : soundvol) {
-            double value = 0.1 * s.value - 4.0;
+            double value = s.value / 10240 - 4.0;
 
             if (value < 0.0) {
                 value = 0.0;
@@ -294,15 +295,15 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 continue;
             }
 
-            x[SensorIndices.MY_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
+            x[SensorIndices.MY_MOTION_DURATION.index()][idx.get()] = ((double)m.onDurationInSeconds) / 5;
 
 
-            //normalize to between 0 - 20 or so by dividing by 1000.0
-            final double value = ((double)m.value) / 1000.0;
+            //normalize to between 0 - 4 or so by dividing by 5000.0
+            final double value = ((double)m.value) / 5000.0;
             final double existingValue = x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()];
 
             //put in max... why? pill timestamps, when truncated, can show up in the same minute.
-            x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()] = value > existingValue ? value : existingValue;
+            x[SensorIndices.MY_MOTION_MAX_AMPLITUDE.index()][idx.get()] = value;
 
         }
 
@@ -319,12 +320,12 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 continue;
             }
 
-            x[SensorIndices.PARTNER_MOTION_DURATION.index()][idx.get()] += m.onDurationInSeconds;
+            x[SensorIndices.PARTNER_MOTION_DURATION.index()][idx.get()] = ((double)m.onDurationInSeconds / 5);
         }
 
         //User attributes - age, bmi, has partner, male, female
-        Arrays.fill(x[SensorIndices.AGE.index()], (double) oneDaysSensorData.age);
-        Arrays.fill(x[SensorIndices.BMI.index()], (double) oneDaysSensorData.bmi);
+        Arrays.fill(x[SensorIndices.AGE.index()], ((double) oneDaysSensorData.age) /90);
+        Arrays.fill(x[SensorIndices.BMI.index()], ((double) oneDaysSensorData.bmi)/ 50 );
         Arrays.fill(x[SensorIndices.PARTNER.index()], (double) oneDaysSensorData.partner);
         Arrays.fill(x[SensorIndices.MALE.index()], (double) oneDaysSensorData.male);
         Arrays.fill(x[SensorIndices.FEMALE.index()], (double) oneDaysSensorData.female);
@@ -669,7 +670,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return windowSize;
 
     }
-    
+
     static int getSustainedMotionIndex(final double []xOnDurWindow){
         final int windowSize = xOnDurWindow.length;
         final int motionCountThreshold = 4;
@@ -764,8 +765,6 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
         return sleepStates;
     }
-
-
 
     static double getVariance(final double [] data)
     {

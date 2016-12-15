@@ -471,10 +471,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     protected Optional<OneDaysSensorData> getSensorData(final long accountId,final DateTime date, final DateTime starteTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,final Optional<TimelineFeedback> newFeedback) {
 
         final Optional<Account> accountOptional = accountDAO.getById(accountId);
-        final int age, male, female, partner;
-        final double bmi;
+        final int male , female, partner;
+        final double age, bmi;
         if (accountOptional.isPresent()){
-            final int userAge = DateTimeUtil.getDateDiffFromNowInDays(accountOptional.get().DOB) / 365;
+            final double userAge = DateTimeUtil.getDateDiffFromNowInDays(accountOptional.get().DOB) / 365;
             final int height = accountOptional.get().height;
             final int weight= accountOptional.get().weight;
             if (userAge >=18){

@@ -21,7 +21,7 @@ public class OneDaysSensorData {
     public final DateTime startTimeLocalUTC;
     public final DateTime endTimeLocalUTC;
     public final DateTime currentTimeUTC;
-    public final int age;
+    public final double age;
     public final int male;
     public final int female;
     public final double bmi;
@@ -33,7 +33,7 @@ public class OneDaysSensorData {
                              final ImmutableList<TimelineFeedback> feedbackList,
                              final ImmutableList<TrackerMotion> originalTrackerMotions, final ImmutableList<TrackerMotion> originalPartnerTrackerMotions,
                              final DateTime date, final DateTime startTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,
-                             final int timezoneOffsetMillis, final int age, final int male, final int female, final double bmi, final int partner) {
+                             final int timezoneOffsetMillis, final double age, final int male, final int female, final double bmi, final int partner) {
         this.allSensorSampleList = allSensorSampleList;
         this.trackerMotions = trackerMotions;
         this.partnerMotions = partnerMotions;
