@@ -110,13 +110,16 @@ public class InstrumentedTimelineProcessorTest {
         features.clear();
 
         final PairingDAO pairingDAO = new HistoricalPairingDAO(helpers.deviceReadDAO, helpers.deviceDataReadAllSensorsDAO);
+
+
+
         instrumentedTimelineProcessor = InstrumentedTimelineProcessor.createTimelineProcessor(
                 helpers.pillDataReadDAO,helpers.deviceReadDAO,helpers.deviceDataReadAllSensorsDAO,
                 helpers.ringTimeHistoryDAODynamoDB,helpers.feedbackDAO, helpers.sleepHmmDAO,helpers.accountDAO,helpers.sleepStatsDAO,
                 new SenseDataDAODynamoDB(pairingDAO, helpers.deviceDataReadAllSensorsDAO, helpers.senseColorDAO, helpers.calibrationDAO),helpers.timeZoneHistoryDAO, helpers.priorsDAO,helpers.featureExtractionModelsDAO,
                 helpers.defaultModelEnsembleDAO,helpers.userTimelineTestGroupDAO,
                 helpers.sleepScoreParametersDAO,
-                helpers.neuralNetEndpoint,helpers.algorithmConfiguration, helpers.metric);
+                Maps.newHashMap(),helpers.algorithmConfiguration, helpers.metric);
     }
 
 

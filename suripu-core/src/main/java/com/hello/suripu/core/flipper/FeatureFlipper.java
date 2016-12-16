@@ -64,6 +64,7 @@ public class FeatureFlipper {
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
     public final static String NEW_ROOM_CONDITION = "new_room_condition";
     public final static String NEURAL_NET_ALGORITHM = "neural_net_algorithm";
+    public final static String NEURAL_NET_FOUR_EVENTS_ALGORITHM = "neural_net_four_events_algorithm";
 
     public final static String OFF_BED_HMM_MOTION_FILTER = "off_bed_hmm_motion_filter";
     public final static String OFFICE_ONLY_OVERRIDE = "office_only_override";
