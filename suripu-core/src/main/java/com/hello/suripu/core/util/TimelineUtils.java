@@ -658,7 +658,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public static SleepStats computeStats(final List<SleepSegment> segments, final List<TrackerMotion> trackerMotions, final int lightSleepThreshold, final boolean hasMediumSleep) {
+    public static SleepStats computeStats(final List<SleepSegment> segments, final List<TrackerMotion> trackerMotions, final int lightSleepThreshold, final boolean hasMediumSleep, final boolean useUninterruptedDuration) {
         Integer soundSleepDurationInSecs = 0;
         Integer mediumSleepDurationInSecs = 0;
         Integer lightSleepDurationInSecs = 0;
@@ -761,8 +761,12 @@ public class TimelineUtils {
         if (firstInBedTimestampMillis > 0 && firstInBedTimestampMillis < firstSleepTimestampMillis) {
             sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis)/MINUTE_IN_MILLIS);
         }
-        final AgitatedSleep agitatedSleep = SleepScoreUtils.getAgitatedSleep(trackerMotions, sleepTimestampMillis, wakeUpTimestampMillis);
-        final Integer uninterruptedSleepDurationInMinutes = Math.max(agitatedSleep.uninterruptedSleepMins - 20, 0);
+        int uninterruptedSleepDurationInMinutes = soundSleepDurationInMinutes;
+        if (useUninterruptedDuration) {
+            final AgitatedSleep agitatedSleep = SleepScoreUtils.getAgitatedSleep(trackerMotions, sleepTimestampMillis, wakeUpTimestampMillis);
+            uninterruptedSleepDurationInMinutes = Math.max(agitatedSleep.uninterruptedSleepMins - 20, 0);
+        }
+
         final SleepStats sleepStats = new SleepStats(
                 soundSleepDurationInMinutes,
                 mediumSleepDurationInMinutes,
@@ -786,14 +790,12 @@ public class TimelineUtils {
      * @param sleepStats
      * @return
      */
-    public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents, final boolean useUninterruptedDuration) {
+    public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents) {
 
         final Integer percentageOfSoundSleep = Math.round((float) sleepStats.soundSleepDurationInMinutes /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
-        double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double) DateTimeConstants.MINUTES_PER_HOUR;
-        if (useUninterruptedDuration) {
-            soundDurationInHours = sleepStats.uninterruptedSleepDurationInMinutes / (double) DateTimeConstants.MINUTES_PER_HOUR;
-        }
+        double soundDurationInHours = sleepStats.uninterruptedSleepDurationInMinutes / (double) DateTimeConstants.MINUTES_PER_HOUR;
+
         // report in-bed time
         String message = String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
         if(!sleepStats.isInBedDuration){

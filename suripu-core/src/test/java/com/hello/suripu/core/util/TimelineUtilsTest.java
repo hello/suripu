@@ -84,7 +84,7 @@ public class TimelineUtilsTest {
         final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents, sleep, wake);
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, trackerMotions, 70, true);
+        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, trackerMotions, 70, true, true);
         final Integer uninterruptedDuration = 380;
         assertThat(sleepStats.uninterruptedSleepDurationInMinutes, is(uninterruptedDuration));
     }
