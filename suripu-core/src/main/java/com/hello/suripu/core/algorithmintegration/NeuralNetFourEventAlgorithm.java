@@ -445,18 +445,18 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {
 
-                log.addMessage(AlgorithmType.NEURAL_NET,events);
+                log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT,events);
 
-                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events));
+                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET_FOUR_EVENT,events));
 
             }
 
             //THERE WAS AN ERROR
-            log.addMessage(AlgorithmType.NEURAL_NET,error);
+            log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT,error);
 
 
         } catch (Exception e) {
-            log.addMessage(AlgorithmType.NEURAL_NET, TimelineError.UNEXEPECTED);
+            log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.UNEXEPECTED);
             LOGGER.error("action=caught_exception exception=Exception error=invalid_index_calculation");
             LOGGER.debug(e.getMessage());
         }

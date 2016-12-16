@@ -116,22 +116,13 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
     }
 
     @Test
-    public void testGetSensorData() throws Exception{
-        final OneDaysSensorData oneDaysSensorData = getOneDaySensorData();
-        final double [][] x = getSensorData(oneDaysSensorData);
-
-    }
-
-    @Test
-    public void testGetEventTimes() throws Exception {
+    public void testGetEventTimesFromNNOutput() throws Exception {
         final OneDaysSensorData oneDaysSensorData = getOneDaySensorData();
         final double[][] x = getSensorData(oneDaysSensorData);
         final double[][] output = getNNOutput();
         final DateTime date = DateTime.parse("2016-05-20").withZone(DateTimeZone.UTC);
-        final int tzOffsetMillis = -25200000;
         final DateTime startTimeLocalUTC = date.withHourOfDay(20);
-        final DateTime endTimeLocalUTC = date.plusDays(1).withHourOfDay(12);
-        final DateTime currentTimeUTC = date.plusDays(1).withHourOfDay(13);
+
 
         final List<Sample> light = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT);
         final TreeMap<Long, Integer> offsetMap = Maps.newTreeMap();
@@ -152,7 +143,11 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
 
 
         final List<Event> eventTimes = getEventTimes(offsetMap, startTimeLocalUTC.getMillis(), sleepSegments, xPartial);
-
+        assert(eventTimes.size() == 4);
+        assert(eventTimes.get(0).getStartTimestamp() == 1463786160000L);
+        assert(eventTimes.get(1).getStartTimestamp() == 1463787660000L);
+        assert(eventTimes.get(2).getStartTimestamp() == 1463811300000L);
+        assert(eventTimes.get(3).getStartTimestamp() == 1463813040000L);
     }
 
 }
