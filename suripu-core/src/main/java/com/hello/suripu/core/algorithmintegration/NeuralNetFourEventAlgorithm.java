@@ -662,7 +662,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 noMotionCount = Math.max(0, noMotionCount - 1);
             }
             if (noMotionCount == noMotionCountThreshold){
-                return i - noMotionCount;
+                return i - (noMotionCount - 1);
             }
         }
         return 0;
@@ -754,7 +754,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int outputDim= nnOutput.length;
         final int[] sleepStates = new int[timeSteps];
         final double[] stateProb = new double[outputDim];
-        for (int idx = 0; idx < timeSteps; idx ++){
+        for (int idx = ZERO_PADDING; idx < timeSteps - 2 * ZERO_PADDING; idx ++){
              int idMax = 0;
              double maxProb = 0;
              for (int i = 0; i < outputDim ; i ++){
