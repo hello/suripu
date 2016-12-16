@@ -34,7 +34,7 @@ import java.util.UUID;
 
 public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
-    public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";
+    public static final String DEFAULT_SLEEP_NET_ID = "SLEEP2";
     public static final int ZERO_PADDING = 120;
     private final int startMinuteOfArtificalLight;
     private final int stopMinuteOfArtificalLight;
@@ -382,16 +382,12 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
             final NeuralNetAlgorithmOutput algorithmOutput = outputOptional.get();
 
-            if (algorithmOutput.output.length == 0) {
-                LOGGER.info("action=return_no_prediction reason=zero_length_neural_net_output");
+            if (algorithmOutput.output.length != 9) {
+                LOGGER.info("action=return_no_prediction reason=incorrect_output_dimensions dims={}",algorithmOutput.output.length);
                 log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.UNEXEPECTED);
                 return Optional.absent();
             }
-            if (algorithmOutput.output[0].length != 9){
-                LOGGER.info("action=return_no_prediction reason=incorrect_output_dimensions");
-                log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.UNEXEPECTED);
-                return Optional.absent();
-            }
+
 
             final List<Sample> light = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT);
 

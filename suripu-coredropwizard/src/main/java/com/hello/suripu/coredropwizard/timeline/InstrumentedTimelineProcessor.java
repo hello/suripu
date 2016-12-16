@@ -142,12 +142,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                                                         final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
                                                                         final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                                                                         final SleepScoreParametersDAO sleepScoreParametersDAO,
-                                                                        final NeuralNetEndpoint neuralNetEndpoint,
+                                                                        final Map<String,NeuralNetEndpoint> neuralNetEndpoints,
                                                                         final AlgorithmConfiguration algorithmConfiguration,
                                                                         final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
-        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoint,algorithmConfiguration,Optional.<UUID>absent());
+        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoints,algorithmConfiguration,Optional.<UUID>absent());
 
         final Histogram scoreDiff = metrics.histogram(name(InstrumentedTimelineProcessor.class, "sleep-score-diff"));
 
@@ -300,6 +300,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         if (this.hasNeuralNetAlgorithmEnabled(accountId)) {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET);
+        }
+
+        if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
+            algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
         }
 
         final DateTime startTimeLocalUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
