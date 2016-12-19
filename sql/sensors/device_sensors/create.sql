@@ -25,6 +25,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE account_device_map_id_seq TO ingress_user;
 
 ALTER TABLE account_device_map ADD COLUMN active BOOLEAN DEFAULT TRUE;
 ALTER TABLE account_device_map ADD COLUMN last_updated TIMESTAMP default current_timestamp;
+ALTER TABLE account_device_map ADD COLUMN device_id VARCHAR(100);
 
 
 CREATE UNIQUE INDEX uniq_account_device_name on account_device_map(account_id, device_name, active);
