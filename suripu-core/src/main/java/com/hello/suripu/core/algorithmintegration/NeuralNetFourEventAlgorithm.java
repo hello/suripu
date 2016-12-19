@@ -115,17 +115,17 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
 
     private static Optional<Integer> getIndex(final long t0, final long t, final int maxIdx) {
-        int idx =  (int) ((t - t0) / (DateTimeConstants.MILLIS_PER_MINUTE)) + ZERO_PADDING;
+        int idx =  (int) ((t - t0) / (DateTimeConstants.MILLIS_PER_MINUTE));
 
-        if (idx < 0) {
+        if (idx < - ZERO_PADDING) {
             return Optional.absent();
         }
 
-        if (idx >= maxIdx) {
+        if (idx >= maxIdx + ZERO_PADDING) {
             return Optional.absent();
         }
 
-        return Optional.of(idx);
+        return Optional.of(idx + ZERO_PADDING);
     }
 
     protected boolean isArtificalLight(final DateTime localUtcTime) {
@@ -173,7 +173,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
         /*********** LOG  LIGHT, DIFF LOG LIGHT, VAR LOG LIGHT, SMOOTHED DIFF LOG LIGHT and LOG LIGHT NO DAYLIGHT *************/
         for (final Sample s : light) {
-            double value = Math.log(s.value + 1.0) / Math.log(2);
+            double value = Math.log((s.value * 65536)/256  + 1.0) / Math.log(2);
 
             if (Double.isNaN(value) || value < 0.0) {
                 value = 0.0;
@@ -191,8 +191,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         //diff light
-        for (int t = 1 + ZERO_PADDING; t < x[0].length; t++) {
-            x[SensorIndices.DIFFLIGHT.index()][t] = x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1];
+        for (int t = ZERO_PADDING + 1; t < T + ZERO_PADDING; t++) {
+            x[SensorIndices.DIFFLIGHT.index()][t-1] = - (x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1]);
         }
 
         //zero out light during natural light times
@@ -215,20 +215,20 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
         //varLight and smoothedLightDiff
         final double [] varLight  = new double[T + 2*ZERO_PADDING];
-        final double [] meanLight  = new double[T];
-        final double [] diffMeanLight = new double[T];
+        final double [] meanLight  = new double[T+ 2*ZERO_PADDING];
+        final double [] diffMeanLight = new double[T + 2*ZERO_PADDING];
         final double [] smoothedLightDiff = new double[T + 2*ZERO_PADDING ];
         final int rollingWindowLight = 10;
         final int smoothedWindowLight = 30;
-        final int windowSize = x[0].length - 2*ZERO_PADDING;
+        final int windowSize = T + 2 * ZERO_PADDING;
         for (int idx = 0; idx < windowSize-1 ; idx++){
             final int idxCeiling = idx + 1;
             final int idxFloor= Math.max(idx - rollingWindowLight, 0);
             final int idxFloorDiff= Math.max(idx - smoothedWindowLight, 0);
-            varLight[idx+ ZERO_PADDING] = getVariance(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
+            varLight[idx] = getVariance(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
             meanLight[idx] = getMean(Arrays.copyOfRange(x[SensorIndices.LIGHT.index()], idxFloor, idxCeiling));
             diffMeanLight[idx] = meanLight[idx] - meanLight[idxFloor];
-            smoothedLightDiff[idx + ZERO_PADDING] = getMean(Arrays.copyOfRange(diffMeanLight, idxFloorDiff, idxCeiling));
+            smoothedLightDiff[idx] = getMean(Arrays.copyOfRange(diffMeanLight, idxFloorDiff, idxCeiling));
 
         }
 
@@ -267,7 +267,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
         /* SOUND VOLUME */
         for (final Sample s : soundvol) {
-            double value = s.value / 10240 - 4.0;
+            double value = s.value / 10 - 4.0; // already in db
 
             if (value < 0.0) {
                 value = 0.0;
@@ -336,7 +336,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 x[col][idx] = 0;
             }
         }
-        for (int idx = T; idx < T+ 2*ZERO_PADDING; idx ++){
+        for (int idx = T + ZERO_PADDING; idx < T+ 2*ZERO_PADDING; idx ++){
             for (int col = 0; col < SensorIndices.MAX_NUM_INDICES; col ++){
                 x[col][idx] = 0;
             }
@@ -373,6 +373,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData);
+            int selectedTime = 180;
+            final double [] test  = {x[0][selectedTime],x[1][selectedTime],x[2][selectedTime],x[3][selectedTime],x[4][selectedTime],x[5][selectedTime],x[6][selectedTime],x[7][selectedTime],x[8][selectedTime],x[9][selectedTime],x[10][selectedTime],x[11][selectedTime],x[12][selectedTime],x[13][selectedTime],x[14][selectedTime],x[15][selectedTime]};
 
             final Optional<NeuralNetAlgorithmOutput> outputOptional = endpoint.getNetOutput(DEFAULT_SLEEP_NET_ID,x); //???
 
@@ -641,7 +643,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             modifier = -1;
         }
         for (int i = 0; i < windowSize; i++){
-            if (xSensorWindow[i] * modifier >+ threshold * modifier){
+            if (xSensorWindow[i] * modifier >= threshold * modifier){
                 eventIndex = i;
             }
         }
@@ -726,24 +728,25 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         int idx = 0;
         for(final int sleepState : sleepStates){
             if (sleepState > 1 && sleepSegments[0] == 0){
-                sleepSegments[0] = Math.max(idx - flexCorrection, 0);
+                sleepSegments[0] = Math.max(idx - flexCorrection, ZERO_PADDING);
             }
-            if (sleepState > 3 && sleepSegments[1] == 0){
-                sleepSegments[1] = Math.max(idx - uncertaintyCorrection, sleepSegments[0]);
+            if (sleepState >= 3 && sleepSegments[1] == 0){
+                sleepSegments[1] = Math.max(idx - uncertaintyCorrection, ZERO_PADDING);
             }
-            if (sleepState > 4 && sleepSegments[2] == 0){
-                sleepSegments[2] = Math.min(idx + uncertaintyCorrection, timeSteps);
+            if (sleepState >=5 && sleepSegments[2] == 0){
+                sleepSegments[2] = Math.min(idx + uncertaintyCorrection, timeSteps - ZERO_PADDING);
             }
             if (sleepState == 8 && sleepSegments[3] == 0){
-                sleepSegments[3] = Math.max(idx,sleepSegments[2]);
+                sleepSegments[3] = Math.min(idx - flexCorrection,timeSteps - ZERO_PADDING);
+                break;
             }
             idx ++;
         }
-        if (sleepSegments[1] <= sleepSegments[0]){
-            sleepSegments[1] = sleepSegments[0] + 1;
+        if (sleepSegments[1] < sleepSegments[0]){
+            sleepSegments[1] = sleepSegments[0] ;
         }
-        if (sleepSegments[3]<=sleepSegments[2]){
-            sleepSegments[3] = sleepSegments[2] + 1;
+        if (sleepSegments[3]<sleepSegments[2]){
+            sleepSegments[3] = sleepSegments[2] ;
         }
 
         return sleepSegments;
@@ -754,7 +757,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int outputDim= nnOutput.length;
         final int[] sleepStates = new int[timeSteps];
         final double[] stateProb = new double[outputDim];
-        for (int idx = ZERO_PADDING; idx < timeSteps - 2 * ZERO_PADDING; idx ++){
+        for (int idx = ZERO_PADDING; idx < timeSteps -  ZERO_PADDING; idx ++){
              int idMax = 0;
              double maxProb = 0;
              for (int i = 0; i < outputDim ; i ++){
