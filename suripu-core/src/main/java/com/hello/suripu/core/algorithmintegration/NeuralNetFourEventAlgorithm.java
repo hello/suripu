@@ -415,7 +415,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, iEnd);
 
 
-            final int [] sleepSegments = (algorithmOutput.output);
+            final int [] sleepSegments = getSleepSegments(algorithmOutput.output);
 
             final List<Event> events = getEventTimes(offsetMap,t0, sleepSegments, xPartial);
 
