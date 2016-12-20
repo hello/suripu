@@ -129,8 +129,9 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     }
 
     protected boolean isArtificalLight(final DateTime localUtcTime) {
-        final int minuteOfDay = localUtcTime.getMinuteOfDay();
-
+        final int hourOfDay = localUtcTime.getHourOfDay();
+        final int startHourOfArtificalLight = 6;
+        final int stopHourOfArtificalLight = 18;
         // |---0xxxxxxxxxxx1------------|
         //
         // OR
@@ -138,18 +139,12 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         // |xxxx1--------------------0xx|
 
         //spans midnight?
-        if (stopMinuteOfArtificalLight < startMinuteOfArtificalLight) {
-            if (minuteOfDay >= startMinuteOfArtificalLight || minuteOfDay < stopMinuteOfArtificalLight) {
-                return true;
-            }
-        }
-        else {
-            if (minuteOfDay >= startMinuteOfArtificalLight && minuteOfDay < stopMinuteOfArtificalLight) {
-                return true;
-            }
-        }
 
-        return false;
+            if (hourOfDay >= startHourOfArtificalLight && hourOfDay <= stopHourOfArtificalLight) {
+                return false;
+            }
+
+        return true;
     }
 
     protected double [][] getSensorData(final OneDaysSensorData oneDaysSensorData) throws  Exception {
@@ -200,7 +195,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             //get local time, enforce artificial light constraint
             final DateTime time = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
 
-            //if between 5am and 10pm, light is "natural", so we don't care about it, and want to zero it out
+            //if between 5am and 6pm, light is "natural", so we don't care about it, and want to zero it out
             if (!isArtificalLight(time)) {
 
                 final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
@@ -373,8 +368,6 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData);
-            int selectedTime = 180;
-            final double [] test  = {x[0][selectedTime],x[1][selectedTime],x[2][selectedTime],x[3][selectedTime],x[4][selectedTime],x[5][selectedTime],x[6][selectedTime],x[7][selectedTime],x[8][selectedTime],x[9][selectedTime],x[10][selectedTime],x[11][selectedTime],x[12][selectedTime],x[13][selectedTime],x[14][selectedTime],x[15][selectedTime]};
 
             final Optional<NeuralNetAlgorithmOutput> outputOptional = endpoint.getNetOutput(DEFAULT_SLEEP_NET_ID,x); //???
 
@@ -422,7 +415,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, iEnd);
 
 
-            final int [] sleepSegments = getSleepSegments(algorithmOutput.output);
+            final int [] sleepSegments = (algorithmOutput.output);
 
             final List<Event> events = getEventTimes(offsetMap,t0, sleepSegments, xPartial);
 
@@ -706,14 +699,13 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
     static int[] getSleepSegmentWindow(final int sleepSegment, final int sleepSegmentWindowSize, final int associatedEventIndex, final int timeSteps){
 
-        final int sleepSegmentCeiling = Math.min( (int) (sleepSegment + .5 * sleepSegmentWindowSize), timeSteps);
         final int sleepSegmentFloor;
         if (associatedEventIndex > 0){
             sleepSegmentFloor =associatedEventIndex;
         } else {
             sleepSegmentFloor = Math.max( (int) (sleepSegment - .5 * sleepSegmentWindowSize), 0);
         }
-
+        final int sleepSegmentCeiling = sleepSegmentFloor + sleepSegmentWindowSize;
         return new int[] {sleepSegmentFloor, sleepSegmentCeiling};
     }
 
@@ -731,22 +723,16 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 sleepSegments[0] = Math.max(idx - flexCorrection, ZERO_PADDING);
             }
             if (sleepState >= 3 && sleepSegments[1] == 0){
-                sleepSegments[1] = Math.max(idx - uncertaintyCorrection, ZERO_PADDING);
+                sleepSegments[1] = Math.max(idx - uncertaintyCorrection, sleepSegments[0]);
             }
             if (sleepState >=5 && sleepSegments[2] == 0){
                 sleepSegments[2] = Math.min(idx + uncertaintyCorrection, timeSteps - ZERO_PADDING);
             }
             if (sleepState == 8 && sleepSegments[3] == 0){
-                sleepSegments[3] = Math.min(idx - flexCorrection,timeSteps - ZERO_PADDING);
+                sleepSegments[3] = Math.max(Math.min(idx - flexCorrection,timeSteps - ZERO_PADDING), sleepSegments[2]);
                 break;
             }
             idx ++;
-        }
-        if (sleepSegments[1] < sleepSegments[0]){
-            sleepSegments[1] = sleepSegments[0] ;
-        }
-        if (sleepSegments[3]<sleepSegments[2]){
-            sleepSegments[3] = sleepSegments[2] ;
         }
 
         return sleepSegments;
