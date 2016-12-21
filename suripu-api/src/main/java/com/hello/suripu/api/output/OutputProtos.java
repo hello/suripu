@@ -272,6 +272,25 @@ public final class OutputProtos {
      * </pre>
      */
     com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControlOrBuilder getAudioFeaturesControlOrBuilder();
+
+    /**
+     * <code>optional uint32 lights_off_threshold = 27;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    boolean hasLightsOffThreshold();
+    /**
+     * <code>optional uint32 lights_off_threshold = 27;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    int getLightsOffThreshold();
   }
   /**
    * Protobuf type {@code SyncResponse}
@@ -454,6 +473,11 @@ public final class OutputProtos {
                 audioFeaturesControl_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00002000;
+              break;
+            }
+            case 216: {
+              bitField0_ |= 0x00004000;
+              lightsOffThreshold_ = input.readUInt32();
               break;
             }
           }
@@ -7500,6 +7524,31 @@ public final class OutputProtos {
       return audioFeaturesControl_;
     }
 
+    public static final int LIGHTS_OFF_THRESHOLD_FIELD_NUMBER = 27;
+    private int lightsOffThreshold_;
+    /**
+     * <code>optional uint32 lights_off_threshold = 27;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    public boolean hasLightsOffThreshold() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    /**
+     * <code>optional uint32 lights_off_threshold = 27;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    public int getLightsOffThreshold() {
+      return lightsOffThreshold_;
+    }
+
     private void initFields() {
       alarm_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance();
       whiteNoise_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
@@ -7517,6 +7566,7 @@ public final class OutputProtos {
       ringTimeAck_ = "";
       roomConditionsLightsOff_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
       audioFeaturesControl_ = com.hello.suripu.api.audio.AudioFeaturesControlProtos.AudioFeaturesControl.getDefaultInstance();
+      lightsOffThreshold_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -7578,6 +7628,9 @@ public final class OutputProtos {
       }
       if (((bitField0_ & 0x00002000) == 0x00002000)) {
         output.writeMessage(26, audioFeaturesControl_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeUInt32(27, lightsOffThreshold_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -7651,6 +7704,10 @@ public final class OutputProtos {
       if (((bitField0_ & 0x00002000) == 0x00002000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(26, audioFeaturesControl_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(27, lightsOffThreshold_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -7831,6 +7888,8 @@ public final class OutputProtos {
           audioFeaturesControlBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00008000);
+        lightsOffThreshold_ = 0;
+        bitField0_ = (bitField0_ & ~0x00010000);
         return this;
       }
 
@@ -7949,6 +8008,10 @@ public final class OutputProtos {
         } else {
           result.audioFeaturesControl_ = audioFeaturesControlBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        result.lightsOffThreshold_ = lightsOffThreshold_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8060,6 +8123,9 @@ public final class OutputProtos {
         }
         if (other.hasAudioFeaturesControl()) {
           mergeAudioFeaturesControl(other.getAudioFeaturesControl());
+        }
+        if (other.hasLightsOffThreshold()) {
+          setLightsOffThreshold(other.getLightsOffThreshold());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -9585,6 +9651,58 @@ public final class OutputProtos {
         return audioFeaturesControlBuilder_;
       }
 
+      private int lightsOffThreshold_ ;
+      /**
+       * <code>optional uint32 lights_off_threshold = 27;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public boolean hasLightsOffThreshold() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      /**
+       * <code>optional uint32 lights_off_threshold = 27;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public int getLightsOffThreshold() {
+        return lightsOffThreshold_;
+      }
+      /**
+       * <code>optional uint32 lights_off_threshold = 27;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder setLightsOffThreshold(int value) {
+        bitField0_ |= 0x00010000;
+        lightsOffThreshold_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 lights_off_threshold = 27;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder clearLightsOffThreshold() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        lightsOffThreshold_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SyncResponse)
     }
 
@@ -10327,7 +10445,7 @@ public final class OutputProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\023sync_response.proto\032\023audio_control.pro" +
-      "to\032\034audio_features_control.proto\"\346\r\n\014Syn" +
+      "to\032\034audio_features_control.proto\"\204\016\n\014Syn" +
       "cResponse\022\"\n\005alarm\030\006 \001(\0132\023.SyncResponse." +
       "Alarm\022-\n\013white_noise\030\010 \001(\0132\030.SyncRespons" +
       "e.WhiteNoise\022\024\n\014reset_device\030\n \001(\010\0225\n\017ro" +
@@ -10342,39 +10460,40 @@ public final class OutputProtos {
       "g_time_ack\030\030 \001(\t\022@\n\032room_conditions_ligh" +
       "ts_off\030\031 \001(\0162\034.SyncResponse.RoomConditio" +
       "ns\0225\n\026audio_features_control\030\032 \001(\0132\025.Aud" +
-      "ioFeaturesControl\032\230\002\n\014FileDownload\022\014\n\004ho" +
-      "st\030\001 \001(\t\022\013\n\003url\030\002 \001(\t\022\034\n\024copy_to_serial_" +
-      "flash\030\004 \001(\010\022\037\n\027reset_network_processor\030\005" +
-      " \001(\010\022#\n\033reset_application_processor\030\006 \001(",
-      "\010\022\035\n\025serial_flash_filename\030\007 \001(\t\022\031\n\021seri" +
-      "al_flash_path\030\010 \001(\t\022\030\n\020sd_card_filename\030" +
-      "\003 \001(\t\022\024\n\014sd_card_path\030\t \001(\t\022\014\n\004sha1\030\n \001(" +
-      "\014\022\021\n\tfile_size\030\013 \001(\005\032\245\001\n\005Alarm\022\022\n\nstart_" +
-      "time\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone" +
-      "_id\030\003 \001(\005:\0011\022&\n\036ring_offset_from_now_in_" +
-      "second\030\004 \001(\005\022\037\n\027ring_duration_in_second\030" +
-      "\005 \001(\005\022\025\n\rringtone_path\030\006 \001(\t\032w\n\rPairingA" +
-      "ction\022\014\n\004ssid\030\001 \001(\t\0224\n\004type\030\002 \001(\0162&.Sync" +
-      "Response.PairingAction.ActionType\"\"\n\nAct",
-      "ionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNo" +
-      "ise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(" +
-      "\005\022\020\n\010sound_id\030\003 \001(\005\032\225\001\n\013FlashAction\022\013\n\003r" +
-      "ed\030\001 \001(\005\022\r\n\005green\030\002 \001(\005\022\014\n\004blue\030\003 \001(\005\022\032\n" +
-      "\022delay_milliseconds\030\004 \001(\005\022\017\n\007fade_in\030\005 \001" +
-      "(\010\022\020\n\010fade_out\030\006 \001(\010\022\016\n\006rotate\030\007 \001(\010\022\r\n\005" +
-      "alpha\030\010 \001(\005\032\376\001\n\tLEDAction\0223\n\004type\030\001 \001(\0162" +
-      "%.SyncResponse.LEDAction.LEDActionType\022\013" +
-      "\n\003url\030\002 \001(\t\022\r\n\005color\030\003 \001(\r\022\021\n\talt_color\030" +
-      "\004 \001(\r\022\030\n\020duration_seconds\030\006 \001(\005\"s\n\rLEDAc",
-      "tionType\022\n\n\006FADEIO\020\000\022\010\n\004GLOW\020\001\022\t\n\005THROB\020" +
-      "\002\022\n\n\006PULSAR\020\003\022\n\n\006DOUBLE\020\004\022\t\n\005SIREN\020\005\022\n\n\006" +
-      "TRIPPY\020\006\022\t\n\005PARTY\020\007\022\007\n\003URL\020\010\0323\n\014PillSett" +
-      "ings\022\017\n\007pill_id\030\001 \001(\t\022\022\n\npill_color\030\002 \001(" +
-      "\r\"N\n\016RoomConditions\022\t\n\005IDEAL\020\001\022\013\n\007WARNIN" +
-      "G\020\002\022\t\n\005ALERT\020\003\022\031\n\025IDEAL_EXCLUDING_LIGHT\020" +
-      "\004\"H\n\023BatchedPillSettings\0221\n\rpill_setting" +
-      "s\030\001 \003(\0132\032.SyncResponse.PillSettingsB+\n\033c" +
-      "om.hello.suripu.api.outputB\014OutputProtos"
+      "ioFeaturesControl\022\034\n\024lights_off_threshol" +
+      "d\030\033 \001(\r\032\230\002\n\014FileDownload\022\014\n\004host\030\001 \001(\t\022\013" +
+      "\n\003url\030\002 \001(\t\022\034\n\024copy_to_serial_flash\030\004 \001(" +
+      "\010\022\037\n\027reset_network_processor\030\005 \001(\010\022#\n\033re",
+      "set_application_processor\030\006 \001(\010\022\035\n\025seria" +
+      "l_flash_filename\030\007 \001(\t\022\031\n\021serial_flash_p" +
+      "ath\030\010 \001(\t\022\030\n\020sd_card_filename\030\003 \001(\t\022\024\n\014s" +
+      "d_card_path\030\t \001(\t\022\014\n\004sha1\030\n \001(\014\022\021\n\tfile_" +
+      "size\030\013 \001(\005\032\245\001\n\005Alarm\022\022\n\nstart_time\030\001 \001(\r" +
+      "\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone_id\030\003 \001(\005:" +
+      "\0011\022&\n\036ring_offset_from_now_in_second\030\004 \001" +
+      "(\005\022\037\n\027ring_duration_in_second\030\005 \001(\005\022\025\n\rr" +
+      "ingtone_path\030\006 \001(\t\032w\n\rPairingAction\022\014\n\004s" +
+      "sid\030\001 \001(\t\0224\n\004type\030\002 \001(\0162&.SyncResponse.P",
+      "airingAction.ActionType\"\"\n\nActionType\022\010\n" +
+      "\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nsta" +
+      "rt_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound" +
+      "_id\030\003 \001(\005\032\225\001\n\013FlashAction\022\013\n\003red\030\001 \001(\005\022\r" +
+      "\n\005green\030\002 \001(\005\022\014\n\004blue\030\003 \001(\005\022\032\n\022delay_mil" +
+      "liseconds\030\004 \001(\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fade" +
+      "_out\030\006 \001(\010\022\016\n\006rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001(" +
+      "\005\032\376\001\n\tLEDAction\0223\n\004type\030\001 \001(\0162%.SyncResp" +
+      "onse.LEDAction.LEDActionType\022\013\n\003url\030\002 \001(" +
+      "\t\022\r\n\005color\030\003 \001(\r\022\021\n\talt_color\030\004 \001(\r\022\030\n\020d",
+      "uration_seconds\030\006 \001(\005\"s\n\rLEDActionType\022\n" +
+      "\n\006FADEIO\020\000\022\010\n\004GLOW\020\001\022\t\n\005THROB\020\002\022\n\n\006PULSA" +
+      "R\020\003\022\n\n\006DOUBLE\020\004\022\t\n\005SIREN\020\005\022\n\n\006TRIPPY\020\006\022\t" +
+      "\n\005PARTY\020\007\022\007\n\003URL\020\010\0323\n\014PillSettings\022\017\n\007pi" +
+      "ll_id\030\001 \001(\t\022\022\n\npill_color\030\002 \001(\r\"N\n\016RoomC" +
+      "onditions\022\t\n\005IDEAL\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALE" +
+      "RT\020\003\022\031\n\025IDEAL_EXCLUDING_LIGHT\020\004\"H\n\023Batch" +
+      "edPillSettings\0221\n\rpill_settings\030\001 \003(\0132\032." +
+      "SyncResponse.PillSettingsB+\n\033com.hello.s" +
+      "uripu.api.outputB\014OutputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -10395,7 +10514,7 @@ public final class OutputProtos {
     internal_static_SyncResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_SyncResponse_descriptor,
-        new java.lang.String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "Mac", "BatchSize", "PillSettings", "ResetMcu", "UploadLogLevel", "PillBatchSize", "RingTimeAck", "RoomConditionsLightsOff", "AudioFeaturesControl", });
+        new java.lang.String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "Mac", "BatchSize", "PillSettings", "ResetMcu", "UploadLogLevel", "PillBatchSize", "RingTimeAck", "RoomConditionsLightsOff", "AudioFeaturesControl", "LightsOffThreshold", });
     internal_static_SyncResponse_FileDownload_descriptor =
       internal_static_SyncResponse_descriptor.getNestedTypes().get(0);
     internal_static_SyncResponse_FileDownload_fieldAccessorTable = new
