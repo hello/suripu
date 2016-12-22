@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,8 +108,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
     public NeuralNetFourEventAlgorithm(final NeuralNetEndpoint endpoint) {
         this.endpoint = endpoint;
-        startMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 21 + 30; //21:30
-        stopMinuteOfArtificalLight = 5*60;
+        startMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 18;
+        stopMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 6; 
         timelineSafeguards = new TimelineSafeguards(Optional.<UUID>absent());
     }
 
@@ -121,7 +122,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             return Optional.absent();
         }
 
-        if (idx >= maxIdx + ZERO_PADDING) {
+        if (idx > maxIdx + ZERO_PADDING) {
             return Optional.absent();
         }
 
@@ -129,9 +130,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     }
 
     protected boolean isArtificalLight(final DateTime localUtcTime) {
-        final int hourOfDay = localUtcTime.getHourOfDay();
-        final int startHourOfArtificalLight = 6;
-        final int stopHourOfArtificalLight = 18;
+        final int minuteOfDay = localUtcTime.getMinuteOfDay();
+
         // |---0xxxxxxxxxxx1------------|
         //
         // OR
@@ -139,12 +139,18 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         // |xxxx1--------------------0xx|
 
         //spans midnight?
-
-            if (hourOfDay >= startHourOfArtificalLight && hourOfDay <= stopHourOfArtificalLight) {
-                return false;
+        if (stopMinuteOfArtificalLight < startMinuteOfArtificalLight) {
+            if (minuteOfDay >= startMinuteOfArtificalLight || minuteOfDay < stopMinuteOfArtificalLight) {
+                return true;
             }
+        }
+        else {
+            if (minuteOfDay >= startMinuteOfArtificalLight && minuteOfDay < stopMinuteOfArtificalLight) {
+                return true;
+            }
+        }
 
-        return true;
+        return false;
     }
 
     protected double [][] getSensorData(final OneDaysSensorData oneDaysSensorData) throws  Exception {
@@ -159,18 +165,19 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         final long durationMillis =  oneDaysSensorData.endTimeLocalUTC.getMillis() - oneDaysSensorData.startTimeLocalUTC.getMillis();
+        final int T = (int)durationMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1 ;
 
         final long t0 = oneDaysSensorData.startTimeLocalUTC.getMillis() - light.get(0).offsetMillis; //LOCAL ---> UTC
-        final int T = (int)durationMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1 ;
         final int N = SensorIndices.MAX_NUM_INDICES;
 
         final double [][] x = new double[N][T + 2 * ZERO_PADDING];
-
+        final HashMap<Integer, Double> lightIndexMap = new HashMap<>();
         /*********** LOG  LIGHT, DIFF LOG LIGHT, VAR LOG LIGHT, SMOOTHED DIFF LOG LIGHT and LOG LIGHT NO DAYLIGHT *************/
+
         for (final Sample s : light) {
             double value = Math.log((s.value * 65536)/256  + 1.0) / Math.log(2);
 
-            if (Double.isNaN(value) || value < 0.0) {
+            if (Double.isNaN(value) || value <= 0.0) {
                 value = 0.0;
             }
 
@@ -183,11 +190,14 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
             x[SensorIndices.LIGHT.index()][idx.get()] = value;
             x[SensorIndices.LIGHT_NODAYLIGHT.index()][idx.get()] = value;
+            lightIndexMap.put(idx.get(), value);
         }
 
         //diff light
-        for (int t = ZERO_PADDING + 1; t < T + ZERO_PADDING; t++) {
-            x[SensorIndices.DIFFLIGHT.index()][t-1] = - (x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t-1]);
+        for (int t = ZERO_PADDING + 1; t < T + (ZERO_PADDING -1); t++) {
+            if (lightIndexMap.containsKey(t) && lightIndexMap.containsKey(t-1)){ //prevents large difference in light when sensor reading is missing.
+                x[SensorIndices.DIFFLIGHT.index()][t - 1] = -(x[SensorIndices.LIGHT.index()][t] - x[SensorIndices.LIGHT.index()][t - 1]);
+            }
         }
 
         //zero out light during natural light times
@@ -278,7 +288,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         /*  MY MOTION  */
-        for (final TrackerMotion m : oneDaysSensorData.originalTrackerMotions) {
+        for (final TrackerMotion m : oneDaysSensorData.nonfilteredOriginalTrackerMotions) {
             if (m.value == -1) {
                 continue;
             }
@@ -303,7 +313,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         /*  PARTNER MOTION  */
-        for (final TrackerMotion m : oneDaysSensorData.originalPartnerTrackerMotions) {
+        for (final TrackerMotion m : oneDaysSensorData.nonfilteredOriginalPartnerTrackerMotions) {
             if (m.value == -1) {
                 continue;
             }
@@ -331,7 +341,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 x[col][idx] = 0;
             }
         }
-        for (int idx = T + ZERO_PADDING; idx < T+ 2*ZERO_PADDING; idx ++){
+        for (int idx = T + ZERO_PADDING - 1; idx < T+ 2*ZERO_PADDING; idx ++){
             for (int col = 0; col < SensorIndices.MAX_NUM_INDICES; col ++){
                 x[col][idx] = 0;
             }
@@ -405,7 +415,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
             //get the earlier of the current time or the end of day time
             final long tf = tEnd < oneDaysSensorData.currentTimeUTC.getMillis() ? tEnd : oneDaysSensorData.currentTimeUTC.getMillis();
-            final int iEnd = (int)(tf - t0) / DateTimeConstants.MILLIS_PER_MINUTE + 1 + 2*ZERO_PADDING;
+            final int iEnd = (int)(tf - t0) / DateTimeConstants.MILLIS_PER_MINUTE + ZERO_PADDING;
 
             final double [][] xPartial= new double[5][iEnd];
             xPartial[PartialSensorIndices.MY_MOTION_DURATION.index()] = Arrays.copyOfRange(x[SensorIndices.MY_MOTION_DURATION.index()],0,iEnd);
@@ -415,8 +425,13 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, iEnd);
 
 
-            final int [] sleepSegments = getSleepSegments(algorithmOutput.output);
+            final Integer [] sleepSegments = getSleepSegments(algorithmOutput.output);
+            if (Arrays.asList(sleepSegments).contains(0)) {
+                LOGGER.info("action=return_no_prediction reason=missing_key_events account_id={} night={}",accountId, oneDaysSensorData.date);
+                log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.MISSING_KEY_EVENTS);
 
+                return Optional.absent();
+            }
             final List<Event> events = getEventTimes(offsetMap,t0, sleepSegments, xPartial);
 
             final Map<Event.Type,Event> eventMap = Maps.newHashMap();
@@ -459,7 +474,9 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return Optional.absent();
     }
 
-    static protected List<Event> getEventTimes(final TreeMap<Long,Integer> offsetMap, final long t0, final int[] sleepSegments, final double[][] xPartial) {
+    static protected List<Event> getEventTimes(final TreeMap<Long,Integer> offsetMap, final long t0,  final Integer[] sleepSegments, final double[][] xPartial) {
+
+
         final int timeSteps = xPartial[0].length;
         final int sleepSegmentWindowSize = 30;//target time for heuristic search window (+/- 15 minutes)
         final int inBedPadding = 3; //minimal difference between in bed time and sleep time
@@ -474,7 +491,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int[] awakeWindow = getSleepSegmentWindow(sleepSegments[2], sleepSegmentWindowSize,  0, timeSteps);
         final int awakeIndex= getAwakeIndex(getCopyOfRange(xPartial, awakeWindow[0], awakeWindow[1]), awakeWindow[0]);
 
-        final int[] outOfBedWindow = getSleepSegmentWindow(sleepSegments[3], sleepSegmentWindowSize,  awakeIndex + outOfBedPadding, timeSteps);
+        final int[] outOfBedWindow = getSleepSegmentWindow(sleepSegments[3], sleepSegmentWindowSize,  Math.min(awakeIndex + outOfBedPadding, timeSteps), timeSteps);
         final int outOfBedIndex= getOutOfBedIndex(getCopyOfRange(xPartial, outOfBedWindow[0], outOfBedWindow[1]), outOfBedWindow[0]);
 
 
@@ -527,7 +544,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     static int getInBedIndex(final double [][] xWindow, final int indexOffset){
         final int windowSize = xWindow[0].length;
         final double onDurationThreshold = 1.0;
-        final int noMotionThreshold = 10;
+        final int noMotionThreshold = 5;
         final List<Integer> motionEventIndices = new ArrayList<Integer>();
         int i = 0;
         for (final double od : xWindow[0]){
@@ -547,8 +564,11 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 } else {
                     noMotionCount = 0;
                 }
+                if (noMotionCount >= noMotionThreshold){
+                    break;
+                }
             }
-            if (noMotionCount == noMotionThreshold){
+            if (noMotionCount >= noMotionThreshold){
                 continue;
             } else {
                 return motionEventIndex + indexOffset;
@@ -561,8 +581,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     //Then searches for last motion followed by no motion interval.
     static int getAsleepIndex(final double [][] xWindow, final int indexOffset){
         final int windowSize = xWindow[0].length;
-        final double lightsOutThreshold = -1.0;
-        final int lightsOffset = -13;
+        final double lightsOutThreshold = -0.25;
+        final int lightsOffset = -15;
         final int defaultOffset = 0;
         final double noiseThreshold = 4.0;
         final double motionAmpThreshold = 0.625;
@@ -593,7 +613,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int sustainedMotionIndex = getSustainedMotionIndex(xWindow[PartialSensorIndices.MY_MOTION_DURATION.index()]);
         //get first event as wake event
         int wakeIndex = Math.min(lightsOnIndex, Math.min(loudNoiseIndex,Math.min(waveIndex,Math.min(motionAmpEventIndex, Math.min(onDurEventIndex, sustainedMotionIndex)))));
-        if (wakeIndex == windowSize - 1){
+        if (wakeIndex == windowSize){
             wakeIndex = wakeDefault;
         }
         return wakeIndex + indexOffset;
@@ -602,6 +622,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     //Searches motion event followed by 15 minutes of no motion - or the end of the search window.
     // Finds long or last motion gap
     static int getOutOfBedIndex(final double [][] xWindow, final int indexOffset){
+
         final int windowSize = xWindow[0].length;
         final int noMotionThreshold = 15; //minutes
         final int outOfBedDefault = 15;
@@ -620,7 +641,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             }
         }
 
-        if (outOfBedIndex == 0) {
+        if (outOfBedIndex == 0 && windowSize >=30) {
             outOfBedIndex = outOfBedDefault;
         }
 
@@ -705,17 +726,17 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         } else {
             sleepSegmentFloor = Math.max( (int) (sleepSegment - .5 * sleepSegmentWindowSize), 0);
         }
-        final int sleepSegmentCeiling = sleepSegmentFloor + sleepSegmentWindowSize;
+        final int sleepSegmentCeiling = (int) Math.min(Math.max(sleepSegmentFloor + sleepSegmentWindowSize, sleepSegment + .5 * sleepSegmentWindowSize), timeSteps);
         return new int[] {sleepSegmentFloor, sleepSegmentCeiling};
     }
 
-    static int[] getSleepSegments(final double[][] nnOutput){
+    static Integer[] getSleepSegments(final double[][] nnOutput){
 
         final int[] sleepStates = getSleepStates(nnOutput);
         final int uncertaintyCorrection = 10;
         final int flexCorrection = 5;
         final int timeSteps = sleepStates.length;
-        int[] sleepSegments = {0,0,0,0};
+        Integer [] sleepSegments = {0,0,0,0};
 
         int idx = 0;
         for(final int sleepState : sleepStates){

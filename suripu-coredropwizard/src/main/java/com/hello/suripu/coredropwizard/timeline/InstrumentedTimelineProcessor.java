@@ -489,7 +489,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
             if(height > 0 && weight > 0){
                 final double userBMI = ((double) weight) / (height * height);
-                if (userBMI > 5 && userBMI < 40){
+                if (userBMI > 5 && userBMI < 50){
                     bmi = userBMI;
                 } else{
                     bmi = 0;
@@ -620,6 +620,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
                 ImmutableList.copyOf(feedbackList),
                 ImmutableList.copyOf(filteredOriginalMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
+                ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(originalPartnerMotions),
                 date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
                 tzOffsetMillis, age, male, female, bmi, partner));
     }

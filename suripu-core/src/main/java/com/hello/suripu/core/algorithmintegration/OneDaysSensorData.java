@@ -16,6 +16,8 @@ public class OneDaysSensorData {
     public final ImmutableList<TimelineFeedback> feedbackList;
     public final ImmutableList<TrackerMotion> originalTrackerMotions;
     public final ImmutableList<TrackerMotion> originalPartnerTrackerMotions;
+    public final ImmutableList<TrackerMotion> nonfilteredOriginalTrackerMotions;
+    public final ImmutableList<TrackerMotion> nonfilteredOriginalPartnerTrackerMotions;
     public final int timezoneOffsetMillis;
     public final DateTime date;
     public final DateTime startTimeLocalUTC;
@@ -32,6 +34,7 @@ public class OneDaysSensorData {
                              final ImmutableList<TrackerMotion> trackerMotions, final ImmutableList<TrackerMotion> partnerMotions,
                              final ImmutableList<TimelineFeedback> feedbackList,
                              final ImmutableList<TrackerMotion> originalTrackerMotions, final ImmutableList<TrackerMotion> originalPartnerTrackerMotions,
+                             final ImmutableList<TrackerMotion> nonfilteredOriginalTrackerMotions, final ImmutableList<TrackerMotion> nonFilteredOriginalPartnerTrackerMotions,
                              final DateTime date, final DateTime startTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,
                              final int timezoneOffsetMillis, final double age, final int male, final int female, final double bmi, final int partner) {
         this.allSensorSampleList = allSensorSampleList;
@@ -40,6 +43,8 @@ public class OneDaysSensorData {
         this.feedbackList = feedbackList;
         this.originalTrackerMotions = originalTrackerMotions;
         this.originalPartnerTrackerMotions = originalPartnerTrackerMotions;
+        this.nonfilteredOriginalTrackerMotions = nonfilteredOriginalTrackerMotions;
+        this.nonfilteredOriginalPartnerTrackerMotions = nonFilteredOriginalPartnerTrackerMotions;
         this.date = date;
         this.startTimeLocalUTC = startTimeLocalUTC;
         this.endTimeLocalUTC = endTimeLocalUTC;
@@ -65,6 +70,8 @@ public class OneDaysSensorData {
         this.feedbackList = feedbackList;
         this.originalTrackerMotions = originalTrackerMotions;
         this.originalPartnerTrackerMotions = originalPartnerTrackerMotions;
+        this.nonfilteredOriginalTrackerMotions = originalTrackerMotions;
+        this.nonfilteredOriginalPartnerTrackerMotions = originalPartnerTrackerMotions;
         this.date = date;
         this.startTimeLocalUTC = startTimeLocalUTC;
         this.endTimeLocalUTC = endTimeLocalUTC;
@@ -88,6 +95,8 @@ public class OneDaysSensorData {
         this.feedbackList = feedbackList;
         this.originalTrackerMotions = trackerMotions;
         this.originalPartnerTrackerMotions = partnerMotions;
+        this.nonfilteredOriginalTrackerMotions = originalTrackerMotions;
+        this.nonfilteredOriginalPartnerTrackerMotions = originalPartnerTrackerMotions;
         this.date = date;
         this.startTimeLocalUTC = startTimeLocalUTC;
         this.endTimeLocalUTC = endTimeLocalUTC;

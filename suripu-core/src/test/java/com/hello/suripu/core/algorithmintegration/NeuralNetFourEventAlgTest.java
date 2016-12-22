@@ -110,6 +110,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
 
         return new OneDaysSensorData(allSensorSampleList,
                 trackerMotions,partnerTrackerMotions , feedback, trackerMotions,partnerTrackerMotions ,
+                trackerMotions,partnerTrackerMotions ,
                 date,startTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
                 tzOffsetMillis, age, male, female, bmi, partner);
 
@@ -135,7 +136,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
         xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, 1201);
 
 
-        final int[] sleepSegments = getSleepSegments(output);
+        final Integer [] sleepSegments = getSleepSegments(output);
 
         for (final Sample s : light) {
             offsetMap.put(s.dateTime, s.offsetMillis);
@@ -144,9 +145,9 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
 
         final List<Event> eventTimes = getEventTimes(offsetMap, startTimeLocalUTC.getMillis(), sleepSegments, xPartial);
         assert(eventTimes.size() == 4);
-        assert(eventTimes.get(0).getStartTimestamp() == 1463786160000L);
+        assert(eventTimes.get(0).getStartTimestamp() == 1463786220000L);
         assert(eventTimes.get(1).getStartTimestamp() == 1463787660000L);
-        assert(eventTimes.get(2).getStartTimestamp() == 1463811300000L);
+        assert(eventTimes.get(2).getStartTimestamp() == 1463810820000L);
         assert(eventTimes.get(3).getStartTimestamp() == 1463813040000L);
     }
 
