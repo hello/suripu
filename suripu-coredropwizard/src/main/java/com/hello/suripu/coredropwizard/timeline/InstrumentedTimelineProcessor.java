@@ -553,9 +553,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
 
         //removes motion events less than 2 seconds and < 300 val. groups the remaining motions into groups separated by 2 hours. If largest motion groups is greater than 6 hours hours, drop all motions afterward this motion group.
-        filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-        filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-
+        if (this.hasOutlierFilterEnabled(accountId)) {
+            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+        }
 
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
 
