@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserBioInfo;
 import org.joda.time.DateTime;
 
 /**
@@ -23,11 +24,7 @@ public class OneDaysSensorData {
     public final DateTime startTimeLocalUTC;
     public final DateTime endTimeLocalUTC;
     public final DateTime currentTimeUTC;
-    public final double age;
-    public final int male;
-    public final int female;
-    public final double bmi;
-    public final int partner;
+    public final UserBioInfo userBioInfo;
 
 
     public OneDaysSensorData(final AllSensorSampleList allSensorSampleList,
@@ -36,7 +33,7 @@ public class OneDaysSensorData {
                              final ImmutableList<TrackerMotion> originalTrackerMotions, final ImmutableList<TrackerMotion> originalPartnerTrackerMotions,
                              final ImmutableList<TrackerMotion> nonfilteredOriginalTrackerMotions, final ImmutableList<TrackerMotion> nonFilteredOriginalPartnerTrackerMotions,
                              final DateTime date, final DateTime startTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,
-                             final int timezoneOffsetMillis, final double age, final int male, final int female, final double bmi, final int partner) {
+                             final int timezoneOffsetMillis, final UserBioInfo userBioInfo) {
         this.allSensorSampleList = allSensorSampleList;
         this.trackerMotions = trackerMotions;
         this.partnerMotions = partnerMotions;
@@ -50,11 +47,7 @@ public class OneDaysSensorData {
         this.endTimeLocalUTC = endTimeLocalUTC;
         this.currentTimeUTC = currentTimeUTC;
         this.timezoneOffsetMillis = timezoneOffsetMillis;
-        this.age = age;
-        this.male = male;
-        this.female = female;
-        this.bmi = bmi;
-        this.partner = partner;
+        this.userBioInfo = userBioInfo;
     }
 
 
@@ -77,11 +70,7 @@ public class OneDaysSensorData {
         this.endTimeLocalUTC = endTimeLocalUTC;
         this.currentTimeUTC = currentTimeUTC;
         this.timezoneOffsetMillis = timezoneOffsetMillis;
-        this.age = 0;
-        this.male = 0;
-        this.female = 0;
-        this.bmi = 0;
-        this.partner = 0;
+        this.userBioInfo = new UserBioInfo();
     }
 
     public OneDaysSensorData(final AllSensorSampleList allSensorSampleList,
@@ -102,11 +91,7 @@ public class OneDaysSensorData {
         this.endTimeLocalUTC = endTimeLocalUTC;
         this.currentTimeUTC = currentTimeUTC;
         this.timezoneOffsetMillis = timezoneOffsetMillis;
-        this.age = 0;
-        this.male = 0;
-        this.female = 0;
-        this.bmi = 0;
-        this.partner = 0;
+        this.userBioInfo = new UserBioInfo();
 
     }
 

@@ -11,6 +11,7 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserBioInfo;
 import com.hello.suripu.core.util.CSVLoader;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -34,53 +35,31 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
         super(new NeuralNetEndpoint() {
             @Override
             public Optional<NeuralNetAlgorithmOutput> getNetOutput(String netId, double[][] sensorData) {
-                final double [][] y = getNNOutput();
+                final double [][] y = getOutput(9,1201,"fixtures/neuralNet/neuralNetFourEventOutput.csv");
                 return Optional.of(new NeuralNetAlgorithmOutput(y));
             }
         });
     }
 
-    private static double [][] getNNOutput(){
-        final int nbClasses = 9;
-        final int timeSteps = 1201;
-        final double[][] y = new double[nbClasses][timeSteps];
+    private static double [][] getOutput(final int nCol, final int nRow, final String fileName){
 
-        final URL fixtureCSVFile = Resources.getResource("fixtures/neuralNet/neuralNetFourEventOutput.csv");
+        final double[][] y = new double[nCol][nRow];
+
+        final URL fixtureCSVFile = Resources.getResource(fileName);
         try{
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
             final String[] lines = csvString.split("\\n");
-            for(int i = 0; i < timeSteps; i++) {
+            for(int i = 0; i < nRow; i++) {
                 final String[] columns = lines[i].split(",");
-                for (int colIndex = 0; colIndex < nbClasses; colIndex++) {
+                for (int colIndex = 0; colIndex < nCol; colIndex++) {
                     y[colIndex][i] = Float.parseFloat(columns[colIndex + 1].trim());
                 }
             }
         }catch (IOException ex){
-            ex.printStackTrace();
         }
         return y;
     }
 
-    private static double [][] getNNInput(){
-        final int dataDim= 16;
-        final int timeSteps = 961;
-        final double[][] xx = new double[dataDim][timeSteps];
-
-        final URL fixtureCSVFile = Resources.getResource("fixtures/neuralNetFourEventInput.csv");
-        try{
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++) {
-                final String[] columns = lines[i].split(",");
-                for (int colIndex = 0; colIndex < dataDim; colIndex++) {
-                    xx[colIndex][i] = Float.parseFloat(columns[colIndex + 1].trim());
-                }
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
-        return xx;
-    }
     //testNight: 1751, 2016-05-20
     private static OneDaysSensorData getOneDaySensorData(){
 
@@ -104,6 +83,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
         final int male = 1;
         final int bmi = 0;
         final int partner = 0;
+        final UserBioInfo userBioInfo = new UserBioInfo(age, bmi, male, female, partner);
         final DateTime startTimeLocalUTC = date.withHourOfDay(20);
         final DateTime endTimeLocalUTC = date.plusDays(1).withHourOfDay(12);
         final DateTime currentTimeUTC = date.plusDays(1).withHourOfDay(13);
@@ -112,7 +92,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
                 trackerMotions,partnerTrackerMotions , feedback, trackerMotions,partnerTrackerMotions ,
                 trackerMotions,partnerTrackerMotions ,
                 date,startTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
-                tzOffsetMillis, age, male, female, bmi, partner);
+                tzOffsetMillis, userBioInfo);
 
     }
 
@@ -120,7 +100,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
     public void testGetEventTimesFromNNOutput() throws Exception {
         final OneDaysSensorData oneDaysSensorData = getOneDaySensorData();
         final double[][] x = getSensorData(oneDaysSensorData);
-        final double[][] output = getNNOutput();
+        final double[][] output = getOutput(9,1201,"fixtures/neuralNet/neuralNetFourEventOutput.csv");
         final DateTime date = DateTime.parse("2016-05-20").withZone(DateTimeZone.UTC);
         final DateTime startTimeLocalUTC = date.withHourOfDay(20);
 

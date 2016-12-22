@@ -109,7 +109,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     public NeuralNetFourEventAlgorithm(final NeuralNetEndpoint endpoint) {
         this.endpoint = endpoint;
         startMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 18;
-        stopMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 6; 
+        stopMinuteOfArtificalLight = DateTimeConstants.MINUTES_PER_HOUR * 6;
         timelineSafeguards = new TimelineSafeguards(Optional.<UUID>absent());
     }
 
@@ -329,11 +329,11 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         //User attributes - age, bmi, has partner, male, female
-        Arrays.fill(x[SensorIndices.AGE.index()], ((double) oneDaysSensorData.age) /90);
-        Arrays.fill(x[SensorIndices.BMI.index()], ((double) oneDaysSensorData.bmi)/ 50 );
-        Arrays.fill(x[SensorIndices.PARTNER.index()], (double) oneDaysSensorData.partner);
-        Arrays.fill(x[SensorIndices.MALE.index()], (double) oneDaysSensorData.male);
-        Arrays.fill(x[SensorIndices.FEMALE.index()], (double) oneDaysSensorData.female);
+        Arrays.fill(x[SensorIndices.AGE.index()], ((double) oneDaysSensorData.userBioInfo.age) /90);
+        Arrays.fill(x[SensorIndices.BMI.index()], ((double) oneDaysSensorData.userBioInfo.bmi)/ 50 );
+        Arrays.fill(x[SensorIndices.PARTNER.index()], (double) oneDaysSensorData.userBioInfo.partner);
+        Arrays.fill(x[SensorIndices.MALE.index()], (double) oneDaysSensorData.userBioInfo.male);
+        Arrays.fill(x[SensorIndices.FEMALE.index()], (double) oneDaysSensorData.userBioInfo.female);
 
         //zero pad
         for (int idx = 0; idx < ZERO_PADDING; idx ++){
