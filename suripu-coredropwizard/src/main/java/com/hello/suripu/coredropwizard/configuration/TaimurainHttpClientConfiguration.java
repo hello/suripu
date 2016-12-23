@@ -16,10 +16,14 @@ public class TaimurainHttpClientConfiguration extends Configuration {
     @JsonProperty("http_client_config")
     private HttpClientConfiguration httpClientConfiguration;
     public HttpClientConfiguration getHttpClientConfiguration() { return httpClientConfiguration; }
-
     @Valid
     @NotNull
     @JsonProperty("endpoint")
     private String endpoint;
     public String getEndpoint() { return endpoint; }
+    @Valid
+    @NotNull
+    @JsonProperty("algorithm")
+    private String algorithm;
+    public String getAlgorithm() { return algorithm;}
 }
