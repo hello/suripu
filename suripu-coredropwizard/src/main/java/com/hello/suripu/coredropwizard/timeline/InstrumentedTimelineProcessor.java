@@ -142,7 +142,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                                                         final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
                                                                         final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                                                                         final SleepScoreParametersDAO sleepScoreParametersDAO,
-                                                                        final Map<String,NeuralNetEndpoint> neuralNetEndpoints,
+                                                                        final Map<AlgorithmType,NeuralNetEndpoint> neuralNetEndpoints,
                                                                         final AlgorithmConfiguration algorithmConfiguration,
                                                                         final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
