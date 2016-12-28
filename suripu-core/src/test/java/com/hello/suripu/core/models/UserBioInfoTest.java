@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class UserBioInfoTest {
         final int weight = 70000;
         final double bmi = (weight/ 1000)/( (((double)height) / 100) * (((double)height)  / 100));
         final Gender gender = Gender.MALE;
-        final DateTime dob = DateTime.now().minusYears((int) age);
+        final DateTime dob = DateTime.now(DateTimeZone.UTC).minusYears((int) age);
         accountTest =  new Account.Builder()
                 .withId(0L)
                 .withDOB(dob.toString())

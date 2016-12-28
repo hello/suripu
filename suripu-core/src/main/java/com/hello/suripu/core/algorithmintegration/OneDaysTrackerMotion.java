@@ -1,4 +1,4 @@
-package com.hello.suripu.core.models.motion;
+package com.hello.suripu.core.algorithmintegration;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.TrackerMotion;

@@ -12,7 +12,6 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
-import com.hello.suripu.core.models.motion.OneDaysTrackerMotion;
 import com.hello.suripu.core.util.CSVLoader;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

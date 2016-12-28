@@ -5,7 +5,6 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
-import com.hello.suripu.core.models.motion.OneDaysTrackerMotion;
 import org.joda.time.DateTime;
 
 /**
