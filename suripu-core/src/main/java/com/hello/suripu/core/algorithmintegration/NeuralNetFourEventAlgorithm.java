@@ -288,7 +288,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         /*  MY MOTION  */
-        for (final TrackerMotion m : oneDaysSensorData.nonfilteredOriginalTrackerMotions) {
+        for (final TrackerMotion m : oneDaysSensorData.oneDaysTrackerMotion.originalTrackerMotions) {
             if (m.value == -1) {
                 continue;
             }
@@ -313,7 +313,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         /*  PARTNER MOTION  */
-        for (final TrackerMotion m : oneDaysSensorData.nonfilteredOriginalPartnerTrackerMotions) {
+        for (final TrackerMotion m : oneDaysSensorData.oneDaysPartnerMotion.originalTrackerMotions) {
             if (m.value == -1) {
                 continue;
             }

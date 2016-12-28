@@ -63,7 +63,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
         try {
 
             final Optional<HmmAlgorithmResults> results = fromHmm(accountId, sensorData.currentTimeUTC, sensorData.startTimeLocalUTC, sensorData.endTimeLocalUTC,
-                    sensorData.trackerMotions,
+                    sensorData.oneDaysTrackerMotion.processedtrackerMotions,
                     sensorData.allSensorSampleList);
 
             if (!results.isPresent()) {

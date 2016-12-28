@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.interpretation.EventIndices;
-import com.hello.suripu.algorithm.interpretation.IdxPair;
 import com.hello.suripu.algorithm.interpretation.SleepProbabilityInterpreterWithSearch;
 import com.hello.suripu.algorithm.outlier.OnBedBounding;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
@@ -16,9 +15,7 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.models.timeline.v2.EventType;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
-import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.TimelineError;
@@ -236,7 +233,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         }
 
         /*  MY MOTION  */
-        for (final TrackerMotion m : oneDaysSensorData.originalTrackerMotions) {
+        for (final TrackerMotion m : oneDaysSensorData.oneDaysTrackerMotion.originalTrackerMotions) {
             if (m.value == -1) {
                 continue;
             }
@@ -261,7 +258,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
         }
 
         /*  PARTNER MOTION  */
-        for (final TrackerMotion m : oneDaysSensorData.originalPartnerTrackerMotions) {
+        for (final TrackerMotion m : oneDaysSensorData.oneDaysPartnerMotion.originalTrackerMotions) {
             if (m.value == -1) {
                 continue;
             }

@@ -12,6 +12,7 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
+import com.hello.suripu.core.models.motion.OneDaysTrackerMotion;
 import com.hello.suripu.core.util.CSVLoader;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -88,9 +89,11 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
         final DateTime endTimeLocalUTC = date.plusDays(1).withHourOfDay(12);
         final DateTime currentTimeUTC = date.plusDays(1).withHourOfDay(13);
 
+        final OneDaysTrackerMotion oneDaysTrackerMotion = new OneDaysTrackerMotion(trackerMotions);
+        final OneDaysTrackerMotion oneDaysPartnerMotion = new OneDaysTrackerMotion(partnerTrackerMotions);
+
         return new OneDaysSensorData(allSensorSampleList,
-                trackerMotions,partnerTrackerMotions , feedback, trackerMotions,partnerTrackerMotions ,
-                trackerMotions,partnerTrackerMotions ,
+                oneDaysTrackerMotion, oneDaysPartnerMotion, feedback,
                 date,startTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
                 tzOffsetMillis, userBioInfo);
 
