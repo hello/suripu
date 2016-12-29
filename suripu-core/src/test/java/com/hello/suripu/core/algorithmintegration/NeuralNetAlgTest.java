@@ -7,7 +7,6 @@ import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
-import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.OnlineHmmTest;
@@ -58,7 +57,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
         ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,endTime,0);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,date,startTime,endTime,endTime,0);
 
         final double[][] neuralNetInput = getSensorData(oneDaysSensorData);
 
@@ -78,7 +77,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime, endTime, 0);
         ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4), endTime.plusHours(4), 0);
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, pillData, emptyFeedback, pillData, pillData, date, startTime, endTime, currentTime, DateTimeConstants.MILLIS_PER_HOUR);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, pillData, emptyFeedback, date, startTime, endTime, currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
         final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData, new TimelineLog(0L, 0L), 0L, false,Sets.<String>newHashSet());
 
@@ -102,7 +101,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
         ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
         final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false,Sets.<String>newHashSet());
 
@@ -126,7 +125,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
         ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
         final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false, Sets.<String>newHashSet());
 
@@ -151,7 +150,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime,endTime,0);
         ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime.minusHours(4),endTime.plusHours(4),0);
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,pillData,pillData,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
         final TimelineLog log = new TimelineLog(0L,0L);
         final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,log,0L,false, Sets.<String>newHashSet());

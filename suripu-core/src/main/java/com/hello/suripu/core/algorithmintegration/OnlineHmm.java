@@ -442,8 +442,8 @@ public class OnlineHmm {
          /* GET THE BINNED SENSOR DATA -- this will take sensor data and aggregate in N minute chunks, plus produce some extra differential signals (light increase, etc.)   */
         final Optional<BinnedData> binnedDataOptional = OnlineHmmSensorDataBinning.getBinnedSensorData(
                 oneDaysSensorData.allSensorSampleList,
-                oneDaysSensorData.trackerMotions,
-                oneDaysSensorData.partnerMotions,
+                oneDaysSensorData.oneDaysTrackerMotion.processedtrackerMotions,
+                oneDaysSensorData.oneDaysPartnerMotion.processedtrackerMotions,
                 featureExtractionModels.params,
                 startTimeUtc,
                 endTimeUtc,

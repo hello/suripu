@@ -4,11 +4,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
-import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.models.TrackerMotion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

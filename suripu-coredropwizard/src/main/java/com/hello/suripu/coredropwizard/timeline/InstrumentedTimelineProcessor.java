@@ -52,6 +52,8 @@ import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserBioInfo;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.processors.PartnerMotion;
@@ -141,12 +143,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                                                         final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
                                                                         final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                                                                         final SleepScoreParametersDAO sleepScoreParametersDAO,
-                                                                        final NeuralNetEndpoint neuralNetEndpoint,
+                                                                        final Map<AlgorithmType,NeuralNetEndpoint> neuralNetEndpoints,
                                                                         final AlgorithmConfiguration algorithmConfiguration,
                                                                         final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
-        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoint,algorithmConfiguration,Optional.<UUID>absent());
+        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoints,algorithmConfiguration,Optional.<UUID>absent());
 
         final Histogram scoreDiff = metrics.histogram(name(InstrumentedTimelineProcessor.class, "sleep-score-diff"));
 
@@ -255,7 +257,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 sleepEvent,
                 origResult.mainEvents.get(Event.Type.IN_BED),
                 15, //15 minutes to fall asleep minimum
-                sensorData.trackerMotions);
+                sensorData.oneDaysTrackerMotion.processedtrackerMotions);
 
         //replace original in-bed event with new event
         final List<Event> origEvents = origResult.mainEvents.values().asList();
@@ -297,8 +299,13 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             algorithmChain.addFirst(AlgorithmType.ONLINE_HMM);
         }
 
-        if (this.hasNeuralNetAlgorithmEnabled(accountId)) {
+        //If ff for both NN, only use the newest NN
+        if (this.hasNeuralNetAlgorithmEnabled(accountId) && !this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET);
+        }
+
+        if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
+            algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
         }
 
         final DateTime startTimeLocalUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
@@ -328,7 +335,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //check to see if there's an issue with the data
         final boolean userLowerMotionCountThreshold = useNoMotionEnforcement(accountId);
 
-        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions, sensorData.trackerMotions, sensorData.originalPartnerTrackerMotions, userLowerMotionCountThreshold);
+        final TimelineError discardReason = isValidNight(accountId, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
@@ -494,16 +501,18 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
+        final Optional<Account> accountOptional = accountDAO.getById(accountId);
+        final UserBioInfo userBioInfo = UserBioInfo.getUserBioInfo(accountOptional, !originalPartnerMotions.isEmpty());
+
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
 
         //removes motion events less than 2 seconds and < 300 val. groups the remaining motions into groups separated by 2 hours. If largest motion groups is greater than 6 hours hours, drop all motions afterward this motion group.
         if (this.hasOutlierFilterEnabled(accountId)) {
-            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
+            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
         }
-
 
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
 
@@ -549,6 +558,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
+        final OneDaysTrackerMotion oneDaysTrackerMotion = new OneDaysTrackerMotion(ImmutableList.copyOf(trackerMotions), ImmutableList.copyOf(filteredOriginalMotions), originalTrackerMotions);
+        final OneDaysTrackerMotion oneDaysPartnerMotion = new OneDaysTrackerMotion(ImmutableList.copyOf(filteredOriginalPartnerMotions), ImmutableList.copyOf(filteredOriginalPartnerMotions), originalPartnerMotions);
+
+
         final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Optional<AllSensorSampleList> allSensorSampleList = senseDataDAO.get(accountId,date,starteTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, tzOffsetMillis);
         LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
@@ -564,12 +577,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             feedbackList.add(newFeedback.get());
         }
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList.get(),
-                ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
-                ImmutableList.copyOf(feedbackList),
-                ImmutableList.copyOf(filteredOriginalMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
-                date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
-                tzOffsetMillis));
+        return Optional.of(new OneDaysSensorData(allSensorSampleList.get(),oneDaysTrackerMotion, oneDaysPartnerMotion,
+                ImmutableList.copyOf(feedbackList),date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
+                tzOffsetMillis,userBioInfo));
     }
 
     private static class PopulatedTimelines {
@@ -586,9 +596,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineAlgorithmResult result,
                                                final OneDaysSensorData sensorData) {
 
-        final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
+        final ImmutableList<TrackerMotion> trackerMotions = sensorData.oneDaysTrackerMotion.processedtrackerMotions;
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
-        final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
+        final ImmutableList<TrackerMotion> partnerMotions = sensorData.oneDaysPartnerMotion.processedtrackerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
 
         //MOVE EVENTS BASED ON FEEDBACK
@@ -727,7 +737,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId), useUninterruptedDuration);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
-        Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
@@ -738,7 +748,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
         if (feedbackList.isEmpty() && this.useNoMotionEnforcement(accountId)) {
-            final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+            final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
             if (!motionDuringSleep) {
                 LOGGER.warn("action=zeroing-score  account_id={} reason=insufficient-motion-during-sleeptime night_of={}", accountId, targetDate);
                 sleepScore =  0;
