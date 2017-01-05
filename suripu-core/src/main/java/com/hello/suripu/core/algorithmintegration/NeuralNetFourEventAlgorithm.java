@@ -97,7 +97,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
     private final NeuralNetEndpoint endpoint;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NeuralNetAlgorithm.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NeuralNetFourEventAlgorithm.class);
 
     public NeuralNetFourEventAlgorithm(final NeuralNetEndpoint endpoint, final AlgorithmConfiguration algorithmConfiguration) {
         this.endpoint = endpoint;
