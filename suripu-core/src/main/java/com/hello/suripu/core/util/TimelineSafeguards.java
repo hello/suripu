@@ -47,28 +47,28 @@ public class TimelineSafeguards {
        //check main events ordering
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
             if (sleepEvents.wakeUp.get().getStartTimestamp() < sleepEvents.fallAsleep.get().getStartTimestamp()) {
-                LOGGER.warn("error=event-order ordering=wake-before-sleep account_id={} algorithm={}", account_id, algorithmType.name());
+                LOGGER.warn("error=event-order ordering=wake-before-sleep account_id={} algorithm={} sleep_time={} wake_time={}", account_id, algorithmType.name(), sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
                 return false;
             }
         }
 
         if (sleepEvents.outOfBed.isPresent() && sleepEvents.goToBed.isPresent()) {
             if (sleepEvents.outOfBed.get().getStartTimestamp() < sleepEvents.goToBed.get().getStartTimestamp()) {
-                LOGGER.warn("error=event-order ordering=outofbed-before-bed account_id={} algorithm={}", account_id, algorithmType.name());
+                LOGGER.warn("error=event-order ordering=outofbed-before-bed account_id={} algorithm={} inbed_time={} outofbed_time={}", account_id, algorithmType.name(),sleepEvents.goToBed.get().getStartTimestamp() ,sleepEvents.outOfBed.get().getStartTimestamp() );
                 return false;
             }
         }
 
         if (sleepEvents.goToBed.isPresent() && sleepEvents.fallAsleep.isPresent()) {
             if (sleepEvents.fallAsleep.get().getStartTimestamp() < sleepEvents.goToBed.get().getStartTimestamp()) {
-                LOGGER.warn("error=event-order ordering=asleep-before-inbed account_id={} algorithm={}", account_id, algorithmType.name());
+                LOGGER.warn("error=event-order ordering=asleep-before-inbed account_id={} algorithm={} inbed_time={} sleep_time={}", account_id, algorithmType.name(),sleepEvents.goToBed.get().getStartTimestamp() ,sleepEvents.fallAsleep.get().getStartTimestamp() );
                 return false;
             }
         }
 
         if (sleepEvents.outOfBed.isPresent() && sleepEvents.wakeUp.isPresent()) {
             if (sleepEvents.outOfBed.get().getStartTimestamp() < sleepEvents.wakeUp.get().getStartTimestamp()) {
-                LOGGER.warn("error=event-order ordering=outofbed-before-wake account_id={} algorithm={}", account_id, algorithmType.name());
+                LOGGER.warn("error=event-order ordering=outofbed-before-wake account_id={} algorithm={} wake_time={} outofbed_time={}", account_id, algorithmType.name(),sleepEvents.wakeUp.get().getStartTimestamp() ,sleepEvents.outOfBed.get().getStartTimestamp() );
                 return false;
             }
         }
