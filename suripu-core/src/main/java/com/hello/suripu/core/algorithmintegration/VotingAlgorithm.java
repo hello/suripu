@@ -60,7 +60,7 @@ public class VotingAlgorithm implements TimelineAlgorithm {
                 return Optional.absent();
             }
 
-            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(votingSleepEventsOptional.get().sleepEvents,
+            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.VOTING, votingSleepEventsOptional.get().sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
                     ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
 

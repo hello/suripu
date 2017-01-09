@@ -43,32 +43,32 @@ public class TimelineSafeguards {
         }
     }
 
-    public boolean checkEventOrdering(SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents) {
+    public boolean checkEventOrdering(final long account_id, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents) {
        //check main events ordering
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
             if (sleepEvents.wakeUp.get().getStartTimestamp() < sleepEvents.fallAsleep.get().getStartTimestamp()) {
-                LOGGER.warn("wakeup happened before falling asleep");
+                LOGGER.warn("error=event-order ordering=wake-before-sleep account_id={} algorithm={}", account_id, algorithmType.name());
                 return false;
             }
         }
 
         if (sleepEvents.outOfBed.isPresent() && sleepEvents.goToBed.isPresent()) {
             if (sleepEvents.outOfBed.get().getStartTimestamp() < sleepEvents.goToBed.get().getStartTimestamp()) {
-                LOGGER.warn("out of bed happened before going to bed");
+                LOGGER.warn("error=event-order ordering=outofbed-before-bed account_id={} algorithm={}", account_id, algorithmType.name());
                 return false;
             }
         }
 
         if (sleepEvents.goToBed.isPresent() && sleepEvents.fallAsleep.isPresent()) {
             if (sleepEvents.fallAsleep.get().getStartTimestamp() < sleepEvents.goToBed.get().getStartTimestamp()) {
-                LOGGER.warn("falling asleep happened before getting in bed");
+                LOGGER.warn("error=event-order ordering=asleep-before-inbed account_id={} algorithm={}", account_id, algorithmType.name());
                 return false;
             }
         }
 
         if (sleepEvents.outOfBed.isPresent() && sleepEvents.wakeUp.isPresent()) {
             if (sleepEvents.outOfBed.get().getStartTimestamp() < sleepEvents.wakeUp.get().getStartTimestamp()) {
-                LOGGER.warn("getting out of bed happend before waking up");
+                LOGGER.warn("error=event-order ordering=outofbed-before-wake account_id={} algorithm={}", account_id, algorithmType.name());
                 return false;
             }
         }
@@ -207,10 +207,10 @@ public class TimelineSafeguards {
     }
 
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public TimelineError checkIfValidTimeline (SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
+    public TimelineError checkIfValidTimeline (final long account_id, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
 
         //make sure events occur in proper order
-        if (!checkEventOrdering(sleepEvents,extraEvents)) {
+        if (!checkEventOrdering(account_id, algorithmType, sleepEvents,extraEvents)) {
             return TimelineError.EVENTS_OUT_OF_ORDER;
         }
 
