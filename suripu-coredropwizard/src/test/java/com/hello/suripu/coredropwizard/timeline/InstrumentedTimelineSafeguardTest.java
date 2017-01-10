@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
@@ -29,6 +30,8 @@ public class InstrumentedTimelineSafeguardTest {
     final long hourInMillis = 3600000L;
     final int hourInMinutes = 60;
     final private ImmutableList<Event> emptyEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
+    final long accountId = 0L;
+    final AlgorithmType algType = AlgorithmType.NONE;
 
     private Event getEvent(Event.Type type, final long time) {
         return Event.createFromType(type, time, time + 60000L, 0, Optional.of("BLAH BLAH"), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
@@ -73,16 +76,16 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(duration1, 7 * hourInMinutes);
         TestCase.assertEquals(duration2, 1 * hourInMinutes);
 
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, emptyEvents));
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsDurationFail, emptyEvents));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsOrderFail1, emptyEvents));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsOrderFail2, emptyEvents));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsOrderFail3, emptyEvents));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, emptyEvents));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsDurationFail, emptyEvents));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsOrderFail1, emptyEvents));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsOrderFail2, emptyEvents));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsOrderFail3, emptyEvents));
 
         ImmutableList<Sample> light = ImmutableList.copyOf(getContiguousLightSensorData(t0, 8 * hourInMillis));
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, light).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsDurationFail, emptyEvents, light).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, light).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light).equals(TimelineError.NO_ERROR));
 
 
     }
@@ -105,7 +108,7 @@ public class InstrumentedTimelineSafeguardTest {
         goodExtraEvents.add(getEvent(Event.Type.IN_BED, t0 + (long) (5.5 * hourInMillis)));
         goodExtraEvents.add(getEvent(Event.Type.SLEEP, t0 + (long) (6.5 * hourInMillis)));
 
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
 
     }
 
@@ -156,12 +159,12 @@ public class InstrumentedTimelineSafeguardTest {
         extraEventsThatShortenTheDuration.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (3.5 * hourInMillis)));
         extraEventsThatShortenTheDuration.add(getEvent(Event.Type.SLEEP, t0 + (long) (4.5 * hourInMillis)));
 
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents1)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents2)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents3)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents4)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents5)));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents1)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents2)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents3)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents4)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents5)));
 
 
         final int duration1 = safeguards.getTotalSleepDurationInMinutes(mainEventsSucceed.fallAsleep.get(), mainEventsSucceed.wakeUp.get(), ImmutableList.copyOf(extraEventsThatShortenTheDuration));
@@ -196,8 +199,8 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(res1, 30);
         TestCase.assertEquals(res2, 120);
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
 
     }
 

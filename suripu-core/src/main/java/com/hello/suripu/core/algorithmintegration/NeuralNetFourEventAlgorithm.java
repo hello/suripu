@@ -447,7 +447,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inbedOptional,sleepOptional,wakeOptional,outOfBedOptional);
 
             //verify that algorithm produced something useable
-            final TimelineError error = timelineSafeguards.checkIfValidTimeline(
+            final TimelineError error = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.NEURAL_NET_FOUR_EVENT,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
                     ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)));
@@ -482,13 +482,13 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int inBedPadding = 3; //minimal difference between in bed time and sleep time
         final int outOfBedPadding = 1; // minimal difference between awake and out of bed time
 
-        final int[] inBedWindow = getSleepSegmentWindow(sleepSegments[0], sleepSegmentWindowSize,  0, timeSteps);
+        final int[] inBedWindow = getSleepSegmentWindow(sleepSegments[0], sleepSegmentWindowSize,  0, timeSteps - 3);
         final int inBedIndex = getInBedIndex(getCopyOfRange(xPartial, inBedWindow[0], inBedWindow[1]), inBedWindow[0]);
 
-        final int[] asleepWindow = getSleepSegmentWindow(sleepSegments[1], sleepSegmentWindowSize,  inBedIndex + inBedPadding, timeSteps);
+        final int[] asleepWindow = getSleepSegmentWindow(sleepSegments[1], sleepSegmentWindowSize,  inBedIndex + inBedPadding, timeSteps - 2 );
         final int asleepIndex = getAsleepIndex(getCopyOfRange(xPartial, asleepWindow[0], asleepWindow[1]), asleepWindow[0]);
 
-        final int[] awakeWindow = getSleepSegmentWindow(sleepSegments[2], sleepSegmentWindowSize,  0, timeSteps);
+        final int[] awakeWindow = getSleepSegmentWindow(sleepSegments[2], sleepSegmentWindowSize,  0, timeSteps - 1 );
         final int awakeIndex= getAwakeIndex(getCopyOfRange(xPartial, awakeWindow[0], awakeWindow[1]), awakeWindow[0]);
 
         final int[] outOfBedWindow = getSleepSegmentWindow(sleepSegments[3], sleepSegmentWindowSize,  Math.min(awakeIndex + outOfBedPadding, timeSteps), timeSteps);
@@ -599,7 +599,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     // If no event found, defaults to center of search window
     static int getAwakeIndex(final double [][] xWindow, final int indexOffset){
         final int windowSize = xWindow[0].length;
-        final int  wakeDefault = 15;
+        final int  wakeDefault = windowSize / 2;
         final double noiseThreshold = 1;
         final double lightsOnThreshold = 1.15;
         final double waveThreshold =  0.5;
@@ -613,7 +613,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int sustainedMotionIndex = getSustainedMotionIndex(xWindow[PartialSensorIndices.MY_MOTION_DURATION.index()]);
         //get first event as wake event
         int wakeIndex = Math.min(lightsOnIndex, Math.min(loudNoiseIndex,Math.min(waveIndex,Math.min(motionAmpEventIndex, Math.min(onDurEventIndex, sustainedMotionIndex)))));
-        if (wakeIndex == windowSize){
+        if (wakeIndex >= windowSize){
             wakeIndex = wakeDefault;
         }
         return wakeIndex + indexOffset;
@@ -702,17 +702,17 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         int motionCount = 0;
         int sustainedMotionIndex = 0;
         for(int i = 0; i < windowSize; i ++){
-           if (motionCount == 0){
-               sustainedMotionIndex = i;
-           }
-           if (xOnDurWindow[i] > 0 ){
-               motionCount++;
-           } else {
-               motionCount = Math.max(motionCount - 1, 0);
-           }
-           if (motionCount == motionCountThreshold){
-               return sustainedMotionIndex;
-           }
+            if (motionCount == 0){
+                sustainedMotionIndex = i;
+            }
+            if (xOnDurWindow[i] > 0 ){
+                motionCount++;
+            } else {
+                motionCount = Math.max(motionCount - 1, 0);
+            }
+            if (motionCount == motionCountThreshold){
+                return sustainedMotionIndex;
+            }
 
         }
         return windowSize;
@@ -722,11 +722,11 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
         final int sleepSegmentFloor;
         if (associatedEventIndex > 0){
-            sleepSegmentFloor =associatedEventIndex;
+            sleepSegmentFloor =associatedEventIndex; //last event index + event padding
         } else {
-            sleepSegmentFloor = Math.max( (int) (sleepSegment - .5 * sleepSegmentWindowSize), 0);
+            sleepSegmentFloor = Math.max( (int) (sleepSegment - .5 * sleepSegmentWindowSize), 0); //floor cant be negative
         }
-        final int sleepSegmentCeiling = (int) Math.min(Math.max(sleepSegmentFloor + sleepSegmentWindowSize, sleepSegment + .5 * sleepSegmentWindowSize), timeSteps);
+        final int sleepSegmentCeiling = (int) Math.min(Math.max(sleepSegmentFloor + sleepSegmentWindowSize, sleepSegment + .5 * sleepSegmentWindowSize), timeSteps); // maximizes window - sleep_segment_floor + window size, sleep segment prediction + 1/2 window size, or end of time window
         return new int[] {sleepSegmentFloor, sleepSegmentCeiling};
     }
 
@@ -765,22 +765,22 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         final int[] sleepStates = new int[timeSteps];
         final double[] stateProb = new double[outputDim];
         for (int idx = ZERO_PADDING; idx < timeSteps -  ZERO_PADDING; idx ++){
-             int idMax = 0;
-             double maxProb = 0;
-             for (int i = 0; i < outputDim ; i ++){
-                 final double exp = Math.exp((double)(LOG_REG_COEFS[i][0] +  LOG_REG_COEFS[i][1]*nnOutput[0][idx] +
-                                 LOG_REG_COEFS[i][2]*nnOutput[1][idx] + LOG_REG_COEFS[i][3]*nnOutput[2][idx] + LOG_REG_COEFS[i][4]*nnOutput[3][idx] +
-                                 LOG_REG_COEFS[i][5]*nnOutput[4][idx] + LOG_REG_COEFS[i][6]*nnOutput[5][idx] + LOG_REG_COEFS[i][7]*nnOutput[6][idx] +
-                                 LOG_REG_COEFS[i][8]*nnOutput[7][idx] + LOG_REG_COEFS[i][9]*nnOutput[8][idx]));
-                 stateProb[i] = exp / (1 + exp);
-                 if ( i == 0){
-                     maxProb = stateProb[i];
-                 } else if (stateProb[i] > maxProb){
-                     maxProb = stateProb[i];
-                     idMax = i;
-                 }
-             }
-             sleepStates[idx] = idMax;
+            int idMax = 0;
+            double maxProb = 0;
+            for (int i = 0; i < outputDim ; i ++){
+                final double exp = Math.exp((double)(LOG_REG_COEFS[i][0] +  LOG_REG_COEFS[i][1]*nnOutput[0][idx] +
+                        LOG_REG_COEFS[i][2]*nnOutput[1][idx] + LOG_REG_COEFS[i][3]*nnOutput[2][idx] + LOG_REG_COEFS[i][4]*nnOutput[3][idx] +
+                        LOG_REG_COEFS[i][5]*nnOutput[4][idx] + LOG_REG_COEFS[i][6]*nnOutput[5][idx] + LOG_REG_COEFS[i][7]*nnOutput[6][idx] +
+                        LOG_REG_COEFS[i][8]*nnOutput[7][idx] + LOG_REG_COEFS[i][9]*nnOutput[8][idx]));
+                stateProb[i] = exp / (1 + exp);
+                if ( i == 0){
+                    maxProb = stateProb[i];
+                } else if (stateProb[i] > maxProb){
+                    maxProb = stateProb[i];
+                    idMax = i;
+                }
+            }
+            sleepStates[idx] = idMax;
         }
         return sleepStates;
     }
