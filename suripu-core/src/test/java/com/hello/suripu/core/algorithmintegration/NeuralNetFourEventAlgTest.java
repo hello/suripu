@@ -118,7 +118,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
         xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, 1201);
 
 
-        final Integer [] sleepSegments = getSleepSegments(output);
+        final Integer [] sleepSegments = getSleepSegments(0L, output, 916);
 
         for (final Sample s : light) {
             offsetMap.put(s.dateTime, s.offsetMillis);
