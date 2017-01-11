@@ -39,6 +39,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     public static final int ZERO_PADDING = 120;
     private final int startMinuteOfArtificalLight;
     private final int stopMinuteOfArtificalLight;
+    private static final int SLEEP_SEGMENT_WINDOW = 30;//target time for heuristic search window (+/- 15 minutes)
 
     private final TimelineSafeguards timelineSafeguards;
 
@@ -425,7 +426,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             xPartial[PartialSensorIndices.WAVES.index()] = Arrays.copyOfRange(x[SensorIndices.WAVES.index()], 0, iEnd);
 
 
-            final Integer [] sleepSegments = getSleepSegments(algorithmOutput.output);
+            final Integer [] sleepSegments = getSleepSegments(accountId, algorithmOutput.output, iEnd);
+
             if (Arrays.asList(sleepSegments).contains(0)) {
                 LOGGER.info("action=return_no_prediction reason=missing_key_events account_id={} night={}",accountId, oneDaysSensorData.date);
                 log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.MISSING_KEY_EVENTS);
@@ -478,20 +480,19 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
 
         final int timeSteps = xPartial[0].length;
-        final int sleepSegmentWindowSize = 30;//target time for heuristic search window (+/- 15 minutes)
         final int inBedPadding = 3; //minimal difference between in bed time and sleep time
         final int outOfBedPadding = 1; // minimal difference between awake and out of bed time
 
-        final int[] inBedWindow = getSleepSegmentWindow(sleepSegments[0], sleepSegmentWindowSize,  0, timeSteps - 3);
+        final int[] inBedWindow = getSleepSegmentWindow(sleepSegments[0], SLEEP_SEGMENT_WINDOW,  0, timeSteps - 3);
         final int inBedIndex = getInBedIndex(getCopyOfRange(xPartial, inBedWindow[0], inBedWindow[1]), inBedWindow[0]);
 
-        final int[] asleepWindow = getSleepSegmentWindow(sleepSegments[1], sleepSegmentWindowSize,  inBedIndex + inBedPadding, timeSteps - 2 );
+        final int[] asleepWindow = getSleepSegmentWindow(sleepSegments[1], SLEEP_SEGMENT_WINDOW,  inBedIndex + inBedPadding, timeSteps - 2 );
         final int asleepIndex = getAsleepIndex(getCopyOfRange(xPartial, asleepWindow[0], asleepWindow[1]), asleepWindow[0]);
 
-        final int[] awakeWindow = getSleepSegmentWindow(sleepSegments[2], sleepSegmentWindowSize,  0, timeSteps - 1 );
+        final int[] awakeWindow = getSleepSegmentWindow(sleepSegments[2], SLEEP_SEGMENT_WINDOW,  0, timeSteps - 1 );
         final int awakeIndex= getAwakeIndex(getCopyOfRange(xPartial, awakeWindow[0], awakeWindow[1]), awakeWindow[0]);
 
-        final int[] outOfBedWindow = getSleepSegmentWindow(sleepSegments[3], sleepSegmentWindowSize,  Math.min(awakeIndex + outOfBedPadding, timeSteps), timeSteps);
+        final int[] outOfBedWindow = getSleepSegmentWindow(sleepSegments[3], SLEEP_SEGMENT_WINDOW,  Math.min(awakeIndex + outOfBedPadding, timeSteps), timeSteps);
         final int outOfBedIndex= getOutOfBedIndex(getCopyOfRange(xPartial, outOfBedWindow[0], outOfBedWindow[1]), outOfBedWindow[0]);
 
 
@@ -730,7 +731,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return new int[] {sleepSegmentFloor, sleepSegmentCeiling};
     }
 
-    static Integer[] getSleepSegments(final double[][] nnOutput){
+    static Integer[] getSleepSegments(final long accountId, final double[][] nnOutput, final int iEnd){
 
         final int[] sleepStates = getSleepStates(nnOutput);
         final int uncertaintyCorrection = 10;
@@ -755,6 +756,15 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             }
             idx ++;
         }
+
+
+        for (int i = 0; i < 4; i++){
+            if (sleepSegments[i] > iEnd){
+                LOGGER.info("action=bounding-sleep-segment reason=predicted-event-in-future algorithm=neural_net_four_event account_id={} segment={} segment_idx={}", accountId, i, sleepSegments[i]);
+                sleepSegments[i] = iEnd - ((int) .5 * SLEEP_SEGMENT_WINDOW);
+            }
+        }
+
 
         return sleepSegments;
     }
