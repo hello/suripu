@@ -646,13 +646,19 @@ public class RingProcessor {
                 continue;
             }
 
+            // expected alarm ringtime should be in the future
+            if(nowUnalignedByMinute.getMillis() > userInfo.ringTime.get().expectedRingTimeUTC) {
+                continue;
+            }
+
+            // this is for the first valid user, order by user id asc
             if(nextRingTimeFromWorker.isEmpty()){
                 nextRingTimeFromWorker = userInfo.ringTime.get();
                 continue;
             }
 
             if(userInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC) {
-                nextRingTimeFromWorker = userInfo.ringTime.get();
+                    nextRingTimeFromWorker = userInfo.ringTime.get();
             }
         }
 
@@ -701,7 +707,7 @@ public class RingProcessor {
                     // 3) This is the data to trigger the worker to process the next ring (If it is still alive).
                     //
                     // Use the generated on-the-fly ring time.
-                    LOGGER.debug("Ring time in merge table for device {} needs to update.", deviceId);
+                    LOGGER.info("sense_id={} action=get-next-ring-time-for-sense result=use-ring-time-from-worker", deviceId);
                     nextRingTime = nextRingTimeFromTemplate;
                 }
 

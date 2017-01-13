@@ -204,7 +204,7 @@ public class MergedUserInfoDynamoDB {
 
 
     private UpdateItemRequest generateUpdateRequest(final String deviceId, final long accountId, final Map<String, AttributeValueUpdate> items){
-        final DateTime now = DateTime.now();
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
         items.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
                 .withValue(new AttributeValue().withN(String.valueOf(now.getMillis()))));
@@ -340,6 +340,7 @@ public class MergedUserInfoDynamoDB {
 
         final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
         final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+
         return true;
     }
 

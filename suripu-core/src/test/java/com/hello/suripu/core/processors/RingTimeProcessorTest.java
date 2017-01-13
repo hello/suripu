@@ -508,6 +508,125 @@ public class RingTimeProcessorTest {
         assertThat(testRing.isPresent(), is(true));
     }
 
+
+
+    @Test
+    public void testgetNextRingTimeFromThreeUsers() {
+
+        final long[] soundId = {5L};
+        final long account_id1 = 41081;
+        final long account_id2 = 71246;
+        final long account_id3 = 71266;
+        final String deviceId = "90AC123D9F7C05D";
+
+        final long lastUpdated1 = 1482591606652L;
+        final long lastUpdated2 = 1483577280940L;
+        final long lastUpdated3 = 1484324156041L;
+
+        final RingTime ringTime1_start = new RingTime(1457221920000L, 1457222400000L, soundId, true);
+        final RingTime ringTime2_start = new RingTime(1483577400000L, 1483578000000L, soundId, true);
+        final RingTime ringTime3_start = new RingTime(1484268300000L, 1484268300000L, soundId, true);
+        final RingTime ringTime3_smart = new RingTime(1484267340000L, 1484268300000L, soundId, true);
+        final DateTimeZone timezone = DateTimeZone.forID("Asia/Singapore");
+
+        final DateTime startTime = new DateTime(2017,1 , 13, 8, 20, 0, timezone);
+        final DateTime triggerTime = new DateTime(2017,1 , 13, 8, 25, 0, timezone);
+
+        final HashSet<Integer> daysOfWeek = new HashSet<>();
+        final List<Alarm> alarmList1 = new ArrayList<>();
+        alarmList1.add(new Alarm.Builder()
+                .withYear(2016)
+                .withMonth(3)
+                .withDay(6)
+                .withHour(5)
+                .withMinute(50)
+                .withIsEditable(true)
+                .withIsEnabled(false)
+                .withIsRepeated(false)
+                .withIsSmart(true)
+                .withDayOfWeek(daysOfWeek)
+                .build());
+        alarmList1.add(new Alarm.Builder()
+                .withYear(2016)
+                .withMonth(3)
+                .withDay(6)
+                .withHour(7)
+                .withMinute(30)
+                .withIsEditable(true)
+                .withIsEnabled(false)
+                .withIsRepeated(false)
+                .withIsSmart(true)
+                .withDayOfWeek(daysOfWeek)
+                .build());
+
+        final List<Alarm> alarmList2 = new ArrayList<>();
+        alarmList2.add(new Alarm.Builder()
+                .withYear(2017)
+                .withMonth(1)
+                .withDay(5)
+                .withHour(9)
+                .withMinute(0)
+                .withIsEditable(true)
+                .withIsEnabled(false)
+                .withIsRepeated(false)
+                .withIsSmart(true)
+                .withDayOfWeek(daysOfWeek)
+                .build());
+        alarmList2.add(new Alarm.Builder()
+                .withYear(2017)
+                .withMonth(1)
+                .withDay(5)
+                .withHour(9)
+                .withMinute(30)
+                .withIsEditable(true)
+                .withIsEnabled(false)
+                .withIsRepeated(false)
+                .withIsSmart(true)
+                .withDayOfWeek(daysOfWeek)
+                .build());
+
+        final List<Alarm> alarmList3 = new ArrayList<>();
+        alarmList3.add(new Alarm.Builder()
+                .withYear(2017)
+                .withMonth(1)
+                .withDay(13)
+                .withHour(8)
+                .withMinute(45)
+                .withIsEditable(true)
+                .withIsEnabled(true)
+                .withIsRepeated(false)
+                .withIsSmart(true)
+                .withDayOfWeek(daysOfWeek)
+                .build());
+
+
+        final UserInfo userInfo1 = new UserInfo(deviceId, account_id1, alarmList1, Optional.of(ringTime1_start), Optional.of(timezone), Optional.absent(), lastUpdated1);
+        final UserInfo userInfo2 = new UserInfo(deviceId, account_id2, alarmList2, Optional.of(ringTime2_start), Optional.of(timezone), Optional.absent(), lastUpdated2);
+        UserInfo userInfo3 = new UserInfo(deviceId, account_id3, alarmList3, Optional.of(ringTime3_start), Optional.of(timezone), Optional.absent(), lastUpdated3);
+
+        final List<UserInfo> userInfoList = new ArrayList<>();
+        userInfoList.add(userInfo1); userInfoList.add(userInfo2); userInfoList.add(userInfo3);
+
+        //smart alarm not yet triggered
+        final RingTime ringTimeStart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, startTime );
+        assertThat(ringTimeStart.actualRingTimeUTC, is(ringTime3_start.actualRingTimeUTC));
+
+        //smart alarm Triggered,
+        userInfo3 = new UserInfo(deviceId, account_id3, alarmList3, Optional.of(ringTime3_smart), Optional.of(timezone), Optional.absent(), lastUpdated3);
+        userInfoList.set(2, userInfo3);
+        final RingTime ringTimeSmart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime);
+        assertThat(ringTimeSmart.actualRingTimeUTC, is(ringTime3_smart.actualRingTimeUTC));
+
+        //after smart alarm triggered
+        final RingTime ringTimeAfterActual = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(5));
+        assertThat(ringTimeAfterActual.actualRingTimeUTC, is(0L));
+
+        //after smart alarm actual time
+        final RingTime ringTimeAfterExpected = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(30));
+        assertThat(ringTimeAfterExpected.actualRingTimeUTC, is(0L));
+
+    }
+
     @Test
     public void testDecayThreshold(){
         final long ringTime = 1479420000000L;
