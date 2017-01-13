@@ -777,6 +777,16 @@ public final class SpeechResultsKinesis {
      * <code>optional .SpeechResultsData.Action action = 17;</code>
      */
     is.hello.supichi.api.SpeechResultsKinesis.SpeechResultsData.Action getAction();
+
+    // optional int32 fw_version = 18;
+    /**
+     * <code>optional int32 fw_version = 18;</code>
+     */
+    boolean hasFwVersion();
+    /**
+     * <code>optional int32 fw_version = 18;</code>
+     */
+    int getFwVersion();
   }
   /**
    * Protobuf type {@code SpeechResultsData}
@@ -942,6 +952,11 @@ public final class SpeechResultsKinesis {
                 bitField0_ |= 0x00008000;
                 action_ = value;
               }
+              break;
+            }
+            case 144: {
+              bitField0_ |= 0x00010000;
+              fwVersion_ = input.readInt32();
               break;
             }
           }
@@ -1606,6 +1621,22 @@ public final class SpeechResultsKinesis {
       return action_;
     }
 
+    // optional int32 fw_version = 18;
+    public static final int FW_VERSION_FIELD_NUMBER = 18;
+    private int fwVersion_;
+    /**
+     * <code>optional int32 fw_version = 18;</code>
+     */
+    public boolean hasFwVersion() {
+      return ((bitField0_ & 0x00010000) == 0x00010000);
+    }
+    /**
+     * <code>optional int32 fw_version = 18;</code>
+     */
+    public int getFwVersion() {
+      return fwVersion_;
+    }
+
     private void initFields() {
       accountId_ = 0L;
       senseId_ = "";
@@ -1624,6 +1655,7 @@ public final class SpeechResultsKinesis {
       responseText_ = "";
       updated_ = 0L;
       action_ = is.hello.supichi.api.SpeechResultsKinesis.SpeechResultsData.Action.PUT_ITEM;
+      fwVersion_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1687,6 +1719,9 @@ public final class SpeechResultsKinesis {
       }
       if (((bitField0_ & 0x00008000) == 0x00008000)) {
         output.writeEnum(17, action_.getNumber());
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        output.writeInt32(18, fwVersion_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -1766,6 +1801,10 @@ public final class SpeechResultsKinesis {
       if (((bitField0_ & 0x00008000) == 0x00008000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(17, action_.getNumber());
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(18, fwVersion_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1922,6 +1961,8 @@ public final class SpeechResultsKinesis {
         bitField0_ = (bitField0_ & ~0x00008000);
         action_ = is.hello.supichi.api.SpeechResultsKinesis.SpeechResultsData.Action.PUT_ITEM;
         bitField0_ = (bitField0_ & ~0x00010000);
+        fwVersion_ = 0;
+        bitField0_ = (bitField0_ & ~0x00020000);
         return this;
       }
 
@@ -2023,6 +2064,10 @@ public final class SpeechResultsKinesis {
           to_bitField0_ |= 0x00008000;
         }
         result.action_ = action_;
+        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+          to_bitField0_ |= 0x00010000;
+        }
+        result.fwVersion_ = fwVersion_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2114,6 +2159,9 @@ public final class SpeechResultsKinesis {
         }
         if (other.hasAction()) {
           setAction(other.getAction());
+        }
+        if (other.hasFwVersion()) {
+          setFwVersion(other.getFwVersion());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -3192,6 +3240,39 @@ public final class SpeechResultsKinesis {
         return this;
       }
 
+      // optional int32 fw_version = 18;
+      private int fwVersion_ ;
+      /**
+       * <code>optional int32 fw_version = 18;</code>
+       */
+      public boolean hasFwVersion() {
+        return ((bitField0_ & 0x00020000) == 0x00020000);
+      }
+      /**
+       * <code>optional int32 fw_version = 18;</code>
+       */
+      public int getFwVersion() {
+        return fwVersion_;
+      }
+      /**
+       * <code>optional int32 fw_version = 18;</code>
+       */
+      public Builder setFwVersion(int value) {
+        bitField0_ |= 0x00020000;
+        fwVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 fw_version = 18;</code>
+       */
+      public Builder clearFwVersion() {
+        bitField0_ = (bitField0_ & ~0x00020000);
+        fwVersion_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SpeechResultsData)
     }
 
@@ -3223,7 +3304,7 @@ public final class SpeechResultsKinesis {
   static {
     java.lang.String[] descriptorData = {
       "\n\024speech_results.proto\",\n\tAudioData\022\021\n\td" +
-      "ata_size\030\001 \001(\r\022\014\n\004data\030\002 \001(\014\"\253\003\n\021SpeechR" +
+      "ata_size\030\001 \001(\r\022\014\n\004data\030\002 \001(\014\"\277\003\n\021SpeechR" +
       "esultsData\022\022\n\naccount_id\030\001 \001(\003\022\020\n\010sense_" +
       "id\030\002 \001(\t\022\017\n\007created\030\003 \001(\003\022\022\n\naudio_uuid\030" +
       "\004 \001(\t\022\031\n\005audio\030\005 \001(\0132\n.AudioData\022\014\n\004text" +
@@ -3233,9 +3314,10 @@ public final class SpeechResultsKinesis {
       "\027\n\017wake_confidence\030\r \003(\002\022\016\n\006result\030\016 \001(\t" +
       "\022\025\n\rresponse_text\030\017 \001(\t\022\017\n\007updated\030\020 \001(\003",
       "\022)\n\006action\030\021 \001(\0162\031.SpeechResultsData.Act" +
-      "ion\"5\n\006Action\022\014\n\010PUT_ITEM\020\001\022\017\n\013UPDATE_IT" +
-      "EM\020\002\022\014\n\010TIMELINE\020\003B,\n\024is.hello.supichi.a" +
-      "piB\024SpeechResultsKinesis"
+      "ion\022\022\n\nfw_version\030\022 \001(\005\"5\n\006Action\022\014\n\010PUT" +
+      "_ITEM\020\001\022\017\n\013UPDATE_ITEM\020\002\022\014\n\010TIMELINE\020\003B," +
+      "\n\024is.hello.supichi.apiB\024SpeechResultsKin" +
+      "esis"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3253,7 +3335,7 @@ public final class SpeechResultsKinesis {
           internal_static_SpeechResultsData_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SpeechResultsData_descriptor,
-              new java.lang.String[] { "AccountId", "SenseId", "Created", "AudioUuid", "Audio", "Text", "Service", "Confidence", "S3Keyname", "HandlerType", "Command", "WakeId", "WakeConfidence", "Result", "ResponseText", "Updated", "Action", });
+              new java.lang.String[] { "AccountId", "SenseId", "Created", "AudioUuid", "Audio", "Text", "Service", "Confidence", "S3Keyname", "HandlerType", "Command", "WakeId", "WakeConfidence", "Result", "ResponseText", "Updated", "Action", "FwVersion", });
           return null;
         }
       };
