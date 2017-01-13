@@ -7,6 +7,9 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
+import com.hello.suripu.core.firmware.HardwareVersion;
+import com.hello.suripu.core.models.CalibratedDeviceData;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -88,7 +91,8 @@ public class Humidity {
 
         final DescriptiveStatistics humStats = new DescriptiveStatistics();
         for (final DeviceData deviceData : data) {
-            humStats.addValue(DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity));
+            final CalibratedDeviceData calibratedDeviceData = new CalibratedDeviceData(deviceData, Device.Color.WHITE, Optional.absent());
+            humStats.addValue(calibratedDeviceData.humidity());
         }
 
         final Integer medianHumidity = (int) humStats.getPercentile(50);

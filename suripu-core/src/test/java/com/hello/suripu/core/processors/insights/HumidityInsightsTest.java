@@ -5,7 +5,10 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.HumidityMsgEN;
+import com.hello.suripu.core.sense.data.ExtraSensorData;
+import com.hello.suripu.core.sense.data.SenseOneFiveExtraData;
 import com.hello.suripu.core.util.DataUtils;
+import com.hello.suripu.core.util.calibration.SenseOneFiveDataConversion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
@@ -29,17 +32,17 @@ public class HumidityInsightsTest {
     @Test
     public void test_getMedianHumidity() {
         
-        final int humidity = 50;
-        final int temp = 70;
+        final int humidityRaw = 50 * 100;
+        final int tempRaw = 70 * 100;
 
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
-        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", temp, humidity + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
-        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", temp, humidity - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
 
 
         final Integer result = Humidity.getMedianHumidity(data);
-        final Integer expectedResult = (int) DataUtils.calibrateHumidity(0, humidity);
+        final Integer expectedResult = (int) DataUtils.calibrateHumidity(tempRaw, humidityRaw);
 
         assertThat(result, is(expectedResult));
 
@@ -49,16 +52,32 @@ public class HumidityInsightsTest {
     public void test_getMedianHumidity_2() {
         //Test that casting median humidity to Integer works with even number of data points too
 
-        final int humidity = 50;
-        final int temp = 70;
+        final int humidityRaw = 50 * 100;
+        final int tempRaw = 70 * 100;
 
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
-        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", temp, humidity + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
 
 
         final Integer result = Humidity.getMedianHumidity(data);
-        final Integer expectedResult = (int) DataUtils.calibrateHumidity(70, humidity);
+        final Integer expectedResult = (int) DataUtils.calibrateHumidity(tempRaw, humidityRaw);
+
+        assertThat(result, is(expectedResult));
+    }
+
+    @Test
+    public void test_getMedianHumidity_3() {
+        final int humidityRaw = 15 * 100;
+        final int tempRaw = 10 * 100;
+
+        final List<DeviceData> data = Lists.newArrayList();
+        data.add(DeviceData.senseOneFive(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0), SenseOneFiveExtraData.create(0, 0, 0, "fakergb", 0, 0, 0, 0)));
+        data.add(DeviceData.senseOneFive(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0), SenseOneFiveExtraData.create(0, 0, 0, "fakergb", 0, 0, 0, 0)));
+        data.add(DeviceData.senseOneFive(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0), SenseOneFiveExtraData.create(0, 0, 0, "fakergb", 0, 0, 0, 0)));
+
+        final Integer result = Humidity.getMedianHumidity(data);
+        final Integer expectedResult = (int) SenseOneFiveDataConversion.convertRawToHumidity(humidityRaw);
 
         assertThat(result, is(expectedResult));
     }
