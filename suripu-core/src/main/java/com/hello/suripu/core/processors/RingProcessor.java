@@ -646,13 +646,26 @@ public class RingProcessor {
                 continue;
             }
 
+<<<<<<< HEAD
+=======
+            // expected alarm ringtime should be in the future
+            if(nowUnalignedByMinute.getMillis() > userInfo.ringTime.get().expectedRingTimeUTC) {
+                continue;
+            }
+
+            // this is for the first valid user, order by user id asc
+>>>>>>> bb23f18... modified getNextRingTimeForSense logic, added threeUserTest
             if(nextRingTimeFromWorker.isEmpty()){
                 nextRingTimeFromWorker = userInfo.ringTime.get();
                 continue;
             }
 
             if(userInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC) {
+<<<<<<< HEAD
                 nextRingTimeFromWorker = userInfo.ringTime.get();
+=======
+                    nextRingTimeFromWorker = userInfo.ringTime.get();
+>>>>>>> bb23f18... modified getNextRingTimeForSense logic, added threeUserTest
             }
         }
 
