@@ -2,6 +2,7 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.HumidityMsgEN;
@@ -41,7 +42,7 @@ public class HumidityInsightsTest {
         data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
 
 
-        final Integer result = Humidity.getMedianHumidity(data);
+        final Integer result = Humidity.getMedianHumidity(data, Optional.of(Device.Color.WHITE), Optional.absent());
         final Integer expectedResult = (int) DataUtils.calibrateHumidity(tempRaw, humidityRaw);
 
         assertThat(result, is(expectedResult));
@@ -60,7 +61,7 @@ public class HumidityInsightsTest {
         data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
 
 
-        final Integer result = Humidity.getMedianHumidity(data);
+        final Integer result = Humidity.getMedianHumidity(data, Optional.of(Device.Color.WHITE), Optional.absent());
         final Integer expectedResult = (int) DataUtils.calibrateHumidity(tempRaw, humidityRaw);
 
         assertThat(result, is(expectedResult));
@@ -76,7 +77,7 @@ public class HumidityInsightsTest {
         data.add(DeviceData.senseOneFive(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0), SenseOneFiveExtraData.create(0, 0, 0, "fakergb", 0, 0, 0, 0)));
         data.add(DeviceData.senseOneFive(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, "", tempRaw, humidityRaw - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0), SenseOneFiveExtraData.create(0, 0, 0, "fakergb", 0, 0, 0, 0)));
 
-        final Integer result = Humidity.getMedianHumidity(data);
+        final Integer result = Humidity.getMedianHumidity(data, Optional.of(Device.Color.WHITE), Optional.absent());
         final Integer expectedResult = (int) SenseOneFiveDataConversion.convertRawToHumidity(humidityRaw);
 
         assertThat(result, is(expectedResult));

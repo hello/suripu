@@ -15,12 +15,14 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.insights.InsightsLastSeenDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -139,6 +141,7 @@ public class InsightProcessorTest {
         Mockito.when(deviceDAO.getMostRecentSenseByAccountId(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_DEVICE_ID_EXT));
         final TrendsInsightsDAO trendsInsightsDAO = Mockito.mock(TrendsInsightsDAO.class);
         final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB = Mockito.mock(AggregateSleepScoreDAODynamoDB.class);
+        final SenseColorDAO senseColorDAO = Mockito.mock(SenseColorDAO.class);
         final InsightsDAODynamoDB insightsDAODynamoDB = Mockito.mock(InsightsDAODynamoDB.class);
         final InsightsLastSeenDAO insightsLastSeenDAO = Mockito.mock(InsightsLastSeenDAO.class);
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = Mockito.mock(SleepStatsDAODynamoDB.class);
@@ -160,7 +163,7 @@ public class InsightProcessorTest {
         data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT,"",  0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(10), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
         data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, "", 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(30), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
         data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
-        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, "", 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
+        data.add(DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID_EXT, "", 0, 0, 0, 0, 0, 0, 0, zeroLight, zeroLight, 0, 0, timestamp.withHourOfDay(21), OFFSET_MILLIS, 1, 1, 1, 0, 0, 0, 0));
 
         final List<InfoInsightCards> mockInfoInsightCardsList = Lists.newArrayList(Mockito.mock(InfoInsightCards.class));
         final DeviceStatus mockDeviceStatus = Mockito.mock(DeviceStatus.class);
@@ -212,6 +215,8 @@ public class InsightProcessorTest {
         Mockito.when(wakeStdDevData.getWakeStdDevPercentile(Mockito.any(Integer.class))).thenReturn(1);
 
         //Taking care of @NotNull check for humidity
+        Mockito.when(senseColorDAO.getColorForSense(FAKE_DEVICE_ACCOUNT_PAIR.externalDeviceId)).thenReturn(Optional.of(Device.Color.WHITE));
+        Mockito.when(calibrationDAO.get(FAKE_DEVICE_ACCOUNT_PAIR.externalDeviceId)).thenReturn(Optional.absent());
         Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(OFFSET_MILLIS));
         Mockito.when(deviceDataDAODynamoDB.getBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class),Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class)))
                 .thenReturn(successfulResponse);
@@ -235,6 +240,7 @@ public class InsightProcessorTest {
                 deviceDAO,
                 trendsInsightsDAO,
                 scoreDAODynamoDB,
+                senseColorDAO,
                 insightsDAODynamoDB,
                 insightsLastSeenDAO,
                 sleepStatsDAODynamoDB,
