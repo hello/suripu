@@ -49,7 +49,7 @@ public class VotingAlgorithm implements TimelineAlgorithm {
 
         try {
             //reset state
-            final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
+            final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.oneDaysTrackerMotion.processedtrackerMotions,
                     sensorData.allSensorSampleList.get(Sensor.SOUND),
                     sensorData.allSensorSampleList.get(Sensor.LIGHT),
                     sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
@@ -60,7 +60,7 @@ public class VotingAlgorithm implements TimelineAlgorithm {
                 return Optional.absent();
             }
 
-            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(votingSleepEventsOptional.get().sleepEvents,
+            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.VOTING, votingSleepEventsOptional.get().sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
                     ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
 

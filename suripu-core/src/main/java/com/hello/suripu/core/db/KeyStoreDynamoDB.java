@@ -171,7 +171,6 @@ public class KeyStoreDynamoDB implements KeyStore {
         return keyMap;
     }
 
-
     /**
      *
      * @param deviceIds set of external sense/pill IDs

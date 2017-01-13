@@ -64,6 +64,7 @@ public class FeatureFlipper {
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
     public final static String NEW_ROOM_CONDITION = "new_room_condition";
     public final static String NEURAL_NET_ALGORITHM = "neural_net_algorithm";
+    public final static String NEURAL_NET_FOUR_EVENTS_ALGORITHM = "neural_net_four_events_algorithm";
 
     public final static String OFF_BED_HMM_MOTION_FILTER = "off_bed_hmm_motion_filter";
     public final static String OFFICE_ONLY_OVERRIDE = "office_only_override";
@@ -111,6 +112,9 @@ public class FeatureFlipper {
     public final static String SLEEP_SOUNDS_OVERRIDE_OTA = "sleep_sounds_override_ota";
     public final static String SLEEP_SEGMENT_OFFSET_REMAPPING = "sleep_segment_offset_remapping";
     public final static String SLEEP_STATS_MEDIUM_SLEEP = "sleep_stats_medium_sleep";
+    public final static String SLEEP_STATS_UNINTERRUPTED_SLEEP = "sleep_stats_uninterrupted_sleep";
+    public final static String SMART_ALARM = "smart_alarm";
+
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
     public final static String SMART_ALARM_REFACTORED = "smart_alarm_refactored";
     public final static String SOUND_EVENTS_USE_HIGHER_THRESHOLD = "sound_events_use_higher_threshold";

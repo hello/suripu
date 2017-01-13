@@ -83,8 +83,8 @@ public class DataUtils{
     public static float convertLightCountsToLux(final int rawCount) {
         // TODO: factor in Sense Color whenever we have that
         // applicable for DVT units onwards
-        final float maxLux = 125.0f;
-        final float maxCount = 65536.0f; // 16-bit counts
+        final float maxLux = 8000.0f;
+        final float maxCount = 4194304.0f;
 
         // note internal to external intensity conversion:
         // white sense: 2x

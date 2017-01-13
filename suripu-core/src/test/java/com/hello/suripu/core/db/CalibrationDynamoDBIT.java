@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertTrue;
 
 public class CalibrationDynamoDBIT {
 
@@ -68,7 +69,7 @@ public class CalibrationDynamoDBIT {
 
     @Test
     public void testCache() throws InterruptedException {
-
+        final Integer defaultLightsOutDelta = 72;
         // Specify short cache duration
         final CalibrationDAO calibrationDAO = CalibrationDynamoDB.createWithCacheConfig(this.amazonDynamoDBClient, tableName, 1);
 
@@ -76,7 +77,7 @@ public class CalibrationDynamoDBIT {
         final Optional<Calibration> calibrationOptional = calibrationDAO.get(SENSE_ID);
         assertThat(calibrationOptional.isPresent(), is(false));
 
-        final Calibration calibration = Calibration.create(SENSE_ID, 88, 123456798L);
+        final Calibration calibration = Calibration.createWithLightsOutDelta(SENSE_ID, 88, defaultLightsOutDelta, 123456798L);
         calibrationDAO.put(calibration);
 
         // Cache hasn't expired yet, so we expect it to still be missing
@@ -87,6 +88,7 @@ public class CalibrationDynamoDBIT {
         // Bypass cache to make sure it's there
         final Optional<Calibration> calibrationOptional3 = calibrationDAO.getStrict(SENSE_ID);
         assertThat(calibrationOptional3.isPresent(), is(true));
+        assertTrue(calibrationOptional3.get().lightsOutDelta().equals(defaultLightsOutDelta));
 
         Thread.sleep(1100); // boo sleep in tests
 

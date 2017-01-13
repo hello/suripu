@@ -16,7 +16,6 @@ public class TaimurainHttpClientConfiguration extends Configuration {
     @JsonProperty("http_client_config")
     private HttpClientConfiguration httpClientConfiguration;
     public HttpClientConfiguration getHttpClientConfiguration() { return httpClientConfiguration; }
-
     @Valid
     @NotNull
     @JsonProperty("endpoint")

@@ -57,6 +57,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static String SENSE_ATTRIBUTE_NAME = "sense_id";
     private final static String DUST_OFFSET_ATTRIBUTE_NAME = "dust_offset";
     private final static String TESTED_AT_ATTRIBUTE_NAME = "tested_at";
+    private final static String LIGHTS_OUT_DELTA_ATTRIBUTE_NAME = "lights_out_delta";
 
     private final static Integer MAX_GET_SIZE = 100;
     private final static Integer MAX_PUT_FORCE_SIZE_PER_BATCH = 25;
@@ -140,6 +141,17 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         }
 
         if(item.containsKey(DUST_OFFSET_ATTRIBUTE_NAME) && item.containsKey(TESTED_AT_ATTRIBUTE_NAME)) {
+
+            if(item.containsKey(LIGHTS_OUT_DELTA_ATTRIBUTE_NAME)) {
+                final Calibration calibration = Calibration.createWithLightsOutDelta(
+                        senseId,
+                        Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()),
+                        Integer.valueOf(item.get(LIGHTS_OUT_DELTA_ATTRIBUTE_NAME).getN()),
+                        Long.valueOf(item.get(TESTED_AT_ATTRIBUTE_NAME).getN())
+                );
+                return Optional.of(calibration);
+            }
+
             final Calibration calibration = Calibration.create(
                     senseId,
                     Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()),
@@ -410,6 +422,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
         attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.dustOffset)));
         attributes.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.testedAt)));
+        attributes.put(LIGHTS_OUT_DELTA_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.lightsOutDelta())));
         return attributes;
     }
 }

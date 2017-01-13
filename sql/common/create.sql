@@ -516,6 +516,7 @@ ALTER TABLE expansions ADD COLUMN company_name VARCHAR (100);
 UPDATE expansions SET company_name='Phillips' WHERE service_name='HUE';
 UPDATE expansions SET company_name='Nest' WHERE service_name='NEST';
 
+ALTER TABLE expansion_data ADD COLUMN account_id bigint default null;
 
 CREATE TABLE alerts (
     id SERIAL,

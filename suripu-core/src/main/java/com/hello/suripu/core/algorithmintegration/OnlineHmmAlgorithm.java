@@ -72,6 +72,8 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
 
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
+                    accountId,
+                    AlgorithmType.ONLINE_HMM,
                     events,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
                     ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));

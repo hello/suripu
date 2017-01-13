@@ -12,10 +12,14 @@ public class ProgressiveAlarmThresholds {
     public final int kickoffCountThreshold;
     public final int onDurationThreshold;
 
-    private final static float KICKOFF_COUNT_DECAY_RATE = 0.10f; //kickoff count decays to 3 with 10 minutes left
-    private final static int AMPLITUDE_DECAY_RATE=  140; // amplitude threshold decays to 3000 with 10 minutes left
-    private final static float AMPLITUDE_COUNT_DECAY_RATE=  0.04f; // required count decays to 1 with 5 minutes left
-    private final static float ON_DURATION_DECAY_RATE= 0.2f; //od threshold decays to 5 with 10 minutes left.
+    private final static float KICKOFF_COUNT_DECAY_RATE = 0.20f; //kickoff count decays to 2 with 15 minutes left - so starting with motion events 22 minutes before alarm time.
+    private final static int AMPLITUDE_DECAY_RATE =  267; // amplitude threshold decays to 500 with 15 minutes left
+    private final static float AMPLITUDE_COUNT_DECAY_RATE =  0.07f; // required count decays to 1 with 15 minutes left
+    private final static float ON_DURATION_DECAY_RATE = 0.45f; //od threshold decays to 2 with 15 minutes left.
+    private final static int AMPLITUDE_MIN_THRESHOLD = 0;
+    private final static int ON_DURATION_MIN_THRESHOLD = 2;
+    private final static int KICKOFF_COUNT_MIN_THREHSOLD = 2;
+    private final static int AMPLITUDE_MIN_COUNT = 1;
 
 
     public ProgressiveAlarmThresholds(final int amplitudeThreshold, final int amplitudeThresholdCountLimit, final int kickoffCountThreshold, final int onDurationThreshold) {
@@ -36,7 +40,7 @@ public class ProgressiveAlarmThresholds {
 
         final int elapsedMinutes = 30 - (int) (nextRingTime - currentTime)/ DateTimeConstants.MILLIS_PER_MINUTE;
 
-        if (!useDecayingThresholds || elapsedMinutes <= 10){
+        if (!useDecayingThresholds || elapsedMinutes <= 5){
             return new ProgressiveAlarmThresholds();
         }
 
@@ -45,10 +49,10 @@ public class ProgressiveAlarmThresholds {
         final int amplitudeCountDecay = (int) (AMPLITUDE_COUNT_DECAY_RATE* elapsedMinutes);
         final int onDurationDecay = (int) (ON_DURATION_DECAY_RATE* elapsedMinutes);
 
-        final int kickoffCountThreshold =  SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD - kickOffCountDecay;
-        final int amplitudeThreshold = SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG - amplitudeDecay;
-        final int amplitudeThresholdCountLimit = SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT - amplitudeCountDecay ;
-        final int onDurationThreshold = SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD - onDurationDecay;
+        final int kickoffCountThreshold =  Math.max(SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD - kickOffCountDecay, KICKOFF_COUNT_MIN_THREHSOLD);
+        final int amplitudeThreshold = Math.max(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG - amplitudeDecay, AMPLITUDE_MIN_THRESHOLD);
+        final int amplitudeThresholdCountLimit = Math.max(SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT - amplitudeCountDecay, AMPLITUDE_MIN_COUNT) ;
+        final int onDurationThreshold = Math.max(SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD - onDurationDecay, ON_DURATION_MIN_THRESHOLD);
 
         return new ProgressiveAlarmThresholds(amplitudeThreshold, amplitudeThresholdCountLimit, kickoffCountThreshold, onDurationThreshold);
     }

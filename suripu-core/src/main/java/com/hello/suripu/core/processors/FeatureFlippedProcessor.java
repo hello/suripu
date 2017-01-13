@@ -52,6 +52,10 @@ public class FeatureFlippedProcessor {
         return  featureFlipper.userFeatureActive(FeatureFlipper.NEURAL_NET_ALGORITHM,accountId,Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasNeuralNetFourEventsAlgorithmEnabled(final Long accountId) {
+        return  featureFlipper.userFeatureActive(FeatureFlipper.NEURAL_NET_FOUR_EVENTS_ALGORITHM,accountId,Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasOnlineHmmLearningEnabled(final Long accountId) {
         return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_LEARNING,accountId,Collections.EMPTY_LIST);
     }
@@ -180,9 +184,11 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V5, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useUninterruptedDuration(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_STATS_UNINTERRUPTED_SLEEP, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean useSmartAlarmRefactored(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, accountId, Collections.EMPTY_LIST);
     }
-
-
 }

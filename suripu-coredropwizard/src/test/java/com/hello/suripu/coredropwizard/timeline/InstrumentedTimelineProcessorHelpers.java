@@ -589,11 +589,5 @@ public class InstrumentedTimelineProcessorHelpers {
     public void clear() {
     }
 
-    final public NeuralNetEndpoint neuralNetEndpoint = new NeuralNetEndpoint() {
 
-        @Override
-        public com.google.common.base.Optional<NeuralNetAlgorithmOutput> getNetOutput(String netId, double[][] sensorData) {
-            return com.google.common.base.Optional.absent();
-        }
-    };
 }
