@@ -61,6 +61,8 @@ public class SpeechResult {
     @JsonProperty("result")
     public final Result result;
 
+    @JsonIgnore
+    public final Optional<Integer> firmwareVersion;
 
     public SpeechResult(final Optional<Long> accountId,
                         final String senseId,
@@ -76,7 +78,8 @@ public class SpeechResult {
                         final Optional<String> command,
                         final WakeWord wakeWord,
                         final Map<String, Float> wakeWordsConfidence,
-                        final Result result) {
+                        final Result result,
+                        final Optional<Integer> firmwareVersion) {
         this.accountId = accountId;
         this.senseId = senseId;
         this.dateTimeUTC = dateTimeUTC;
@@ -92,6 +95,7 @@ public class SpeechResult {
         this.wakeWord = wakeWord;
         this.wakeWordsConfidence = wakeWordsConfidence;
         this.result = result;
+        this.firmwareVersion = firmwareVersion;
 
         // TODO: add checks for not null?
     }
@@ -112,6 +116,8 @@ public class SpeechResult {
         private WakeWord wakeWord = WakeWord.OK_SENSE;
         private Map<String, Float> wakeWordsConfidence = Maps.newHashMap();
         private Result result = Result.NONE;
+        private Optional<Integer> firmwareVersion = Optional.absent();
+
 
         public Builder withAccountId(final Long accountId) {
             this.accountId = Optional.of(accountId);
@@ -199,11 +205,16 @@ public class SpeechResult {
             return this;
         }
 
+        public Builder withFirmwareVersion(final Integer firmwareVersion) {
+            this.firmwareVersion = Optional.of(firmwareVersion);
+            return this;
+        }
+
         public SpeechResult build() {
             return new SpeechResult(accountId, senseId, dateTimeUTC, updatedUTC, audioIdentifier,
                     text, responseText, service, confidence,
                     s3ResponseKeyname, handlerType, command,
-                    wakeWord, wakeWordsConfidence, result);
+                    wakeWord, wakeWordsConfidence, result, firmwareVersion);
         }
     }
 }
