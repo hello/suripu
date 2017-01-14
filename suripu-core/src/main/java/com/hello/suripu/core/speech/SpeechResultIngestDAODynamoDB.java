@@ -156,6 +156,10 @@ public class SpeechResultIngestDAODynamoDB implements SpeechResultIngestDAO {
             item.withString(SpeechToTextAttribute.S3_KEYNAME.shortName(), speechResult.s3ResponseKeyname.get());
         }
 
+        if (speechResult.firmwareVersion.isPresent()) {
+            item.withInt(SpeechToTextAttribute.FIRMWARE_VERSION.shortName(), speechResult.firmwareVersion.get());
+        }
+
         return item;
     }
     // endregion
