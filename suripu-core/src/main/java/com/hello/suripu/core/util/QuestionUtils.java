@@ -21,16 +21,18 @@ public class QuestionUtils {
             public Integer apply(Question question) {
                 if (question.category.equals(QuestionCategory.ONBOARDING)) {
                     return 0;
-                } if (question.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                } if (question.category.equals(QuestionCategory.INSIGHT)) {
                     return 1;
-                } if (question.category.equals(QuestionCategory.DAILY)) {
+                } if (question.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
                     return 2;
-                } if (question.category.equals(QuestionCategory.GOAL)) {
+                } if (question.category.equals(QuestionCategory.DAILY)) {
                     return 3;
-                } if (question.category.equals(QuestionCategory.SURVEY)) {
+                } if (question.category.equals(QuestionCategory.GOAL)) {
                     return 4;
-                } else {
+                } if (question.category.equals(QuestionCategory.SURVEY)) {
                     return 5;
+                } else {
+                    return 6;
                 }
             }
         };

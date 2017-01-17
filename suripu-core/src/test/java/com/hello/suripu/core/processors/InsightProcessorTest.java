@@ -13,6 +13,8 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
+import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.responses.Response;
@@ -150,6 +152,8 @@ public class InsightProcessorTest {
         final CalibrationDAO calibrationDAO = Mockito.mock(CalibrationDAO.class);
         final AccountInfoProcessor accountInfoProcessor = Mockito.mock(AccountInfoProcessor.class);
         final MarketingInsightsSeenDAODynamoDB marketingInsightsSeenDAODynamoDB = Mockito.mock(MarketingInsightsSeenDAODynamoDB.class);
+        final QuestionResponseDAO questionResponseDAO = Mockito.mock(QuestionResponseDAO.class);
+        final Map<String, Integer> strictAlarmTextQidMap = new HashMap<>();
 
         //Prepping for taking care of @NotNull check for light
         final int light = 2;
@@ -244,7 +248,9 @@ public class InsightProcessorTest {
                 lightData,
                 wakeStdDevData,
                 calibrationDAO,
-                marketingInsightsSeenDAODynamoDB);
+                marketingInsightsSeenDAODynamoDB,
+                questionResponseDAO,
+                strictAlarmTextQidMap);
 
         //only to get rid of null pointer exception
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);

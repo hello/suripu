@@ -33,7 +33,7 @@ public class SenseOneFiveDataConversionTest {
     final float ALERT_CO2_HIGH = 1200;
 
     final float ALERT_UV_HIGH = 2;
-
+    
     @Test
     public void testRGBtoLux_one() throws IOException {
         final float LUXMETER_GOLDSTANDARD_MIN = 500;
