@@ -108,5 +108,20 @@ public class RingProcessorBugTest {
 
         final RingTime computedRingTime3 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing);
         assertEquals("after adjusted", 0, computedRingTime3.actualRingTimeUTC);
+
+        final DateTime expectedRingTime = new DateTime(2017,1,10, 10,40,0, DateTimeZone.UTC);
+
+        final RingTime computedRingTime4 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime);
+        assertEquals("expected ring time", 0, computedRingTime4.expectedRingTimeUTC);
+
+        final DateTime expectedRingTime2 = new DateTime(2017,1,10, 10,40,20, DateTimeZone.UTC);
+
+        final RingTime computedRingTime5 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime2);
+        assertEquals("expected ring time + 20seconds", 0, computedRingTime5.expectedRingTimeUTC);
+
+        final DateTime afterExpectedRingtime = new DateTime(2017,1,10, 10,41,01, DateTimeZone.UTC);
+
+        final RingTime computedRingTime6 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterExpectedRingtime);
+        assertEquals("expected ring time + 1 minute", new DateTime(2017,1,11,10,40, DateTimeZone.UTC).getMillis(), computedRingTime6.expectedRingTimeUTC);
     }
 }

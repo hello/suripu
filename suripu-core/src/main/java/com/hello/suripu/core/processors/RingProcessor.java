@@ -646,8 +646,9 @@ public class RingProcessor {
                 continue;
             }
 
+
             // expected alarm ringtime should be in the future
-            if(nowUnalignedByMinute.getMillis() > userInfo.ringTime.get().expectedRingTimeUTC) {
+            if( Alarm.Utils.alignToMinuteGranularity(nowUnalignedByMinute.withZone(userTimeZoneOptional.get())).getMillis() > userInfo.ringTime.get().expectedRingTimeUTC) {
                 continue;
             }
 
