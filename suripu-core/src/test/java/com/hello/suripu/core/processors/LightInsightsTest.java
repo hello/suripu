@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.LightMsgEN;
@@ -35,7 +36,7 @@ public class LightInsightsTest {
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light - 1,light - 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
 
-        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
+        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, Optional.of(Device.Color.WHITE), Optional.absent(), new LightData());
         if (insightCardOptional.isPresent()) {
             final String expectedTitle = LightMsgEN.getLightDark(0,0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));
@@ -56,7 +57,7 @@ public class LightInsightsTest {
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light - 1,light - 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
 
-        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
+        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, Optional.of(Device.Color.WHITE), Optional.absent(), new LightData());
         if (insightCardOptional.isPresent()) {
             final String expectedTitle = LightMsgEN.getLightNotDarkEnough(0, 0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));
@@ -77,7 +78,7 @@ public class LightInsightsTest {
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light - 1,light - 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
 
-        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
+        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, Optional.of(Device.Color.WHITE), Optional.absent(), new LightData());
         if (insightCardOptional.isPresent()) {
             final String expectedTitle = LightMsgEN.getLightALittleBright(0, 0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));
@@ -98,7 +99,7 @@ public class LightInsightsTest {
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light - 1,light - 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
 
-        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
+        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, Optional.of(Device.Color.WHITE), Optional.absent(), new LightData());
         if (insightCardOptional.isPresent()) {
             final String expectedTitle = LightMsgEN.getLightQuiteBright(0, 0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));
@@ -120,7 +121,7 @@ public class LightInsightsTest {
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
 
 
-        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
+        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, Optional.of(Device.Color.WHITE), Optional.absent(), new LightData());
         if (insightCardOptional.isPresent()) {
             final String expectedTitle = LightMsgEN.getLightTooBright(0,0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));
@@ -141,7 +142,7 @@ public class LightInsightsTest {
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light - 1,light - 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
         data.add(DeviceData.senseOne(accountId, deviceId, "", 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0, 0));
 
-        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
+        final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, Optional.of(Device.Color.WHITE), Optional.absent(), new LightData());
         if (insightCardOptional.isPresent()) {
             final String expectedTitle = LightMsgEN.getLightWayTooBright(0,0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));

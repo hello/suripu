@@ -6,6 +6,8 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
+import com.hello.suripu.core.models.CalibratedDeviceData;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
@@ -37,8 +39,13 @@ public class Lights {
     public static final float LIGHT_LEVEL_WARNING = 2.0f;  // in lux
     public static final float LIGHT_LEVEL_ALERT = 8.0f;  // in lux
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataDAO,
-                                                    final LightData lightData, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+    public static Optional<InsightCard> getInsights(final Long accountId,
+                                                    final DeviceAccountPair deviceAccountPair,
+                                                    final Optional<Device.Color> colorOptional,
+                                                    final Optional<Calibration> calibrationOptional,
+                                                    final DeviceDataInsightQueryDAO deviceDataDAO,
+                                                    final LightData lightData,
+                                                    final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
@@ -65,11 +72,15 @@ public class Lights {
             rows = Lists.newArrayList();
         }
 
-        final Optional<InsightCard> card = processLightData(accountId, rows, lightData);
+        final Optional<InsightCard> card = processLightData(accountId, rows, colorOptional, calibrationOptional, lightData);
         return card;
     }
 
-    public static Optional<InsightCard> processLightData(final Long accountId, final List<DeviceData> data, final LightData lightData) {
+    public static Optional<InsightCard> processLightData(final Long accountId,
+                                                         final List<DeviceData> data,
+                                                         final Optional<Device.Color> colorOptional,
+                                                         final Optional<Calibration> calibrationOptional,
+                                                         final LightData lightData) {
 
         if (data.size() == 0) {
             LOGGER.debug("action=insight-absent insight=lights reason=data-empty account_id={}", accountId);
@@ -77,9 +88,11 @@ public class Lights {
         }
 
         // compute mean value
+        final Device.Color color = colorOptional.or(Device.DEFAULT_COLOR);
         int sum = 0;
         for (final DeviceData deviceData : data) {
-            sum += deviceData.ambientLight;
+            final CalibratedDeviceData calibratedDeviceData = new CalibratedDeviceData(deviceData, color, calibrationOptional);
+            sum += calibratedDeviceData.lux();
         }
 
         int n = data.size();

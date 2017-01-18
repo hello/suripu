@@ -2,6 +2,7 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
@@ -39,7 +40,7 @@ public class TemperatureHumidityInsightsTest {
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, middle_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8),
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, max_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8));
 
-        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, UNIT_CELSIUS);
+        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, Optional.of(Device.Color.WHITE), Optional.absent(), UNIT_CELSIUS);
 
         assertThat(insightCardOptional.isPresent(), is(Boolean.TRUE));
 
@@ -59,7 +60,7 @@ public class TemperatureHumidityInsightsTest {
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, middle_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8),
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, max_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8));
 
-        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, UNIT_CELSIUS);
+        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, Optional.of(Device.Color.WHITE), Optional.absent(), UNIT_CELSIUS);
 
         assertThat(insightCardOptional.isPresent(), is(Boolean.TRUE));
 
@@ -79,7 +80,7 @@ public class TemperatureHumidityInsightsTest {
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, middle_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8),
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, max_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8));
 
-        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, UNIT_CELSIUS);
+        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, Optional.of(Device.Color.WHITE), Optional.absent(), UNIT_CELSIUS);
 
         assertThat(insightCardOptional.isPresent(), is(Boolean.TRUE));
 
@@ -99,7 +100,7 @@ public class TemperatureHumidityInsightsTest {
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, middle_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8),
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, max_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8));
 
-        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, UNIT_CELSIUS);
+        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, Optional.of(Device.Color.WHITE), Optional.absent(), UNIT_CELSIUS);
 
         assertThat(insightCardOptional.isPresent(), is(Boolean.TRUE));
 
@@ -124,7 +125,7 @@ public class TemperatureHumidityInsightsTest {
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, middle_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8),
                 DeviceData.senseOne(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, FAKE_EXTERNAL_ID, max_ambient_temp, 2, 3, 4, 5, 6, 7, 8, 1f, 1, 2, DateTime.now(), 1, 2, 3, 4, 5, 6, 7, 8));
 
-        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, UNIT_FAHRENH);
+        final Optional<InsightCard> insightCardOptional = TemperatureHumidity.processData(FAKE_ACCOUNT_ID, deviceDataList, Optional.of(Device.Color.WHITE), Optional.absent(), UNIT_FAHRENH);
 
         assertThat(insightCardOptional.isPresent(), is(Boolean.TRUE));
 

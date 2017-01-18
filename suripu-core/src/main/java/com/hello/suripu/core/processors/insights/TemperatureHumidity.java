@@ -7,6 +7,9 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
+import com.hello.suripu.core.models.CalibratedDeviceData;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -54,9 +57,13 @@ public class TemperatureHumidity {
     private static final int TEMP_START_HOUR = 23; // 11pm
     private static final int TEMP_END_HOUR = 6; // 6am
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceAccountPair deviceAccountPair,
+    public static Optional<InsightCard> getInsights(final Long accountId,
+                                                    final DeviceAccountPair deviceAccountPair,
+                                                    final Optional<Device.Color> colorOptional,
+                                                    final Optional<Calibration> calibrationOptional,
                                                     final DeviceDataInsightQueryDAO deviceDataDAO,
-                                                    final TemperatureUnit tempUnit, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                                                    final TemperatureUnit tempUnit,
+                                                    final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
             return Optional.absent(); //cannot compute insight without timezone info
@@ -82,12 +89,15 @@ public class TemperatureHumidity {
             sensorData = Lists.newArrayList();
         }
 
-        final Optional<InsightCard> card = processData(accountId, sensorData, tempUnit);
+        final Optional<InsightCard> card = processData(accountId, sensorData, colorOptional, calibrationOptional, tempUnit);
         return card;
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data,
+    public static Optional<InsightCard> processData(final Long accountId,
+                                                    final List<DeviceData> data,
+                                                    final Optional<Device.Color> colorOptional,
+                                                    final Optional<Calibration> calibrationOptional,
                                                     final TemperatureUnit tempUnit) {
 
         if (data.isEmpty()) {
@@ -97,9 +107,13 @@ public class TemperatureHumidity {
         // TODO: if location is available, compare with users from the same city
         // TODO: adjust ideal range based on question response on preference for cold/hot. Implemented before by KSG, but removed for simplicity for now.
 
+        final Device.Color color = colorOptional.or(Device.DEFAULT_COLOR);
+
         // get min, max and average
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final DeviceData deviceData : data) {
+            final CalibratedDeviceData calibratedDeviceData = new CalibratedDeviceData(deviceData, color, calibrationOptional);
+            stats.addValue(calibratedDeviceData.temperature());
             stats.addValue(DataUtils.calibrateTemperature(deviceData.ambientTemperature));
         }
 

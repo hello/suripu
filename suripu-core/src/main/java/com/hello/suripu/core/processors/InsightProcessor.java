@@ -475,13 +475,13 @@ public class InsightProcessor {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
-            case AIR_QUALITY:
+            case AIR_QUALITY: //TODO syntax change
                 insightCardOptional = Particulates.getInsights(accountId, deviceAccountPair, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
                 break;
-            case BED_LIGHT_DURATION:
+            case BED_LIGHT_DURATION: //TODO modify thresholds
                 insightCardOptional = BedLightDuration.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
-            case BED_LIGHT_INTENSITY_RATIO:
+            case BED_LIGHT_INTENSITY_RATIO: //TODO calibration interpretation?
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case CAFFEINE:
@@ -515,8 +515,8 @@ public class InsightProcessor {
             case LEARN:
                 insightCardOptional = MarketingInsights.getLearnInsight(accountId);
                 break;
-            case LIGHT:
-                insightCardOptional = Lights.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
+            case LIGHT: //TODO recalculate data
+                insightCardOptional = Lights.getInsights(accountId, deviceAccountPair, colorOptional, calibrationOptional, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
                 break;
             case LOVE:
                 insightCardOptional = MarketingInsights.getLoveInsight(accountId);
@@ -544,7 +544,7 @@ public class InsightProcessor {
                 timeFormat = this.getTimeFormat(accountId);
                 insightCardOptional = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, timeFormat);
                 break;
-            case SOUND:
+            case SOUND: //TODO
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceAccountPair, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
                 break;
             case SWIM:
@@ -552,7 +552,7 @@ public class InsightProcessor {
                 break;
             case TEMPERATURE:
                 tempUnit = this.getTemperatureUnitString(accountId);
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceAccountPair, colorOptional, calibrationOptional, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
                 break;
             case WAKE_VARIANCE:
                 final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
