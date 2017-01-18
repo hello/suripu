@@ -701,6 +701,7 @@ public class RingProcessor {
                         // The smart alarm already took off, do not ring twice!
                         //UNLESS we have evidence of a recent crash / do not have a recent alarm
                         if (!hasRecentAlarm){
+                            LOGGER.error("action=setting-smart-ring-time-to-template issue=missing-recent-alarm sense-id={}", deviceId);
                             nextRingTime = nextRingTimeFromTemplate;
                         }
 
