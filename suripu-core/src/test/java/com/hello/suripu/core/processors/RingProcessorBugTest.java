@@ -26,7 +26,7 @@ public class RingProcessorBugTest {
         final ObjectMapper mapper = new ObjectMapper();
         final List<Alarm> alarmList = mapper.readValue(alarm1String, new TypeReference<List<Alarm>>() { });
         final List<Alarm> alarmList2 = mapper.readValue(alarm2String, new TypeReference<List<Alarm>>() { });
-
+        final boolean hasRecentAlarm = true;
 
 
         /*
@@ -75,7 +75,7 @@ public class RingProcessorBugTest {
 
         final List<UserInfo> userInfos = Lists.newArrayList(userInfo, userInfo2);
         final DateTime beforeWorkerUpdatedIt = new DateTime(2017,1,10, 10,20,0, DateTimeZone.UTC);
-        final RingTime computedRingtime = RingProcessor.getNextRingTimeForSense(senseId, userInfos, beforeWorkerUpdatedIt);
+        final RingTime computedRingtime = RingProcessor.getNextRingTimeForSense(senseId, userInfos, beforeWorkerUpdatedIt, hasRecentAlarm);
         assertEquals(computedRingtime.actualRingTimeUTC, ringTime.actualRingTimeUTC);
 
 
@@ -100,28 +100,34 @@ public class RingProcessorBugTest {
         userInfos.set(0, userInfoUpdated);
         final DateTime afterWorkerUpdatedIt = new DateTime(2017,1,10, 10,25,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime2 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedIt);
+        final RingTime computedRingTime2 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedIt, hasRecentAlarm);
         assertEquals("after adjusted", ringTimeUpdated.actualRingTimeUTC, computedRingTime2.actualRingTimeUTC);
 
 
         final DateTime afterWorkerUpdatedItAndAfterSupposedToRing = new DateTime(2017,1,10, 10,29,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime3 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing);
-        assertEquals("after adjusted", 0, computedRingTime3.actualRingTimeUTC);
+        final RingTime computedRingTime3a = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, hasRecentAlarm);
+        assertEquals("after adjusted", 0, computedRingTime3a.actualRingTimeUTC);
+
+        //but sense may have crashed
+        final RingTime computedRingTime3b = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false);
+        assertEquals("after adjusted", ringTime.actualRingTimeUTC, computedRingTime3b.actualRingTimeUTC);
+
+
 
         final DateTime expectedRingTime = new DateTime(2017,1,10, 10,40,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime4 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime);
+        final RingTime computedRingTime4 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime, hasRecentAlarm);
         assertEquals("expected ring time", 0, computedRingTime4.expectedRingTimeUTC);
 
         final DateTime expectedRingTime2 = new DateTime(2017,1,10, 10,40,20, DateTimeZone.UTC);
 
-        final RingTime computedRingTime5 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime2);
+        final RingTime computedRingTime5 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime2,hasRecentAlarm);
         assertEquals("expected ring time + 20seconds", 0, computedRingTime5.expectedRingTimeUTC);
 
         final DateTime afterExpectedRingtime = new DateTime(2017,1,10, 10,41,01, DateTimeZone.UTC);
 
-        final RingTime computedRingTime6 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterExpectedRingtime);
+        final RingTime computedRingTime6 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterExpectedRingtime, hasRecentAlarm);
         assertEquals("expected ring time + 1 minute", new DateTime(2017,1,11,10,40, DateTimeZone.UTC).getMillis(), computedRingTime6.expectedRingTimeUTC);
     }
 }

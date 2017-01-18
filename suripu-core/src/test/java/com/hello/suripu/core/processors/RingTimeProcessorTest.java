@@ -112,7 +112,7 @@ public class RingTimeProcessorTest {
         final List<UserInfo> userInfoList = new ArrayList<>();
         userInfoList.add(userInfo);
 
-        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, userTimeZone);
 
         // alarm 1, smart: 7:30
@@ -136,7 +136,7 @@ public class RingTimeProcessorTest {
                 now.minusMillis(100).getMillis()
         );
         userInfoList.set(0, userInfo);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015,2,3,7,21,0,userTimeZone).getMillis()));
         assertThat(ringTime.expectedRingTimeUTC, is(new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis()));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -145,28 +145,28 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:22
         now = new DateTime(2015, 2, 3, 7, 22, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.isEmpty(), is(true));
 
         // alarm 1, smart: 7:30
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:23
         now = new DateTime(2015, 2, 3, 7, 23, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.isEmpty(), is(true));
 
         // alarm 1, smart: 7:30
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:30
         now = new DateTime(2015, 2, 3, 7, 30, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.isEmpty(), is(true));
 
         // alarm 1, smart: 7:30
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:31
         now = new DateTime(2015, 2, 3, 7, 31, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015,2,3,8,0,0,userTimeZone).getMillis()));
         assertThat(ringTime.expectedRingTimeUTC, is(new DateTime(2015,2,3,8,0,0,userTimeZone).getMillis()));
         assertThat(ringTime.fromSmartAlarm, is(false));
@@ -175,7 +175,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 8:01
         now = new DateTime(2015, 2, 3, 8, 1, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(new DateTime(ringTime.actualRingTimeUTC, userTimeZone), is(new DateTime(2015,2,4,7,30,0,userTimeZone)));
         assertThat(new DateTime(ringTime.expectedRingTimeUTC, userTimeZone), is(new DateTime(2015,2,4,7,30,0,userTimeZone)));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -240,7 +240,7 @@ public class RingTimeProcessorTest {
         userInfoList.add(userInfo);
         userInfoList.add(userInfo2);
 
-        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, userTimeZone);
 
         // alarm 1, smart: 7:30
@@ -265,7 +265,7 @@ public class RingTimeProcessorTest {
                 now.minusMillis(100).getMillis()
         );
         userInfoList.set(0, userInfo);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015, 2, 3, 7, 21, 0, userTimeZone).getMillis()));
         assertThat(ringTime.expectedRingTimeUTC, is(new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis()));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -275,7 +275,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:22
         now = new DateTime(2015, 2, 3, 7, 22, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.isEmpty(), is(true));
 
         // alarm 1, smart: 7:30 - 2015-2-3 7:21
@@ -283,7 +283,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:23
         now = new DateTime(2015, 2, 3, 7, 23, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.isEmpty(), is(true));
 
         // alarm 1, smart: 7:30
@@ -291,7 +291,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:30
         now = new DateTime(2015, 2, 3, 7, 30, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.isEmpty(), is(true));
 
         // alarm 1, smart: 7:30
@@ -299,7 +299,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:31
         now = new DateTime(2015, 2, 3, 7, 31, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015,2,3,7,40,0,userTimeZone).getMillis()));
         assertThat(ringTime.expectedRingTimeUTC, is(new DateTime(2015,2,3,7,40,0,userTimeZone).getMillis()));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -309,7 +309,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:41
         now = new DateTime(2015, 2, 3, 7, 41, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(new DateTime(ringTime.actualRingTimeUTC, userTimeZone), is(new DateTime(2015,2,3,8,0,0,userTimeZone)));
         assertThat(new DateTime(ringTime.expectedRingTimeUTC, userTimeZone), is(new DateTime(2015,2,3,8,0,0,userTimeZone)));
         assertThat(ringTime.fromSmartAlarm, is(false));
@@ -319,7 +319,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 8:01
         now = new DateTime(2015, 2, 3, 8, 1, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(new DateTime(ringTime.actualRingTimeUTC, userTimeZone), is(new DateTime(2015,2,4,7,30,0,userTimeZone)));
         assertThat(new DateTime(ringTime.expectedRingTimeUTC, userTimeZone), is(new DateTime(2015,2,4,7,30,0,userTimeZone)));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -366,7 +366,7 @@ public class RingTimeProcessorTest {
         final List<UserInfo> userInfoList = new ArrayList<>();
         userInfoList.add(userInfo);
 
-        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, userTimeZone);
 
         // alarm 1, smart: 7:30
@@ -390,7 +390,7 @@ public class RingTimeProcessorTest {
                 now.minusMillis(100).getMillis()
         );
         userInfoList.set(0, userInfo);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015,2,3,7,21,0,userTimeZone).getMillis()));
         assertThat(ringTime.expectedRingTimeUTC, is(new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis()));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -409,7 +409,7 @@ public class RingTimeProcessorTest {
                 now.minusMillis(100).getMillis()
         );
         userInfoList.set(0, userInfo);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis()));  // should be reset to expected ringtime
         assertThat(ringTime.expectedRingTimeUTC, is(new DateTime(2015,2,3,7,30,0,userTimeZone).getMillis()));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -420,7 +420,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 7:31
         now = new DateTime(2015, 2, 3, 7, 31, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(ringTime.actualRingTimeUTC, is(new DateTime(2015,2,3,8,0,0,userTimeZone).getMillis()));
         assertThat(ringTime.expectedRingTimeUTC, is(new DateTime(2015,2,3,8,0,0,userTimeZone).getMillis()));
         assertThat(ringTime.fromSmartAlarm, is(false));
@@ -429,7 +429,7 @@ public class RingTimeProcessorTest {
         // alarm 2, stupid: 8:00
         // now: 2015-2-3 8:01
         now = new DateTime(2015, 2, 3, 8, 1, userTimeZone);
-        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now, true);
         assertThat(new DateTime(ringTime.actualRingTimeUTC, userTimeZone), is(new DateTime(2015,2,4,7,30,0,userTimeZone)));
         assertThat(new DateTime(ringTime.expectedRingTimeUTC, userTimeZone), is(new DateTime(2015,2,4,7,30,0,userTimeZone)));
         assertThat(ringTime.fromSmartAlarm, is(true));
@@ -467,7 +467,7 @@ public class RingTimeProcessorTest {
         final List<UserInfo> userInfoList = new ArrayList<>();
         userInfoList.add(userInfo);
 
-        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now);
+        RingTime ringTime = RingProcessor.getNextRingTimeForSense(this.senseId, userInfoList, now,true);
 
         List<TrackerMotion> trackerMotionsWithoutMM = loadTrackerMotionFromCSV("fixtures/tracker_motion/smart_alarm_test.csv", false);
         List<TrackerMotion> trackerMotionsMockedMM = loadTrackerMotionFromCSV("fixtures/tracker_motion/smart_alarm_test.csv", true);
@@ -608,21 +608,21 @@ public class RingTimeProcessorTest {
         userInfoList.add(userInfo1); userInfoList.add(userInfo2); userInfoList.add(userInfo3);
 
         //smart alarm not yet triggered
-        final RingTime ringTimeStart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, startTime );
+        final RingTime ringTimeStart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, startTime, true);
         assertThat(ringTimeStart.actualRingTimeUTC, is(ringTime3_start.actualRingTimeUTC));
 
         //smart alarm Triggered,
         userInfo3 = new UserInfo(deviceId, account_id3, alarmList3, Optional.of(ringTime3_smart), Optional.of(timezone), Optional.absent(), lastUpdated3);
         userInfoList.set(2, userInfo3);
-        final RingTime ringTimeSmart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime);
+        final RingTime ringTimeSmart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime, true);
         assertThat(ringTimeSmart.actualRingTimeUTC, is(ringTime3_smart.actualRingTimeUTC));
 
         //after smart alarm triggered
-        final RingTime ringTimeAfterActual = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(5));
+        final RingTime ringTimeAfterActual = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(5), true);
         assertThat(ringTimeAfterActual.actualRingTimeUTC, is(0L));
 
         //after smart alarm actual time
-        final RingTime ringTimeAfterExpected = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(30));
+        final RingTime ringTimeAfterExpected = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(30), true);
         assertThat(ringTimeAfterExpected.actualRingTimeUTC, is(0L));
 
     }

@@ -618,7 +618,8 @@ public class RingProcessor {
 
     public static RingTime getNextRingTimeForSense(final String deviceId,
                                                    final List<UserInfo> userInfoFromThatDevice,
-                                                   final DateTime nowUnalignedByMinute){
+                                                   final DateTime nowUnalignedByMinute,
+                                                   final boolean hasRecentAlarm){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
         Optional<DateTimeZone> userTimeZoneOptional = Optional.absent();
@@ -649,6 +650,7 @@ public class RingProcessor {
 
             // expected alarm ringtime should be in the future
             if( Alarm.Utils.alignToMinuteGranularity(nowUnalignedByMinute.withZone(userTimeZoneOptional.get())).getMillis() > userInfo.ringTime.get().expectedRingTimeUTC) {
+
                 continue;
             }
 
@@ -659,6 +661,7 @@ public class RingProcessor {
             }
 
             if(userInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC) {
+
                     nextRingTimeFromWorker = userInfo.ringTime.get();
             }
         }
@@ -694,8 +697,13 @@ public class RingProcessor {
                     // on-the-fly and ring from worker are from the same alarm, use the one from worker
                     // since it is "smart"
                     if(now.isAfter(nextRingTimeFromWorker.actualRingTimeUTC)){
-                        // The smart alarm already took off, do not ring twice!
                         nextRingTime = RingTime.createEmpty();
+                        // The smart alarm already took off, do not ring twice!
+                        //UNLESS we have evidence of a recent crash / do not have a recent alarm
+                        if (!hasRecentAlarm){
+                            nextRingTime = nextRingTimeFromTemplate;
+                        }
+
                     }else {
                         nextRingTime = nextRingTimeFromWorker;
                     }
