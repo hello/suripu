@@ -10,8 +10,10 @@ import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.metrics.DeviceEvents;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.ProgressiveAlarmThresholds;
 import com.hello.suripu.core.models.RingTime;
@@ -701,8 +703,13 @@ public class RingProcessor {
                         // The smart alarm already took off, do not ring twice!
                         //UNLESS we have evidence of a recent crash / do not have a recent alarm
                         if (!hasRecentAlarm){
-                            LOGGER.error("action=setting-smart-ring-time-to-template issue=missing-recent-alarm sense-id={}", deviceId);
-                            nextRingTime = nextRingTimeFromTemplate;
+                            SenseEventsDAO dao = new SenseEventsDAO(null, null);
+                            List<DeviceEvents> deviceEventList = dao.get(deviceId, now.plusMinutes(1), nextRingTimeFromWorker.actualRingTimeUTC);
+                            if(deviceEventList.isEmpty()) {
+
+                                LOGGER.error("action=setting-smart-ring-time-to-template issue=missing-recent-alarm sense-id={}", deviceId);
+                                nextRingTime = nextRingTimeFromWorker;
+                            }
                         }
 
                     }else {
