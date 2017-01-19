@@ -621,7 +621,8 @@ public class RingProcessor {
     public static RingTime getNextRingTimeForSense(final String deviceId,
                                                    final List<UserInfo> userInfoFromThatDevice,
                                                    final DateTime nowUnalignedByMinute,
-                                                   final boolean hasRecentAlarm){
+                                                   final boolean hasRecentAlarm,
+                                                   final SenseEventsDAO senseEventsDAO){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
         Optional<DateTimeZone> userTimeZoneOptional = Optional.absent();
@@ -703,11 +704,10 @@ public class RingProcessor {
                         // The smart alarm already took off, do not ring twice!
                         //UNLESS we have evidence of a recent crash / do not have a recent alarm
                         if (!hasRecentAlarm){
-                            SenseEventsDAO dao = new SenseEventsDAO(null, null);
-                            List<DeviceEvents> deviceEventList = dao.get(deviceId, now.plusMinutes(1), nextRingTimeFromWorker.actualRingTimeUTC);
-                            if(deviceEventList.isEmpty()) {
 
-                                LOGGER.error("action=setting-smart-ring-time-to-template issue=missing-recent-alarm sense-id={}", deviceId);
+                            final List<DeviceEvents> deviceEventList = senseEventsDAO.getAlarms(deviceId, now.plusMinutes(1), new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, DateTimeZone.UTC));
+                            if(deviceEventList.isEmpty()) {
+                                LOGGER.error("action=setting-smart-ring-time-to-template issue=missing-recent-alarm sense_id={}", deviceId);
                                 nextRingTime = nextRingTimeFromWorker;
                             }
                         }
