@@ -620,8 +620,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
         Optional<Long> sleepTime = Optional.absent();
+        Optional<Long> wakeTime = Optional.absent();
         if (sleep.isPresent()){
             sleepTime = Optional.of(sleep.get().getEndTimestamp());
+        }
+        if (wake.isPresent()) {
+            wakeTime = Optional.of(wake.get().getStartTimestamp());
         }
 
         // LIGHT
@@ -690,6 +694,15 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
+            }
+        }
+
+        if (hasInterruptionEvent(accountId)){
+            if (sleepTime.isPresent() && wakeTime.isPresent()) {
+                final List<Event> sleepDisturbanceEvents = timelineUtils.getSleepDisturbanceEvents(sensorData.oneDaysTrackerMotion, sleepTime.get(), wakeTime.get(), timeZoneOffsetMap);
+                for(final Event sleepDisturbanceEvent : sleepDisturbanceEvents){
+                    timelineEvents.put(sleepDisturbanceEvent.getStartTimestamp(), sleepDisturbanceEvent);
+                }
             }
         }
 

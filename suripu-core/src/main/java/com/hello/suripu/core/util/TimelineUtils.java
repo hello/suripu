@@ -19,6 +19,7 @@ import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -32,6 +33,7 @@ import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NoiseEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
+import com.hello.suripu.core.models.Events.SleepDisturbanceEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
@@ -1455,6 +1457,100 @@ public class TimelineUtils {
 
         LOGGER.debug("Adding {} alarms to the timeline", events.size());
         return events;
+    }
+
+    public List<Event> getSleepDisturbanceEvents(final OneDaysTrackerMotion oneDaysTrackerMotion, final Long sleepTime, final Long wakeTime, final TimeZoneOffsetMap timeZoneOffsetMap){
+        final long sleepBuffer = 30 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final long wakeBuffer= 60 * DateTimeConstants.MILLIS_PER_MINUTE;
+        List<TrackerMotion> trackerMotions = new ArrayList<>();
+        for(final TrackerMotion trackerMotion : oneDaysTrackerMotion.originalTrackerMotions){
+            if (trackerMotion.timestamp > sleepTime + sleepBuffer && trackerMotion.timestamp < wakeTime - wakeBuffer){
+                trackerMotions.add(trackerMotion);
+            }
+        }
+        Collections.sort(trackerMotions, new CustomComparator());
+        final HashMap<Long, Long> sleepDisturbanceTimeStamps= getSleepDisturbances(trackerMotions);
+        final List<Event> sleepDisturbanceEvents = new ArrayList<>();
+        for (final long sleepDisturbanceStartTS : sleepDisturbanceTimeStamps.keySet()){
+            final SleepDisturbanceEvent sleepDisturbanceEvent = new SleepDisturbanceEvent(sleepDisturbanceStartTS, sleepDisturbanceTimeStamps.get(sleepDisturbanceStartTS), timeZoneOffsetMap.getOffsetWithDefaultAsZero(sleepDisturbanceStartTS), 0);
+            sleepDisturbanceEvents.add(sleepDisturbanceEvent);
+        }
+
+        return sleepDisturbanceEvents;
+    }
+
+    //Finds intances where the pill recorded 15seconds + of motion within a 4 minute window
+    public HashMap<Long, Long> getSleepDisturbances(final List<TrackerMotion> trackerMotions){
+
+        // computes periods of agitated sleep  using on duration. Over 16 seconds of movement within a two minute window initiates a state of agitated sleep that persists until there is a 4 minute window with no motion
+        final int onDurationSumThreshold = 15; //secs
+        final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 10;
+        final long timeWindow = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 minutes - finds consecutive minutes with some flexibility
+        final int maxDisturbanceCount = 5; //max number of sleep disturbances to report during night
+        long currentTS = 0L;
+        long currentDisturbanceStartTS = 0L;
+        long currentDisturbanceEndTS = 0L;
+        long previousDisturbanceStartTS = 0L;
+        long previousDisturbanceEndTS = 0L;
+
+        List<TrackerMotion> trackerMotionWindowCurrent = new ArrayList<>();
+        final HashMap<Long,Integer> sleepDisturbances = new HashMap<>();
+        final HashMap<Long, Long> sleepDisturbanceWindows = new HashMap<>();
+        for (TrackerMotion trackerMotionCurrent : trackerMotions) {
+            final List<TrackerMotion> trackerMotionWindowPrevious = trackerMotionWindowCurrent;
+            trackerMotionWindowCurrent = new ArrayList<>();
+            trackerMotionWindowCurrent.add(trackerMotionCurrent);
+            currentTS = trackerMotionCurrent.timestamp;
+            currentDisturbanceStartTS = currentTS;
+
+            currentDisturbanceEndTS = currentTS;
+            int onDurationSum = trackerMotionCurrent.onDurationInSeconds.intValue();
+            if (!trackerMotionWindowPrevious.isEmpty()) {
+                for (final TrackerMotion trackerMotionPrevious : trackerMotionWindowPrevious) {
+                    if (currentTS - trackerMotionPrevious.timestamp <= timeWindow) {
+                        trackerMotionWindowCurrent.add(trackerMotionPrevious);
+                        onDurationSum += trackerMotionPrevious.onDurationInSeconds.intValue();
+                        currentDisturbanceEndTS = Math.max(currentDisturbanceStartTS, trackerMotionPrevious.timestamp);
+                        currentDisturbanceStartTS = Math.min(currentDisturbanceStartTS, trackerMotionPrevious.timestamp);
+                    }
+                }
+            }
+            if (onDurationSum > onDurationSumThreshold){
+                final boolean isNewDisturbance = (currentDisturbanceStartTS - previousDisturbanceEndTS > noMotionThreshold);
+                if (isNewDisturbance) {
+                    if (!sleepDisturbances.containsKey(currentDisturbanceStartTS)) {
+                        sleepDisturbances.put(currentDisturbanceStartTS, onDurationSum);
+                        previousDisturbanceStartTS = currentDisturbanceStartTS;
+                    }
+                }
+                previousDisturbanceEndTS = currentDisturbanceEndTS;
+                sleepDisturbanceWindows.put(previousDisturbanceStartTS, previousDisturbanceEndTS);
+            }
+
+        }
+
+        if (sleepDisturbances.size() > maxDisturbanceCount){
+            final int discardCount = sleepDisturbances.size() - maxDisturbanceCount;
+            final List<Long> tsKeys = new ArrayList<>(sleepDisturbances.keySet());
+            final List<Integer> onDurationSums = new ArrayList<>(sleepDisturbances.values());
+            Collections.sort(onDurationSums);
+            final int minOnDuration = onDurationSums.get(discardCount);
+            int removedCount = 0;
+            for (long tsKey : tsKeys){
+                if (sleepDisturbances.get(tsKey)< minOnDuration){
+                    sleepDisturbanceWindows.remove(tsKey);
+                    removedCount +=1;
+                }
+            }
+        }
+        //possible for two sleep disturbances to have the same onDurationSum, in this case it is possible to have > 5 sleepDisturbances;
+        return sleepDisturbanceWindows;
+    }
+
+    public class CustomComparator {
+        public boolean compare(TrackerMotion object1, TrackerMotion object2) {
+            return object1.timestamp < object2.timestamp;
+        }
     }
 
     public List<Event> eventsFromOptionalEvents(final List<Optional<Event>> optionalEvents) {

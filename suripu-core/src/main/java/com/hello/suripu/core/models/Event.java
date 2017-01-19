@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
+import com.hello.suripu.core.models.Events.SleepDisturbanceEvent;
 import com.hello.suripu.core.models.Events.SleepMotionEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
@@ -44,7 +45,8 @@ public abstract class Event {
         SLEEP(12),
         OUT_OF_BED(13),
         WAKE_UP(14),
-        ALARM(15);
+        ALARM(15),
+        SLEEP_DISTURBANCE(16);
 
         private int value;
 
@@ -149,6 +151,8 @@ public abstract class Event {
                 return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NOISE:
                 return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SLEEP_DISTURBANCE:
+                return new SleepDisturbanceEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
@@ -186,7 +190,9 @@ public abstract class Event {
             case SLEEPING:
                 return new SleepingEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case NOISE:
-                    return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+                return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case SLEEP_DISTURBANCE:
+                return new SleepDisturbanceEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
@@ -290,6 +296,12 @@ public abstract class Event {
                 return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case NOISE:
                 return new NoiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+            case SLEEP_DISTURBANCE:
+                if (!messageOptional.isPresent()) {
+                    throw new IllegalArgumentException("message required.");
+                }
+                return new SleepDisturbanceEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+
             default:
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");

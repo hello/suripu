@@ -15,6 +15,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -104,6 +105,13 @@ public class TimelineUtilsTest {
         testMotionDuringSleep = timelineUtils.motionDuringSleepCheck(trackerMotions, fallAsleepTime, wakeUpTime);
         assertThat(testMotionDuringSleep, is(true));
 
+    }
+
+    @Test
+    public void testGetSleepDisturbances() {
+        final List<TrackerMotion> trackerMotions =  CSVLoader.loadTrackerMotionFromCSV("fixtures/tracker_motion/nn_raw_tracker_motion.csv");
+        final HashMap<Long, Long> sleepDisturbances = timelineUtils.getSleepDisturbances(trackerMotions);
+        int i = 0;
     }
 
 }
