@@ -705,9 +705,9 @@ public class RingProcessor {
                         //UNLESS we have evidence of a recent crash / do not have a recent alarm
                         if (!hasRecentAlarm){
 
-                            final List<DeviceEvents> deviceEventList = senseEventsDAO.getAlarms(deviceId, now.plusMinutes(1), new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, DateTimeZone.UTC));
+                            final List<DeviceEvents> deviceEventList = senseEventsDAO.getAlarms(deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, DateTimeZone.UTC), now.plusMinutes(1));
                             if(deviceEventList.isEmpty()) {
-                                LOGGER.error("action=setting-smart-ring-time-to-template issue=missing-recent-alarm sense_id={}", deviceId);
+                                LOGGER.warn("action=setting-smart-ring-time-to-previous-ring-time-from-worker issue=missing-recent-alarm sense_id={}", deviceId);
                                 nextRingTime = nextRingTimeFromWorker;
                             }
                         }
