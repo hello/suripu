@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.SenseEventsDAO;
+import com.hello.suripu.core.metrics.DeviceEvents;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
@@ -13,14 +15,43 @@ import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 
 public class RingProcessorBugTest {
+    private final static String SENSE_ID1 = "9A730831AF0DB34D";
+    private final static String SENSE_ID_CRASH = "9A730831AF0DB34E";
 
-    private final SenseEventsDAO senseEventsDAO = mock(SenseEventsDAO.class);
+
+    private final SenseEventsDAO senseEventsDAO = new SenseEventsDAO() {
+        @Override
+        public List<DeviceEvents> get(String deviceId, DateTime start, Integer limit) {
+            return null;
+        }
+
+        @Override
+        public List<DeviceEvents> get(String deviceId, DateTime start) {
+            return null;
+        }
+
+        @Override
+        public List<DeviceEvents> getAlarms(String deviceId, DateTime start, DateTime end) {
+            if (deviceId == SENSE_ID1) {
+                final DeviceEvents deviceEvent = new DeviceEvents(SENSE_ID1, start,  Sets.newHashSet("alarm:ring"));
+                final List<DeviceEvents> deviceEvents = new ArrayList<>();
+                deviceEvents.add(deviceEvent);
+                return deviceEvents;
+            }
+            return new ArrayList();
+        }
+
+        @Override
+        public Integer write(List<DeviceEvents> deviceEventsList) {
+            return null;
+        }
+    };
 
 
     @Test public void testSmartAlarmNeverTriggers() throws IOException {
@@ -55,9 +86,8 @@ public class RingProcessorBugTest {
         );
 
 
-        final String senseId = "9A730831AF0DB34D";
         final UserInfo userInfo = new UserInfo(
-                senseId,
+                SENSE_ID1,
                 45699L,
                 alarmList,
                 Optional.of(ringTime),
@@ -68,7 +98,7 @@ public class RingProcessorBugTest {
 
 
         final UserInfo userInfo2 = new UserInfo(
-                senseId,
+                SENSE_ID1,
                 56478L,
                 alarmList2,
                 Optional.of(ringTime2),
@@ -77,9 +107,11 @@ public class RingProcessorBugTest {
                 0L
         );
 
+
+
         final List<UserInfo> userInfos = Lists.newArrayList(userInfo, userInfo2);
         final DateTime beforeWorkerUpdatedIt = new DateTime(2017,1,10, 10,20,0, DateTimeZone.UTC);
-        final RingTime computedRingtime = RingProcessor.getNextRingTimeForSense(senseId, userInfos, beforeWorkerUpdatedIt, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingtime = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, beforeWorkerUpdatedIt, hasRecentAlarm, senseEventsDAO);
         assertEquals(computedRingtime.actualRingTimeUTC, ringTime.actualRingTimeUTC);
 
 
@@ -92,7 +124,7 @@ public class RingProcessorBugTest {
         );
 
         final UserInfo userInfoUpdated = new UserInfo(
-                senseId,
+                SENSE_ID1,
                 45699L,
                 alarmList,
                 Optional.of(ringTimeUpdated),
@@ -101,37 +133,72 @@ public class RingProcessorBugTest {
                 0L
         );
 
+
+        final UserInfo userInfoCrashedUpdated = new UserInfo(
+                SENSE_ID_CRASH,
+                45699L,
+                alarmList,
+                Optional.of(ringTimeUpdated),
+                Optional.of(DateTimeZone.forID("America/New_York")),
+                Optional.absent(),
+                0L
+        );
+
+
+
+        final UserInfo userInfoCrashed2 = new UserInfo(
+                SENSE_ID_CRASH,
+                56478L,
+                alarmList2,
+                Optional.of(ringTime2),
+                Optional.of(DateTimeZone.forID("America/New_York")),
+                Optional.absent(),
+                0L
+        );
+
+
         userInfos.set(0, userInfoUpdated);
         final DateTime afterWorkerUpdatedIt = new DateTime(2017,1,10, 10,25,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime2 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedIt, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime2 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterWorkerUpdatedIt, hasRecentAlarm, senseEventsDAO);
         assertEquals("after adjusted", ringTimeUpdated.actualRingTimeUTC, computedRingTime2.actualRingTimeUTC);
 
 
         final DateTime afterWorkerUpdatedItAndAfterSupposedToRing = new DateTime(2017,1,10, 10,29,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime3a = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime3a = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, hasRecentAlarm, senseEventsDAO);
         assertEquals("after adjusted", 0, computedRingTime3a.actualRingTimeUTC);
 
-        //but sense may have crashed
-        final RingTime computedRingTime3b = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false, senseEventsDAO);
-        assertEquals("after adjusted", ringTime.actualRingTimeUTC, computedRingTime3b.actualRingTimeUTC);
+        //if sense crashed without ringing
+        userInfos.set(0, userInfoCrashedUpdated);
+        userInfos.set(1, userInfoCrashed2);
 
+        final RingTime computedRingTime3b = RingProcessor.getNextRingTimeForSense(SENSE_ID_CRASH, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false, senseEventsDAO);
+        assertEquals("after adjusted", ringTimeUpdated.actualRingTimeUTC, computedRingTime3b.actualRingTimeUTC); //should give the previous ring time to ring immediately
+
+        userInfos.set(0, userInfoUpdated);
+        userInfos.set(1, userInfo2);
+
+        //but sense may have crashed with ringing
+        final RingTime computedRingTime3c = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false, senseEventsDAO);
+        assertEquals("after adjusted", 0, computedRingTime3c.actualRingTimeUTC);
 
 
         final DateTime expectedRingTime = new DateTime(2017,1,10, 10,40,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime4 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime4 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, expectedRingTime, hasRecentAlarm, senseEventsDAO);
         assertEquals("expected ring time", 0, computedRingTime4.expectedRingTimeUTC);
 
         final DateTime expectedRingTime2 = new DateTime(2017,1,10, 10,40,20, DateTimeZone.UTC);
 
-        final RingTime computedRingTime5 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, expectedRingTime2,hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime5 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, expectedRingTime2,hasRecentAlarm, senseEventsDAO);
         assertEquals("expected ring time + 20seconds", 0, computedRingTime5.expectedRingTimeUTC);
 
         final DateTime afterExpectedRingtime = new DateTime(2017,1,10, 10,41,01, DateTimeZone.UTC);
 
-        final RingTime computedRingTime6 = RingProcessor.getNextRingTimeForSense(senseId, userInfos, afterExpectedRingtime, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime6 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterExpectedRingtime, hasRecentAlarm, senseEventsDAO);
         assertEquals("expected ring time + 1 minute", new DateTime(2017,1,11,10,40, DateTimeZone.UTC).getMillis(), computedRingTime6.expectedRingTimeUTC);
+
+
     }
 }
