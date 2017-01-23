@@ -10,8 +10,10 @@ import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.metrics.DeviceEvents;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.ProgressiveAlarmThresholds;
 import com.hello.suripu.core.models.RingTime;
@@ -618,7 +620,18 @@ public class RingProcessor {
 
     public static RingTime getNextRingTimeForSense(final String deviceId,
                                                    final List<UserInfo> userInfoFromThatDevice,
-                                                   final DateTime nowUnalignedByMinute){
+                                                   final DateTime nowUnalignedByMinute,
+                                                   final boolean hasRecentAlarm,
+                                                   final SenseEventsDAO senseEventsDAO){
+        return getNextRingTimeForSenseWithFutureAlarm(deviceId, userInfoFromThatDevice,nowUnalignedByMinute, hasRecentAlarm, senseEventsDAO, false);
+    }
+
+    public static RingTime getNextRingTimeForSenseWithFutureAlarm(final String deviceId,
+                                                   final List<UserInfo> userInfoFromThatDevice,
+                                                   final DateTime nowUnalignedByMinute,
+                                                   final boolean hasRecentAlarm,
+                                                   final SenseEventsDAO senseEventsDAO,
+                                                   final boolean useFutureAlarm){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
         Optional<DateTimeZone> userTimeZoneOptional = Optional.absent();
@@ -646,8 +659,10 @@ public class RingProcessor {
                 continue;
             }
 
+            final long currentTimeAligned = Alarm.Utils.alignToMinuteGranularity(nowUnalignedByMinute.withZone(userTimeZoneOptional.get())).getMillis();
             // expected alarm ringtime should be in the future
-            if(nowUnalignedByMinute.getMillis() > userInfo.ringTime.get().expectedRingTimeUTC) {
+            if(useFutureAlarm &&  currentTimeAligned > userInfo.ringTime.get().expectedRingTimeUTC) {
+                LOGGER.info("action=use-future-alarm sense_id={} past_expected_ring_time={} current_time_aligned={}", deviceId, userInfo.ringTime.get().expectedRingTimeUTC, currentTimeAligned);
                 continue;
             }
 
@@ -658,6 +673,7 @@ public class RingProcessor {
             }
 
             if(userInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC) {
+
                     nextRingTimeFromWorker = userInfo.ringTime.get();
             }
         }
@@ -693,8 +709,19 @@ public class RingProcessor {
                     // on-the-fly and ring from worker are from the same alarm, use the one from worker
                     // since it is "smart"
                     if(now.isAfter(nextRingTimeFromWorker.actualRingTimeUTC)){
-                        // The smart alarm already took off, do not ring twice!
                         nextRingTime = RingTime.createEmpty();
+                        // The smart alarm already took off, do not ring twice!
+                        //UNLESS we have evidence of a recent crash / do not have a recent alarm
+                        if (!hasRecentAlarm){
+                            LOGGER.warn("action=checking-for-previous-alarm-ring issue=recent-crash sense_id={}", deviceId);
+
+                            final List<DeviceEvents> deviceEventList = senseEventsDAO.getAlarms(deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, DateTimeZone.UTC), now.withZone(DateTimeZone.UTC).plusMinutes(1));
+                            if(deviceEventList.isEmpty()) {
+                                LOGGER.warn("action=setting-smart-ring-time-to-previous-ring-time-from-worker issue=missing-recent-alarm sense_id={}", deviceId);
+                                nextRingTime = nextRingTimeFromWorker;
+                            }
+                        }
+
                     }else {
                         nextRingTime = nextRingTimeFromWorker;
                     }

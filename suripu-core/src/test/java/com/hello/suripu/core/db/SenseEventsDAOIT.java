@@ -21,6 +21,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class SenseEventsDAOIT {
 
@@ -33,7 +34,7 @@ public class SenseEventsDAOIT {
         clientConfiguration.setMaxErrorRetry(0);
         amazonDynamoDB = new AmazonDynamoDBClient(new DefaultAWSCredentialsProviderChain(), clientConfiguration);
         amazonDynamoDB.setEndpoint("http://localhost:7777");
-        CreateTableResult createTableResult = SenseEventsDAO.createTable(tableName, amazonDynamoDB);
+        CreateTableResult createTableResult = SenseEventsDynamoDB.createTable(tableName, amazonDynamoDB);
         Thread.sleep(2000L);
     }
 
@@ -47,7 +48,7 @@ public class SenseEventsDAOIT {
         }
     }
     @Test public void query() {
-        final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(amazonDynamoDB, tableName);
+        final SenseEventsDynamoDB senseEventsDynamoDB = new SenseEventsDynamoDB(amazonDynamoDB, tableName);
         final DateTime dateTime = DateTime.now(DateTimeZone.UTC);
         final Long millis = dateTime.getMillis();
         final DeviceEvents deviceEvents = new DeviceEvents("AAA", dateTime, Sets.newHashSet("hello : world"));
@@ -55,12 +56,12 @@ public class SenseEventsDAOIT {
         final DateTime dateTime2 = dateTime.plusSeconds(5);
         final DeviceEvents deviceEvents2 = new DeviceEvents("AAA", dateTime2, Sets.newHashSet("hello! : world!"));
         final List<DeviceEvents> eventsList = Lists.newArrayList(deviceEvents, deviceEvents2);
-        senseEventsDAO.write(eventsList);
+        senseEventsDynamoDB.write(eventsList);
 
-        final List<DeviceEvents> deviceEventsList = senseEventsDAO.get("AAA", dateTime, 1);
+        final List<DeviceEvents> deviceEventsList = senseEventsDynamoDB.get("AAA", dateTime, 1);
         assertThat(deviceEventsList.size(), is(1));
 
-        final List<DeviceEvents> deviceEventsList2 = senseEventsDAO.get("AAA", dateTime2, 1);
+        final List<DeviceEvents> deviceEventsList2 = senseEventsDynamoDB.get("AAA", dateTime2, 1);
         assertThat(deviceEventsList2.size(), is(1));
 
         final List<String> eventsFromDeviceList1 = Lists.newArrayList(deviceEventsList.get(0).events);
@@ -69,7 +70,7 @@ public class SenseEventsDAOIT {
     }
 
     @Test public void queryMultiple() {
-        final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(amazonDynamoDB, tableName);
+        final SenseEventsDynamoDB senseEventsDynamoDB = new SenseEventsDynamoDB(amazonDynamoDB, tableName);
         final DateTime dateTime = DateTime.now(DateTimeZone.UTC);
         final Long millis = dateTime.getMillis();
         final DeviceEvents deviceEvents = new DeviceEvents("AAA", dateTime, Sets.newHashSet("hello : world"));
@@ -77,9 +78,21 @@ public class SenseEventsDAOIT {
         final DateTime dateTime2 = dateTime.plusSeconds(5);
         final DeviceEvents deviceEvents2 = new DeviceEvents("AAA", dateTime2, Sets.newHashSet("hello! : world!"));
         final List<DeviceEvents> eventsList = Lists.newArrayList(deviceEvents, deviceEvents2);
-        senseEventsDAO.write(eventsList);
+        senseEventsDynamoDB.write(eventsList);
 
-        final List<DeviceEvents> deviceEventsList = senseEventsDAO.get("AAA", dateTime2);
+        final List<DeviceEvents> deviceEventsList = senseEventsDynamoDB.get("AAA", dateTime2);
         assertThat(deviceEventsList.size(), is(eventsList.size()));
+    }
+
+    @Test public void queryAlarms() {
+        final SenseEventsDynamoDB senseEventsDynamoDB = new SenseEventsDynamoDB(amazonDynamoDB, tableName);
+        final String senseId = "sense-id";
+        final DateTime now = new DateTime(2017,1,19,1,0,0, DateTimeZone.UTC);
+        final DeviceEvents deviceEvents = new DeviceEvents(senseId, now, Sets.newHashSet("alarm:ring"));
+        senseEventsDynamoDB.write(Lists.newArrayList(deviceEvents));
+
+
+        final List<DeviceEvents> deviceEventsList = senseEventsDynamoDB.getAlarms(senseId, now.minusMinutes(5), now.plusMinutes(1));
+        assertEquals("alarms found", 1, deviceEventsList.size());
     }
 }
