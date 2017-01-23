@@ -704,6 +704,7 @@ public class RingProcessor {
                         // The smart alarm already took off, do not ring twice!
                         //UNLESS we have evidence of a recent crash / do not have a recent alarm
                         if (!hasRecentAlarm){
+                            LOGGER.warn("action=checking-for-previous-alarm-ring issue=recent-crash sense_id={}", deviceId);
 
                             final List<DeviceEvents> deviceEventList = senseEventsDAO.getAlarms(deviceId, new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, DateTimeZone.UTC), now.withZone(DateTimeZone.UTC).plusMinutes(1));
                             if(deviceEventList.isEmpty()) {
