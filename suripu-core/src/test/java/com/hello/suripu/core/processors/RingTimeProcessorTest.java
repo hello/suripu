@@ -612,21 +612,21 @@ public class RingTimeProcessorTest {
         userInfoList.add(userInfo1); userInfoList.add(userInfo2); userInfoList.add(userInfo3);
 
         //smart alarm not yet triggered
-        final RingTime ringTimeStart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, startTime, true, senseEventsDAO);
+        final RingTime ringTimeStart = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(deviceId, userInfoList, startTime, true, senseEventsDAO, true);
         assertThat(ringTimeStart.actualRingTimeUTC, is(ringTime3_start.actualRingTimeUTC));
 
         //smart alarm Triggered,
         userInfo3 = new UserInfo(deviceId, account_id3, alarmList3, Optional.of(ringTime3_smart), Optional.of(timezone), Optional.absent(), lastUpdated3);
         userInfoList.set(2, userInfo3);
-        final RingTime ringTimeSmart = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime, true, senseEventsDAO);
+        final RingTime ringTimeSmart = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(deviceId, userInfoList, triggerTime, true, senseEventsDAO, true);
         assertThat(ringTimeSmart.actualRingTimeUTC, is(ringTime3_smart.actualRingTimeUTC));
 
         //after smart alarm triggered
-        final RingTime ringTimeAfterActual = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(5), true, senseEventsDAO);
+        final RingTime ringTimeAfterActual = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(deviceId, userInfoList, triggerTime.plusMinutes(5), true, senseEventsDAO, true);
         assertThat(ringTimeAfterActual.actualRingTimeUTC, is(0L));
 
         //after smart alarm actual time
-        final RingTime ringTimeAfterExpected = RingProcessor.getNextRingTimeForSense(deviceId, userInfoList, triggerTime.plusMinutes(30), true, senseEventsDAO);
+        final RingTime ringTimeAfterExpected = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(deviceId, userInfoList, triggerTime.plusMinutes(30), true, senseEventsDAO, true);
         assertThat(ringTimeAfterExpected.actualRingTimeUTC, is(0L));
 
     }

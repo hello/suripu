@@ -160,43 +160,43 @@ public class RingProcessorBugTest {
         userInfos.set(0, userInfoUpdated);
         final DateTime afterWorkerUpdatedIt = new DateTime(2017,1,10, 10,25,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime2 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterWorkerUpdatedIt, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime2 = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(SENSE_ID1, userInfos, afterWorkerUpdatedIt, hasRecentAlarm, senseEventsDAO, true);
         assertEquals("after adjusted", ringTimeUpdated.actualRingTimeUTC, computedRingTime2.actualRingTimeUTC);
 
 
         final DateTime afterWorkerUpdatedItAndAfterSupposedToRing = new DateTime(2017,1,10, 10,29,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime3a = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, hasRecentAlarm, senseEventsDAO);
-        assertEquals("after adjusted", 0, computedRingTime3a.actualRingTimeUTC);
+        final RingTime computedRingTime3a = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(SENSE_ID1, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, hasRecentAlarm, senseEventsDAO, true);
+        assertEquals("after adjusted and actual ring time", 0, computedRingTime3a.actualRingTimeUTC);
 
         //if sense crashed without ringing
         userInfos.set(0, userInfoCrashedUpdated);
         userInfos.set(1, userInfoCrashed2);
 
-        final RingTime computedRingTime3b = RingProcessor.getNextRingTimeForSense(SENSE_ID_CRASH, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false, senseEventsDAO);
-        assertEquals("after adjusted", ringTimeUpdated.actualRingTimeUTC, computedRingTime3b.actualRingTimeUTC); //should give the previous ring time to ring immediately
+        final RingTime computedRingTime3b = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(SENSE_ID_CRASH, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false, senseEventsDAO, true);
+        assertEquals("after adjusted and crashed without ringing", ringTimeUpdated.actualRingTimeUTC, computedRingTime3b.actualRingTimeUTC); //should give the previous ring time to ring immediately
 
         userInfos.set(0, userInfoUpdated);
         userInfos.set(1, userInfo2);
 
         //but sense may have crashed with ringing
-        final RingTime computedRingTime3c = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false, senseEventsDAO);
-        assertEquals("after adjusted", 0, computedRingTime3c.actualRingTimeUTC);
+        final RingTime computedRingTime3c = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(SENSE_ID1, userInfos, afterWorkerUpdatedItAndAfterSupposedToRing, false, senseEventsDAO, true);
+        assertEquals("after adjusted and crashed with ringing", 0, computedRingTime3c.actualRingTimeUTC);
 
 
         final DateTime expectedRingTime = new DateTime(2017,1,10, 10,40,0, DateTimeZone.UTC);
 
-        final RingTime computedRingTime4 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, expectedRingTime, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime4 = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(SENSE_ID1, userInfos, expectedRingTime, hasRecentAlarm, senseEventsDAO, true);
         assertEquals("expected ring time", 0, computedRingTime4.expectedRingTimeUTC);
 
         final DateTime expectedRingTime2 = new DateTime(2017,1,10, 10,40,20, DateTimeZone.UTC);
 
-        final RingTime computedRingTime5 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, expectedRingTime2,hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime5 = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(SENSE_ID1, userInfos, expectedRingTime2,hasRecentAlarm, senseEventsDAO, true);
         assertEquals("expected ring time + 20seconds", 0, computedRingTime5.expectedRingTimeUTC);
 
         final DateTime afterExpectedRingtime = new DateTime(2017,1,10, 10,41,01, DateTimeZone.UTC);
 
-        final RingTime computedRingTime6 = RingProcessor.getNextRingTimeForSense(SENSE_ID1, userInfos, afterExpectedRingtime, hasRecentAlarm, senseEventsDAO);
+        final RingTime computedRingTime6 = RingProcessor.getNextRingTimeForSenseWithFutureAlarm(SENSE_ID1, userInfos, afterExpectedRingtime, hasRecentAlarm, senseEventsDAO, true);
         assertEquals("expected ring time + 1 minute", new DateTime(2017,1,11,10,40, DateTimeZone.UTC).getMillis(), computedRingTime6.expectedRingTimeUTC);
 
 

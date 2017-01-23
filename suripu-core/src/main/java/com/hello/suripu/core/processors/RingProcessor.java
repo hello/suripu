@@ -623,6 +623,15 @@ public class RingProcessor {
                                                    final DateTime nowUnalignedByMinute,
                                                    final boolean hasRecentAlarm,
                                                    final SenseEventsDAO senseEventsDAO){
+        return getNextRingTimeForSenseWithFutureAlarm(deviceId, userInfoFromThatDevice,nowUnalignedByMinute, hasRecentAlarm, senseEventsDAO, false);
+    }
+
+    public static RingTime getNextRingTimeForSenseWithFutureAlarm(final String deviceId,
+                                                   final List<UserInfo> userInfoFromThatDevice,
+                                                   final DateTime nowUnalignedByMinute,
+                                                   final boolean hasRecentAlarm,
+                                                   final SenseEventsDAO senseEventsDAO,
+                                                   final boolean useFutureAlarm){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
         Optional<DateTimeZone> userTimeZoneOptional = Optional.absent();
@@ -650,10 +659,10 @@ public class RingProcessor {
                 continue;
             }
 
-
+            final long currentTimeAligned = Alarm.Utils.alignToMinuteGranularity(nowUnalignedByMinute.withZone(userTimeZoneOptional.get())).getMillis();
             // expected alarm ringtime should be in the future
-            if( Alarm.Utils.alignToMinuteGranularity(nowUnalignedByMinute.withZone(userTimeZoneOptional.get())).getMillis() > userInfo.ringTime.get().expectedRingTimeUTC) {
-
+            if(useFutureAlarm &&  currentTimeAligned > userInfo.ringTime.get().expectedRingTimeUTC) {
+                LOGGER.info("action=use-future-alarm sense_id={} past_expected_ring_time={} current_time_aligned={}", deviceId, userInfo.ringTime.get().expectedRingTimeUTC, currentTimeAligned);
                 continue;
             }
 
