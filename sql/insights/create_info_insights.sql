@@ -679,3 +679,7 @@ UPDATE info_insight_cards SET title='Effects of ambient light on your sleep' WHE
 UPDATE info_insight_cards SET title='Daytime activities' WHERE category='daytime_activities'; --not used, update for consistency
 UPDATE info_insight_cards SET title='Daytime sleepiness' WHERE category='daytime_sleepiness'; --not used, update for consistency
 UPDATE info_insight_cards SET title='Effects of exercise on your sleep' WHERE category='workout'; --not used, update for consistency
+
+--prishil jyfan change temperature range 2017-01-23
+UPDATE info_insight_cards SET text='Like an internal thermostat, your body has an ideal **set point** for temperature that it is constantly trying to achieve. If it''s too hot or too cold, the body struggles to achieve this set point, causing interruptions to your sleep. Generally, you should keep your bedroom quiet, dark, and cool, between 60°F (15°C) and 67°F (20°C). However, the perfect room temperature is different for everyone, so you should make sure to set it for whatever is most comfortable.'
+WHERE category='temperature';

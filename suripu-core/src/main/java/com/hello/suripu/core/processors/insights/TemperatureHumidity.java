@@ -32,11 +32,11 @@ import java.util.List;
 public class TemperatureHumidity {
     private static final Logger LOGGER = LoggerFactory.getLogger(TemperatureHumidity.class);
 
-    public static final int IDEAL_TEMP_MIN = 59;
-    public static final int IDEAL_TEMP_MAX = 73;
+    public static final int IDEAL_TEMP_MIN = 60;
+    public static final int IDEAL_TEMP_MAX = 67;
 
     public static final int IDEAL_TEMP_MIN_CELSIUS = 15;
-    public static final int IDEAL_TEMP_MAX_CELSIUS = 23;
+    public static final int IDEAL_TEMP_MAX_CELSIUS = 20;
 
     public static final int ALERT_TEMP_MIN = 55;
     public static final int ALERT_TEMP_MAX = 79;
