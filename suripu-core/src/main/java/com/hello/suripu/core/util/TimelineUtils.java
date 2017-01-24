@@ -1482,7 +1482,7 @@ public class TimelineUtils {
     public HashMap<Long, Long> getSleepDisturbances(final List<TrackerMotion> trackerMotions){
 
         // computes periods of agitated sleep  using on duration. Over 16 seconds of movement within a two minute window initiates a state of agitated sleep that persists until there is a 4 minute window with no motion
-        final int onDurationSumThreshold = 15; //secs
+        final int onDurationSumThreshold = 10; //secs
         final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 10;
         final long timeWindow = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 minutes - finds consecutive minutes with some flexibility
         final int maxDisturbanceCount = 5; //max number of sleep disturbances to report during night
@@ -1538,12 +1538,15 @@ public class TimelineUtils {
         if (sleepDisturbances.size() > maxDisturbanceCount){
             final int discardCount = sleepDisturbances.size() - maxDisturbanceCount;
             final List<Long> tsKeys = new ArrayList<>(sleepDisturbances.keySet());
-            final List<Integer> onDurationSums = new ArrayList<>(sleepDisturbances.values());
-            Collections.sort(onDurationSums);
-            final int minOnDuration = onDurationSums.get(discardCount);
+            final List<Integer> disturbanceSpan = new ArrayList<>();
+            for (final long sleepDisturbanceStart : sleepDisturbanceWindows.keySet()){
+                disturbanceSpan.add((int) (sleepDisturbanceWindows.get(sleepDisturbanceStart) - sleepDisturbanceStart)/ DateTimeConstants.MILLIS_PER_MINUTE);
+            }
+            Collections.sort(disturbanceSpan);
+            final int minDisturbanceSpan = disturbanceSpan.get(discardCount);
             int removedCount = 0;
             for (long tsKey : tsKeys){
-                if (sleepDisturbances.get(tsKey)< minOnDuration){
+                if ((sleepDisturbanceWindows.get(tsKey) - tsKey)/DateTimeConstants.MILLIS_PER_MINUTE < minDisturbanceSpan){
                     sleepDisturbanceWindows.remove(tsKey);
                     removedCount +=1;
                 }

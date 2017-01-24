@@ -139,7 +139,7 @@ public class TimelineUtilsTest {
             }
             span.add(index_end - index_start);
         }
-        final Integer[] startMinutesActual = {315,333,404,585, 735};
+        final Integer[] startMinutesActual = {315,390,495,585, 735};
         assertThat(startMinutesActual.length == startMinutes.size(), is(true));
         for (Integer startMinute : startMinutes){
             assertThat(startMinutes.contains(startMinute), is(true));
