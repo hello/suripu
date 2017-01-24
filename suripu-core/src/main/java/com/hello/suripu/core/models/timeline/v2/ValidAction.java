@@ -30,6 +30,7 @@ public enum ValidAction {
             case NOISE:
             case SNORING:
             case SLEEP_TALK:
+            case SLEEP_DISTURBANCE:
                 return Lists.newArrayList(VERIFY, INCORRECT);
             default:
                 return Lists.newArrayList();

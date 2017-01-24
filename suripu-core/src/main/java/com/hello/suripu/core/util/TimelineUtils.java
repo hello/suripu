@@ -1490,13 +1490,14 @@ public class TimelineUtils {
         long currentDisturbanceStartTS ;
         long currentDisturbanceEndTS ;
         long previousDisturbanceStartTS = 0L;
-        long previousDisturbanceEndTS = 0L;
-        long previousMotionTS;
+        long previousDisturbanceEndTS;
+        long previousMotionTS = 0L;
 
         List<TrackerMotion> trackerMotionWindowCurrent = new ArrayList<>();
         final HashMap<Long,Integer> sleepDisturbances = new HashMap<>();
         final HashMap<Long, Long> sleepDisturbanceWindows = new HashMap<>();
         boolean currentlyDisturbed = false;
+
         for (TrackerMotion trackerMotionCurrent : trackerMotions) {
             final List<TrackerMotion> trackerMotionWindowPrevious = trackerMotionWindowCurrent;
             trackerMotionWindowCurrent = new ArrayList<>();
@@ -1512,7 +1513,7 @@ public class TimelineUtils {
                     if (currentTS - trackerMotionPrevious.timestamp <= timeWindow) {
                         trackerMotionWindowCurrent.add(trackerMotionPrevious);
                         onDurationSum += trackerMotionPrevious.onDurationInSeconds.intValue();
-                        currentDisturbanceEndTS = Math.max(currentDisturbanceStartTS, trackerMotionPrevious.timestamp);
+                        currentDisturbanceEndTS = Math.max(currentDisturbanceEndTS, trackerMotionPrevious.timestamp);
                         currentDisturbanceStartTS = Math.min(currentDisturbanceStartTS, trackerMotionPrevious.timestamp);
                     }
                 }
@@ -1527,8 +1528,7 @@ public class TimelineUtils {
                 }
                 previousDisturbanceEndTS = currentDisturbanceEndTS;
                 sleepDisturbanceWindows.put(previousDisturbanceStartTS, previousDisturbanceEndTS);
-            }
-            if (currentTS - previousMotionTS > noMotionThreshold && currentlyDisturbed){
+            }else  if (currentTS - previousMotionTS > noMotionThreshold && currentlyDisturbed){
                 sleepDisturbanceWindows.put(previousDisturbanceStartTS, previousMotionTS);
                 currentlyDisturbed = false;
             }
@@ -1553,11 +1553,6 @@ public class TimelineUtils {
         return sleepDisturbanceWindows;
     }
 
-    public class CustomComparator {
-        public boolean compare(TrackerMotion object1, TrackerMotion object2) {
-            return object1.timestamp < object2.timestamp;
-        }
-    }
 
     public List<Event> eventsFromOptionalEvents(final List<Optional<Event>> optionalEvents) {
         final List<Event> events = Lists.newArrayList();

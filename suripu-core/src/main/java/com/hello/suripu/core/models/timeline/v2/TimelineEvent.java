@@ -128,6 +128,8 @@ public class TimelineEvent {
         temp.put(Event.Type.SUNSET, EventType.SUNSET);
         temp.put(Event.Type.SUNRISE, EventType.SUNRISE);
 
+        temp.put(Event.Type.SLEEP_DISTURBANCE, EventType.SLEEP_DISTURBANCE);;
+
         typesMapping = ImmutableMap.copyOf(temp);
     }
 
