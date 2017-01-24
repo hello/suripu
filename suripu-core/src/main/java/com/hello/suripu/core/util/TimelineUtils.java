@@ -1468,7 +1468,6 @@ public class TimelineUtils {
                 trackerMotions.add(trackerMotion);
             }
         }
-        Collections.sort(trackerMotions, new CustomComparator());
         final HashMap<Long, Long> sleepDisturbanceTimeStamps= getSleepDisturbances(trackerMotions);
         final List<Event> sleepDisturbanceEvents = new ArrayList<>();
         for (final long sleepDisturbanceStartTS : sleepDisturbanceTimeStamps.keySet()){
@@ -1488,18 +1487,21 @@ public class TimelineUtils {
         final long timeWindow = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 minutes - finds consecutive minutes with some flexibility
         final int maxDisturbanceCount = 5; //max number of sleep disturbances to report during night
         long currentTS = 0L;
-        long currentDisturbanceStartTS = 0L;
-        long currentDisturbanceEndTS = 0L;
+        long currentDisturbanceStartTS ;
+        long currentDisturbanceEndTS ;
         long previousDisturbanceStartTS = 0L;
         long previousDisturbanceEndTS = 0L;
+        long previousMotionTS;
 
         List<TrackerMotion> trackerMotionWindowCurrent = new ArrayList<>();
         final HashMap<Long,Integer> sleepDisturbances = new HashMap<>();
         final HashMap<Long, Long> sleepDisturbanceWindows = new HashMap<>();
+        boolean currentlyDisturbed = false;
         for (TrackerMotion trackerMotionCurrent : trackerMotions) {
             final List<TrackerMotion> trackerMotionWindowPrevious = trackerMotionWindowCurrent;
             trackerMotionWindowCurrent = new ArrayList<>();
             trackerMotionWindowCurrent.add(trackerMotionCurrent);
+            previousMotionTS = currentTS;
             currentTS = trackerMotionCurrent.timestamp;
             currentDisturbanceStartTS = currentTS;
 
@@ -1516,8 +1518,8 @@ public class TimelineUtils {
                 }
             }
             if (onDurationSum > onDurationSumThreshold){
-                final boolean isNewDisturbance = (currentDisturbanceStartTS - previousDisturbanceEndTS > noMotionThreshold);
-                if (isNewDisturbance) {
+                if (!currentlyDisturbed) {
+                    currentlyDisturbed = true;
                     if (!sleepDisturbances.containsKey(currentDisturbanceStartTS)) {
                         sleepDisturbances.put(currentDisturbanceStartTS, onDurationSum);
                         previousDisturbanceStartTS = currentDisturbanceStartTS;
@@ -1525,6 +1527,10 @@ public class TimelineUtils {
                 }
                 previousDisturbanceEndTS = currentDisturbanceEndTS;
                 sleepDisturbanceWindows.put(previousDisturbanceStartTS, previousDisturbanceEndTS);
+            }
+            if (currentTS - previousMotionTS > noMotionThreshold && currentlyDisturbed){
+                sleepDisturbanceWindows.put(previousDisturbanceStartTS, previousMotionTS);
+                currentlyDisturbed = false;
             }
 
         }

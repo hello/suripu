@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -10,6 +11,8 @@ import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -109,9 +112,37 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetSleepDisturbances() {
-        final List<TrackerMotion> trackerMotions =  CSVLoader.loadTrackerMotionFromCSV("fixtures/tracker_motion/nn_raw_tracker_motion.csv");
+        List<TrackerMotion> trackerMotions =  CSVLoader.loadTrackerMotionFromCSV("fixtures/tracker_motion/nn_raw_tracker_motion.csv");
+        trackerMotions = Lists.reverse(trackerMotions);
         final HashMap<Long, Long> sleepDisturbances = timelineUtils.getSleepDisturbances(trackerMotions);
-        int i = 0;
-    }
+        final List<Integer> startMinutes = new ArrayList<>();
+        final List<Integer> endMinutes = new ArrayList<>();
+        final List<Integer> span = new ArrayList<>();
+        for (final long start : sleepDisturbances.keySet()){
+            final DateTime startTime = new DateTime(start, DateTimeZone.forID("America/Los_Angeles"));
+            final DateTime endTime = new DateTime(sleepDisturbances.get(start), DateTimeZone.forID("America/Los_Angeles"));
+            final int index_start, index_end;
+            if (startTime.getHourOfDay() > 23 || startTime.getHourOfDay() < 12){
+                index_start = (startTime.getHourOfDay() + 6) * 60 + startTime.getMinuteOfHour();
+                startMinutes.add(index_start);
+            } else {
+                index_start = (startTime.getHourOfDay() - 18) * 60 + startTime.getMinuteOfHour();
+                startMinutes.add(index_start);
+            }
 
+            if (endTime.getHourOfDay() > 23 || endTime.getHourOfDay() < 12){
+                index_end = (endTime.getHourOfDay() + 6) * 60 + endTime.getMinuteOfHour();
+                endMinutes.add(index_end);
+            } else {
+                index_end = (endTime.getHourOfDay() - 18) * 60 + endTime.getMinuteOfHour();
+                endMinutes.add(index_end);
+            }
+            span.add(index_end - index_start);
+        }
+        final Integer[] startMinutesActual = {315,333,404,585, 735};
+        assertThat(startMinutesActual.length == startMinutes.size(), is(true));
+        for (Integer startMinute : startMinutes){
+            assertThat(startMinutes.contains(startMinute), is(true));
+        }
+    }
 }
