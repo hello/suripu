@@ -117,8 +117,7 @@ public class TemperatureHumidity {
             stats.addValue(DataUtils.calibrateTemperature(deviceData.ambientTemperature));
         }
 
-        final double tmpMedValue = stats.getPercentile(50);
-        final int medTempC = (int) tmpMedValue;
+        final int medTempC = (int) stats.getPercentile(50);
         final int medTempF = DataUtils.celsiusToFahrenheit(medTempC);
 
         LOGGER.debug("Temp for account {}: med {} C; {} F", accountId, medTempC, medTempF);
