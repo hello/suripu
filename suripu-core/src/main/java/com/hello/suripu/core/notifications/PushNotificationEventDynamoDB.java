@@ -215,7 +215,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
                 LOGGER.error("error=InternalServerErrorException account_id={}", event.accountId);
             } catch (ConditionalCheckFailedException ccfe) {
                 // The item already exists or we already have an item with this timestamp / account ID!
-                LOGGER.error("error=ConditionalCheckFailedException reason=item_already_exists account_id={} timestamp={}",
+                LOGGER.warn("warn=item_already_exists account_id={} timestamp={}",
                         event.accountId, event.timestamp);
                 return false;
             }

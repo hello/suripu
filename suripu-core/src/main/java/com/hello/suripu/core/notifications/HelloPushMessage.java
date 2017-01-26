@@ -7,7 +7,11 @@ import com.hello.suripu.core.models.Sensor;
 
 import java.util.Objects;
 
+/**
+ * Created by jakepiccolo on 5/19/16.
+ */
 public class HelloPushMessage {
+
     public final String body;
     public final String target;
     public final String details;
@@ -46,4 +50,5 @@ public class HelloPushMessage {
                 Objects.equals(target, other.target) &&
                 Objects.equals(details, other.details);
     }
+
 }

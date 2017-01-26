@@ -8,10 +8,10 @@ public final class TimelineQueueProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface MessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface MessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Message)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional int64 account_id = 1;
     /**
      * <code>optional int64 account_id = 1;</code>
      */
@@ -21,7 +21,6 @@ public final class TimelineQueueProtos {
      */
     long getAccountId();
 
-    // optional string target_date = 2;
     /**
      * <code>optional string target_date = 2;</code>
      */
@@ -36,7 +35,6 @@ public final class TimelineQueueProtos {
     com.google.protobuf.ByteString
         getTargetDateBytes();
 
-    // optional int64 timestamp = 3;
     /**
      * <code>optional int64 timestamp = 3;</code>
      */
@@ -50,8 +48,9 @@ public final class TimelineQueueProtos {
    * Protobuf type {@code Message}
    */
   public static final class Message extends
-      com.google.protobuf.GeneratedMessage
-      implements MessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:Message)
+      MessageOrBuilder {
     // Use Message.newBuilder() to construct.
     private Message(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -103,8 +102,9 @@ public final class TimelineQueueProtos {
               break;
             }
             case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              targetDate_ = input.readBytes();
+              targetDate_ = bs;
               break;
             }
             case 24: {
@@ -152,7 +152,6 @@ public final class TimelineQueueProtos {
     }
 
     private int bitField0_;
-    // optional int64 account_id = 1;
     public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
     private long accountId_;
     /**
@@ -168,7 +167,6 @@ public final class TimelineQueueProtos {
       return accountId_;
     }
 
-    // optional string target_date = 2;
     public static final int TARGET_DATE_FIELD_NUMBER = 2;
     private java.lang.Object targetDate_;
     /**
@@ -211,7 +209,6 @@ public final class TimelineQueueProtos {
       }
     }
 
-    // optional int64 timestamp = 3;
     public static final int TIMESTAMP_FIELD_NUMBER = 3;
     private long timestamp_;
     /**
@@ -235,7 +232,8 @@ public final class TimelineQueueProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -356,8 +354,9 @@ public final class TimelineQueueProtos {
      * Protobuf type {@code Message}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.queue.TimelineQueueProtos.MessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Message)
+        com.hello.suripu.api.queue.TimelineQueueProtos.MessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.queue.TimelineQueueProtos.internal_static_Message_descriptor;
@@ -490,7 +489,6 @@ public final class TimelineQueueProtos {
       }
       private int bitField0_;
 
-      // optional int64 account_id = 1;
       private long accountId_ ;
       /**
        * <code>optional int64 account_id = 1;</code>
@@ -523,7 +521,6 @@ public final class TimelineQueueProtos {
         return this;
       }
 
-      // optional string target_date = 2;
       private java.lang.Object targetDate_ = "";
       /**
        * <code>optional string target_date = 2;</code>
@@ -537,9 +534,12 @@ public final class TimelineQueueProtos {
       public java.lang.String getTargetDate() {
         java.lang.Object ref = targetDate_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          targetDate_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            targetDate_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -597,7 +597,6 @@ public final class TimelineQueueProtos {
         return this;
       }
 
-      // optional int64 timestamp = 3;
       private long timestamp_ ;
       /**
        * <code>optional int64 timestamp = 3;</code>
@@ -641,11 +640,726 @@ public final class TimelineQueueProtos {
     // @@protoc_insertion_point(class_scope:Message)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  public interface TriggerMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:TriggerMessage)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    boolean hasAccountId();
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    long getAccountId();
+
+    /**
+     * <code>optional string target_date = 2;</code>
+     */
+    boolean hasTargetDate();
+    /**
+     * <code>optional string target_date = 2;</code>
+     */
+    java.lang.String getTargetDate();
+    /**
+     * <code>optional string target_date = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getTargetDateBytes();
+
+    /**
+     * <code>optional int64 message_created_at = 3;</code>
+     */
+    boolean hasMessageCreatedAt();
+    /**
+     * <code>optional int64 message_created_at = 3;</code>
+     */
+    long getMessageCreatedAt();
+
+    /**
+     * <code>optional int32 lookback_window_in_minutes = 4;</code>
+     */
+    boolean hasLookbackWindowInMinutes();
+    /**
+     * <code>optional int32 lookback_window_in_minutes = 4;</code>
+     */
+    int getLookbackWindowInMinutes();
+  }
+  /**
+   * Protobuf type {@code TriggerMessage}
+   */
+  public static final class TriggerMessage extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:TriggerMessage)
+      TriggerMessageOrBuilder {
+    // Use TriggerMessage.newBuilder() to construct.
+    private TriggerMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private TriggerMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final TriggerMessage defaultInstance;
+    public static TriggerMessage getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public TriggerMessage getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private TriggerMessage(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              accountId_ = input.readInt64();
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              targetDate_ = bs;
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              messageCreatedAt_ = input.readInt64();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              lookbackWindowInMinutes_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.queue.TimelineQueueProtos.internal_static_TriggerMessage_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.queue.TimelineQueueProtos.internal_static_TriggerMessage_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage.class, com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<TriggerMessage> PARSER =
+        new com.google.protobuf.AbstractParser<TriggerMessage>() {
+      public TriggerMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new TriggerMessage(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<TriggerMessage> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
+    private long accountId_;
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    public boolean hasAccountId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    public long getAccountId() {
+      return accountId_;
+    }
+
+    public static final int TARGET_DATE_FIELD_NUMBER = 2;
+    private java.lang.Object targetDate_;
+    /**
+     * <code>optional string target_date = 2;</code>
+     */
+    public boolean hasTargetDate() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string target_date = 2;</code>
+     */
+    public java.lang.String getTargetDate() {
+      java.lang.Object ref = targetDate_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          targetDate_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string target_date = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTargetDateBytes() {
+      java.lang.Object ref = targetDate_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        targetDate_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int MESSAGE_CREATED_AT_FIELD_NUMBER = 3;
+    private long messageCreatedAt_;
+    /**
+     * <code>optional int64 message_created_at = 3;</code>
+     */
+    public boolean hasMessageCreatedAt() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int64 message_created_at = 3;</code>
+     */
+    public long getMessageCreatedAt() {
+      return messageCreatedAt_;
+    }
+
+    public static final int LOOKBACK_WINDOW_IN_MINUTES_FIELD_NUMBER = 4;
+    private int lookbackWindowInMinutes_;
+    /**
+     * <code>optional int32 lookback_window_in_minutes = 4;</code>
+     */
+    public boolean hasLookbackWindowInMinutes() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional int32 lookback_window_in_minutes = 4;</code>
+     */
+    public int getLookbackWindowInMinutes() {
+      return lookbackWindowInMinutes_;
+    }
+
+    private void initFields() {
+      accountId_ = 0L;
+      targetDate_ = "";
+      messageCreatedAt_ = 0L;
+      lookbackWindowInMinutes_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt64(1, accountId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getTargetDateBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt64(3, messageCreatedAt_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt32(4, lookbackWindowInMinutes_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, accountId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getTargetDateBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, messageCreatedAt_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(4, lookbackWindowInMinutes_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code TriggerMessage}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:TriggerMessage)
+        com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.queue.TimelineQueueProtos.internal_static_TriggerMessage_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.queue.TimelineQueueProtos.internal_static_TriggerMessage_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage.class, com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        accountId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        targetDate_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        messageCreatedAt_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        lookbackWindowInMinutes_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.queue.TimelineQueueProtos.internal_static_TriggerMessage_descriptor;
+      }
+
+      public com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage getDefaultInstanceForType() {
+        return com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage build() {
+        com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage buildPartial() {
+        com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage result = new com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.accountId_ = accountId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.targetDate_ = targetDate_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.messageCreatedAt_ = messageCreatedAt_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.lookbackWindowInMinutes_ = lookbackWindowInMinutes_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage) {
+          return mergeFrom((com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage other) {
+        if (other == com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage.getDefaultInstance()) return this;
+        if (other.hasAccountId()) {
+          setAccountId(other.getAccountId());
+        }
+        if (other.hasTargetDate()) {
+          bitField0_ |= 0x00000002;
+          targetDate_ = other.targetDate_;
+          onChanged();
+        }
+        if (other.hasMessageCreatedAt()) {
+          setMessageCreatedAt(other.getMessageCreatedAt());
+        }
+        if (other.hasLookbackWindowInMinutes()) {
+          setLookbackWindowInMinutes(other.getLookbackWindowInMinutes());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.queue.TimelineQueueProtos.TriggerMessage) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long accountId_ ;
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public boolean hasAccountId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public long getAccountId() {
+        return accountId_;
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public Builder setAccountId(long value) {
+        bitField0_ |= 0x00000001;
+        accountId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public Builder clearAccountId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        accountId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object targetDate_ = "";
+      /**
+       * <code>optional string target_date = 2;</code>
+       */
+      public boolean hasTargetDate() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string target_date = 2;</code>
+       */
+      public java.lang.String getTargetDate() {
+        java.lang.Object ref = targetDate_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            targetDate_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string target_date = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTargetDateBytes() {
+        java.lang.Object ref = targetDate_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          targetDate_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string target_date = 2;</code>
+       */
+      public Builder setTargetDate(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        targetDate_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string target_date = 2;</code>
+       */
+      public Builder clearTargetDate() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        targetDate_ = getDefaultInstance().getTargetDate();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string target_date = 2;</code>
+       */
+      public Builder setTargetDateBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        targetDate_ = value;
+        onChanged();
+        return this;
+      }
+
+      private long messageCreatedAt_ ;
+      /**
+       * <code>optional int64 message_created_at = 3;</code>
+       */
+      public boolean hasMessageCreatedAt() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int64 message_created_at = 3;</code>
+       */
+      public long getMessageCreatedAt() {
+        return messageCreatedAt_;
+      }
+      /**
+       * <code>optional int64 message_created_at = 3;</code>
+       */
+      public Builder setMessageCreatedAt(long value) {
+        bitField0_ |= 0x00000004;
+        messageCreatedAt_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 message_created_at = 3;</code>
+       */
+      public Builder clearMessageCreatedAt() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        messageCreatedAt_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private int lookbackWindowInMinutes_ ;
+      /**
+       * <code>optional int32 lookback_window_in_minutes = 4;</code>
+       */
+      public boolean hasLookbackWindowInMinutes() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int32 lookback_window_in_minutes = 4;</code>
+       */
+      public int getLookbackWindowInMinutes() {
+        return lookbackWindowInMinutes_;
+      }
+      /**
+       * <code>optional int32 lookback_window_in_minutes = 4;</code>
+       */
+      public Builder setLookbackWindowInMinutes(int value) {
+        bitField0_ |= 0x00000008;
+        lookbackWindowInMinutes_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 lookback_window_in_minutes = 4;</code>
+       */
+      public Builder clearLookbackWindowInMinutes() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        lookbackWindowInMinutes_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:TriggerMessage)
+    }
+
+    static {
+      defaultInstance = new TriggerMessage(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:TriggerMessage)
+  }
+
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Message_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_Message_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_TriggerMessage_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_TriggerMessage_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -657,27 +1371,36 @@ public final class TimelineQueueProtos {
     java.lang.String[] descriptorData = {
       "\n\024timeline_queue.proto\"E\n\007Message\022\022\n\nacc" +
       "ount_id\030\001 \001(\003\022\023\n\013target_date\030\002 \001(\t\022\021\n\tti" +
-      "mestamp\030\003 \001(\003B1\n\032com.hello.suripu.api.qu" +
-      "eueB\023TimelineQueueProtos"
+      "mestamp\030\003 \001(\003\"y\n\016TriggerMessage\022\022\n\naccou" +
+      "nt_id\030\001 \001(\003\022\023\n\013target_date\030\002 \001(\t\022\032\n\022mess" +
+      "age_created_at\030\003 \001(\003\022\"\n\032lookback_window_" +
+      "in_minutes\030\004 \001(\005B1\n\032com.hello.suripu.api" +
+      ".queueB\023TimelineQueueProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_Message_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_Message_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_Message_descriptor,
-              new java.lang.String[] { "AccountId", "TargetDate", "Timestamp", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_Message_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_Message_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_Message_descriptor,
+        new java.lang.String[] { "AccountId", "TargetDate", "Timestamp", });
+    internal_static_TriggerMessage_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_TriggerMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_TriggerMessage_descriptor,
+        new java.lang.String[] { "AccountId", "TargetDate", "MessageCreatedAt", "LookbackWindowInMinutes", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
