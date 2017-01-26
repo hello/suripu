@@ -1,6 +1,6 @@
 package com.hello.suripu.core.actions;
 
-import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
+import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehoseAsync;
 import com.amazonaws.services.kinesisfirehose.model.Record;
 import com.hello.suripu.core.db.FirehoseDAO;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public class ActionFirehoseDAO extends FirehoseDAO<Action> {
     private final static Logger LOGGER = LoggerFactory.getLogger(ActionFirehoseDAO.class);
 
-    public ActionFirehoseDAO(final String deliveryStreamName, final AmazonKinesisFirehose firehose) {
+    public ActionFirehoseDAO(final String deliveryStreamName, final AmazonKinesisFirehoseAsync firehose) {
         super(deliveryStreamName, firehose);
     }
 
@@ -25,8 +25,8 @@ public class ActionFirehoseDAO extends FirehoseDAO<Action> {
     }
 
     @Override
-    protected Record toRecord(final Action model) {
-        final String resultString = model.result.isPresent() ? model.result.get() : FirehoseDAO.NULL_STRING;
+    public Record toRecord(final Action model) {
+        final String resultString = model.result.isPresent() ? model.result.get().string() : FirehoseDAO.NULL_STRING;
         final String offsetMillisString = model.offsetMillis.isPresent() ? toString(model.offsetMillis.get()) : FirehoseDAO.NULL_STRING;
         return toPipeDelimitedRecord(
                 toString(model.accountId),

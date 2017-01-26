@@ -9,12 +9,12 @@ import org.joda.time.DateTime;
 public class Action {
     public final Long accountId;
     public final ActionType action;
-    public final Optional<String> result;
+    public final Optional<ActionResult> result;
     public final DateTime ts;
     public final Optional<Integer> offsetMillis;
 
 
-    public Action(final Long accountId, final ActionType action, final Optional<String> result, final DateTime ts, final Optional<Integer> offsetMillis) {
+    public Action(final Long accountId, final ActionType action, final Optional<ActionResult> result, final DateTime ts, final Optional<Integer> offsetMillis) {
         this.accountId = accountId;
         this.action = action;
         this.result = result;
