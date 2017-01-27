@@ -697,10 +697,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        if (hasInterruptionEvent(accountId)){
+        if (hasSleepDisturbanceEvent(accountId)){
             if (sleepTime.isPresent() && wakeTime.isPresent()) {
                 final List<Event> sleepDisturbanceEvents = timelineUtils.getSleepDisturbanceEvents(sensorData.oneDaysTrackerMotion, sleepTime.get(), wakeTime.get(), timeZoneOffsetMap);
                 for(final Event sleepDisturbanceEvent : sleepDisturbanceEvents){
+                    LOGGER.info("action=get-sleep-disturbance account_id={} night={} start-time={} end-time={} offset={}", accountId, targetDate, sleepDisturbanceEvent.getStartTimestamp(), sleepDisturbanceEvent.getEndTimestamp(), sleepDisturbanceEvent.getTimezoneOffset());
+                    if (timelineEvents.containsKey(sleepDisturbanceEvent.getStartTimestamp())){
+                        LOGGER.info("action=multiple-events-during-same-window");
+                    }
                     timelineEvents.put(sleepDisturbanceEvent.getStartTimestamp(), sleepDisturbanceEvent);
                 }
             }
@@ -740,14 +744,16 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
 
 
+        final List<Event> filteredEvents = timelineUtils.cleanEventWindow(nonSignificantFilteredEvents);
+
         /* convert valid events to segment, compute sleep stats and score */
 
-        final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
+        final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(filteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
         final boolean useUninterruptedDuration = useUninterruptedDuration(accountId);
 
-        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId), useUninterruptedDuration);
+        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, useUninterruptedDuration, hasSleepDisturbanceEvent(accountId));
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         Integer sleepScore = computeAndMaybeSaveScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);

@@ -478,6 +478,30 @@ public class TimelineUtils {
         return result;
     }
 
+    public List<Event> cleanEventWindow(final List<Event> eventList){
+        if(eventList.size() == 0){
+            return eventList;
+        }
+
+        final ArrayList<Event> result = new ArrayList<>();
+        long distrubanceStartTime = 0L;
+        long distrubanceEndTime = 0L;
+
+        for(final Event event:eventList) {
+            if (event.getType() == Event.Type.SLEEP_DISTURBANCE) {
+                distrubanceStartTime = event.getStartTimestamp();
+                distrubanceEndTime = event.getEndTimestamp();
+
+            }
+            if ((event.getStartTimestamp() >= distrubanceStartTime && event.getStartTimestamp() <= distrubanceEndTime) && (event.getType() == Event.Type.MOTION || event.getType() == Event.Type.SLEEP_MOTION || event.getType()==Event.Type.SLEEPING)) {
+                continue;
+            } else {
+                result.add(event);
+            }
+        }
+        return result;
+    }
+
     public List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
                                                            int slotDurationMS, int mergeSlotCount,
                                                            boolean collapseNullSegments){
@@ -660,7 +684,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public static SleepStats computeStats(final List<SleepSegment> segments, final List<TrackerMotion> trackerMotions, final int lightSleepThreshold, final boolean hasMediumSleep, final boolean useUninterruptedDuration) {
+    public static SleepStats computeStats(final List<SleepSegment> segments, final List<TrackerMotion> trackerMotions, final int lightSleepThreshold, final boolean useUninterruptedDuration, final boolean useSleepDisturbance) {
         Integer soundSleepDurationInSecs = 0;
         Integer mediumSleepDurationInSecs = 0;
         Integer lightSleepDurationInSecs = 0;
@@ -718,24 +742,22 @@ public class TimelineUtils {
             final int sleepDepth = segment.getSleepDepth();
             final int duration = segment.getDurationInSeconds();
 
-            if (hasMediumSleep) {
-                if (sleepDepth >= SleepStats.MEDIUM_SLEEP_DEPTH_THRESHOLD) {
-                    soundSleepDurationInSecs += duration;
-                } else if (sleepDepth >= SleepStats.LIGHT_SLEEP_DEPTH_THRESHOLD) {
-                    mediumSleepDurationInSecs += duration;
-                } else if (sleepDepth >= SleepStats.AWAKE_SLEEP_DEPTH_THRESHOLD) {
-                    lightSleepDurationInSecs += duration;
-                }
-            } else {
-                if (sleepDepth >= lightSleepThreshold) {
-                    soundSleepDurationInSecs += duration;
-                } else if (sleepDepth >= 0 && sleepDepth < lightSleepThreshold) {
-                    lightSleepDurationInSecs += duration;
-                }
+            if (sleepDepth >= SleepStats.MEDIUM_SLEEP_DEPTH_THRESHOLD) {
+                soundSleepDurationInSecs += duration;
+            } else if (sleepDepth >= SleepStats.LIGHT_SLEEP_DEPTH_THRESHOLD) {
+                mediumSleepDurationInSecs += duration;
+            } else if (sleepDepth >= SleepStats.AWAKE_SLEEP_DEPTH_THRESHOLD) {
+                lightSleepDurationInSecs += duration;
             }
 
-            if(segment.getType() == Event.Type.MOTION){
-                numberOfMotionEvents++;
+            if(useSleepDisturbance){
+                if(segment.getType()== Event.Type.SLEEP_DISTURBANCE){
+                    numberOfMotionEvents++;
+                }
+            }else {
+                if (segment.getType() == Event.Type.MOTION) {
+                    numberOfMotionEvents++;
+                }
             }
             //LOGGER.trace("duration in seconds = {}", segment.getDurationInSeconds());
         }
@@ -1483,14 +1505,15 @@ public class TimelineUtils {
 
         // computes periods of agitated sleep  using on duration. Over 16 seconds of movement within a two minute window initiates a state of agitated sleep that persists until there is a 4 minute window with no motion
         final int onDurationSumThreshold = 10; //secs
-        final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 10;
+        final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 5;
+        final long minInterDisturbanceInterval = DateTimeConstants.MILLIS_PER_MINUTE * 45;
         final long timeWindow = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 minutes - finds consecutive minutes with some flexibility
         final int maxDisturbanceCount = 5; //max number of sleep disturbances to report during night
         long currentTS = 0L;
         long currentDisturbanceStartTS ;
         long currentDisturbanceEndTS ;
         long previousDisturbanceStartTS = 0L;
-        long previousDisturbanceEndTS;
+        long previousDisturbanceEndTS = 0L;
         long previousMotionTS = 0L;
 
         List<TrackerMotion> trackerMotionWindowCurrent = new ArrayList<>();
@@ -1519,7 +1542,7 @@ public class TimelineUtils {
                 }
             }
             if (onDurationSum > onDurationSumThreshold){
-                if (!currentlyDisturbed) {
+                if (!currentlyDisturbed && currentDisturbanceStartTS - previousDisturbanceEndTS> minInterDisturbanceInterval) {
                     currentlyDisturbed = true;
                     if (!sleepDisturbances.containsKey(currentDisturbanceStartTS)) {
                         sleepDisturbances.put(currentDisturbanceStartTS, onDurationSum);

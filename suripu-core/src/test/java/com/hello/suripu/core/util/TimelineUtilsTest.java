@@ -88,7 +88,7 @@ public class TimelineUtilsTest {
         final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents, sleep, wake);
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, trackerMotions, 70, true, true);
+        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, trackerMotions, 70, true, false);
         final Integer uninterruptedDuration = 380;
         assertThat(sleepStats.uninterruptedSleepDurationInMinutes, is(uninterruptedDuration));
     }
@@ -139,7 +139,7 @@ public class TimelineUtilsTest {
             }
             span.add(index_end - index_start);
         }
-        final Integer[] startMinutesActual = {315,390,495,585, 735};
+        final Integer[] startMinutesActual = {315,390,495,585};
         assertThat(startMinutesActual.length == startMinutes.size(), is(true));
         for (Integer startMinute : startMinutes){
             assertThat(startMinutes.contains(startMinute), is(true));

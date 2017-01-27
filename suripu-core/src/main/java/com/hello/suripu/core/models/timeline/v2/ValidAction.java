@@ -23,7 +23,6 @@ public enum ValidAction {
             case IN_BED:
             case OUT_OF_BED:
             case WAKE_UP:
-            case SLEEP_DISTURBANCE:
                 return Lists.newArrayList(ADJUST_TIME, VERIFY, INCORRECT);
             case LIGHTS_OUT:
             case MOTION:
@@ -31,6 +30,7 @@ public enum ValidAction {
             case NOISE:
             case SNORING:
             case SLEEP_TALK:
+            case SLEEP_DISTURBANCE:
                 return Lists.newArrayList(VERIFY, INCORRECT);
             default:
                 return Lists.newArrayList();

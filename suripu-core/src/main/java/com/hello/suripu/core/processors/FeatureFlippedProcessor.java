@@ -192,8 +192,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasInterruptionEvent(final Long accountId){
-        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_INTERRUPTION_EVENT, accountId, Collections.EMPTY_LIST);
+    protected Boolean hasSleepDisturbanceEvent(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_SLEEP_DISTURBANCE_EVENT, accountId, Collections.EMPTY_LIST);
     }
 
 }
