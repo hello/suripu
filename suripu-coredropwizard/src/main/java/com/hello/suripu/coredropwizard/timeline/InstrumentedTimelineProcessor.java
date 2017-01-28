@@ -11,6 +11,7 @@ import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
@@ -53,7 +54,6 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
-import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.processors.PartnerMotion;
@@ -615,7 +615,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         Optional<Event> outOfBed= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
 
         //CREATE SLEEP MOTION EVENTS
-        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions, hasSleepDisturbanceEvent(accountId));
 
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
@@ -661,7 +661,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
         final List<Event> soundEvents = getSoundEvents(
-                allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
+                allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
                 motionEvents,
                 lightOutTimeOptional,
                 sleepEventsFromAlgorithm,
@@ -703,7 +703,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 for(final Event sleepDisturbanceEvent : sleepDisturbanceEvents){
                     LOGGER.info("action=get-sleep-disturbance account_id={} night={} start-time={} end-time={} offset={}", accountId, targetDate, sleepDisturbanceEvent.getStartTimestamp(), sleepDisturbanceEvent.getEndTimestamp(), sleepDisturbanceEvent.getTimezoneOffset());
                     if (timelineEvents.containsKey(sleepDisturbanceEvent.getStartTimestamp())){
-                        LOGGER.info("action=multiple-events-during-same-window");
+                        final Event.Type otherEventType = timelineEvents.get(sleepDisturbanceEvent.getStartTimestamp()).getType();
+                        if (otherEventType != Event.Type.NONE && otherEventType != Event.Type.MOTION) {
+                            LOGGER.info("action=multiple-events-during-same-window account-id={} date-of-night={} event1={} event2=SLEEP_DISTURBANCE event-time={}", accountId,targetDate, otherEventType.name(), sleepDisturbanceEvent.getStartTimestamp());
+                        }
                     }
                     timelineEvents.put(sleepDisturbanceEvent.getStartTimestamp(), sleepDisturbanceEvent);
                 }
@@ -913,7 +916,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
             //tz offset should be correct
-            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
+            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds, false);
 
             return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
         }

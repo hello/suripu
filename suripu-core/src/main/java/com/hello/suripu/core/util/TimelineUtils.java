@@ -163,7 +163,11 @@ public class TimelineUtils {
         return positiveMotions;
     }
 
-    public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
+    public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions, final boolean hasSleepDisturbance) {
+        int minSleepDepth = 0;
+        if (hasSleepDisturbance){
+            minSleepDepth = 5;
+        }
         final List<MotionEvent> motionEvents = new ArrayList<>();
 
         final List<TrackerMotion> positiveMotions = removeNegativeAmplitudes(trackerMotions);
@@ -183,7 +187,7 @@ public class TimelineUtils {
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
-                    getSleepDepth(trackerMotion.value, positionMap, maxSVM));
+                    Math.max(getSleepDepth(trackerMotion.value, positionMap, maxSVM), minSleepDepth));
             motionEvents.add(motionEvent);
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
@@ -479,25 +483,32 @@ public class TimelineUtils {
     }
 
     public List<Event> cleanEventWindow(final List<Event> eventList){
+        final long disturbanceBlackOut = DateTimeConstants.MILLIS_PER_MINUTE * 20;
         if(eventList.size() == 0){
             return eventList;
         }
 
         final ArrayList<Event> result = new ArrayList<>();
-        long distrubanceStartTime = 0L;
-        long distrubanceEndTime = 0L;
+        long disturbanceStartTime = -1L;
+        long disturbanceEndTime = -1L;
 
-        for(final Event event:eventList) {
+        for(Event event:eventList) {
             if (event.getType() == Event.Type.SLEEP_DISTURBANCE) {
-                distrubanceStartTime = event.getStartTimestamp();
-                distrubanceEndTime = event.getEndTimestamp();
-
-            }
-            if ((event.getStartTimestamp() >= distrubanceStartTime && event.getStartTimestamp() <= distrubanceEndTime) && (event.getType() == Event.Type.MOTION || event.getType() == Event.Type.SLEEP_MOTION || event.getType()==Event.Type.SLEEPING)) {
+                disturbanceStartTime = event.getStartTimestamp();
+                disturbanceEndTime = event.getEndTimestamp();
+                result.add(new SleepDisturbanceEvent(event.getStartTimestamp(), event.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE, event.getTimezoneOffset(), event.getSleepDepth()));
+                result.add(new SleepingEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), 0));
                 continue;
-            } else {
-                result.add(event);
             }
+            if ((event.getStartTimestamp() >= disturbanceStartTime && event.getStartTimestamp() <= disturbanceEndTime + disturbanceBlackOut) && (event.getType() == Event.Type.MOTION || event.getType() == Event.Type.SLEEP_MOTION)){
+                continue;
+            } else if ((event.getStartTimestamp() >= disturbanceStartTime && event.getEndTimestamp() <= disturbanceEndTime) && (event.getType() == Event.Type.SLEEPING )) {
+                continue;
+            }else if ((event.getStartTimestamp() >= disturbanceStartTime && event.getStartTimestamp() < disturbanceEndTime && event.getEndTimestamp() > disturbanceEndTime) && (event.getType() == Event.Type.SLEEPING )) {
+                event = new SleepingEvent(disturbanceEndTime, event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth());
+            }
+            result.add(event);
+
         }
         return result;
     }
@@ -1504,11 +1515,12 @@ public class TimelineUtils {
     public HashMap<Long, Long> getSleepDisturbances(final List<TrackerMotion> trackerMotions){
 
         // computes periods of agitated sleep  using on duration. Over 16 seconds of movement within a two minute window initiates a state of agitated sleep that persists until there is a 4 minute window with no motion
-        final int onDurationSumThreshold = 10; //secs
-        final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 5;
-        final long minInterDisturbanceInterval = DateTimeConstants.MILLIS_PER_MINUTE * 45;
+        final int onDurationSumThreshold = 15; //secs
+        final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 7;
+        final long minInterDisturbanceInterval = DateTimeConstants.MILLIS_PER_MINUTE * 30;
         final long timeWindow = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 minutes - finds consecutive minutes with some flexibility
         final int maxDisturbanceCount = 5; //max number of sleep disturbances to report during night
+        final int minDisturbanceLength = DateTimeConstants.MILLIS_PER_MINUTE * 4;
         long currentTS = 0L;
         long currentDisturbanceStartTS ;
         long currentDisturbanceEndTS ;
@@ -1552,7 +1564,7 @@ public class TimelineUtils {
                 previousDisturbanceEndTS = currentDisturbanceEndTS;
                 sleepDisturbanceWindows.put(previousDisturbanceStartTS, previousDisturbanceEndTS);
             }else  if (currentTS - previousMotionTS > noMotionThreshold && currentlyDisturbed){
-                sleepDisturbanceWindows.put(previousDisturbanceStartTS, previousMotionTS);
+                sleepDisturbanceWindows.put(previousDisturbanceStartTS, Math.max(previousMotionTS, previousDisturbanceStartTS + minDisturbanceLength));
                 currentlyDisturbed = false;
             }
 
@@ -1569,7 +1581,7 @@ public class TimelineUtils {
             final int minDisturbanceSpan = disturbanceSpan.get(discardCount);
             int removedCount = 0;
             for (long tsKey : tsKeys){
-                if ((sleepDisturbanceWindows.get(tsKey) - tsKey)/DateTimeConstants.MILLIS_PER_MINUTE < minDisturbanceSpan){
+                if ((sleepDisturbanceWindows.get(tsKey) - tsKey)/DateTimeConstants.MILLIS_PER_MINUTE <= minDisturbanceSpan){
                     sleepDisturbanceWindows.remove(tsKey);
                     removedCount +=1;
                 }
