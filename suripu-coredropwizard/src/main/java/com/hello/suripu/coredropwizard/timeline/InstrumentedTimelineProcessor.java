@@ -661,7 +661,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
         final List<Event> soundEvents = getSoundEvents(
-                allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+                allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
                 motionEvents,
                 lightOutTimeOptional,
                 sleepEventsFromAlgorithm,
