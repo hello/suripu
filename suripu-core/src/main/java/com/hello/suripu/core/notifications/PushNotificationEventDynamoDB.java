@@ -163,7 +163,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     protected Map<String, AttributeValue> toAttributeMap(final PushNotificationEvent model) {
         final ImmutableMap.Builder<String, AttributeValue> builder = ImmutableMap.builder();
         builder.put(Attribute.ACCOUNT_ID.shortName(), toAttributeValue(model.accountId))
-                .put(Attribute.TYPE.shortName(), toAttributeValue(model.type))
+                .put(Attribute.TYPE.shortName(), toAttributeValue(model.type.shortName()))
                 .put(Attribute.TIMESTAMP.shortName(), toAttributeValue(model.timestamp))
                 .put(Attribute.BODY.shortName(), toAttributeValue(model.helloPushMessage.body))
                 .put(Attribute.TARGET.shortName(), toAttributeValue(model.helloPushMessage.target))
@@ -215,7 +215,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
                 LOGGER.error("error=InternalServerErrorException account_id={}", event.accountId);
             } catch (ConditionalCheckFailedException ccfe) {
                 // The item already exists or we already have an item with this timestamp / account ID!
-                LOGGER.warn("warn=item_already_exists account_id={} timestamp={}",
+                LOGGER.warn("warn=item-already-exists account_id={} timestamp={}",
                         event.accountId, event.timestamp);
                 return false;
             }
@@ -291,7 +291,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
                 Attribute.DETAILS.getString(item));
         return PushNotificationEvent.newBuilder()
                 .withAccountId(Attribute.ACCOUNT_ID.getLong(item))
-                .withType(Attribute.TYPE.getString(item))
+                .withType(PushNotificationEventType.fromString(Attribute.TYPE.getString(item)))
                 .withTimestamp(Attribute.TIMESTAMP.getDateTime(item))
                 .withHelloPushMessage(helloPushMessage)
                 .withSenseId(Attribute.SENSE_ID.getString(item))
