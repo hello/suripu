@@ -826,6 +826,15 @@ public final class PushNotification {
         getSenseIdBytes();
 
     /**
+     * <code>optional uint64 timestamp = 3;</code>
+     */
+    boolean hasTimestamp();
+    /**
+     * <code>optional uint64 timestamp = 3;</code>
+     */
+    long getTimestamp();
+
+    /**
      * <code>optional .PillBatteryLow pill_battery_low = 100;</code>
      *
      * <pre>
@@ -991,9 +1000,14 @@ public final class PushNotification {
               senseId_ = bs;
               break;
             }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              timestamp_ = input.readUInt64();
+              break;
+            }
             case 802: {
               com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = pillBatteryLow_.toBuilder();
               }
               pillBatteryLow_ = input.readMessage(com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.PARSER, extensionRegistry);
@@ -1001,12 +1015,12 @@ public final class PushNotification {
                 subBuilder.mergeFrom(pillBatteryLow_);
                 pillBatteryLow_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000004;
+              bitField0_ |= 0x00000008;
               break;
             }
             case 818: {
               com.hello.suripu.api.notifications.Insight.NewInsight.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = newInsight_.toBuilder();
               }
               newInsight_ = input.readMessage(com.hello.suripu.api.notifications.Insight.NewInsight.PARSER, extensionRegistry);
@@ -1014,12 +1028,12 @@ public final class PushNotification {
                 subBuilder.mergeFrom(newInsight_);
                 newInsight_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000010;
               break;
             }
             case 826: {
               com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 subBuilder = roomConditionAlert_.toBuilder();
               }
               roomConditionAlert_ = input.readMessage(com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert.PARSER, extensionRegistry);
@@ -1027,12 +1041,12 @@ public final class PushNotification {
                 subBuilder.mergeFrom(roomConditionAlert_);
                 roomConditionAlert_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000020;
               break;
             }
             case 834: {
               com.hello.suripu.api.notifications.SleepScore.NewSleepScore.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000020) == 0x00000020)) {
+              if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 subBuilder = newSleepScore_.toBuilder();
               }
               newSleepScore_ = input.readMessage(com.hello.suripu.api.notifications.SleepScore.NewSleepScore.PARSER, extensionRegistry);
@@ -1040,12 +1054,12 @@ public final class PushNotification {
                 subBuilder.mergeFrom(newSleepScore_);
                 newSleepScore_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000040;
               break;
             }
             case 842: {
               com.hello.suripu.api.notifications.DeviceStatus.SenseOffline.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+              if (((bitField0_ & 0x00000080) == 0x00000080)) {
                 subBuilder = senseOffline_.toBuilder();
               }
               senseOffline_ = input.readMessage(com.hello.suripu.api.notifications.DeviceStatus.SenseOffline.PARSER, extensionRegistry);
@@ -1053,12 +1067,12 @@ public final class PushNotification {
                 subBuilder.mergeFrom(senseOffline_);
                 senseOffline_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000080;
               break;
             }
             case 850: {
               com.hello.suripu.api.notifications.DeviceStatus.PillOffline.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000080) == 0x00000080)) {
+              if (((bitField0_ & 0x00000100) == 0x00000100)) {
                 subBuilder = pillOffline_.toBuilder();
               }
               pillOffline_ = input.readMessage(com.hello.suripu.api.notifications.DeviceStatus.PillOffline.PARSER, extensionRegistry);
@@ -1066,12 +1080,12 @@ public final class PushNotification {
                 subBuilder.mergeFrom(pillOffline_);
                 pillOffline_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000080;
+              bitField0_ |= 0x00000100;
               break;
             }
             case 858: {
               com.hello.suripu.api.notifications.PushNotification.GeneralNotification.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000100) == 0x00000100)) {
+              if (((bitField0_ & 0x00000200) == 0x00000200)) {
                 subBuilder = generalNotification_.toBuilder();
               }
               generalNotification_ = input.readMessage(com.hello.suripu.api.notifications.PushNotification.GeneralNotification.PARSER, extensionRegistry);
@@ -1079,7 +1093,7 @@ public final class PushNotification {
                 subBuilder.mergeFrom(generalNotification_);
                 generalNotification_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000100;
+              bitField0_ |= 0x00000200;
               break;
             }
           }
@@ -1179,6 +1193,21 @@ public final class PushNotification {
       }
     }
 
+    public static final int TIMESTAMP_FIELD_NUMBER = 3;
+    private long timestamp_;
+    /**
+     * <code>optional uint64 timestamp = 3;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional uint64 timestamp = 3;</code>
+     */
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
     public static final int PILL_BATTERY_LOW_FIELD_NUMBER = 100;
     private com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow pillBatteryLow_;
     /**
@@ -1189,7 +1218,7 @@ public final class PushNotification {
      * </pre>
      */
     public boolean hasPillBatteryLow() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
      * <code>optional .PillBatteryLow pill_battery_low = 100;</code>
@@ -1218,7 +1247,7 @@ public final class PushNotification {
      * <code>optional .NewInsight new_insight = 102;</code>
      */
     public boolean hasNewInsight() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
      * <code>optional .NewInsight new_insight = 102;</code>
@@ -1239,7 +1268,7 @@ public final class PushNotification {
      * <code>optional .RoomConditionAlert room_condition_alert = 103;</code>
      */
     public boolean hasRoomConditionAlert() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional .RoomConditionAlert room_condition_alert = 103;</code>
@@ -1260,7 +1289,7 @@ public final class PushNotification {
      * <code>optional .NewSleepScore new_sleep_score = 104;</code>
      */
     public boolean hasNewSleepScore() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <code>optional .NewSleepScore new_sleep_score = 104;</code>
@@ -1281,7 +1310,7 @@ public final class PushNotification {
      * <code>optional .SenseOffline sense_offline = 105;</code>
      */
     public boolean hasSenseOffline() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <code>optional .SenseOffline sense_offline = 105;</code>
@@ -1302,7 +1331,7 @@ public final class PushNotification {
      * <code>optional .PillOffline pill_offline = 106;</code>
      */
     public boolean hasPillOffline() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000100) == 0x00000100);
     }
     /**
      * <code>optional .PillOffline pill_offline = 106;</code>
@@ -1323,7 +1352,7 @@ public final class PushNotification {
      * <code>optional .GeneralNotification general_notification = 107;</code>
      */
     public boolean hasGeneralNotification() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000200) == 0x00000200);
     }
     /**
      * <code>optional .GeneralNotification general_notification = 107;</code>
@@ -1341,6 +1370,7 @@ public final class PushNotification {
     private void initFields() {
       accountId_ = 0L;
       senseId_ = "";
+      timestamp_ = 0L;
       pillBatteryLow_ = com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.getDefaultInstance();
       newInsight_ = com.hello.suripu.api.notifications.Insight.NewInsight.getDefaultInstance();
       roomConditionAlert_ = com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert.getDefaultInstance();
@@ -1369,24 +1399,27 @@ public final class PushNotification {
         output.writeBytes(2, getSenseIdBytes());
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeMessage(100, pillBatteryLow_);
+        output.writeUInt64(3, timestamp_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeMessage(102, newInsight_);
+        output.writeMessage(100, pillBatteryLow_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeMessage(103, roomConditionAlert_);
+        output.writeMessage(102, newInsight_);
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeMessage(104, newSleepScore_);
+        output.writeMessage(103, roomConditionAlert_);
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        output.writeMessage(105, senseOffline_);
+        output.writeMessage(104, newSleepScore_);
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
-        output.writeMessage(106, pillOffline_);
+        output.writeMessage(105, senseOffline_);
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeMessage(106, pillOffline_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeMessage(107, generalNotification_);
       }
       getUnknownFields().writeTo(output);
@@ -1408,29 +1441,33 @@ public final class PushNotification {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(100, pillBatteryLow_);
+          .computeUInt64Size(3, timestamp_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(102, newInsight_);
+          .computeMessageSize(100, pillBatteryLow_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(103, roomConditionAlert_);
+          .computeMessageSize(102, newInsight_);
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(104, newSleepScore_);
+          .computeMessageSize(103, roomConditionAlert_);
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(105, senseOffline_);
+          .computeMessageSize(104, newSleepScore_);
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(106, pillOffline_);
+          .computeMessageSize(105, senseOffline_);
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(106, pillOffline_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(107, generalNotification_);
       }
@@ -1562,48 +1599,50 @@ public final class PushNotification {
         bitField0_ = (bitField0_ & ~0x00000001);
         senseId_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
         if (pillBatteryLowBuilder_ == null) {
           pillBatteryLow_ = com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.getDefaultInstance();
         } else {
           pillBatteryLowBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000008);
         if (newInsightBuilder_ == null) {
           newInsight_ = com.hello.suripu.api.notifications.Insight.NewInsight.getDefaultInstance();
         } else {
           newInsightBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         if (roomConditionAlertBuilder_ == null) {
           roomConditionAlert_ = com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert.getDefaultInstance();
         } else {
           roomConditionAlertBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         if (newSleepScoreBuilder_ == null) {
           newSleepScore_ = com.hello.suripu.api.notifications.SleepScore.NewSleepScore.getDefaultInstance();
         } else {
           newSleepScoreBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000040);
         if (senseOfflineBuilder_ == null) {
           senseOffline_ = com.hello.suripu.api.notifications.DeviceStatus.SenseOffline.getDefaultInstance();
         } else {
           senseOfflineBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000080);
         if (pillOfflineBuilder_ == null) {
           pillOffline_ = com.hello.suripu.api.notifications.DeviceStatus.PillOffline.getDefaultInstance();
         } else {
           pillOfflineBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000100);
         if (generalNotificationBuilder_ == null) {
           generalNotification_ = com.hello.suripu.api.notifications.PushNotification.GeneralNotification.getDefaultInstance();
         } else {
           generalNotificationBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -1643,53 +1682,57 @@ public final class PushNotification {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
+        result.timestamp_ = timestamp_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
         if (pillBatteryLowBuilder_ == null) {
           result.pillBatteryLow_ = pillBatteryLow_;
         } else {
           result.pillBatteryLow_ = pillBatteryLowBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
         }
         if (newInsightBuilder_ == null) {
           result.newInsight_ = newInsight_;
         } else {
           result.newInsight_ = newInsightBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
         }
         if (roomConditionAlertBuilder_ == null) {
           result.roomConditionAlert_ = roomConditionAlert_;
         } else {
           result.roomConditionAlert_ = roomConditionAlertBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
         }
         if (newSleepScoreBuilder_ == null) {
           result.newSleepScore_ = newSleepScore_;
         } else {
           result.newSleepScore_ = newSleepScoreBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000040;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
         }
         if (senseOfflineBuilder_ == null) {
           result.senseOffline_ = senseOffline_;
         } else {
           result.senseOffline_ = senseOfflineBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
-          to_bitField0_ |= 0x00000080;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
         }
         if (pillOfflineBuilder_ == null) {
           result.pillOffline_ = pillOffline_;
         } else {
           result.pillOffline_ = pillOfflineBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
-          to_bitField0_ |= 0x00000100;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
         }
         if (generalNotificationBuilder_ == null) {
           result.generalNotification_ = generalNotification_;
@@ -1719,6 +1762,9 @@ public final class PushNotification {
           bitField0_ |= 0x00000002;
           senseId_ = other.senseId_;
           onChanged();
+        }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
         }
         if (other.hasPillBatteryLow()) {
           mergePillBatteryLow(other.getPillBatteryLow());
@@ -1876,6 +1922,38 @@ public final class PushNotification {
         return this;
       }
 
+      private long timestamp_ ;
+      /**
+       * <code>optional uint64 timestamp = 3;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional uint64 timestamp = 3;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <code>optional uint64 timestamp = 3;</code>
+       */
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000004;
+        timestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 timestamp = 3;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
       private com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow pillBatteryLow_ = com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow, com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.Builder, com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLowOrBuilder> pillBatteryLowBuilder_;
@@ -1887,7 +1965,7 @@ public final class PushNotification {
        * </pre>
        */
       public boolean hasPillBatteryLow() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
        * <code>optional .PillBatteryLow pill_battery_low = 100;</code>
@@ -1920,7 +1998,7 @@ public final class PushNotification {
         } else {
           pillBatteryLowBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000008;
         return this;
       }
       /**
@@ -1938,7 +2016,7 @@ public final class PushNotification {
         } else {
           pillBatteryLowBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000008;
         return this;
       }
       /**
@@ -1950,7 +2028,7 @@ public final class PushNotification {
        */
       public Builder mergePillBatteryLow(com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow value) {
         if (pillBatteryLowBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
               pillBatteryLow_ != com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.getDefaultInstance()) {
             pillBatteryLow_ =
               com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.newBuilder(pillBatteryLow_).mergeFrom(value).buildPartial();
@@ -1961,7 +2039,7 @@ public final class PushNotification {
         } else {
           pillBatteryLowBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000008;
         return this;
       }
       /**
@@ -1978,7 +2056,7 @@ public final class PushNotification {
         } else {
           pillBatteryLowBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
       /**
@@ -1989,7 +2067,7 @@ public final class PushNotification {
        * </pre>
        */
       public com.hello.suripu.api.notifications.DeviceStatus.PillBatteryLow.Builder getPillBatteryLowBuilder() {
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000008;
         onChanged();
         return getPillBatteryLowFieldBuilder().getBuilder();
       }
@@ -2035,7 +2113,7 @@ public final class PushNotification {
        * <code>optional .NewInsight new_insight = 102;</code>
        */
       public boolean hasNewInsight() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
        * <code>optional .NewInsight new_insight = 102;</code>
@@ -2060,7 +2138,7 @@ public final class PushNotification {
         } else {
           newInsightBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         return this;
       }
       /**
@@ -2074,7 +2152,7 @@ public final class PushNotification {
         } else {
           newInsightBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         return this;
       }
       /**
@@ -2082,7 +2160,7 @@ public final class PushNotification {
        */
       public Builder mergeNewInsight(com.hello.suripu.api.notifications.Insight.NewInsight value) {
         if (newInsightBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000010) == 0x00000010) &&
               newInsight_ != com.hello.suripu.api.notifications.Insight.NewInsight.getDefaultInstance()) {
             newInsight_ =
               com.hello.suripu.api.notifications.Insight.NewInsight.newBuilder(newInsight_).mergeFrom(value).buildPartial();
@@ -2093,7 +2171,7 @@ public final class PushNotification {
         } else {
           newInsightBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         return this;
       }
       /**
@@ -2106,14 +2184,14 @@ public final class PushNotification {
         } else {
           newInsightBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
       /**
        * <code>optional .NewInsight new_insight = 102;</code>
        */
       public com.hello.suripu.api.notifications.Insight.NewInsight.Builder getNewInsightBuilder() {
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         onChanged();
         return getNewInsightFieldBuilder().getBuilder();
       }
@@ -2151,7 +2229,7 @@ public final class PushNotification {
        * <code>optional .RoomConditionAlert room_condition_alert = 103;</code>
        */
       public boolean hasRoomConditionAlert() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional .RoomConditionAlert room_condition_alert = 103;</code>
@@ -2176,7 +2254,7 @@ public final class PushNotification {
         } else {
           roomConditionAlertBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         return this;
       }
       /**
@@ -2190,7 +2268,7 @@ public final class PushNotification {
         } else {
           roomConditionAlertBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         return this;
       }
       /**
@@ -2198,7 +2276,7 @@ public final class PushNotification {
        */
       public Builder mergeRoomConditionAlert(com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert value) {
         if (roomConditionAlertBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000020) == 0x00000020) &&
               roomConditionAlert_ != com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert.getDefaultInstance()) {
             roomConditionAlert_ =
               com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert.newBuilder(roomConditionAlert_).mergeFrom(value).buildPartial();
@@ -2209,7 +2287,7 @@ public final class PushNotification {
         } else {
           roomConditionAlertBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         return this;
       }
       /**
@@ -2222,14 +2300,14 @@ public final class PushNotification {
         } else {
           roomConditionAlertBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
       /**
        * <code>optional .RoomConditionAlert room_condition_alert = 103;</code>
        */
       public com.hello.suripu.api.notifications.RoomConditions.RoomConditionAlert.Builder getRoomConditionAlertBuilder() {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         onChanged();
         return getRoomConditionAlertFieldBuilder().getBuilder();
       }
@@ -2267,7 +2345,7 @@ public final class PushNotification {
        * <code>optional .NewSleepScore new_sleep_score = 104;</code>
        */
       public boolean hasNewSleepScore() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional .NewSleepScore new_sleep_score = 104;</code>
@@ -2292,7 +2370,7 @@ public final class PushNotification {
         } else {
           newSleepScoreBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         return this;
       }
       /**
@@ -2306,7 +2384,7 @@ public final class PushNotification {
         } else {
           newSleepScoreBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         return this;
       }
       /**
@@ -2314,7 +2392,7 @@ public final class PushNotification {
        */
       public Builder mergeNewSleepScore(com.hello.suripu.api.notifications.SleepScore.NewSleepScore value) {
         if (newSleepScoreBuilder_ == null) {
-          if (((bitField0_ & 0x00000020) == 0x00000020) &&
+          if (((bitField0_ & 0x00000040) == 0x00000040) &&
               newSleepScore_ != com.hello.suripu.api.notifications.SleepScore.NewSleepScore.getDefaultInstance()) {
             newSleepScore_ =
               com.hello.suripu.api.notifications.SleepScore.NewSleepScore.newBuilder(newSleepScore_).mergeFrom(value).buildPartial();
@@ -2325,7 +2403,7 @@ public final class PushNotification {
         } else {
           newSleepScoreBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         return this;
       }
       /**
@@ -2338,14 +2416,14 @@ public final class PushNotification {
         } else {
           newSleepScoreBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
       /**
        * <code>optional .NewSleepScore new_sleep_score = 104;</code>
        */
       public com.hello.suripu.api.notifications.SleepScore.NewSleepScore.Builder getNewSleepScoreBuilder() {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         onChanged();
         return getNewSleepScoreFieldBuilder().getBuilder();
       }
@@ -2383,7 +2461,7 @@ public final class PushNotification {
        * <code>optional .SenseOffline sense_offline = 105;</code>
        */
       public boolean hasSenseOffline() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
        * <code>optional .SenseOffline sense_offline = 105;</code>
@@ -2408,7 +2486,7 @@ public final class PushNotification {
         } else {
           senseOfflineBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000080;
         return this;
       }
       /**
@@ -2422,7 +2500,7 @@ public final class PushNotification {
         } else {
           senseOfflineBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000080;
         return this;
       }
       /**
@@ -2430,7 +2508,7 @@ public final class PushNotification {
        */
       public Builder mergeSenseOffline(com.hello.suripu.api.notifications.DeviceStatus.SenseOffline value) {
         if (senseOfflineBuilder_ == null) {
-          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+          if (((bitField0_ & 0x00000080) == 0x00000080) &&
               senseOffline_ != com.hello.suripu.api.notifications.DeviceStatus.SenseOffline.getDefaultInstance()) {
             senseOffline_ =
               com.hello.suripu.api.notifications.DeviceStatus.SenseOffline.newBuilder(senseOffline_).mergeFrom(value).buildPartial();
@@ -2441,7 +2519,7 @@ public final class PushNotification {
         } else {
           senseOfflineBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000080;
         return this;
       }
       /**
@@ -2454,14 +2532,14 @@ public final class PushNotification {
         } else {
           senseOfflineBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
       /**
        * <code>optional .SenseOffline sense_offline = 105;</code>
        */
       public com.hello.suripu.api.notifications.DeviceStatus.SenseOffline.Builder getSenseOfflineBuilder() {
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000080;
         onChanged();
         return getSenseOfflineFieldBuilder().getBuilder();
       }
@@ -2499,7 +2577,7 @@ public final class PushNotification {
        * <code>optional .PillOffline pill_offline = 106;</code>
        */
       public boolean hasPillOffline() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000100) == 0x00000100);
       }
       /**
        * <code>optional .PillOffline pill_offline = 106;</code>
@@ -2524,7 +2602,7 @@ public final class PushNotification {
         } else {
           pillOfflineBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000100;
         return this;
       }
       /**
@@ -2538,7 +2616,7 @@ public final class PushNotification {
         } else {
           pillOfflineBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000100;
         return this;
       }
       /**
@@ -2546,7 +2624,7 @@ public final class PushNotification {
        */
       public Builder mergePillOffline(com.hello.suripu.api.notifications.DeviceStatus.PillOffline value) {
         if (pillOfflineBuilder_ == null) {
-          if (((bitField0_ & 0x00000080) == 0x00000080) &&
+          if (((bitField0_ & 0x00000100) == 0x00000100) &&
               pillOffline_ != com.hello.suripu.api.notifications.DeviceStatus.PillOffline.getDefaultInstance()) {
             pillOffline_ =
               com.hello.suripu.api.notifications.DeviceStatus.PillOffline.newBuilder(pillOffline_).mergeFrom(value).buildPartial();
@@ -2557,7 +2635,7 @@ public final class PushNotification {
         } else {
           pillOfflineBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000100;
         return this;
       }
       /**
@@ -2570,14 +2648,14 @@ public final class PushNotification {
         } else {
           pillOfflineBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
       /**
        * <code>optional .PillOffline pill_offline = 106;</code>
        */
       public com.hello.suripu.api.notifications.DeviceStatus.PillOffline.Builder getPillOfflineBuilder() {
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000100;
         onChanged();
         return getPillOfflineFieldBuilder().getBuilder();
       }
@@ -2615,7 +2693,7 @@ public final class PushNotification {
        * <code>optional .GeneralNotification general_notification = 107;</code>
        */
       public boolean hasGeneralNotification() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000200) == 0x00000200);
       }
       /**
        * <code>optional .GeneralNotification general_notification = 107;</code>
@@ -2640,7 +2718,7 @@ public final class PushNotification {
         } else {
           generalNotificationBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000200;
         return this;
       }
       /**
@@ -2654,7 +2732,7 @@ public final class PushNotification {
         } else {
           generalNotificationBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000200;
         return this;
       }
       /**
@@ -2662,7 +2740,7 @@ public final class PushNotification {
        */
       public Builder mergeGeneralNotification(com.hello.suripu.api.notifications.PushNotification.GeneralNotification value) {
         if (generalNotificationBuilder_ == null) {
-          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+          if (((bitField0_ & 0x00000200) == 0x00000200) &&
               generalNotification_ != com.hello.suripu.api.notifications.PushNotification.GeneralNotification.getDefaultInstance()) {
             generalNotification_ =
               com.hello.suripu.api.notifications.PushNotification.GeneralNotification.newBuilder(generalNotification_).mergeFrom(value).buildPartial();
@@ -2673,7 +2751,7 @@ public final class PushNotification {
         } else {
           generalNotificationBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000200;
         return this;
       }
       /**
@@ -2686,14 +2764,14 @@ public final class PushNotification {
         } else {
           generalNotificationBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
       /**
        * <code>optional .GeneralNotification general_notification = 107;</code>
        */
       public com.hello.suripu.api.notifications.PushNotification.GeneralNotification.Builder getGeneralNotificationBuilder() {
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000200;
         onChanged();
         return getGeneralNotificationFieldBuilder().getBuilder();
       }
@@ -2758,17 +2836,18 @@ public final class PushNotification {
       "\032\021sleep_score.proto\032\025room_conditions.pro" +
       "to\032\023device_status.proto\"@\n\023GeneralNotifi" +
       "cation\022\r\n\005title\030\001 \001(\t\022\014\n\004body\030\002 \001(\t\022\014\n\004v" +
-      "iew\030\003 \001(\t\"\343\002\n\024UserPushNotification\022\022\n\nac" +
-      "count_id\030\001 \001(\004\022\020\n\010sense_id\030\002 \001(\t\022)\n\020pill" +
-      "_battery_low\030d \001(\0132\017.PillBatteryLow\022 \n\013n" +
-      "ew_insight\030f \001(\0132\013.NewInsight\0221\n\024room_co" +
-      "ndition_alert\030g \001(\0132\023.RoomConditionAlert" +
-      "\022\'\n\017new_sleep_score\030h \001(\0132\016.NewSleepScor",
-      "e\022$\n\rsense_offline\030i \001(\0132\r.SenseOffline\022" +
-      "\"\n\014pill_offline\030j \001(\0132\014.PillOffline\0222\n\024g" +
-      "eneral_notification\030k \001(\0132\024.GeneralNotif" +
-      "icationB6\n\"com.hello.suripu.api.notifica" +
-      "tionsB\020PushNotification"
+      "iew\030\003 \001(\t\"\366\002\n\024UserPushNotification\022\022\n\nac" +
+      "count_id\030\001 \001(\004\022\020\n\010sense_id\030\002 \001(\t\022\021\n\ttime" +
+      "stamp\030\003 \001(\004\022)\n\020pill_battery_low\030d \001(\0132\017." +
+      "PillBatteryLow\022 \n\013new_insight\030f \001(\0132\013.Ne" +
+      "wInsight\0221\n\024room_condition_alert\030g \001(\0132\023" +
+      ".RoomConditionAlert\022\'\n\017new_sleep_score\030h",
+      " \001(\0132\016.NewSleepScore\022$\n\rsense_offline\030i " +
+      "\001(\0132\r.SenseOffline\022\"\n\014pill_offline\030j \001(\013" +
+      "2\014.PillOffline\0222\n\024general_notification\030k" +
+      " \001(\0132\024.GeneralNotificationB6\n\"com.hello." +
+      "suripu.api.notificationsB\020PushNotificati" +
+      "on"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2797,7 +2876,7 @@ public final class PushNotification {
     internal_static_UserPushNotification_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_UserPushNotification_descriptor,
-        new java.lang.String[] { "AccountId", "SenseId", "PillBatteryLow", "NewInsight", "RoomConditionAlert", "NewSleepScore", "SenseOffline", "PillOffline", "GeneralNotification", });
+        new java.lang.String[] { "AccountId", "SenseId", "Timestamp", "PillBatteryLow", "NewInsight", "RoomConditionAlert", "NewSleepScore", "SenseOffline", "PillOffline", "GeneralNotification", });
     com.hello.suripu.api.notifications.Insight.getDescriptor();
     com.hello.suripu.api.notifications.SleepScore.getDescriptor();
     com.hello.suripu.api.notifications.RoomConditions.getDescriptor();

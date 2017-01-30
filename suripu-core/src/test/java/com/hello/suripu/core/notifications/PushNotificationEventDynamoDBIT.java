@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by jakepiccolo on 5/3/16.
@@ -273,8 +274,8 @@ public class PushNotificationEventDynamoDBIT {
             dao.insert(event);
         }
 
-        assertThat(dao.query(account1, startTime.minusHours(12), startTime.minusHours(1)).data.isEmpty(), is(true));
-        assertThat(dao.query(account1, startTime, startTime.plusMinutes(30)).data, is(account1Events.subList(0, 1)));
+        assertTrue("should be empty", dao.query(account1, startTime.minusHours(12), startTime.minusHours(1)).data.isEmpty());
+        assertThat(dao.query(account1, startTime, startTime.plusHours(1)).data, is(account1Events.subList(0, 1)));
         assertThat(dao.query(account1, startTime, startTime.plusDays(1)).data, is(account1Events.subList(0, 2)));
         assertThat(dao.query(account1, startTime, startTime.plusYears(1)).data, is(account1Events));
         assertThat(dao.query(account1, startTime.plusYears(1), startTime.plusYears(2)).data.isEmpty(), is(true));
@@ -316,13 +317,13 @@ public class PushNotificationEventDynamoDBIT {
             dao.insert(event);
         }
 
-        assertThat(dao.query(account1, startTime, startTime.plusYears(2), insight).data,
+        assertThat("first", dao.query(account1, startTime, startTime.plusYears(2), PushNotificationEventType.SLEEP_SCORE).data,
                 is(account1Events.subList(0, 1)));
-        assertThat(dao.query(account1, startTime, startTime.plusYears(2), senseStatus).data,
+        assertThat("second", dao.query(account1, startTime, startTime.plusYears(2), PushNotificationEventType.SENSE_STATUS).data,
                 is(account1Events.subList(1, 2)));
-        assertThat(dao.query(account1, startTime, startTime.plusYears(2), pillBattery).data,
+        assertThat("third", dao.query(account1, startTime, startTime.plusYears(2), PushNotificationEventType.PILL_BATTERY).data,
                 is(account1Events.subList(2, 3)));
-        assertThat(dao.query(account1, startTime, startTime.plusMinutes(30), senseStatus).data.isEmpty(),
+        assertThat("fourth", dao.query(account1, startTime, startTime.plusMinutes(30), PushNotificationEventType.SENSE_STATUS).data.isEmpty(),
                 is(true));
     }
 }

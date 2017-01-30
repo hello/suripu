@@ -67,6 +67,8 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return;
         }
 
+
+
         if(PushNotificationEventType.SLEEP_SCORE.equals(event.type)) {
             final Optional<DateTime> lastViewed = appStatsDAO.getQuestionsLastViewed(event.accountId);
             if(!lastViewed.isPresent()) {
@@ -132,14 +134,16 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         final Map<String, Object> appMessageMap = new HashMap<>();
 
         content.put("body", message.body);
-        content.put("target", message.target);
-        content.put("details", message.details);
-
 
         appMessageMap.put("alert", content);
         appMessageMap.put("sound", "default");
 
         appleMessageMap.put("aps", appMessageMap);
+
+        // Hello custom keys
+        // https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW1
+        appleMessageMap.put("hlo-type", message.target);
+        appleMessageMap.put("hlo-detail", message.details);
 
         try {
             final String jsonString = mapper.writeValueAsString(appleMessageMap);

@@ -5,7 +5,8 @@ public enum PushNotificationEventType {
     SLEEP_SCORE("sleep_score"),
     SENSE_STATUS("sense_status"),
     PILL_BATTERY("pill_battery"),
-    PILL_STATUS("pill_status");
+    PILL_STATUS("pill_status"),
+    INSIGHT("insight");
 
     private String value;
 
