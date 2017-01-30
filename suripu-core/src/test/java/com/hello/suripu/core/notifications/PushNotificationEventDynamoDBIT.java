@@ -114,7 +114,7 @@ public class PushNotificationEventDynamoDBIT {
                 .withAccountId(1L)
                 .withSenseId("senseId")
                 .withTimestamp(dateTime)
-                .withType("insight")
+                .withType(PushNotificationEventType.SLEEP_SCORE)
                 .withHelloPushMessage(new HelloPushMessage("body", "target", "details"))
                 .build();
         final boolean result = dao.insert(event);
@@ -133,7 +133,7 @@ public class PushNotificationEventDynamoDBIT {
                 .withAccountId(1L)
                 .withSenseId("senseId")
                 .withTimestamp(dateTime)
-                .withType("insight")
+                .withType(PushNotificationEventType.SLEEP_SCORE)
                 .withHelloPushMessage(new HelloPushMessage("body", "target", "details"))
                 .build();
 
@@ -162,7 +162,7 @@ public class PushNotificationEventDynamoDBIT {
                 .withAccountId(1L)
                 .withSenseId("senseId")
                 .withTimestamp(dateTime)
-                .withType("insight")
+                .withType(PushNotificationEventType.SLEEP_SCORE)
                 .withHelloPushMessage(new HelloPushMessage("body", "target", "details"))
                 .build();
 
@@ -186,7 +186,7 @@ public class PushNotificationEventDynamoDBIT {
                 .withAccountId(1L)
                 .withSenseId("senseId")
                 .withTimestamp(dateTime)
-                .withType("insight")
+                .withType(PushNotificationEventType.SLEEP_SCORE)
                 .withHelloPushMessage(new HelloPushMessage("body", "target", "details"))
                 .build();
 
@@ -210,7 +210,7 @@ public class PushNotificationEventDynamoDBIT {
                 .withAccountId(1L)
                 .withSenseId("senseId")
                 .withTimestamp(dateTime)
-                .withType("insight")
+                .withType(PushNotificationEventType.SLEEP_SCORE)
                 .withHelloPushMessage(new HelloPushMessage("body", "target", "details"))
                 .build();
 
@@ -237,33 +237,33 @@ public class PushNotificationEventDynamoDBIT {
         final String senseStatus = "senseStatus";
         final String pillStatus = "pillStatus";
 
-        final List<PushNotificationEvent> account1Events = new ArrayList<>();
+        final List<PushNotificationEvent> account1Events = new ArrayList();
         account1Events.add(PushNotificationEvent.newBuilder()
                 .withAccountId(account1)
                 .withTimestamp(startTime)
                 .withHelloPushMessage(new HelloPushMessage("body1", "target1", "details1"))
-                .withType(insight)
+                .withType(PushNotificationEventType.SLEEP_SCORE)
                 .build());
         account1Events.add(PushNotificationEvent.newBuilder()
                 .withAccountId(account1)
                 .withTimestamp(startTime.plusHours(1))
                 .withHelloPushMessage(new HelloPushMessage("body2", "target2", "details2"))
-                .withType(senseStatus)
+                .withType(PushNotificationEventType.SENSE_STATUS)
                 .withSenseId(sense1)
                 .build());
         account1Events.add(PushNotificationEvent.newBuilder()
                 .withAccountId(account1)
                 .withTimestamp(startTime.plusMonths(5)) // 2017 now
                 .withHelloPushMessage(new HelloPushMessage("body3", "target3", "details3"))
-                .withType(pillBattery)
+                .withType(PushNotificationEventType.PILL_BATTERY)
                 .build());
 
-        final List<PushNotificationEvent> account2Events = new ArrayList<>();
+        final List<PushNotificationEvent> account2Events = new ArrayList();
         account2Events.add(PushNotificationEvent.newBuilder()
                 .withAccountId(account2)
                 .withTimestamp(startTime)
                 .withHelloPushMessage(new HelloPushMessage("body4", "target4", "details4"))
-                .withType(pillStatus)
+                .withType(PushNotificationEventType.PILL_STATUS)
                 .build());
 
         final List<PushNotificationEvent> allEvents = ImmutableList.<PushNotificationEvent>builder()
@@ -292,25 +292,25 @@ public class PushNotificationEventDynamoDBIT {
         final String senseStatus = "senseStatus";
         final String pillStatus = "pillStatus";
 
-        final List<PushNotificationEvent> account1Events = new ArrayList<>();
+        final List<PushNotificationEvent> account1Events = new ArrayList();
         account1Events.add(PushNotificationEvent.newBuilder()
                 .withAccountId(account1)
                 .withTimestamp(startTime)
                 .withHelloPushMessage(new HelloPushMessage("body1", "target1", "details1"))
-                .withType(insight)
+                .withType(PushNotificationEventType.SLEEP_SCORE)
                 .build());
         account1Events.add(PushNotificationEvent.newBuilder()
                 .withAccountId(account1)
                 .withTimestamp(startTime.plusHours(1))
                 .withHelloPushMessage(new HelloPushMessage("body2", "target2", "details2"))
-                .withType(senseStatus)
+                .withType(PushNotificationEventType.SENSE_STATUS)
                 .withSenseId(sense1)
                 .build());
         account1Events.add(PushNotificationEvent.newBuilder()
                 .withAccountId(account1)
                 .withTimestamp(startTime.plusMonths(5)) // 2017 now
                 .withHelloPushMessage(new HelloPushMessage("body3", "target3", "details3"))
-                .withType(pillBattery)
+                .withType(PushNotificationEventType.PILL_BATTERY)
                 .build());
         for (final PushNotificationEvent event: account1Events) {
             dao.insert(event);
