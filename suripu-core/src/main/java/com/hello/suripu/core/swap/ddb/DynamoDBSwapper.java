@@ -1,5 +1,8 @@
 package com.hello.suripu.core.swap.ddb;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -17,8 +20,6 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -27,6 +28,7 @@ import com.hello.suripu.core.swap.IntentResult;
 import com.hello.suripu.core.swap.Result;
 import com.hello.suripu.core.swap.Status;
 import com.hello.suripu.core.swap.Swapper;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -173,7 +175,7 @@ public class DynamoDBSwapper implements Swapper {
         }
 
         final List<DeviceAccountPair> pairedAccountsNewSense = deviceDAO.getAccountIdsForDeviceId(newSenseId);
-        final boolean pairedToSameAccount = pairedAccountsNewSense.size() == 1 && pairedAccountsNewSense.get(0).accountId == accountId;
+        final boolean pairedToSameAccount = pairedAccountsNewSense.size() == 1 && pairedAccountsNewSense.get(0).accountId.equals(accountId);
 
         if(pairedAccountsNewSense.isEmpty() || pairedToSameAccount) {
             final Intent intent = Intent.create(

@@ -662,7 +662,6 @@ public class RingProcessor {
             final long currentTimeAligned = Alarm.Utils.alignToMinuteGranularity(nowUnalignedByMinute.withZone(userTimeZoneOptional.get())).getMillis();
             // expected alarm ringtime should be in the future
             if(useFutureAlarm &&  currentTimeAligned > userInfo.ringTime.get().expectedRingTimeUTC) {
-                LOGGER.info("action=use-future-alarm sense_id={} past_expected_ring_time={} current_time_aligned={}", deviceId, userInfo.ringTime.get().expectedRingTimeUTC, currentTimeAligned);
                 continue;
             }
 

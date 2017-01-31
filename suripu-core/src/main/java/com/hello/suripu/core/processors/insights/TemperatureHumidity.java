@@ -32,11 +32,11 @@ import java.util.List;
 public class TemperatureHumidity {
     private static final Logger LOGGER = LoggerFactory.getLogger(TemperatureHumidity.class);
 
-    public static final int IDEAL_TEMP_MIN = 59;
-    public static final int IDEAL_TEMP_MAX = 73;
+    public static final int IDEAL_TEMP_MIN = 60;
+    public static final int IDEAL_TEMP_MAX = 67;
 
     public static final int IDEAL_TEMP_MIN_CELSIUS = 15;
-    public static final int IDEAL_TEMP_MAX_CELSIUS = 23;
+    public static final int IDEAL_TEMP_MAX_CELSIUS = 20;
 
     public static final int ALERT_TEMP_MIN = 55;
     public static final int ALERT_TEMP_MAX = 79;
@@ -117,51 +117,29 @@ public class TemperatureHumidity {
             stats.addValue(DataUtils.calibrateTemperature(deviceData.ambientTemperature));
         }
 
-        final double tmpMinValue = stats.getMin();
-        final int minTempC = (int) tmpMinValue;
-        final int minTempF = DataUtils.celsiusToFahrenheit(tmpMinValue);
+        final int medTempC = (int) stats.getPercentile(50);
+        final int medTempF = DataUtils.celsiusToFahrenheit(medTempC);
 
-        final double tmpMaxValue = stats.getMax();
-        final int maxTempC = (int) tmpMaxValue;
-        final int maxTempF = DataUtils.celsiusToFahrenheit(tmpMaxValue);
-        LOGGER.debug("Temp for account {}: min {}, max {}", accountId, minTempF, maxTempF);
+        LOGGER.debug("Temp for account {}: med {} C; {} F", accountId, medTempC, medTempF);
 
         // Units for passing into TemperatureMsgEN
-        int minTemp = minTempC;
-        int maxTemp = maxTempC;
+        int medTemp = medTempC;
         int idealMin = IDEAL_TEMP_MIN_CELSIUS;
         int idealMax = IDEAL_TEMP_MAX_CELSIUS;
         if (tempUnit == TemperatureUnit.FAHRENHEIT) {
-            minTemp = minTempF;
-            maxTemp = maxTempF;
+            medTemp = medTempF;
             idealMin = IDEAL_TEMP_MIN;
             idealMax = IDEAL_TEMP_MAX;
         }
 
-        /* Possible cases
-                    min                       max
-                    |------ ideal range ------|
-            |----|                               |-----|
-            too cold                            too hot
-
-            |----------------|      |------------------|
-                too cold                   too hot
-
-            |---------- too much fluctuation ---------|
-         */
-
-        Text text;
-
         //careful: comparisons are done in user's own units, TemperatureMsgEN also gets passed user's own units.
-        if (minTemp >= idealMin && maxTemp <= idealMax) {
-            text = TemperatureMsgEN.getTempMsgPerfect(minTemp, maxTemp, tempUnit.toString());
-        } else if (minTemp < idealMin && maxTemp <= idealMax) {
-            text = TemperatureMsgEN.getTempMsgTooCold(minTemp, maxTemp, tempUnit.toString(), idealMin);
-        } else if (maxTemp > idealMax && minTemp >= idealMin) {
-            text = TemperatureMsgEN.getTempMsgTooHot(minTemp, maxTemp, tempUnit.toString(), idealMax);
+        Text text;
+        if (medTemp >= idealMin && medTemp <= idealMax) {
+            text = TemperatureMsgEN.getTempMsgPerfect(medTemp, tempUnit.toString());
+        } else if (medTemp < idealMin) {
+            text = TemperatureMsgEN.getTempMsgTooCold(medTemp, tempUnit.toString(), idealMin);
         } else {
-            // both min and max are outside of ideal range
-            text = TemperatureMsgEN.getTempMsgFluctuate(minTemp, maxTemp, tempUnit.toString(), idealMin, idealMax);
+            text = TemperatureMsgEN.getTempMsgTooHot(medTemp, tempUnit.toString(), idealMax);
         }
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,

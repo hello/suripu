@@ -295,7 +295,7 @@ public class SleepScoreUtilsTest {
     public void testCalculateTemperatureScore() {
         // The average of the samples is used. So one sample == the value of that sample.
 
-        final List<Sample> good = Lists.newArrayList(new Sample(0, 23f, 0));
+        final List<Sample> good = Lists.newArrayList(new Sample(0, 18f, 0));
         assertThat(SleepScoreUtils.calculateTemperatureScore(good, 0, 0), is(100));
 
         final List<Sample> warningHigh = Lists.newArrayList(new Sample(0, 24f, 0));
