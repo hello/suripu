@@ -62,6 +62,7 @@ import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.InBedSearcher;
+import com.hello.suripu.core.util.MotionMaskPartnerFilter;
 import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepScoreUtils;
@@ -513,6 +514,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
             filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
         }
+        if (filteredOriginalMotions.isEmpty()){
+            LOGGER.warn("action=outlier-filter-removed-all-motion account_id={}", accountId);
+            return Optional.absent();
+        }
 
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
 
@@ -529,6 +534,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                     LOGGER.error(e.getMessage());
                     trackerMotions.addAll(filteredOriginalMotions);
                 }
+            }
+            else if (this.hasMotionMaskPartnerFilter(accountId) && originalTrackerMotions.get(0).motionMask.isPresent()){
+                trackerMotions.addAll(MotionMaskPartnerFilter.partnerFiltering(filteredOriginalMotions, filteredOriginalPartnerMotions));
+                LOGGER.info("action=using-motion-mask-partner-filter account_id={} removed-motions={}", accountId, filteredOriginalMotions.size() - trackerMotions.size());
             }
             else if (this.hasHmmPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using hmm partner filter");
@@ -548,6 +557,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             else {
                 trackerMotions.addAll(filteredOriginalMotions);
             }
+
         }
         else {
             trackerMotions.addAll(filteredOriginalMotions);

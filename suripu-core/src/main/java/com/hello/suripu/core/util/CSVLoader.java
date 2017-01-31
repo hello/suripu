@@ -23,17 +23,34 @@ public class CSVLoader {
         final String[] lines = csvString.split("\\n");
         for(int i = 1; i < lines.length; i++){
             final String[] columns = lines[i].split(",");
-            final TrackerMotion trackerMotion = new TrackerMotion(
-                    Long.parseLong(columns[0].trim()), //id
-                    Long.parseLong(columns[1].trim()), //account id
-                    0L, // tracker_id
-                    Long.parseLong(columns[3].trim()), //timestamp
-                    Integer.parseInt(columns[4].trim()), //value
-                    Integer.parseInt(columns[5].trim()), // offset
-                    Long.parseLong(columns[6].trim()), //motion_range
-                    Long.parseLong(columns[7].trim()), //kickoff count
-                    Long.parseLong(columns[8].trim()) //on duration
-            );
+            final TrackerMotion trackerMotion;
+            if (columns.length >=11) {
+                final TrackerMotion.Builder trackerMotionBuilder = new TrackerMotion.Builder();
+                trackerMotion = trackerMotionBuilder.withAccountId(Long.parseLong(columns[1].trim()))
+                        .withExternalTrackerId("0")
+                        .withTimestampMillis(Long.parseLong(columns[3].trim())) //timestamp
+                        .withValue(Integer.parseInt(columns[4].trim())) //value
+                        .withOffsetMillis(Integer.parseInt(columns[5].trim())) // offset
+                        .withMotionRange(Long.parseLong(columns[6].trim())) //motion_range
+                        .withKickOffCounts(Long.parseLong(columns[7].trim())) //kickoff count
+                        .withOnDurationInSeconds(Long.parseLong(columns[8].trim())) //on duration
+                        .withMotionMask(Long.parseLong(columns[9].trim()))
+                        .withCosTheta(Long.parseLong(columns[10].trim()))
+                        .build();
+            }else{
+                trackerMotion = new TrackerMotion(
+                        Long.parseLong(columns[0].trim()), //id
+                        Long.parseLong(columns[1].trim()), //account id
+                        0L, // tracker_id
+                        Long.parseLong(columns[3].trim()), //timestamp
+                        Integer.parseInt(columns[4].trim()), //value
+                        Integer.parseInt(columns[5].trim()), // offset
+                        Long.parseLong(columns[6].trim()), //motion_range
+                        Long.parseLong(columns[7].trim()), //kickoff count
+                        Long.parseLong(columns[8].trim()) //on duration
+                );
+
+            }
             trackerMotions.add(trackerMotion);
             //}
         }

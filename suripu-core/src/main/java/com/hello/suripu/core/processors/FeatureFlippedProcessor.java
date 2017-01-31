@@ -191,4 +191,7 @@ public class FeatureFlippedProcessor {
     protected Boolean useSmartAlarmRefactored(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, accountId, Collections.EMPTY_LIST);
     }
+    protected Boolean hasMotionMaskPartnerFilter(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.MOTION_MASK_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
+    }
 }
