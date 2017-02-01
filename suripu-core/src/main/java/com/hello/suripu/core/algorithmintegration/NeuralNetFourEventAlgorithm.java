@@ -823,7 +823,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
     @Override
     public TimelineAlgorithm cloneWithNewUUID(Optional<UUID> uuid) {
-        return new NeuralNetAlgorithm(endpoint);
+        return new NeuralNetFourEventAlgorithm(endpoint);
     }
 
 
