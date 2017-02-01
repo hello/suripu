@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.hello.suripu.core.db.TimeSeriesDAODynamoDB;
@@ -17,6 +18,8 @@ import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +47,8 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     public enum Attribute implements com.hello.suripu.core.db.dynamo.Attribute {
         ACCOUNT_ID("account", "N"), // Hash key
         TYPE("type", "S"),
-        TIMESTAMP("timestamp", "N"), // Range key
+        TIMESTAMP_TYPE("ts|type", "S"), // Range key // <utc_timestamp>|<external_device_id>
+        TIMESTAMP("timestamp", "N"),
         BODY("body", "S"),
         TARGET("target", "S"),
         DETAILS("details", "S"),
@@ -81,7 +85,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
         String getString(final Map<String, AttributeValue> item) {
             final AttributeValue av = get(item);
             if (av == null) {
-                return null;
+                return "";
             }
             return av.getS();
         }
@@ -103,6 +107,8 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
         }
     }
 
+    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:00";
+    private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
 
     public PushNotificationEventDynamoDB(final AmazonDynamoDB client, final String tablePrefix) {
         super(client, tablePrefix);
@@ -131,7 +137,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
 
     @Override
     protected String rangeKeyName() {
-        return Attribute.TIMESTAMP.shortName();
+        return Attribute.TIMESTAMP_TYPE.shortName();
     }
 
     @Override
@@ -141,7 +147,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
 
     @Override
     protected String rangeKeyType() {
-        return Attribute.TIMESTAMP.type();
+        return Attribute.TIMESTAMP_TYPE.type();
     }
 
     @Override
@@ -163,11 +169,13 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     protected Map<String, AttributeValue> toAttributeMap(final PushNotificationEvent model) {
         final ImmutableMap.Builder<String, AttributeValue> builder = ImmutableMap.builder();
         builder.put(Attribute.ACCOUNT_ID.shortName(), toAttributeValue(model.accountId))
+                .put(Attribute.TIMESTAMP_TYPE.shortName(), getRangeKey(model.timestamp, Optional.of(model.type)))
                 .put(Attribute.TYPE.shortName(), toAttributeValue(model.type.shortName()))
                 .put(Attribute.TIMESTAMP.shortName(), toAttributeValue(model.timestamp))
                 .put(Attribute.BODY.shortName(), toAttributeValue(model.helloPushMessage.body))
                 .put(Attribute.TARGET.shortName(), toAttributeValue(model.helloPushMessage.target))
                 .put(Attribute.DETAILS.shortName(), toAttributeValue(model.helloPushMessage.details));
+
         if (model.senseId.isPresent()) {
             // Optional fields are optional lol
             builder.put(Attribute.SENSE_ID.shortName(), toAttributeValue(model.senseId.get()));
@@ -196,15 +204,16 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     }
     //endregion TimeSeriesDAODynamoDB
 
-
     //region write
     public Boolean insert(final PushNotificationEvent event) {
+
+
         int numTries = 0;
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(getTableName(event.timestamp))
                 .withItem(toAttributeMap(event))
                 // Ensure that the item does not exist. If it exists, this throws a ConditionalCheckFailedException.
-                .withExpected(ImmutableMap.of(Attribute.ACCOUNT_ID.shortName(), new ExpectedAttributeValue(false)));
+                .withExpected(ImmutableMap.of(Attribute.TIMESTAMP_TYPE.shortName(), new ExpectedAttributeValue(false)));
         do {
             try {
                 dynamoDBClient.putItem(putItemRequest);
@@ -228,15 +237,24 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
 
 
     //region query
-    private Expression getKeyConditionExpression(final Long accountId, final DateTime start, final DateTime end) {
+    private Expression getKeyConditionExpression(final Long accountId, final DateTime start, final DateTime end, final Optional<PushNotificationEventType> type) {
         return Expressions.and(
                 Expressions.equals(Attribute.ACCOUNT_ID, toAttributeValue(accountId)),
-                Expressions.between(Attribute.TIMESTAMP, toAttributeValue(start), toAttributeValue(end))
+                Expressions.between(Attribute.TIMESTAMP_TYPE, getRangeKey(start, type), getRangeKey(end, type))
         );
     }
 
+    public Response<List<PushNotificationEvent>> query(final Long accountId, final DateTime start, final DateTime end, final PushNotificationEventType type) {
+        final Expression keyConditionExpression = getKeyConditionExpression(accountId, start, end, Optional.of(type));
+        final Expression filterExpression = Expressions.equals(Attribute.TYPE, new AttributeValue().withS(type.shortName()));
+        final Response<List<Map<String, AttributeValue>>> response = queryTables(getTableNames(start, end), keyConditionExpression, filterExpression, ImmutableSet.copyOf(Attribute.values()));
+
+        final List<PushNotificationEvent> events = toPushNotificationEventList(response.data);
+        return Response.into(events, response);
+    }
+
     public Response<List<PushNotificationEvent>> query(final Long accountId, final DateTime start, final DateTime end) {
-        final Expression keyConditionExpression = getKeyConditionExpression(accountId, start, end);
+        final Expression keyConditionExpression = getKeyConditionExpression(accountId, start, end, Optional.absent());
         final Response<List<Map<String, AttributeValue>>> response = queryTables(getTableNames(start, end), keyConditionExpression, ImmutableSet.copyOf(Attribute.values()));
 
         final List<PushNotificationEvent> events = toPushNotificationEventList(response.data);
@@ -250,23 +268,6 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     protected Response<List<Map<String, AttributeValue>>> query(final QueryRequest originalQueryRequest) {
         final QueryRequest consistentQueryRequest = originalQueryRequest.clone().withConsistentRead(true);
         return super.query(consistentQueryRequest);
-    }
-
-    public Response<List<PushNotificationEvent>> query(final Long accountId,
-                                                       final DateTime start,
-                                                       final DateTime end,
-                                                       final String type)
-    {
-        final Expression filterExpression = Expressions.equals(Attribute.TYPE, toAttributeValue(type));
-        final Expression keyConditionExpression = getKeyConditionExpression(accountId, start, end);
-        final Response<List<Map<String, AttributeValue>>> response = queryTables(
-                getTableNames(start, end),
-                keyConditionExpression,
-                filterExpression,
-                ImmutableSet.copyOf(Attribute.values()));
-
-        final List<PushNotificationEvent> events = toPushNotificationEventList(response.data);
-        return Response.into(events, response);
     }
     //endregion query
 
@@ -282,6 +283,17 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
 
     private static AttributeValue toAttributeValue(final DateTime dt) {
         return toAttributeValue(dt.getMillis());
+    }
+
+    private static AttributeValue getRangeKey(final DateTime dateTime, final Optional<PushNotificationEventType> type) {
+        if (type.isPresent()) {
+            return getRangeKey(dateTime, type.get().shortName());
+        }
+        return getRangeKey(dateTime, "");
+    }
+
+    private static AttributeValue getRangeKey(final DateTime dateTime, final String type) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + type);
     }
 
     private static PushNotificationEvent toPushNotificationEvent(final Map<String, AttributeValue> item) {
