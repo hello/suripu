@@ -33,7 +33,7 @@ public class Lights {
     private static final int NIGHT_START_HOUR = 18; // 6pm
     private static final int NIGHT_END_HOUR = 1; // 1am
 
-    private static final int LIGHT_LEVEL_ON_RAW = 524; //corresponds to 1.0 lux
+    private static final int LIGHT_ON_THRESHOLD_LUX = 1;
 
     //TODO: move the below public variables somewhere else
     public static final float LIGHT_LEVEL_WARNING = 2.0f;  // in lux
@@ -61,16 +61,18 @@ public class Lights {
         final DateTime queryEndTimeLocal = queryEndTime.plusMillis(timeZoneOffset);
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
-        // get light data > 0 between the hour of 6pm to 1am
         final List<DeviceData> rows;
         final DeviceId deviceId = DeviceId.create(deviceAccountPair.externalDeviceId);
-        final Response<ImmutableList<DeviceData>> response = deviceDataDAO.getLightByBetweenHourDateByTS(
-                accountId, deviceId, LIGHT_LEVEL_ON_RAW, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
+        final Response<ImmutableList<DeviceData>> response = deviceDataDAO.getBetweenHourDateByTS(
+                accountId, deviceId, queryStartTime, queryEndTime,
+                queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
+
         if (response.status == Response.Status.SUCCESS) {
             rows = response.data;
         } else {
             rows = Lists.newArrayList();
         }
+
 
         final Optional<InsightCard> card = processLightData(accountId, rows, colorOptional, calibrationOptional, lightData);
         return card;
@@ -90,12 +92,15 @@ public class Lights {
         // compute mean value
         final Device.Color color = colorOptional.or(Device.DEFAULT_COLOR);
         int sum = 0;
+        int n = 0;
         for (final DeviceData deviceData : data) {
             final CalibratedDeviceData calibratedDeviceData = new CalibratedDeviceData(deviceData, color, calibrationOptional);
+            if (calibratedDeviceData.lux() < LIGHT_ON_THRESHOLD_LUX) {
+                continue;
+            }
             sum += calibratedDeviceData.lux();
+            n += 1;
         }
-
-        int n = data.size();
 
         final int meanLight = (int) ((float) sum / (float) n);
         final int percentile = lightData.getLightPercentile( meanLight);
