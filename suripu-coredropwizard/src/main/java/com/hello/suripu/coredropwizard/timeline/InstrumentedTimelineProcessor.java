@@ -535,7 +535,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                     trackerMotions.addAll(filteredOriginalMotions);
                 }
             }
-            else if (this.hasMotionMaskPartnerFilter(accountId) && originalTrackerMotions.get(0).motionMask.isPresent()){
+            else if (this.hasMotionMaskPartnerFilter(accountId) && filteredOriginalMotions.get(0).motionMask.isPresent() &&  filteredOriginalPartnerMotions.get(0).motionMask.isPresent()){
                 trackerMotions.addAll(MotionMaskPartnerFilter.partnerFiltering(filteredOriginalMotions, filteredOriginalPartnerMotions));
                 LOGGER.info("action=using-motion-mask-partner-filter account_id={} removed-motions={}", accountId, filteredOriginalMotions.size() - trackerMotions.size());
             }
