@@ -53,12 +53,11 @@ public class PushNotificationEvent {
                 .add("type", type)
                 .add("timestamp", timestamp)
                 .add("helloPushMessage", helloPushMessage)
-                .add("senseId", senseId)
+                .add("senseId", senseId.or("missing"))
                 .toString();
     }
 
     //endregion Object overrides
-
 
     //region Builder
 
@@ -106,7 +105,12 @@ public class PushNotificationEvent {
         }
 
         public Builder withSenseId(final String senseId) {
-            this.senseId = Optional.fromNullable(senseId);
+            if(senseId != null && senseId.isEmpty()) {
+                this.senseId = Optional.absent();
+            } else {
+                this.senseId = Optional.fromNullable(senseId);
+            }
+
             return this;
         }
     }
