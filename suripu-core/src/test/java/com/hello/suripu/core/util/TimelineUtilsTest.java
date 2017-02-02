@@ -18,7 +18,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -114,7 +113,7 @@ public class TimelineUtilsTest {
     public void testGetSleepDisturbances() {
         List<TrackerMotion> trackerMotions =  CSVLoader.loadTrackerMotionFromCSV("fixtures/tracker_motion/nn_raw_tracker_motion.csv");
         trackerMotions = Lists.reverse(trackerMotions);
-        final HashMap<Long, Long> sleepDisturbances = timelineUtils.getSleepDisturbances(trackerMotions);
+        final Map<Long, Long> sleepDisturbances = timelineUtils.getSleepDisturbances(trackerMotions);
         final List<Integer> startMinutes = new ArrayList<>();
         final List<Integer> endMinutes = new ArrayList<>();
         final List<Integer> span = new ArrayList<>();
