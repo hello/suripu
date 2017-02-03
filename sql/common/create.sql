@@ -536,6 +536,6 @@ CREATE TABLE voice_commands (
     id SERIAL PRIMARY KEY,
     title VARCHAR(100),
     description VARCHAR(255),
-    command_name VARCHAR(100),
-    command_description VARCHAR(100)
+    command_title VARCHAR(100),
+    command VARCHAR(100)
 );
