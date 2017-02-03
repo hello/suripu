@@ -11,6 +11,7 @@ import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
@@ -31,6 +32,7 @@ import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataCompleteness;
@@ -53,7 +55,6 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
-import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.processors.PartnerMotion;
@@ -64,6 +65,7 @@ import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.InBedSearcher;
 import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
+import com.hello.suripu.core.util.RestrictEventWindow;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
@@ -314,6 +316,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(),accountId,startTimeLocalUTC,endTimeLocalUTC);
 
+        //check to see if a timeline has already been generated at a "reasonable time" today
+
         final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, startTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, newFeedback);
 
         if (!sensorDataOptional.isPresent()) {
@@ -474,7 +478,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-    protected Optional<OneDaysSensorData> getSensorData(final long accountId,final DateTime date, final DateTime starteTimeLocalUTC, final DateTime endTimeLocalUTC, final DateTime currentTimeUTC,final Optional<TimelineFeedback> newFeedback) {
+    protected Optional<OneDaysSensorData> getSensorData(final long accountId,final DateTime date, final DateTime starteTimeLocalUTC, DateTime endTimeLocalUTC, final DateTime currentTimeUTC, final Optional<TimelineFeedback> newFeedback) {
 
 
         ImmutableList<TrackerMotion> originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, starteTimeLocalUTC, endTimeLocalUTC);
@@ -485,9 +489,22 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         LOGGER.debug("Length of originalTrackerMotion is {} for {} on {}", originalTrackerMotions.size(), accountId, starteTimeLocalUTC);
-
+        final int tzOffsetMillis = originalTrackerMotions.get(0).offsetMillis;
         // get partner tracker motion, if available
         ImmutableList<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+
+        final Optional<Long> lockdownTimeOptional;
+        if(hasTimelineLockdown(accountId)) {
+            lockdownTimeOptional = getLockdownTime(accountId, date, originalTrackerMotions);
+        } else{
+            lockdownTimeOptional = Optional.absent();
+        }
+
+        if (lockdownTimeOptional.isPresent()){
+            originalTrackerMotions = RestrictEventWindow.removeSubsequentMotions(originalTrackerMotions, lockdownTimeOptional.get());
+            originalPartnerMotions = RestrictEventWindow.removeSubsequentMotions(originalPartnerMotions, lockdownTimeOptional.get());
+            endTimeLocalUTC = new DateTime(lockdownTimeOptional.get() + tzOffsetMillis, DateTimeZone.UTC);
+        }
 
         //filter pairing motions for a good first night's experience
         if (this.hasRemovePairingMotions(accountId)) {
@@ -517,8 +534,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
 
         if (!filteredOriginalPartnerMotions.isEmpty()) {
-
-            final int tzOffsetMillis = originalTrackerMotions.get(0).offsetMillis;
 
             if (this.hasPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using original partner filter");
@@ -562,7 +577,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final OneDaysTrackerMotion oneDaysPartnerMotion = new OneDaysTrackerMotion(ImmutableList.copyOf(filteredOriginalPartnerMotions), ImmutableList.copyOf(filteredOriginalPartnerMotions), originalPartnerMotions);
 
 
-        final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Optional<AllSensorSampleList> allSensorSampleList = senseDataDAO.get(accountId,date,starteTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, tzOffsetMillis);
         LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
 
@@ -1160,6 +1174,49 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final DateTime nightOfUTC = new DateTime(nightOf.getYear(),
                 nightOf.getMonthOfYear(), nightOf.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
         return feedbackDAO.getCorrectedForNight(accountId, nightOfUTC);
+    }
+
+
+
+
+    //checks if a timeline has been generated with a sleep duration that is consistent with a users recent sleep durations.
+    //if a reasonable timeline has already been generated, returns the time this timeline was generated.
+    private Optional<Long> getLockdownTime(final long accountId, final DateTime targetDate, final List<TrackerMotion> trackerMotions){
+        final int sleepDurationWindow = 60; //sleepduration needs to be no less than 45 mins of typical duration.
+        final int motionSearchWindow = 60;
+        final int newMotionCountThreshold = 2;
+        final int sleepDurationThreshold = 5 * DateTimeConstants.MINUTES_PER_HOUR;
+        int sleepDurationSum = 0;
+        int targetDateSleepDuration = 0;
+        long lockdownTime = 0L;
+
+        final ImmutableList<AggregateSleepStats> previousSleepStats= sleepStatsDAODynamoDB.getBatchStats(accountId, targetDate.minusDays(14).toString(),targetDate.toString());
+        if (previousSleepStats.size() < 7){ //safeguard for individuals with few / no recent nights that are atypical
+            return Optional.absent();
+        }
+        for (final AggregateSleepStats sleepStat: previousSleepStats){
+            sleepDurationSum += sleepStat.sleepStats.sleepDurationInMinutes;
+            if (sleepStat.dateTime == targetDate){
+                targetDateSleepDuration = sleepStat.sleepStats.sleepDurationInMinutes;
+                lockdownTime = sleepStat.createdAt;
+            }
+        }
+
+        final int meanSleepDuration = sleepDurationSum / previousSleepStats.size();
+        final int minSleepDuration = Math.min(meanSleepDuration - sleepDurationWindow, sleepDurationThreshold);
+
+        //check if sufficient sleep duration
+        if (targetDateSleepDuration <  minSleepDuration){
+            return Optional.absent();
+        }
+
+        //check if motion immediately after lockdown time
+        final boolean hasMotionAfterLockdown = RestrictEventWindow.motionDuringWindow(trackerMotions, lockdownTime, motionSearchWindow, newMotionCountThreshold);
+        if (hasMotionAfterLockdown){
+            return Optional.absent();
+        }
+
+        return Optional.of(lockdownTime);
     }
 
 }

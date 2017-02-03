@@ -279,4 +279,7 @@ public class InstrumentedTimelineProcessorTest {
         final SleepScore testSleepScoreTransition = InstrumentedTimelineProcessor.computeSleepScoreVersionTransition(testSleepScoreV2, testSleepScoreV4, testV2V4Weighting, "v2-V4");
         assertThat(testSleepScoreTransition.value, is(89));
     }
+
+
+
 }

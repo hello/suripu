@@ -10,6 +10,7 @@ import org.joda.time.DateTimeZone;
 public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
     public final Long accountId;
     public final DateTime dateTime;
+    public final Long createdAt;
     public final Integer offsetMillis;
 
     public final Integer sleepScore;
@@ -31,6 +32,28 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
                                final SleepStats sleepStats) {
         this.accountId = accountId;
         this.dateTime = dateTime;
+        this.createdAt = dateTime.withHourOfDay(12).plusMillis(offsetMillis).getMillis();
+        this.offsetMillis = offsetMillis;
+        this.sleepScore = sleepScore;
+        this.version = version;
+        this.motionScore = motionScore;
+        this.sleepDurationScore = sleepDurationScore;
+        this.environmentalScore = environmentalScore;
+        this.timesAwakePenaltyScore = timesAwakePenaltyScore;
+        this.sleepStats = sleepStats;
+    }
+
+
+    public AggregateSleepStats(final Long accountId, final DateTime dateTime, final Long createdAt, final Integer offsetMillis,
+                               final Integer sleepScore, final String version,
+                               final MotionScore motionScore,
+                               final Integer sleepDurationScore,
+                               final Integer environmentalScore,
+                               final Integer timesAwakePenaltyScore,
+                               final SleepStats sleepStats) {
+        this.accountId = accountId;
+        this.dateTime = dateTime;
+        this.createdAt = createdAt;
         this.offsetMillis = offsetMillis;
         this.sleepScore = sleepScore;
         this.version = version;
@@ -49,6 +72,7 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
     public static class Builder {
         private Long accountId;
         private DateTime dateTime;
+        private Long createdAt;
         private Integer offsetMillis;
         private Integer sleepScore;
         private String version;
@@ -61,6 +85,7 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
         public Builder() {
             this.accountId = 0L;
             this.dateTime = DateTime.now(DateTimeZone.UTC);
+            this.createdAt = DateTime.now(DateTimeZone.UTC).getMillis();
             this.offsetMillis = 0;
             this.sleepScore = 0;
             this.version = "";
@@ -78,6 +103,11 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
 
         public Builder withDateTime(final DateTime dateTime) {
             this.dateTime = dateTime;
+            return this;
+        }
+
+        public Builder withCreatedAt(final long createdAt){
+            this.createdAt = createdAt;
             return this;
         }
 
@@ -125,6 +155,7 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
             return new AggregateSleepStats(
                     accountId,
                     dateTime,
+                    createdAt,
                     offsetMillis,
                     sleepScore,
                     version,
