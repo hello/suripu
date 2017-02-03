@@ -529,3 +529,13 @@ CREATE TABLE alerts (
 
 GRANT ALL PRIVILEGES ON alerts TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE alerts_id_seq TO ingress_user;
+
+
+-- Added Feb 3rd, 2017
+CREATE TABLE voice_commands (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(100),
+    description VARCHAR(255),
+    command_name VARCHAR(100),
+    command_description VARCHAR(100)
+);
