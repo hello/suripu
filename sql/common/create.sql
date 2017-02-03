@@ -534,8 +534,8 @@ GRANT ALL PRIVILEGES ON SEQUENCE alerts_id_seq TO ingress_user;
 -- Added Feb 3rd, 2017
 CREATE TABLE voice_commands (
     id SERIAL PRIMARY KEY,
-    title VARCHAR(100),
+    title VARCHAR(255),
     description VARCHAR(255),
-    command_title VARCHAR(100),
-    command VARCHAR(100)
+    command_title VARCHAR(255),
+    command VARCHAR(255)
 );
