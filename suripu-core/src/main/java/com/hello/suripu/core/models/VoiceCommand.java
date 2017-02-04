@@ -1,31 +1,42 @@
 package com.hello.suripu.core.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.ArrayList;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Created by david on 2/3/17.
+ * <p>
+ * Represents one row from the database.
  */
 public class VoiceCommand {
 
-    @JsonProperty("title")
     private final String title;
-
-    @JsonProperty("description")
     private final String description;
-
-    @JsonProperty("categories")
-    private final ArrayList<VoiceCommandCategory> categories;
+    private final String commandName;
+    private final String commandDescription;
 
     public VoiceCommand(final String title,
                         final String description,
-                        final ArrayList<VoiceCommandCategory> categories) {
-
+                        final String commandName,
+                        final String commandDescription) {
         this.title = checkNotNull(title, "VoiceCommand title can not be null.");
         this.description = checkNotNull(description, "VoiceCommand description can not be null.");
-        this.categories = checkNotNull(categories, "VoiceCommand categories can not be null.");
+        this.commandName = checkNotNull(commandName, "VoiceCommand commandName can not be null.");
+        this.commandDescription = checkNotNull(commandDescription, "VoiceCommand commandDescription can not be null.");
+    }
+
+    public String getTitle() {
+        return this.title;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public String getCommandName() {
+        return this.commandName;
+    }
+
+    public String getCommandDescription() {
+        return this.commandDescription;
     }
 }
