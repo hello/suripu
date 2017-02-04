@@ -12,6 +12,7 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.MobilePushRegistration;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
+import com.hello.suripu.core.preferences.PreferenceName;
 import com.librato.rollout.RolloutClient;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -67,9 +68,16 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return;
         }
 
+        final Map<PreferenceName, Boolean> preferences = accountPreferencesDAO.get(event.accountId);
 
 
         if(PushNotificationEventType.SLEEP_SCORE.equals(event.type)) {
+            final boolean enabled = preferences.getOrDefault(PreferenceName.PUSH_SCORE, false);
+            if(!enabled) {
+                LOGGER.info("account_id={} preference={} enabled={}", event.accountId, PreferenceName.PUSH_SCORE, enabled);
+                return;
+            }
+
             final Optional<DateTime> lastViewed = appStatsDAO.getQuestionsLastViewed(event.accountId);
             if(!lastViewed.isPresent()) {
                 LOGGER.warn("action=no-last-viewed account_id={}", event.accountId);
@@ -95,11 +103,11 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         // That way if something later in this method fails, we won't accidentally send the same notification twice.
         final boolean successfullyInserted = pushNotificationEventDynamoDB.insert(event);
         if (!successfullyInserted) {
-            LOGGER.warn("action=insert-push-notification account_id={} type={}", event.accountId, event.type);
+            LOGGER.warn("action=duplicate-push-notification account_id={} type={}", event.accountId, event.type);
             return;
         }
 
-        final Long accountId = 4187L; //event.accountId;
+        final Long accountId = event.accountId;
         final HelloPushMessage pushMessage = event.helloPushMessage;
 
         final List<MobilePushRegistration> registrations = subscriptionDAO.getSubscriptions(accountId);
@@ -108,20 +116,19 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                 final MobilePushRegistration.OS os = MobilePushRegistration.OS.fromString(reg.os);
                 final Optional<String> message = makeMessage(os, pushMessage);
                 if(!message.isPresent()) {
-                    LOGGER.info("Did not get any suitable message for {}", reg);
+                    LOGGER.warn("warn=failed-to-generate-message os={} push_message={}", os, pushMessage);
                     continue;
                 }
-                LOGGER.info(message.get());
+
                 final PublishRequest pr = new PublishRequest();
                 pr.setMessageStructure("json");
                 pr.setMessage(message.get());
-                LOGGER.info("message={}", message.get());
                 pr.setTargetArn(reg.endpoint.get());
                 try {
                     final PublishResult result = sns.publish(pr);
-                    LOGGER.info("message_id={}", result.getMessageId());
+                    LOGGER.info("account_id={} message_id={}", event.accountId, result.getMessageId());
                 } catch (Exception e) {
-                    LOGGER.error("Failed sending message : {}", e.getMessage());
+                    LOGGER.error("error=failed-sending-sns-message message={}", e.getMessage());
                 }
             }
         }
