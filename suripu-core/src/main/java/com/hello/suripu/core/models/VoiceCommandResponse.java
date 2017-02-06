@@ -2,8 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -12,31 +11,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * This will be returned to our mobile friends.
  */
+@SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class VoiceCommandResponse {
 
     @JsonProperty("voice_subjects")
-    private final List<VoiceCommandSubject> voiceSubjects = new ArrayList<>();
+    private final List<VoiceCommandSubject> voiceSubjects;
 
-    public VoiceCommandResponse(final List<VoiceCommand> dbVoiceCommands) {
-        checkNotNull(dbVoiceCommands, "VoiceCommandResponse dbVoiceCommands can not be null.");
-        for (final VoiceCommand voiceCommand : dbVoiceCommands) {
-            VoiceCommandSubject voiceCommandSubject = getVoiceCommandSubject(voiceCommand.getTitle());
-            if (voiceCommandSubject == null) {
-                voiceCommandSubject = new VoiceCommandSubject(voiceCommand.getTitle(), voiceCommand.getDescription());
-                this.voiceSubjects.add(voiceCommandSubject);
+    public VoiceCommandResponse(final List<VoiceCommandRow> dbVoiceCommandRows) {
+        checkNotNull(dbVoiceCommandRows, "VoiceCommandResponse dbVoiceCommandRows can not be null.");
+        Map<String, VoiceCommandSubject> tempMap = new HashMap<>();
+        for (final VoiceCommandRow voiceCommandRow : dbVoiceCommandRows) {
+            final VoiceCommandSubject voiceCommandSubject;
+            if (tempMap.containsKey(voiceCommandRow.getTitle())) {
+                voiceCommandSubject = tempMap.get(voiceCommandRow.getTitle());
+            } else {
+                voiceCommandSubject = new VoiceCommandSubject(voiceCommandRow.getTitle(), voiceCommandRow.getDescription());
+                tempMap.put(voiceCommandRow.getTitle(), voiceCommandSubject);
+
             }
-            voiceCommandSubject.addCategory(voiceCommand.getCommandName(), voiceCommand.getCommandDescription());
+            voiceCommandSubject.addCategory(voiceCommandRow.getCommandTitle(), voiceCommandRow.getCommand());
         }
-
-    }
-
-    private VoiceCommandSubject getVoiceCommandSubject(final String title) {
-        for (final VoiceCommandSubject voiceCommandSubject : this.voiceSubjects) {
-            if (voiceCommandSubject.title.equals(title)) {
-                return voiceCommandSubject;
-            }
-        }
-        return null;
+        voiceSubjects = new ArrayList<>(tempMap.values());
     }
 
     private class VoiceCommandSubject {
@@ -47,44 +42,45 @@ public class VoiceCommandResponse {
         @JsonProperty("description")
         private final String description;
 
-        @JsonProperty("command")
-        private final List<VoiceCommandCategory> categories = new ArrayList<>();
+        @JsonProperty("commands")
+        private final List<VoiceCommand> voiceCommands = new ArrayList<>();
 
-        public VoiceCommandSubject(final String title,
-                                   final String description) {
+
+        VoiceCommandSubject(final String title,
+                            final String description) {
             this.title = checkNotNull(title, "VoiceCommandSubject title can not be null.");
             this.description = checkNotNull(description, "VoiceCommandSubject description can not be null.");
         }
 
-        public void addCategory(final String commandName,
-                                final String commandDescription) {
-            for (final VoiceCommandCategory voiceCommandCategory : this.categories) {
-                if (voiceCommandCategory.commandName.equals(commandName)) {
-                    voiceCommandCategory.addDescription(commandDescription);
+        void addCategory(final String commandTitle,
+                         final String command) {
+            for (final VoiceCommand voiceCommand : this.voiceCommands) {
+                if (voiceCommand.commandTitle.equals(commandTitle)) {
+                    voiceCommand.addCommand(command);
                     return;
                 }
             }
-            this.categories.add(new VoiceCommandCategory(commandName, commandDescription));
+            this.voiceCommands.add(new VoiceCommand(commandTitle, command));
         }
-
     }
 
-    private class VoiceCommandCategory {
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private class VoiceCommand {
 
-        @JsonProperty("commandName")
-        private final String commandName;
+        @JsonProperty("command_title")
+        private final String commandTitle;
 
-        @JsonProperty("commandDescriptions")
-        private final List<String> commandDescriptions = new ArrayList<>();
+        @JsonProperty("command")
+        private final List<String> commands = new ArrayList<>();
 
-        public VoiceCommandCategory(final String commandName,
-                                    final String commandDescription) {
-            this.commandName = checkNotNull(commandName, "VoiceCommandCategory commandName can not be null.");
-            this.commandDescriptions.add(checkNotNull(commandDescription, "VoiceCommandCategory commandDescriptions can not be null."));
+        VoiceCommand(final String commandTitle,
+                     final String command) {
+            this.commandTitle = checkNotNull(commandTitle, "VoiceCommand commandTitle can not be null.");
+            this.commands.add(checkNotNull(command, "VoiceCommand command can not be null."));
         }
 
-        public void addDescription(final String commandDescription) {
-            this.commandDescriptions.add(checkNotNull(commandDescription, "VoiceCommandCategory commandDescription can not be null."));
+        void addCommand(final String command) {
+            this.commands.add(checkNotNull(command, "VoiceCommand command can not be null."));
         }
     }
 
