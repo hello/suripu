@@ -316,8 +316,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(),accountId,startTimeLocalUTC,endTimeLocalUTC);
 
-        //check to see if a timeline has already been generated at a "reasonable time" today
-
         final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, startTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, newFeedback);
 
         if (!sensorDataOptional.isPresent()) {
@@ -494,8 +492,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         ImmutableList<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
 
         final Optional<Long> lockdownTimeOptional;
-        if(hasTimelineLockdown(accountId)) {
-            lockdownTimeOptional = getLockdownTime(accountId, date, originalTrackerMotions);
+        if(hasTimelineLockdown(accountId) && !newFeedback.isPresent()) {
+            lockdownTimeOptional = getLockdownTime(accountId, date, endTimeLocalUTC, originalTrackerMotions);
         } else{
             lockdownTimeOptional = Optional.absent();
         }
@@ -1181,7 +1179,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     //checks if a timeline has been generated with a sleep duration that is consistent with a users recent sleep durations.
     //if a reasonable timeline has already been generated, returns the time this timeline was generated.
-    private Optional<Long> getLockdownTime(final long accountId, final DateTime targetDate, final List<TrackerMotion> trackerMotions){
+    private Optional<Long> getLockdownTime(final long accountId, final DateTime targetDate, final DateTime endTimeLocalUTC, final List<TrackerMotion> trackerMotions){
         final int sleepDurationWindow = 60; //sleepduration needs to be no less than 45 mins of typical duration.
         final int motionSearchWindow = 60;
         final int newMotionCountThreshold = 2;
@@ -1196,9 +1194,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
         for (final AggregateSleepStats sleepStat: previousSleepStats){
             sleepDurationSum += sleepStat.sleepStats.sleepDurationInMinutes;
-            if (sleepStat.dateTime == targetDate){
+            if (sleepStat.dateTime.getMillis() == targetDate.getMillis()){
                 targetDateSleepDuration = sleepStat.sleepStats.sleepDurationInMinutes;
-                lockdownTime = sleepStat.createdAt;
+                lockdownTime = Math.min(sleepStat.createdAt, endTimeLocalUTC.getMillis());
             }
         }
 
