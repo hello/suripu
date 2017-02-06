@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class VoiceCommandResponse {
 
     @JsonProperty("voice_command_topics")
-    private final List<VoiceCommandTopic> voiceSubjects;
+    private final List<VoiceCommandTopic> voiceCommandTopics;
 
     public VoiceCommandResponse(final List<VoiceCommand> dbVoiceCommands) {
         checkNotNull(dbVoiceCommands, "VoiceCommandResponse dbVoiceCommands can not be null.");
@@ -31,7 +31,7 @@ public class VoiceCommandResponse {
             }
             voiceCommandTopic.addCategory(voiceCommand.getCommandTitle(), voiceCommand.getCommand());
         }
-        voiceSubjects = new ArrayList<>(tempMap.values());
+        voiceCommandTopics = new ArrayList<>(tempMap.values());
     }
 
     private class VoiceCommandTopic {
