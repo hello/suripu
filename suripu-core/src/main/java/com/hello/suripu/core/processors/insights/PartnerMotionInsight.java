@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.AggregateSleepStats;
@@ -20,7 +21,19 @@ import org.slf4j.LoggerFactory;
 public class PartnerMotionInsight {
     private static final Logger LOGGER = LoggerFactory.getLogger(PartnerMotionInsight.class);
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceReadDAO deviceReadDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceReadDAO deviceReadDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DateTime dateVisibleLocal) {
+
+        //Get dateVisibleUTC
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        if (!timeZoneOffsetOptional.isPresent()) {
+            LOGGER.debug("action=insight-absent insight=partner_motion reason=timezoneoffset-absent account_id={}", accountId);
+            return Optional.absent(); //cannot compute insight without timezone info
+        }
+
+        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
+        final DateTime dateVisibleUTC = dateVisibleLocal.minusMillis(timeZoneOffset);
+
+        //Get partner id
         final Optional<Long> optionalPartnerAccountId = deviceReadDAO.getPartnerAccountId(accountId);
         if (!optionalPartnerAccountId.isPresent()) {
             LOGGER.debug("action=insight_absent-insight=partner_motion-reason=no_partner-account_id={}", accountId);
@@ -28,21 +41,26 @@ public class PartnerMotionInsight {
         }
         LOGGER.debug("action=found-partner account_id={} partner_id={}", accountId, optionalPartnerAccountId.get());
 
-        final String queryLastNightTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1).toString("yyyy-MM-dd"); //Note tz for trigger time
+        //Query partner data
+        final String queryStartTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(8).toString("yyyy-MM-dd");
+        final String queryEndTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().toString("yyyy-MM-dd");
 
-        final Optional<AggregateSleepStats> mySleepStat = sleepStatsDAODynamoDB.getSingleStat(accountId, queryLastNightTime);
-        final Optional<AggregateSleepStats> partnerSleepStat = sleepStatsDAODynamoDB.getSingleStat(optionalPartnerAccountId.get(), queryLastNightTime);
+        final ImmutableList<AggregateSleepStats> mySleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartTime, queryEndTime);
+        final ImmutableList<AggregateSleepStats> partnerSleepStats = sleepStatsDAODynamoDB.getBatchStats(optionalPartnerAccountId.get(), queryStartTime, queryEndTime);
 
-        if (!mySleepStat.isPresent() || !partnerSleepStat.isPresent()) {
+        if (mySleepStats.isEmpty() || partnerSleepStats.isEmpty()) {
             LOGGER.debug("action=insight-absent insight=partner-motion reason=sleep-stats-absent account_id={} partner_id={}", accountId, optionalPartnerAccountId.get());
             return Optional.absent();
         }
 
-        // I do not check that mySleepStat.get().motionScore.motionPeriodMinutes!=0 b/c
-        // Checked prod_sleep_stats 11/4/2015 only values of numMotions when period=0 is 0,1
-        // So biggest anomalous difference is 0 (after motionTtl check) \in egalitarian class
-        final Float myMotionTtl = (float) mySleepStat.get().motionScore.numMotions;
-        final Float partnerMotionTtl = (float) partnerSleepStat.get().motionScore.numMotions;
+        Float myMotionTtl = 0f;
+        Float partnerMotionTtl = 0f;
+        for (AggregateSleepStats mySleepStat : mySleepStats) {
+            myMotionTtl = myMotionTtl + mySleepStat.motionScore.numMotions;
+        }
+        for (AggregateSleepStats partnerSleepStat : partnerSleepStats) {
+            partnerMotionTtl = partnerMotionTtl + partnerSleepStat.motionScore.numMotions;
+        }
 
         if (myMotionTtl == 0f || partnerMotionTtl ==0f) {
             LOGGER.debug("action=insight-absent insight=partner-motion reason=motion-ttl-zero account_id={} partner_id={}", accountId, optionalPartnerAccountId.get());
@@ -53,7 +71,7 @@ public class PartnerMotionInsight {
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId, text.title, text.message,
                 InsightCard.Category.PARTNER_MOTION, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
+                dateVisibleUTC, InsightCard.InsightType.DEFAULT));
     }
 
     @VisibleForTesting
