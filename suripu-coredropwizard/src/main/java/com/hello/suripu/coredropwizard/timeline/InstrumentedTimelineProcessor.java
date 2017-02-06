@@ -44,6 +44,7 @@ import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepSegment;
@@ -286,7 +287,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     }
 
-    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
+    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final SleepPeriod sleepPeriod,  final Optional<TimelineFeedback> newFeedback) {
 
         final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
 
@@ -308,8 +309,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
         }
 
-        final DateTime startTimeLocalUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
-        final DateTime endTimeLocalUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
+        final DateTime startTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START,targetDate);
+        final DateTime endTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA,targetDate);;
         final DateTime currentTimeUTC = DateTime.now().withZone(DateTimeZone.UTC);
 
         LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(),accountId,startTimeLocalUTC,endTimeLocalUTC);
@@ -396,6 +397,17 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             return TimelineResult.createEmpty(log);
         }
 
+        if (this.useTimelineSleepPeriodEnforcement(accountId) && resultOptional.get().mainEvents.containsKey(Event.Type.IN_BED)){
+            final Event inBedEvent = resultOptional.get().mainEvents.get(Event.Type.IN_BED);
+            final DateTime inBedTime = new DateTime(inBedEvent.getStartTimestamp(), DateTimeZone.UTC).plusMillis(inBedEvent.getTimezoneOffset());
+            if (!sleepPeriod.sleepEventInSleepPeriod(inBedTime)){
+                LOGGER.info("action=discard_timeline reason=in-bed-time-outside-sleep-period account_id={} date={} sleep_period={} in_bed_time={}", accountId, targetDate, sleepPeriod.PERIOD, inBedTime );
+                log.addMessage(TimelineError.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD);
+                return TimelineResult.createEmpty(log);
+
+            }
+        }
+
 
         //get result, and refine (optional feature) in-bed time for online HMM
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
@@ -411,7 +423,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneOffsetMap, result, sensorData);
+        final PopulatedTimelines populateTimelines = populateTimeline(accountId, targetDate, startTimeLocalUTC, endTimeLocalUTC, sleepPeriod, timeZoneOffsetMap, result, sensorData);
 
 
         if (!populateTimelines.isValidSleepScore) {
@@ -593,7 +605,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineAlgorithmResult result,
+    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepPeriod sleepPeriod, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineAlgorithmResult result,
                                                final OneDaysSensorData sensorData) {
 
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.oneDaysTrackerMotion.processedtrackerMotions;

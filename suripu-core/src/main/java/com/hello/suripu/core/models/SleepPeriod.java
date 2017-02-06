@@ -31,6 +31,19 @@ public class SleepPeriod {
             }
         }
 
+        public static SleepPeriod night(){
+            return new SleepPeriod(Period.NIGHT);
+        }
+
+        public static  SleepPeriod afternoonEvening(){
+            return new SleepPeriod(Period.AFTERNOON_EVENING);
+        }
+
+        public static  SleepPeriod morning(){
+            return new SleepPeriod(Period.MORNING);
+        }
+
+
     public enum Period {
         NONE(-1) {
             public String toString() {
@@ -93,6 +106,23 @@ public class SleepPeriod {
             }
         }
 
+        public SleepPeriod getSleepPeriod(final DateTime inBedTime){
+            final Integer inBedHour = inBedTime.getHourOfDay();
+            if (inBedHour >= 4 && inBedHour < 12){
+                return SleepPeriod.morning();
+            } else if (inBedHour >= 12 && inBedHour < 20){
+                return SleepPeriod.afternoonEvening();
+            } else {
+                return SleepPeriod.night();
+            }
+        }
 
+        public boolean sleepEventInSleepPeriod(final DateTime inBedTime){
+            final SleepPeriod eventSleepPeriod = getSleepPeriod(inBedTime);
+            if (this.PERIOD == eventSleepPeriod.PERIOD){
+                return true;
+            }
+            return false;
+        }
 
 }
