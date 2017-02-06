@@ -12,7 +12,6 @@ import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import javax.inject.Singleton;
-
 import java.util.concurrent.CountDownLatch;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,7 +23,9 @@ import static org.mockito.Mockito.mock;
  */
 public class ActionProcessorFirehoseTest {
     private ActionFirehoseDAO firehoseDAO = mock(ActionFirehoseDAO.class);
+    private final ActionProcessor processor = new ActionProcessorFirehose(firehoseDAO, MAX_BUFFER_SIZE);
 
+    private static final int MAX_BUFFER_SIZE = 100;
 
     public class ActionRunnable implements Runnable {
         private final ActionProcessor processor;
@@ -49,7 +50,6 @@ public class ActionProcessorFirehoseTest {
 
     @Test
     public void testAddSingleAction() {
-        final ActionProcessor processor = new ActionProcessorFirehose(firehoseDAO);
 
         final Action action = new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY), DateTime.now(DateTimeZone.UTC), Optional.absent());
 
@@ -65,17 +65,16 @@ public class ActionProcessorFirehoseTest {
     @Test
     public void addManyActions() {
         final int extra = 10;
-        final int numActions = ActionProcessorFirehose.MAX_BUFFER_SIZE + (2 * extra);
-        final ActionProcessor processor = new ActionProcessorFirehose(firehoseDAO);
+        final int numActions = MAX_BUFFER_SIZE + (2 * extra);
         final DateTime now = DateTime.now(DateTimeZone.UTC).minusHours(3);
         Boolean result = false;
         for (int i = 0; i < numActions; i++ ) {
             final Action action = new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY), now.plusMinutes(i), Optional.absent());
             result = processor.add(action);
 
-            if (i == ActionProcessorFirehose.MAX_BUFFER_SIZE - 2) {
+            if (i == MAX_BUFFER_SIZE - 2) {
                 assertThat(result, is(true));
-                assertThat(processor.bufferSize(), is(ActionProcessorFirehose.MAX_BUFFER_SIZE - 1));
+                assertThat(processor.bufferSize(), is(MAX_BUFFER_SIZE - 1));
             } else if (i == (numActions - extra - 1)) {
                 assertThat(result, is(true));
                 assertThat(processor.bufferSize(), is(extra));
@@ -88,14 +87,14 @@ public class ActionProcessorFirehoseTest {
     @Test
     public void multiThreadedAddActions() throws InterruptedException {
         @Singleton
-        final ActionProcessor processor = new ActionProcessorFirehose(firehoseDAO);
+        final ActionProcessor singleProcessor = new ActionProcessorFirehose(firehoseDAO, MAX_BUFFER_SIZE);
 
         final CountDownLatch latch = new CountDownLatch(10000);
         final int numActions1 = 120;
         final int numActions2 = 150;
 
-        final Thread thread1 = new Thread(new ActionRunnable(numActions1, processor, ActionType.LOGIN));
-        final Thread thread2 = new Thread(new ActionRunnable(numActions2, processor, ActionType.TRENDS));
+        final Thread thread1 = new Thread(new ActionRunnable(numActions1, singleProcessor, ActionType.LOGIN));
+        final Thread thread2 = new Thread(new ActionRunnable(numActions2, singleProcessor, ActionType.TRENDS));
 
         thread1.start();
         latch.countDown();
@@ -109,7 +108,7 @@ public class ActionProcessorFirehoseTest {
             thread2.join();
         }
 
-        assertThat(processor.bufferSize() > 0, is(true));
+        assertThat(singleProcessor.bufferSize() > 0, is(true));
 
     }
 }

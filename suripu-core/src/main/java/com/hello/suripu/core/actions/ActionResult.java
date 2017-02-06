@@ -5,7 +5,8 @@ package com.hello.suripu.core.actions;
  */
 public enum ActionResult {
     OKAY("okay"),
-    FAIL("fail");
+    FAIL("fail"),
+    NO_DATA("no_data");
 
     private String value;
 

@@ -6,4 +6,5 @@ package com.hello.suripu.core.actions;
 public interface ActionProcessor {
     Boolean add(Action action);
     int bufferSize();
+    int maxBufferSize();
 }

@@ -5,7 +5,9 @@ package com.hello.suripu.core.actions;
  */
 public enum ActionType {
     LOGIN("login"),
-    TRENDS("trends");
+    TRENDS("trends"),
+    V1_TIMELINE("v1_timeline"),
+    V2_TIMELINE("v2_timeline");
 
     private final String value;
     ActionType(final String value) {

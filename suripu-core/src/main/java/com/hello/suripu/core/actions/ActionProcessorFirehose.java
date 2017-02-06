@@ -16,15 +16,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ActionProcessorFirehose implements ActionProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(ActionProcessorFirehose.class);
 
-    public static final Integer MAX_BUFFER_SIZE = 100;
 
     private final ActionFirehoseDAO firehoseDAO;
+    private final Integer maxBufferSize;
     private final ConcurrentMap<Action, Long> buffer;
+
     private AtomicInteger inserted = new AtomicInteger(0);
     private AtomicInteger failed = new AtomicInteger(0);
 
-    public ActionProcessorFirehose(final ActionFirehoseDAO firehoseDAO) {
+    public ActionProcessorFirehose(final ActionFirehoseDAO firehoseDAO, final Integer maxBufferSize) {
         this.firehoseDAO = firehoseDAO;
+        this.maxBufferSize = maxBufferSize;
         this.buffer = new ConcurrentHashMap<>();
     }
 
@@ -32,7 +34,7 @@ public class ActionProcessorFirehose implements ActionProcessor {
     public Boolean add(final Action action) {
         final Long putResult = this.buffer.put(action, action.ts.getMillis());
 
-        if (buffer.size() >= MAX_BUFFER_SIZE) {
+        if (buffer.size() >= this.maxBufferSize) {
             flushToFirehose();
         }
 
@@ -40,9 +42,10 @@ public class ActionProcessorFirehose implements ActionProcessor {
     }
 
     @Override
-    public int bufferSize() {
-        return buffer.size();
-    }
+    public int bufferSize() { return buffer.size(); }
+
+    @Override
+    public int maxBufferSize() { return this.maxBufferSize; }
 
     /**
      * synchronous writes to firehose

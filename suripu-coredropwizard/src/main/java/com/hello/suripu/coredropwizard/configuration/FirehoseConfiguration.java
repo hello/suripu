@@ -3,6 +3,8 @@ package com.hello.suripu.coredropwizard.configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -13,14 +15,20 @@ public class FirehoseConfiguration {
     @NotNull
     @JsonProperty
     private String region;
-    public String getRegion() {
+    public String region() {
         return region;
     }
-
 
     @Valid
     @NotNull
     @JsonProperty("stream")
     private String stream;
-    public String getStream() { return stream; }
+    public String stream() { return stream; }
+
+    @Valid
+    @JsonProperty("max_buffer_size")
+    @Min(1)
+    @Max(100)
+    private Integer maxBufferSize = 100;
+    public Integer maxBufferSize() { return this.maxBufferSize; }
 }
