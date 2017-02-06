@@ -565,7 +565,7 @@ public class InsightProcessor {
             }
 
             // save to dynamo
-            LOGGER.info("action=generated_insight_card category={} accountId={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
+            LOGGER.info("action=generated_insight_card category={} account_id={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
             final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now(DateTimeZone.UTC));
             this.insightsLastSeenDAO.markLastSeen(newInsight);
@@ -590,7 +590,7 @@ public class InsightProcessor {
             }
 
             // save to dynamo
-            LOGGER.info("action=generated_insight_card category={} accountId={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
+            LOGGER.info("action=generated_insight_card category={} account_id={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
             final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now(DateTimeZone.UTC));
             this.insightsLastSeenDAO.markLastSeen(newInsight);

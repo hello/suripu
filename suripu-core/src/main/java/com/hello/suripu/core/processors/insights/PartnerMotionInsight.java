@@ -26,7 +26,7 @@ public class PartnerMotionInsight {
         //Get dateVisibleUTC
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight-absent insight=lights reason=timezoneoffset-absent account_id={}", accountId);
+            LOGGER.debug("action=insight-absent insight=partner_motion reason=timezoneoffset-absent account_id={}", accountId);
             return Optional.absent(); //cannot compute insight without timezone info
         }
 
