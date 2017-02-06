@@ -14,27 +14,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class VoiceCommandResponse {
 
-    @JsonProperty("voice_subjects")
-    private final List<VoiceCommandSubject> voiceSubjects;
+    @JsonProperty("voice_command_topics")
+    private final List<VoiceCommandTopic> voiceSubjects;
 
-    public VoiceCommandResponse(final List<VoiceCommandRow> dbVoiceCommandRows) {
-        checkNotNull(dbVoiceCommandRows, "VoiceCommandResponse dbVoiceCommandRows can not be null.");
-        Map<String, VoiceCommandSubject> tempMap = new HashMap<>();
-        for (final VoiceCommandRow voiceCommandRow : dbVoiceCommandRows) {
-            final VoiceCommandSubject voiceCommandSubject;
-            if (tempMap.containsKey(voiceCommandRow.getTitle())) {
-                voiceCommandSubject = tempMap.get(voiceCommandRow.getTitle());
+    public VoiceCommandResponse(final List<VoiceCommand> dbVoiceCommands) {
+        checkNotNull(dbVoiceCommands, "VoiceCommandResponse dbVoiceCommands can not be null.");
+        Map<String, VoiceCommandTopic> tempMap = new HashMap<>();
+        for (final VoiceCommand voiceCommand : dbVoiceCommands) {
+            final VoiceCommandTopic voiceCommandTopic;
+            if (tempMap.containsKey(voiceCommand.getTitle())) {
+                voiceCommandTopic = tempMap.get(voiceCommand.getTitle());
             } else {
-                voiceCommandSubject = new VoiceCommandSubject(voiceCommandRow.getTitle(), voiceCommandRow.getDescription());
-                tempMap.put(voiceCommandRow.getTitle(), voiceCommandSubject);
+                voiceCommandTopic = new VoiceCommandTopic(voiceCommand.getTitle(), voiceCommand.getDescription());
+                tempMap.put(voiceCommand.getTitle(), voiceCommandTopic);
 
             }
-            voiceCommandSubject.addCategory(voiceCommandRow.getCommandTitle(), voiceCommandRow.getCommand());
+            voiceCommandTopic.addCategory(voiceCommand.getCommandTitle(), voiceCommand.getCommand());
         }
         voiceSubjects = new ArrayList<>(tempMap.values());
     }
 
-    private class VoiceCommandSubject {
+    private class VoiceCommandTopic {
 
         @JsonProperty("title")
         private final String title;
@@ -42,45 +42,45 @@ public class VoiceCommandResponse {
         @JsonProperty("description")
         private final String description;
 
-        @JsonProperty("commands")
-        private final List<VoiceCommand> voiceCommands = new ArrayList<>();
+        @JsonProperty("subtopics")
+        private final List<VoiceCommandSubTopic> voiceCommandSubTopics = new ArrayList<>();
 
 
-        VoiceCommandSubject(final String title,
-                            final String description) {
-            this.title = checkNotNull(title, "VoiceCommandSubject title can not be null.");
-            this.description = checkNotNull(description, "VoiceCommandSubject description can not be null.");
+        VoiceCommandTopic(final String title,
+                          final String description) {
+            this.title = checkNotNull(title, "VoiceCommandTopic title can not be null.");
+            this.description = checkNotNull(description, "VoiceCommandTopic description can not be null.");
         }
 
         void addCategory(final String commandTitle,
                          final String command) {
-            for (final VoiceCommand voiceCommand : this.voiceCommands) {
-                if (voiceCommand.commandTitle.equals(commandTitle)) {
-                    voiceCommand.addCommand(command);
+            for (final VoiceCommandSubTopic voiceCommandSubTopic : this.voiceCommandSubTopics) {
+                if (voiceCommandSubTopic.commandTitle.equals(commandTitle)) {
+                    voiceCommandSubTopic.addCommand(command);
                     return;
                 }
             }
-            this.voiceCommands.add(new VoiceCommand(commandTitle, command));
+            this.voiceCommandSubTopics.add(new VoiceCommandSubTopic(commandTitle, command));
         }
     }
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-    private class VoiceCommand {
+    private class VoiceCommandSubTopic {
 
         @JsonProperty("command_title")
         private final String commandTitle;
 
-        @JsonProperty("command")
+        @JsonProperty("commands")
         private final List<String> commands = new ArrayList<>();
 
-        VoiceCommand(final String commandTitle,
-                     final String command) {
-            this.commandTitle = checkNotNull(commandTitle, "VoiceCommand commandTitle can not be null.");
-            this.commands.add(checkNotNull(command, "VoiceCommand command can not be null."));
+        VoiceCommandSubTopic(final String commandTitle,
+                             final String command) {
+            this.commandTitle = checkNotNull(commandTitle, "VoiceCommandSubTopic commandTitle can not be null.");
+            this.commands.add(checkNotNull(command, "VoiceCommandSubTopic command can not be null."));
         }
 
         void addCommand(final String command) {
-            this.commands.add(checkNotNull(command, "VoiceCommand command can not be null."));
+            this.commands.add(checkNotNull(command, "VoiceCommandSubTopic command can not be null."));
         }
     }
 

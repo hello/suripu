@@ -7,21 +7,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * Represents one row from the database.
  */
-public class VoiceCommandRow {
+public class VoiceCommand {
 
     private final String title;
     private final String description;
     private final String commandTitle;
     private final String command;
 
-    public VoiceCommandRow(final String title,
-                           final String description,
-                           final String commandTitle,
-                           final String command) {
-        this.title = checkNotNull(title, "VoiceCommandRow title can not be null.");
-        this.description = checkNotNull(description, "VoiceCommandRow description can not be null.");
-        this.commandTitle = checkNotNull(commandTitle, "VoiceCommandRow commandTitle can not be null.");
-        this.command = checkNotNull(command, "VoiceCommandRow command can not be null.");
+    public VoiceCommand(final String title,
+                        final String description,
+                        final String commandTitle,
+                        final String command) {
+        this.title = checkNotNull(title, "VoiceCommand title can not be null.");
+        this.description = checkNotNull(description, "VoiceCommand description can not be null.");
+        this.commandTitle = checkNotNull(commandTitle, "VoiceCommand commandTitle can not be null.");
+        this.command = checkNotNull(command, "VoiceCommand command can not be null.");
     }
 
     public String getTitle() {
