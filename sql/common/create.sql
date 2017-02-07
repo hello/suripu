@@ -563,7 +563,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE voice_commands_id_seq TO ingress_user;
 
 
 INSERT INTO voice_command_topics (title, description, icon) VALUES
-    ('Alarm and Sleep Sounds', 'Before each command, say "Okay Sense" to set an alarm or begin playing Sleep Sounds', 'icon-alarms'),
+    ('Alarm and Sleep Sounds', 'Before each command, say "Okay Sense" to set an alarm or begin playing Sleep Sounds.', 'icon-alarms'),
     ('Sleep', 'Before each command, say "Okay Sense" to ask about your Sleep Score, Sleep Timeline, and Sleep Trends.', 'icon-sleep'),
     ('Room Conditions', 'Before each command, say "Okay Sense" to ask about your temperature, humidity, air quality, and more.', 'icon-rc'),
     ('Expansions', 'Before each command, say "Okay Sense" to control your lights or thermostat.', 'icon-expansions');
@@ -593,6 +593,6 @@ INSERT INTO voice_commands(command, voice_command_subtopic_id) VALUES
     ('How is the air quality?', (SELECT id FROM voice_command_subtopics where command_title = 'Air Quality')),
     ('Turn the lights on.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Turn the lights off.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
-    ('Brighten the lgihts.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Brighten the lights.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Dim the lights.',  (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Set the thermostat to 70°.',  (SELECT id FROM voice_command_subtopics where command_title = 'Thermostat'));
