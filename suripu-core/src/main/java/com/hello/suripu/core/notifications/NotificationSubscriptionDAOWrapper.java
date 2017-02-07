@@ -45,6 +45,10 @@ public class NotificationSubscriptionDAOWrapper {
     }
 
 
+    public NotificationSubscriptionsDAO dao() {
+        return notificationSubscriptionsDAO;
+    }
+
     public Optional<MobilePushRegistration> getSubscription(final Long accountId, final String deviceToken) {
         return notificationSubscriptionsDAO.getSubscription(accountId, deviceToken);
     }
