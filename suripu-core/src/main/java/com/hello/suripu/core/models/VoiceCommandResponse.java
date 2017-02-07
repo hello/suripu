@@ -16,24 +16,27 @@ public class VoiceCommandResponse {
 
     @JsonProperty("voice_command_topics")
     private final List<VoiceCommandTopic> voiceCommandTopics;
+    private final String path;
 
-    public VoiceCommandResponse(final List<VoiceCommand> dbVoiceCommands) {
+    public VoiceCommandResponse(final List<VoiceCommand> dbVoiceCommands,
+                                final String path) {
         checkNotNull(dbVoiceCommands, "VoiceCommandResponse dbVoiceCommands can not be null.");
-        Map<String, VoiceCommandTopic> tempMap = new HashMap<>();
+        this.path = checkNotNull(path, "VoiceCommandResponse path can not be null.");
+        final Map<String, VoiceCommandTopic> tempMap = new HashMap<>();
         for (final VoiceCommand voiceCommand : dbVoiceCommands) {
             final VoiceCommandTopic voiceCommandTopic;
             if (tempMap.containsKey(voiceCommand.getTitle())) {
                 voiceCommandTopic = tempMap.get(voiceCommand.getTitle());
             } else {
-                voiceCommandTopic = new VoiceCommandTopic(voiceCommand.getTitle(), voiceCommand.getDescription());
+                voiceCommandTopic = new VoiceCommandTopic(voiceCommand);
                 tempMap.put(voiceCommand.getTitle(), voiceCommandTopic);
-
             }
             voiceCommandTopic.addCategory(voiceCommand.getCommandTitle(), voiceCommand.getCommand());
         }
         voiceCommandTopics = new ArrayList<>(tempMap.values());
     }
 
+    @SuppressWarnings("Guava")
     private class VoiceCommandTopic {
 
         @JsonProperty("title")
@@ -45,11 +48,16 @@ public class VoiceCommandResponse {
         @JsonProperty("subtopics")
         private final List<VoiceCommandSubTopic> voiceCommandSubTopics = new ArrayList<>();
 
+        @JsonProperty("icon_urls")
+        private final MultiDensityImage multiDensityImage;
 
-        VoiceCommandTopic(final String title,
-                          final String description) {
-            this.title = checkNotNull(title, "VoiceCommandTopic title can not be null.");
-            this.description = checkNotNull(description, "VoiceCommandTopic description can not be null.");
+        VoiceCommandTopic(final VoiceCommand voiceCommand) {
+            this.title = checkNotNull(voiceCommand.getTitle());
+            this.description = checkNotNull(voiceCommand.getDescription());
+            this.multiDensityImage = MultiDensityImage.create(VoiceCommandResponse.this.path,
+                                                              voiceCommand.getNormalPhoto(),
+                                                              voiceCommand.getHighPhoto(),
+                                                              voiceCommand.getExtraHighPhoto());
         }
 
         void addCategory(final String commandTitle,

@@ -21,6 +21,7 @@ public class VoiceCommandMapper implements ResultSetMapper<VoiceCommand> {
         return new VoiceCommand(resultSet.getString("title"),
                                 resultSet.getString("description"),
                                 resultSet.getString("command_title"),
-                                resultSet.getString("command"));
+                                resultSet.getString("command"),
+                                resultSet.getString("icon"));
     }
 }
