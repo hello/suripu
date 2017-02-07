@@ -768,6 +768,7 @@ public class TimelineUtils {
         }
 
         final SleepStats sleepStats = new SleepStats(
+                DateTime.now(DateTimeZone.UTC).getMillis(),
                 soundSleepDurationInMinutes,
                 mediumSleepDurationInMinutes,
                 lightSleepDurationInMinutes,

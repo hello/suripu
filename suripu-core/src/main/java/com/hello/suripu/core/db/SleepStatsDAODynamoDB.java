@@ -415,6 +415,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
 
         final SleepStats stats = new SleepStats(
+                createdAt,
                 soundSleep,
                 mediumSleep,
                 lightSleep,
@@ -430,7 +431,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         AggregateSleepStats.Builder builder = new AggregateSleepStats.Builder()
                 .withAccountId(Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()))
                 .withDateTime(date)
-                .withCreatedAt(createdAt)
                 .withOffsetMillis(offset)
                 .withSleepScore(Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN()))
                 .withVersion(item.get(VERSION_ATTRIBUTE_NAME).getS())
