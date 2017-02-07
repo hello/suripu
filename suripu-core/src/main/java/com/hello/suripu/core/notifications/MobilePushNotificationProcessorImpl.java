@@ -88,19 +88,16 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             }
 
             final Optional<DateTime> lastViewed = appStatsDAO.getQuestionsLastViewed(event.accountId);
-            if(!lastViewed.isPresent()) {
-                LOGGER.warn("action=no-last-viewed account_id={}", event.accountId);
-                return;
-            }
+            if(lastViewed.isPresent()) {
 
-
-            final DateTimeZone dateTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
-            final DateTime lastViewedLocalTime = new DateTime(lastViewed.get(), dateTimeZone).withTimeAtStartOfDay();
-            final DateTime nowLocalTime = DateTime.now().withTimeAtStartOfDay();
-            final int minutes = Minutes.minutesBetween(nowLocalTime, lastViewedLocalTime).getMinutes();
-            if(minutes > 0) {
-                LOGGER.warn("action=skip-push-notification account_id={} last_seen={}", event.accountId, lastViewedLocalTime);
-                return;
+                final DateTimeZone dateTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
+                final DateTime lastViewedLocalTime = new DateTime(lastViewed.get(), dateTimeZone).withTimeAtStartOfDay();
+                final DateTime nowLocalTime = DateTime.now().withTimeAtStartOfDay();
+                final int minutes = Minutes.minutesBetween(nowLocalTime, lastViewedLocalTime).getMinutes();
+                if(minutes > 0) {
+                    LOGGER.warn("action=skip-push-notification status=app-opened account_id={} last_seen={}", event.accountId, lastViewedLocalTime);
+                    return;
+                }
             }
         }
 
@@ -143,7 +140,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                 pr.setTargetArn(reg.endpoint.get());
                 try {
                     final PublishResult result = sns.publish(pr);
-                    LOGGER.info("account_id={} message_id={}", event.accountId, result.getMessageId());
+                    LOGGER.info("account_id={} message_id={} os={}", event.accountId, result.getMessageId(), reg.os);
                 } catch (EndpointDisabledException endpointDisabled) {
                     toDelete.add(reg);
                 }
@@ -154,7 +151,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         }
 
         for(final MobilePushRegistration registration : toDelete) {
-            LOGGER.info("action=delete-by-device-token account_id={} device_token={} os={}", registration.accountId, registration.deviceToken, registration.os);
+            LOGGER.info("action=delete-by-device-token account_id={} device_token={} os={}", registration.accountId.or(0L), registration.deviceToken, registration.os);
             subscriptionDAO.deleteByDeviceToken(registration.deviceToken);
         }
     }
