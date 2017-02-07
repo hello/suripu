@@ -107,7 +107,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
         }
     }
 
-    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:00";
+    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd"; // limiting to once a day
     private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
 
     public PushNotificationEventDynamoDB(final AmazonDynamoDB client, final String tablePrefix) {
