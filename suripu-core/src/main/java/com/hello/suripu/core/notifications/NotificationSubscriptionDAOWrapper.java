@@ -1,6 +1,6 @@
 package com.hello.suripu.core.notifications;
 
-import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.CreatePlatformEndpointRequest;
 import com.amazonaws.services.sns.model.CreatePlatformEndpointResult;
 import com.amazonaws.services.sns.model.DeleteEndpointRequest;
@@ -22,10 +22,10 @@ public class NotificationSubscriptionDAOWrapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationSubscriptionDAOWrapper.class);
     private final NotificationSubscriptionsDAO notificationSubscriptionsDAO;
 
-    private final AmazonSNSClient amazonSNSClient;
+    private final AmazonSNS amazonSNSClient;
     private final Map<String, String> arns;
 
-    private NotificationSubscriptionDAOWrapper(final NotificationSubscriptionsDAO dao, final AmazonSNSClient amazonSNSClient, final Map<String, String> arns) {
+    private NotificationSubscriptionDAOWrapper(final NotificationSubscriptionsDAO dao, final AmazonSNS amazonSNSClient, final Map<String, String> arns) {
         checkNotNull(arns, "arns can't be null");
 
         this.notificationSubscriptionsDAO = dao;
@@ -40,10 +40,18 @@ public class NotificationSubscriptionDAOWrapper {
      * @param arns
      * @return
      */
-    public static NotificationSubscriptionDAOWrapper create(final NotificationSubscriptionsDAO dao, final AmazonSNSClient amazonSNSClient, final Map<String, String> arns) {
+    public static NotificationSubscriptionDAOWrapper create(final NotificationSubscriptionsDAO dao, final AmazonSNS amazonSNSClient, final Map<String, String> arns) {
         return new NotificationSubscriptionDAOWrapper(dao, amazonSNSClient, arns);
     }
 
+
+    public NotificationSubscriptionsDAO dao() {
+        return notificationSubscriptionsDAO;
+    }
+
+    public AmazonSNS sns() {
+        return amazonSNSClient;
+    }
 
     public Optional<MobilePushRegistration> getSubscription(final Long accountId, final String deviceToken) {
         return notificationSubscriptionsDAO.getSubscription(accountId, deviceToken);
