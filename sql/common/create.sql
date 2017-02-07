@@ -539,17 +539,26 @@ CREATE TABLE voice_command_topics (
     icon VARCHAR(255) NOT NULL
 );
 
+GRANT ALL PRIVILEGES ON voice_command_topics TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE voice_command_topics_id_seq TO ingress_user;
+
 CREATE TABLE voice_command_subtopics (
     id SERIAL PRIMARY KEY,
     command_title VARCHAR(255) NOT NULL,
     voice_command_topic_id INTEGER references voice_command_topics(id) NOT NULL
 );
 
+GRANT ALL PRIVILEGES ON voice_command_subtopics TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE voice_command_subtopics_id_seq TO ingress_user;
+
 CREATE TABLE voice_commands(
     id SERIAL PRIMARY KEY,
     command VARCHAR(255) NOT NULL,
     voice_command_subtopic_id INTEGER references voice_command_subtopics(id) NOT NULL
 );
+
+GRANT ALL PRIVILEGES ON voice_commands TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE voice_commands_id_seq TO ingress_user;
 
 
 
