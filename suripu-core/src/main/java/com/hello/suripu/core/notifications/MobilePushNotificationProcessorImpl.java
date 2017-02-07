@@ -40,14 +40,14 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
     private final ObjectMapper mapper;
 
     private final AmazonSNS sns;
-    private final NotificationSubscriptionsDAO subscriptionDAO;
+    private final NotificationSubscriptionDAOWrapper subscriptionDAOWrapper;
     private final PushNotificationEventDynamoDB pushNotificationEventDynamoDB;
     private final RolloutClient featureFlipper;
     private final AppStatsDAO appStatsDAO;
     private final AccountPreferencesDAO accountPreferencesDAO;
     private final TimeZoneHistoryDAO timeZoneHistoryDAO;
 
-    private MobilePushNotificationProcessorImpl(final AmazonSNS sns, final NotificationSubscriptionsDAO subscriptionDAO,
+    private MobilePushNotificationProcessorImpl(final AmazonSNS sns, final NotificationSubscriptionDAOWrapper subscriptionDAOWrapper,
                                                final PushNotificationEventDynamoDB pushNotificationEventDynamoDB,
                                                final ObjectMapper mapper,
                                                final RolloutClient featureFlipper,
@@ -55,7 +55,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                                                final AccountPreferencesDAO accountPreferencesDAO,
                                                 final TimeZoneHistoryDAO timeZoneHistoryDAO) {
         this.sns = sns;
-        this.subscriptionDAO = subscriptionDAO;
+        this.subscriptionDAOWrapper = subscriptionDAOWrapper;
         this.pushNotificationEventDynamoDB = pushNotificationEventDynamoDB;
         this.mapper = mapper;
         this.featureFlipper = featureFlipper;
@@ -126,7 +126,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         final Long accountId = event.accountId;
         final HelloPushMessage pushMessage = event.helloPushMessage;
 
-        final List<MobilePushRegistration> registrations = subscriptionDAO.getMostRecentSubscriptions(accountId, 5);
+        final List<MobilePushRegistration> registrations = subscriptionDAOWrapper.dao().getMostRecentSubscriptions(accountId, 5);
         LOGGER.info("action=list-registrations account_id={} num_subscriptions={}", event.accountId, registrations.size());
 
         final List<MobilePushRegistration> toDelete = Lists.newArrayList();
@@ -158,7 +158,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
 
         for(final MobilePushRegistration registration : toDelete) {
             LOGGER.info("action=delete-by-device-token account_id={} device_token={} os={}", registration.accountId.or(0L), registration.deviceToken, registration.os);
-            subscriptionDAO.deleteByDeviceToken(registration.deviceToken);
+            subscriptionDAOWrapper.unsubscribe(registration.accountId.or(0L), registration.deviceToken);
         }
     }
 
@@ -235,7 +235,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
     public static class Builder {
 
         private AmazonSNS sns;
-        private NotificationSubscriptionsDAO subscriptionDAO;
+        private NotificationSubscriptionDAOWrapper subscriptionDAOWrapper;
         private PushNotificationEventDynamoDB pushNotificationEventDynamoDB;
         private ObjectMapper mapper = new ObjectMapper();
         private RolloutClient featureFlipper;
@@ -248,8 +248,8 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return this;
         }
 
-        public Builder withSubscriptionDAO(final NotificationSubscriptionsDAO subscriptionDAO) {
-            this.subscriptionDAO = subscriptionDAO;
+        public Builder withSubscriptionDAO(final NotificationSubscriptionDAOWrapper wrapper) {
+            this.subscriptionDAOWrapper = wrapper;
             return this;
         }
 
@@ -285,13 +285,13 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
 
         public MobilePushNotificationProcessor build() {
             checkNotNull(sns, "sns can not be null");
-            checkNotNull(subscriptionDAO, "subscription can not be null");
+            checkNotNull(subscriptionDAOWrapper, "subscriptionDAOWrapper can not be null");
             checkNotNull(pushNotificationEventDynamoDB, "pushNotificationEventDynamoDB can not be null");
             checkNotNull(featureFlipper, "featureFlipper can not be null");
             checkNotNull(appStatsDAO, "appStatsDAO can not be null");
             checkNotNull(accountPreferencesDAO, "accountPreferencesDAO can not be null");
 
-            return new MobilePushNotificationProcessorImpl(sns, subscriptionDAO, pushNotificationEventDynamoDB, mapper,
+            return new MobilePushNotificationProcessorImpl(sns, subscriptionDAOWrapper, pushNotificationEventDynamoDB, mapper,
                     featureFlipper, appStatsDAO, accountPreferencesDAO, timeZoneHistoryDAO);
         }
 
