@@ -87,30 +87,36 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                 return;
             }
 
-            final Optional<DateTime> lastViewed = appStatsDAO.getQuestionsLastViewed(event.accountId);
-            if(lastViewed.isPresent()) {
+            if(featureFlipper.userFeatureActive(FeatureFlipper.APP_LAST_SEEN_PUSH_ENABLED, event.accountId, Collections.EMPTY_LIST)) {
+                final Optional<DateTime> lastViewed = appStatsDAO.getQuestionsLastViewed(event.accountId);
+                if (lastViewed.isPresent()) {
 
-                final DateTimeZone dateTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
-                final DateTime lastViewedLocalTime = new DateTime(lastViewed.get(), dateTimeZone).withTimeAtStartOfDay();
-                final DateTime nowLocalTime = DateTime.now().withTimeAtStartOfDay();
-                final int minutes = Minutes.minutesBetween(nowLocalTime, lastViewedLocalTime).getMinutes();
-                if(minutes > 0) {
-                    LOGGER.warn("action=skip-push-notification status=app-opened account_id={} last_seen={}", event.accountId, lastViewedLocalTime);
-                    return;
+                    final DateTimeZone dateTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
+                    final DateTime lastViewedLocalTime = new DateTime(lastViewed.get(), dateTimeZone).withTimeAtStartOfDay();
+                    final DateTime nowLocalTime = DateTime.now().withTimeAtStartOfDay();
+                    final int minutes = Minutes.minutesBetween(nowLocalTime, lastViewedLocalTime).getMinutes();
+                    if (minutes > 0) {
+                        LOGGER.warn("action=skip-push-notification status=app-opened account_id={} last_seen={}", event.accountId, lastViewedLocalTime);
+                        return;
+                    }
                 }
             }
         }
 
+
+        final DateTimeZone tz = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
+
+        final PushNotificationEvent eventAdjusted = PushNotificationEvent.newBuilder()
+                .withAccountId(event.accountId)
+                .withType(event.type)
+                .withHelloPushMessage(event.helloPushMessage)
+                .withSenseId(event.senseId.orNull())
+                .withTimestamp(event.timestamp)
+                .withTimeZone(tz)
+                .build();
+
         // We often want at-most-once delivery of push notifications, so we insert the record to DDB first.
         // That way if something later in this method fails, we won't accidentally send the same notification twice.
-        final PushNotificationEvent eventAdjusted = new PushNotificationEvent(
-                event.accountId,
-                event.type,
-                new DateTime(event.timestamp, DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId)),
-                event.helloPushMessage,
-                event.senseId
-        );
-
         final boolean successfullyInserted = pushNotificationEventDynamoDB.insert(eventAdjusted);
         if (!successfullyInserted) {
             LOGGER.warn("action=duplicate-push-notification account_id={} type={}", event.accountId, event.type);
@@ -141,7 +147,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                 try {
                     final PublishResult result = sns.publish(pr);
                     LOGGER.info("account_id={} message_id={} os={}", event.accountId, result.getMessageId(), reg.os);
-                } catch (EndpointDisabledException endpointDisabled) {
+                } catch (final EndpointDisabledException endpointDisabled) {
                     toDelete.add(reg);
                 }
                 catch (Exception e) {

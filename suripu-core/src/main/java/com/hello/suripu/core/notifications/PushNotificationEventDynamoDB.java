@@ -169,7 +169,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     protected Map<String, AttributeValue> toAttributeMap(final PushNotificationEvent model) {
         final ImmutableMap.Builder<String, AttributeValue> builder = ImmutableMap.builder();
         builder.put(Attribute.ACCOUNT_ID.shortName(), toAttributeValue(model.accountId))
-                .put(Attribute.TIMESTAMP_TYPE.shortName(), getRangeKey(model.timestamp, Optional.of(model.type)))
+                .put(Attribute.TIMESTAMP_TYPE.shortName(), getRangeKey(new DateTime(model.timestamp, model.timeZone), Optional.of(model.type)))
                 .put(Attribute.TYPE.shortName(), toAttributeValue(model.type.shortName()))
                 .put(Attribute.TIMESTAMP.shortName(), toAttributeValue(model.timestamp))
                 .put(Attribute.BODY.shortName(), toAttributeValue(model.helloPushMessage.body))
