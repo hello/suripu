@@ -50,7 +50,6 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
     public static class Builder {
         private Long accountId;
         private DateTime dateTime;
-        private Long createdAt;
         private Integer offsetMillis;
         private Integer sleepScore;
         private String version;
@@ -63,7 +62,6 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
         public Builder() {
             this.accountId = 0L;
             this.dateTime = DateTime.now(DateTimeZone.UTC);
-            this.createdAt = DateTime.now(DateTimeZone.UTC).getMillis();
             this.offsetMillis = 0;
             this.sleepScore = 0;
             this.version = "";

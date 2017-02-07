@@ -410,7 +410,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         if (item.containsKey(CREATED_AT_ATTRIBUTE_NAME)){
             createdAt = Long.valueOf(item.get(CREATED_AT_ATTRIBUTE_NAME).getN());
         } else{
-            createdAt =  date.withHourOfDay(12).plusMillis(offset).getMillis();
+            createdAt =  0L;
         }
 
 

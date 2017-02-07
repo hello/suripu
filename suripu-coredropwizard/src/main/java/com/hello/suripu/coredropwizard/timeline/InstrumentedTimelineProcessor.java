@@ -1196,8 +1196,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             sleepDurationSum += sleepStat.sleepStats.sleepDurationInMinutes;
             if (sleepStat.dateTime.getMillis() == targetDate.getMillis()){
                 targetDateSleepDuration = sleepStat.sleepStats.sleepDurationInMinutes;
-                lockdownTime = Math.min(sleepStat.sleepStats.createdAt, endTimeLocalUTC.getMillis());
+                lockdownTime = Math.min(sleepStat.sleepStats.createdAt, endTimeLocalUTC.minusMillis(sleepStat.offsetMillis).getMillis());
             }
+        }
+
+        if (lockdownTime == 0L){
+            return Optional.absent();
         }
 
         final int meanSleepDuration = sleepDurationSum / previousSleepStats.size();
