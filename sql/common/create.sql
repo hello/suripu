@@ -532,58 +532,58 @@ GRANT ALL PRIVILEGES ON SEQUENCE alerts_id_seq TO ingress_user;
 
 
 -- Added Feb 3rd, 2017
-CREATE TABLE voice_command_topic (
+CREATE TABLE voice_command_topics (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
     icon VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE voice_command_subtopic (
+CREATE TABLE voice_command_subtopics (
     id SERIAL PRIMARY KEY,
     command_title VARCHAR(255) NOT NULL,
-    voice_command_topic_id INTEGER references voice_command_topic(id) NOT NULL
+    voice_command_topic_id INTEGER references voice_command_topics(id) NOT NULL
 );
 
 CREATE TABLE voice_commands(
     id SERIAL PRIMARY KEY,
     command VARCHAR(255) NOT NULL,
-    voice_command_subtopic_id INTEGER references voice_command_subtopic(id) NOT NULL
+    voice_command_subtopic_id INTEGER references voice_command_subtopics(id) NOT NULL
 );
 
 
 
-INSERT INTO voice_command_topic (title, description, icon) VALUES
+INSERT INTO voice_command_topics (title, description, icon) VALUES
     ('Alarm and Sleep Sounds', 'Before each command, say "Okay Sense" to set an alarm or begin playing Sleep Sounds', 'icon-alarms'),
     ('Sleep', 'Before each command, say "Okay Sense" to ask about your Sleep Score, Sleep Timeline, and Sleep Trends.', 'icon-sleep'),
     ('Room Conditions', 'Before each command, say "Okay Sense" to ask about your temperature, humidity, air quality, and more.', 'icon-rc'),
     ('Expansions', 'Before each command, say "Okay Sense" to control your lights or thermostat.', 'icon-expansions');
 
-INSERT INTO voice_command_subtopic(command_title, voice_command_topic_id) VALUES
-    ('Alarms', (SELECT id FROM voice_command_topic where title = 'Alarm and Sleep Sounds')),
-    ('Sleep Sounds', (SELECT id FROM voice_command_topic where title = 'Alarm and Sleep Sounds')),
-    ('Sleep Timeline', (SELECT id FROM voice_command_topic where title = 'Sleep')),
-    ('Temperature', (SELECT id FROM voice_command_topic where title = 'Room Conditions')),
-    ('Humidity', (SELECT id FROM voice_command_topic where title = 'Room Conditions')),
-    ('Noise Level', (SELECT id FROM voice_command_topic where title = 'Room Conditions')),
-    ('Air Quality', (SELECT id FROM voice_command_topic where title = 'Room Conditions')),
-    ('Lights', (SELECT id FROM voice_command_topic where title = 'Expansions')),
-    ('Thermostat', (SELECT id FROM voice_command_topic where title = 'Expansions'));
+INSERT INTO voice_command_subtopics(command_title, voice_command_topic_id) VALUES
+    ('Alarms', (SELECT id FROM voice_command_topics where title = 'Alarm and Sleep Sounds')),
+    ('Sleep Sounds', (SELECT id FROM voice_command_topics where title = 'Alarm and Sleep Sounds')),
+    ('Sleep Timeline', (SELECT id FROM voice_command_topics where title = 'Sleep')),
+    ('Temperature', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Humidity', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Noise Level', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Air Quality', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Lights', (SELECT id FROM voice_command_topics where title = 'Expansions')),
+    ('Thermostat', (SELECT id FROM voice_command_topics where title = 'Expansions'));
 
 INSERT INTO voice_commands(command, voice_command_subtopic_id) VALUES
-    ('Wake me up at 10 AM.', (SELECT id FROM voice_command_subtopic where command_title = 'Alarms')),
-    ('Set alarm for tomorrow morning at 8.', (SELECT id FROM voice_command_subtopic where command_title = 'Alarms')),
-    ('Play a Sleep Sound.',  (SELECT id FROM voice_command_subtopic where command_title = 'Sleep Sounds')),
-    ('Play White Noise.',  (SELECT id FROM voice_command_subtopic where command_title = 'Sleep Sounds')),
-    ('How was my sleep last night?', (SELECT id FROM voice_command_subtopic where command_title = 'Sleep Timeline')),
-    ('What was my Sleep Score?', (SELECT id FROM voice_command_subtopic where command_title = 'Sleep Timeline')),
-    ('What is the temperature?', (SELECT id FROM voice_command_subtopic where command_title = 'Temperature')),
-    ('What is the humidity?', (SELECT id FROM voice_command_subtopic where command_title = 'Humidity')),
-    ('How noisy is it?', (SELECT id FROM voice_command_subtopic where command_title = 'Noise Level')),
-    ('What is the noise level?', (SELECT id FROM voice_command_subtopic where command_title = 'Noise Level')),
-    ('How is the air quality?', (SELECT id FROM voice_command_subtopic where command_title = 'Air Quality')),
-    ('Turn the lights on.', (SELECT id FROM voice_command_subtopic where command_title = 'Lights')),
-    ('Turn the lights off.', (SELECT id FROM voice_command_subtopic where command_title = 'Lights')),
-    ('Brighten the lgihts.', (SELECT id FROM voice_command_subtopic where command_title = 'Lights')),
-    ('Dim the lights.',  (SELECT id FROM voice_command_subtopic where command_title = 'Lights')),
-    ('Set the thermostat to 70°.',  (SELECT id FROM voice_command_subtopic where command_title = 'Thermostat'));
+    ('Wake me up at 10 AM.', (SELECT id FROM voice_command_subtopics where command_title = 'Alarms')),
+    ('Set alarm for tomorrow morning at 8.', (SELECT id FROM voice_command_subtopics where command_title = 'Alarms')),
+    ('Play a Sleep Sound.',  (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Sounds')),
+    ('Play White Noise.',  (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Sounds')),
+    ('How was my sleep last night?', (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Timeline')),
+    ('What was my Sleep Score?', (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Timeline')),
+    ('What is the temperature?', (SELECT id FROM voice_command_subtopics where command_title = 'Temperature')),
+    ('What is the humidity?', (SELECT id FROM voice_command_subtopics where command_title = 'Humidity')),
+    ('How noisy is it?', (SELECT id FROM voice_command_subtopics where command_title = 'Noise Level')),
+    ('What is the noise level?', (SELECT id FROM voice_command_subtopics where command_title = 'Noise Level')),
+    ('How is the air quality?', (SELECT id FROM voice_command_subtopics where command_title = 'Air Quality')),
+    ('Turn the lights on.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Turn the lights off.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Brighten the lgihts.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Dim the lights.',  (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Set the thermostat to 70°.',  (SELECT id FROM voice_command_subtopics where command_title = 'Thermostat'));

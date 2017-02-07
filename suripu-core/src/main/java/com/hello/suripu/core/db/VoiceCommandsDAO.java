@@ -15,8 +15,8 @@ public  interface VoiceCommandsDAO {
 
 
     @SqlQuery("select vc.command, vcs.command_title, vct.title, vct.description, vct.icon from voice_commands vc " +
-            "left join voice_command_subtopic vcs on vcs.id = vc.voice_command_subtopic_id " +
-            "left join voice_command_topic vct on vct.id = vcs.voice_command_topic_id")
+            "left join voice_command_subtopics vcs on vcs.id = vc.voice_command_subtopic_id " +
+            "left join voice_command_topics vct on vct.id = vcs.voice_command_topic_id")
     List<VoiceCommand> getCommands();
 
 }

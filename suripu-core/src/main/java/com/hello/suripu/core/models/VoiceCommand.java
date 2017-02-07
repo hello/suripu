@@ -12,10 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @SuppressWarnings({"Guava", "WeakerAccess"})
 public class VoiceCommand {
 
-    private static final int NORMAL = 1;
-    private static final int HIGH = 2;
-    private static final int EXTRA_HIGH = 3;
-
     private final String title;
     private final String description;
     private final String commandTitle;
@@ -51,19 +47,31 @@ public class VoiceCommand {
     }
 
     public Optional<String> getNormalPhoto() {
-        return Optional.of(formatIcon(NORMAL));
+        return Optional.of(formatIcon(PhotoSize.NORMAL));
     }
 
     public Optional<String> getHighPhoto() {
-        return Optional.of(formatIcon(HIGH));
+        return Optional.of(formatIcon(PhotoSize.HIGH));
     }
 
     public Optional<String> getExtraHighPhoto() {
-        return Optional.of(formatIcon(EXTRA_HIGH));
+        return Optional.of(formatIcon(PhotoSize.EXTRA_HIGH));
     }
 
-    private String formatIcon(final int size) {
-        return String.format("/%s@%dx.png", icon, size);
+    private String formatIcon(final PhotoSize photoSize) {
+        return String.format("/%s@%dx.png", icon, photoSize.size);
+    }
+
+    private enum PhotoSize {
+        NORMAL(1),
+        HIGH(2),
+        EXTRA_HIGH(3);
+        private final int size;
+
+        PhotoSize(final int size) {
+            this.size = size;
+        }
+
     }
 
 }
