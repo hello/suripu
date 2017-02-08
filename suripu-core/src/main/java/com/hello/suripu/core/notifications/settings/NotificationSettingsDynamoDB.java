@@ -20,6 +20,18 @@ import java.util.stream.Collectors;
 
 public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
 
+    public enum SettingAttribute{
+        ACCOUNT_ID ("account_id"),
+        ENABLED ("enabled"),
+        TYPE("type"),
+        SCHEDULE("schedule");
+
+        private final String name;
+        SettingAttribute(final String name) {
+            this.name = name;
+        }
+    }
+
     private final static boolean DEFAULT_ENABLED = false;
     final private static List<NotificationSetting.Type> ORDERING = Lists.newArrayList(
             NotificationSetting.Type.SLEEP_SCORE,
@@ -27,11 +39,17 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
             NotificationSetting.Type.SLEEP_REMINDER);
 
     private final DynamoDB dynamoDB;
-    private final String tableName;
+    private final Table table;
 
-    public NotificationSettingsDynamoDB(DynamoDB dynamoDB, String tableName) {
+    private NotificationSettingsDynamoDB(final DynamoDB dynamoDB, final Table table) {
         this.dynamoDB = dynamoDB;
-        this.tableName = tableName;
+        this.table = table;
+
+    }
+
+    public static NotificationSettingsDynamoDB create(final DynamoDB dynamoDB, final String tableName) {
+        final Table table = dynamoDB.getTable(tableName);
+        return new NotificationSettingsDynamoDB(dynamoDB, table);
     }
 
     private NotificationSetting createDefault(final Long accountId, final NotificationSetting.Type type) {
@@ -41,17 +59,16 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
     @Override
     public void save(final List<NotificationSetting> settings) {
         final List<Item> items = settings.stream().map(s -> toItem(s)).collect(Collectors.toList());
-        final TableWriteItems settingsWriteItems = new TableWriteItems(tableName)
+        final TableWriteItems settingsWriteItems = new TableWriteItems(table.getTableName())
                 .withItemsToPut(items);
         dynamoDB.batchWriteItem(settingsWriteItems);
     }
 
     @Override
     public List<NotificationSetting> get(final Long accountId) {
-        final Table table = dynamoDB.getTable(tableName);
-        final KeyAttribute key = new KeyAttribute("account_id", accountId);
+
+        final KeyAttribute key = new KeyAttribute(SettingAttribute.ACCOUNT_ID.name, accountId);
         final ItemCollection<QueryOutcome> outcomes = table.query(key);
-        final List<NotificationSetting> settings = Lists.newArrayList();
         final Map<NotificationSetting.Type, NotificationSetting> defaults = Maps.newHashMap();
 
         for(final NotificationSetting.Type type : NotificationSetting.Type.values()) {
@@ -76,28 +93,26 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
             throw new IllegalArgumentException("account id is absent");
         }
         final PrimaryKey primaryKey = new PrimaryKey()
-                .addComponent("account_id", setting.accountId.get())
-                .addComponent("type", setting.type());
+                .addComponent(SettingAttribute.ACCOUNT_ID.name, setting.accountId.get())
+                .addComponent(SettingAttribute.TYPE.name, setting.type());
 
         final Item item = new Item()
                 .withPrimaryKey(primaryKey)
-                .withBoolean("enabled", setting.enabled());
+                .withBoolean(SettingAttribute.ENABLED.name, setting.enabled());
         if(setting.schedule.isPresent()) {
-            item.withString(
-                    "schedule",
-                    setting.schedule.get().toString());
+            item.withString(SettingAttribute.SCHEDULE.name, setting.schedule.get().toString());
         }
 
         return item;
     }
 
     NotificationSetting fromItem(final Item item) {
-        final NotificationSetting.Type type = NotificationSetting.Type.valueOf(item.getString("type"));
-        final String schedule = item.hasAttribute("schedule") ? item.getString("schedule") : "";
+        final NotificationSetting.Type type = NotificationSetting.Type.valueOf(item.getString(SettingAttribute.TYPE.name));
+        final String schedule = item.hasAttribute(SettingAttribute.SCHEDULE.name) ? item.getString(SettingAttribute.SCHEDULE.name) : "";
         final NotificationSetting setting = new NotificationSetting(
-                item.getLong("account_id"),
+                item.getLong(SettingAttribute.ACCOUNT_ID.name),
                 type,
-                item.getBOOL("enabled"),
+                item.getBOOL(SettingAttribute.ENABLED.name),
                 NotificationSchedule.fromString(schedule)
         );
 
