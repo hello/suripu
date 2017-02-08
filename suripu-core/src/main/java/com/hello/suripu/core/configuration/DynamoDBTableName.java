@@ -33,6 +33,7 @@ public enum DynamoDBTableName {
     PILL_LAST_SEEN("pill_last_seen"),
     PREFERENCES("preferences"),
     PUSH_NOTIFICATION_EVENT("push_notification_event"),
+    PUSH_NOTIFICATION_SETTINGS("push_notification_settings"),
     RING_TIME("ring_time"),
     RING_TIME_HISTORY("ring_time_history"),
     SENSE_EVENTS("sense_events"),
