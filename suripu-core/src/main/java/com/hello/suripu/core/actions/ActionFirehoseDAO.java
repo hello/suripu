@@ -26,7 +26,7 @@ public class ActionFirehoseDAO extends FirehoseDAO<Action> {
 
     @Override
     public Record toRecord(final Action model) {
-        final String resultString = model.result.isPresent() ? model.result.get().string() : FirehoseDAO.NULL_STRING;
+        final String resultString = model.result.isPresent() ? model.result.get() : FirehoseDAO.NULL_STRING;
         final String offsetMillisString = model.offsetMillis.isPresent() ? toString(model.offsetMillis.get()) : FirehoseDAO.NULL_STRING;
         return toPipeDelimitedRecord(
                 toString(model.accountId),

@@ -49,9 +49,9 @@ public class FirehoseDAOTest {
     private static final String STREAM_NAME = "test_stream";
 
     private static List<Action> actions = ImmutableList.of(
-            new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY), DateTime.now(DateTimeZone.UTC).minusMinutes(5), Optional.of(0)),
-            new Action(2L, ActionType.LOGIN, Optional.of(ActionResult.FAIL), DateTime.now(DateTimeZone.UTC).minusMinutes(10), Optional.of(0)),
-            new Action(3L, ActionType.LOGIN, Optional.of(ActionResult.OKAY), DateTime.now(DateTimeZone.UTC).minusMinutes(15), Optional.of(0))
+            new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY.string()), DateTime.now(DateTimeZone.UTC).minusMinutes(5), Optional.of(0)),
+            new Action(2L, ActionType.LOGIN, Optional.of(ActionResult.FAIL.string()), DateTime.now(DateTimeZone.UTC).minusMinutes(10), Optional.of(0)),
+            new Action(3L, ActionType.LOGIN, Optional.of(ActionResult.OKAY.string()), DateTime.now(DateTimeZone.UTC).minusMinutes(15), Optional.of(0))
     );
 
     private class DummyFirehoseAsync implements AmazonKinesisFirehoseAsync {

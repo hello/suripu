@@ -48,11 +48,16 @@ public class ActionProcessorFirehose implements ActionProcessor {
     public int maxBufferSize() { return this.maxBufferSize; }
 
     /**
-     * synchronous writes to firehose
+     * blocking writes to firehose
      */
-    private void flushToFirehose() {
+    private synchronized void flushToFirehose() {
         final List<Action> actionList = new ArrayList<>(buffer.keySet());
+
         final int actionListSize = actionList.size();
+        if (actionListSize < this.maxBufferSize) {
+            LOGGER.debug("action=abort-flush reason=not-enough-data-in-buffer");
+            return;
+        }
 
         final int added = this.firehoseDAO.batchInsertAll(actionList);
         if (added != actionListSize) {

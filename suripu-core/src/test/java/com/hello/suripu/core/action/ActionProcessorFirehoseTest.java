@@ -42,7 +42,7 @@ public class ActionProcessorFirehoseTest {
         public void run() {
             final DateTime now = DateTime.now(DateTimeZone.UTC);
             for (int i = 0; i < numActions; i++) {
-                final Action action = new Action(1L, actionType, Optional.of(ActionResult.OKAY), now.plusMinutes(i), Optional.absent());
+                final Action action = new Action(1L, actionType, Optional.of(ActionResult.OKAY.string()), now.plusMinutes(i), Optional.absent());
                 processor.add(action);
             }
         }
@@ -51,7 +51,7 @@ public class ActionProcessorFirehoseTest {
     @Test
     public void testAddSingleAction() {
 
-        final Action action = new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY), DateTime.now(DateTimeZone.UTC), Optional.absent());
+        final Action action = new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY.string()), DateTime.now(DateTimeZone.UTC), Optional.absent());
 
         Boolean result = processor.add(action);
         assertThat(result, is(true));
@@ -69,7 +69,7 @@ public class ActionProcessorFirehoseTest {
         final DateTime now = DateTime.now(DateTimeZone.UTC).minusHours(3);
         Boolean result = false;
         for (int i = 0; i < numActions; i++ ) {
-            final Action action = new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY), now.plusMinutes(i), Optional.absent());
+            final Action action = new Action(1L, ActionType.LOGIN, Optional.of(ActionResult.OKAY.string()), now.plusMinutes(i), Optional.absent());
             result = processor.add(action);
 
             if (i == MAX_BUFFER_SIZE - 2) {
@@ -94,7 +94,7 @@ public class ActionProcessorFirehoseTest {
         final int numActions2 = 150;
 
         final Thread thread1 = new Thread(new ActionRunnable(numActions1, singleProcessor, ActionType.LOGIN));
-        final Thread thread2 = new Thread(new ActionRunnable(numActions2, singleProcessor, ActionType.TRENDS));
+        final Thread thread2 = new Thread(new ActionRunnable(numActions2, singleProcessor, ActionType.LOGIN));
 
         thread1.start();
         latch.countDown();
