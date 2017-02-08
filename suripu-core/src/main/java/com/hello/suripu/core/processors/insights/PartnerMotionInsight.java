@@ -53,12 +53,14 @@ public class PartnerMotionInsight {
             return Optional.absent();
         }
 
+        final int numComparisons = Math.min(mySleepStats.size(), partnerSleepStats.size());
+
         Float myMotionTtl = 0f;
         Float partnerMotionTtl = 0f;
-        for (AggregateSleepStats mySleepStat : mySleepStats) {
+        for (AggregateSleepStats mySleepStat : mySleepStats.subList(0, numComparisons)) {
             myMotionTtl = myMotionTtl + mySleepStat.motionScore.numMotions;
         }
-        for (AggregateSleepStats partnerSleepStat : partnerSleepStats) {
+        for (AggregateSleepStats partnerSleepStat : partnerSleepStats.subList(0, numComparisons)) {
             partnerMotionTtl = partnerMotionTtl + partnerSleepStat.motionScore.numMotions;
         }
 
