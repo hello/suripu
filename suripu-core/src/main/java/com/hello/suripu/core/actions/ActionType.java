@@ -1,18 +1,20 @@
 package com.hello.suripu.core.actions;
 
+import com.hello.suripu.core.trends.v2.TimeScale;
+
 /**
  * Created by ksg on 1/23/17
  */
 public enum ActionType {
-    LOGIN("login"),
+    LOGIN("login"), // set
     LOGOUT("logout"),
     TRENDS_WEEK("trends_week"),
     TRENDS_MONTH("trends_month"),
     TRENDS_QUARTER("trends_quarter"),
     TIMELINE_V1("timeline_v1"),
-    TIMELINE_V2("timeline_v2"),
-    TIMELINE_FEEDBACK("timeline_feedback"),
-    TIMELINE_CORRECT("timeline_correct"),
+    TIMELINE_V2("timeline_v2"), // set
+    TIMELINE_FEEDBACK("timeline_feedback"), // set
+    TIMELINE_CORRECT("timeline_correct"), // set
     PILL_PAIR("pill_pair"),
     PILL_UNPAIR("pill_unpair"),
     SENSE_PAIR("sense_pair"),
@@ -25,9 +27,9 @@ public enum ActionType {
     PHOTO_UPLOAD("photo_upload"),
     PROVISION_SENSE("provision_sense"),
     PROVISION_PILL("provision_pill"),
-    QUESTION_GET("question_get"),
-    QUESTION_SAVE("question_save"),
-    QUESTION_SKIP("question_skip"),
+    QUESTION_GET("question_get"),   // set
+    QUESTION_SAVE("question_save"), // set
+    QUESTION_SKIP("question_skip"), // set
     ROOM_CONDITIONS_CURRENT("room_conditions_current"),
     ROOM_CONDITIONS_BATCH("room_conditions_batch"),
     ALERTS("alerts"),
@@ -42,4 +44,14 @@ public enum ActionType {
     }
 
     public String string() { return value;}
+
+    public static ActionType getTrendsType(final TimeScale timeScale) {
+        if (timeScale.equals(TimeScale.LAST_WEEK)) {
+            return TRENDS_WEEK;
+        } else if (timeScale.equals(TimeScale.LAST_MONTH)) {
+            return TRENDS_MONTH;
+        } else {
+            return TRENDS_QUARTER;
+        }
+    }
 }
