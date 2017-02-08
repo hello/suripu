@@ -120,6 +120,18 @@ public class SleepPeriod {
             }
         }
 
+        public static SleepPeriod getSleepPeriod(final Period period){
+            if (period == Period.MORNING){
+                return SleepPeriod.morning();
+            }
+            if(period == period.AFTERNOON_EVENING){
+                return SleepPeriod.afternoonEvening();
+            }
+            return SleepPeriod.night();
+
+
+        }
+
         public boolean sleepEventInSleepPeriod(final DateTime inBedTime){
             final SleepPeriod eventSleepPeriod = getSleepPeriod(inBedTime);
             if (this.PERIOD == eventSleepPeriod.PERIOD){
@@ -127,12 +139,12 @@ public class SleepPeriod {
             }
             return false;
         }
-    public static List<SleepPeriod> getAll(){
-        final List<SleepPeriod> sleepPeriods = new ArrayList<>();
-        sleepPeriods.add(morning());
-        sleepPeriods.add(afternoonEvening());
-        sleepPeriods.add(night());
-        return sleepPeriods;
+    public static List<SleepPeriod.Period> getAll(){
+        final List<SleepPeriod.Period> periods = new ArrayList<>();
+        periods.add(Period.MORNING);
+        periods.add(Period.AFTERNOON_EVENING);
+        periods.add(Period.NIGHT);
+        return periods;
     }
 
 }

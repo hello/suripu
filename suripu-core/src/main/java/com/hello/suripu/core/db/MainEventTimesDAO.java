@@ -11,5 +11,5 @@ import java.util.Map;
  */
 public interface MainEventTimesDAO {
     public boolean updateEventTimes(Long accountId, DateTime date, MainEventTimes mainEventTimes);
-    public Map<SleepPeriod, MainEventTimes> getEventTimes(Long accountId, DateTime date);
+    public Map<SleepPeriod.Period, MainEventTimes> getEventTimes(Long accountId, DateTime date);
 }

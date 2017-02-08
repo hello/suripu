@@ -5,6 +5,7 @@ import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.translations.English;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,15 +17,14 @@ import java.util.Map;
  * Created by jarredheinrich on 2/7/17.
  */
 public class MainEventTimes {
-    private final List<Event.Type> MAIN_EVENT_TYPES = Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP,Event.Type.OUT_OF_BED);
-    private final List<Event.Type> REQUIRED_EVENT_TYPES =  Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP);
+    //private final List<Event.Type> REQUIRED_EVENT_TYPES =  Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP);
     public final SleepPeriod SLEEP_PERIOD;
     public final Map<Event.Type, EventTime> EVENT_TIME_MAP;
 
     public final long CREATED_AT;
 
-    public MainEventTimes create (final long inBedTime, final int inBedOffset, final long sleepTime, final int sleepOffset, final long wakeUpTime, final int wakeUpOffset, final long outOfBedTime, final int outOfBedOffset, final long createdAt){
-        final DateTime inBedTimeLocalUTC = new DateTime(inBedTime + inBedOffset);
+    public static MainEventTimes create (final long inBedTime, final int inBedOffset, final long sleepTime, final int sleepOffset, final long wakeUpTime, final int wakeUpOffset, final long outOfBedTime, final int outOfBedOffset, final long createdAt){
+        final DateTime inBedTimeLocalUTC = new DateTime(inBedTime + inBedOffset, DateTimeZone.UTC);
         final SleepPeriod sleepPeriod = SleepPeriod.getSleepPeriod(inBedTimeLocalUTC);
         final EventTime inBedEventTime = new EventTime(inBedTime, inBedOffset);
         final EventTime sleepEventTime = new EventTime(sleepTime, sleepOffset);
@@ -34,7 +34,7 @@ public class MainEventTimes {
 
     }
 
-    public MainEventTimes create(final SleepPeriod sleepPeriod, final long createdAt, final TimelineAlgorithmResult timelineAlgorithmResult){
+    public static MainEventTimes create(final SleepPeriod sleepPeriod, final long createdAt, final TimelineAlgorithmResult timelineAlgorithmResult){
 
         if(timelineAlgorithmResult.mainEvents.containsKey(Event.Type.IN_BED) && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.SLEEP)  && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.WAKE_UP)  && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.OUT_OF_BED) ) {
             final EventTime inBedEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.IN_BED).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.IN_BED).getTimezoneOffset());
@@ -46,7 +46,12 @@ public class MainEventTimes {
         return new MainEventTimes(sleepPeriod, createdAt);
     }
 
-    public MainEventTimes create (final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
+    public static MainEventTimes create (final SleepPeriod.Period period, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
+        final SleepPeriod sleepPeriod = SleepPeriod.getSleepPeriod(period);
+        return new MainEventTimes(sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
+    }
+
+    public static MainEventTimes create (final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
        return new MainEventTimes(sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
     }
 
@@ -81,6 +86,8 @@ public class MainEventTimes {
 
 
     public boolean hasValidEventTimes(){
+        final List<Event.Type> MAIN_EVENT_TYPES = Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP,Event.Type.OUT_OF_BED);
+
         for (final Event.Type eventType : MAIN_EVENT_TYPES){
             if (!this.EVENT_TIME_MAP.containsKey(eventType)){
                 return false;
