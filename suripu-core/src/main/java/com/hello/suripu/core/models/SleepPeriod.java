@@ -2,7 +2,9 @@ package com.hello.suripu.core.models;
 
 import org.joda.time.DateTime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -72,6 +74,7 @@ public class SleepPeriod {
             return NONE;
         }
 
+
     }
 
     public enum Boundary {
@@ -106,7 +109,7 @@ public class SleepPeriod {
             }
         }
 
-        public SleepPeriod getSleepPeriod(final DateTime inBedTime){
+        public static SleepPeriod getSleepPeriod(final DateTime inBedTime){
             final Integer inBedHour = inBedTime.getHourOfDay();
             if (inBedHour >= 4 && inBedHour < 12){
                 return SleepPeriod.morning();
@@ -124,5 +127,12 @@ public class SleepPeriod {
             }
             return false;
         }
+    public static List<SleepPeriod> getAll(){
+        final List<SleepPeriod> sleepPeriods = new ArrayList<>();
+        sleepPeriods.add(morning());
+        sleepPeriods.add(afternoonEvening());
+        sleepPeriods.add(night());
+        return sleepPeriods;
+    }
 
 }

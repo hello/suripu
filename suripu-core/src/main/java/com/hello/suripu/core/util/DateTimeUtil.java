@@ -25,6 +25,10 @@ public class DateTimeUtil {
         return DateTimeFormat.forPattern(DYNAMO_DB_DATE_FORMAT).print(date);
     }
 
+    public static String dateToYmdSleepPeriodString(final DateTime date) {
+        return DateTimeFormat.forPattern(DYNAMO_DB_DATETIME_FORMAT).print(date);
+    }
+
     public static String datetimeToString(final DateTime dateTime) {
         return DateTimeFormat.forPattern(DYNAMO_DB_DATETIME_FORMAT).print(dateTime);
     }
@@ -32,7 +36,19 @@ public class DateTimeUtil {
     public static DateTime ymdStringToDateTime(final String dateString) {
         return DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+    }
 
+    public static DateTime ymdMaybeSleepPeriodStringToDateTime(final String dateString) {
+        if (dateString.length() == 10){
+            return ymdStringToDateTime(dateString);
+        } else {
+           return ymdSleepPeriodToDateTime(dateString);
+        }
+    }
+
+    public static DateTime ymdSleepPeriodToDateTime(final String dateString) {
+        return DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))
+                .withZoneRetainFields(DateTimeZone.UTC);
     }
 
     public static DateTime datetimeStringToDateTime(final String datetimeString) {
