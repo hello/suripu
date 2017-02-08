@@ -7,6 +7,7 @@ import com.amazonaws.services.sns.model.PublishResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AppStatsDAO;
@@ -17,6 +18,9 @@ import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.librato.rollout.RolloutClient;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.MessageBuilder;
+import com.segment.analytics.messages.TrackMessage;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -38,6 +42,8 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MobilePushNotificationProcessorImpl.class);
 
+    private final static String SEGMENT_TRACKNAME = "Push Notifications";
+
     private final ObjectMapper mapper;
 
     private final PushNotificationEventDynamoDB pushNotificationEventDynamoDB;
@@ -46,6 +52,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
     private final AccountPreferencesDAO accountPreferencesDAO;
     private final TimeZoneHistoryDAO timeZoneHistoryDAO;
     private final NotificationSubscriptionDAOWrapper wrapper;
+    private final Analytics analytics;
 
     private MobilePushNotificationProcessorImpl(final PushNotificationEventDynamoDB pushNotificationEventDynamoDB,
                                                 final ObjectMapper mapper,
@@ -53,7 +60,8 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                                                 final AppStatsDAO appStatsDAO,
                                                 final AccountPreferencesDAO accountPreferencesDAO,
                                                 final TimeZoneHistoryDAO timeZoneHistoryDAO,
-                                                final NotificationSubscriptionDAOWrapper wrapper) {
+                                                final NotificationSubscriptionDAOWrapper wrapper,
+                                                final Analytics analytics) {
         this.pushNotificationEventDynamoDB = pushNotificationEventDynamoDB;
         this.mapper = mapper;
         this.featureFlipper = featureFlipper;
@@ -61,6 +69,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         this.accountPreferencesDAO = accountPreferencesDAO;
         this.timeZoneHistoryDAO = timeZoneHistoryDAO;
         this.wrapper = wrapper;
+        this.analytics = analytics;
     }
 
     @Override
@@ -143,15 +152,32 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                 pr.setMessageStructure("json");
                 pr.setMessage(message.get());
                 pr.setTargetArn(reg.endpoint.get());
+
                 try {
                     final PublishResult result = wrapper.sns().publish(pr);
-                    LOGGER.info("account_id={} message_id={} os={}", event.accountId, result.getMessageId(), reg.os);
+                    LOGGER.info("account_id={} message_id={} os={} version={}", event.accountId, result.getMessageId(), reg.os, reg.appVersion);
+
+                    final Map<String, String> tags = ImmutableMap.of(
+                            "type",event.type.shortName(),
+                            "app_version", reg.appVersion,
+                            "platform", reg.os,
+                            "version", reg.version
+                    );
+
+                    final MessageBuilder mb = TrackMessage.builder(SEGMENT_TRACKNAME)
+                            .userId(String.valueOf(reg.accountId.or(0L)))
+                            .properties(tags)
+                            .timestamp(DateTime.now(DateTimeZone.UTC).toDate());
+
+                    analytics.enqueue(mb);
                 } catch (final EndpointDisabledException endpointDisabled) {
                     toDelete.add(reg);
                 }
                 catch (Exception e) {
                     LOGGER.error("error=failed-sending-sns-message message={}", e.getMessage());
                 }
+
+
             }
         }
 
@@ -242,6 +268,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         private AccountPreferencesDAO accountPreferencesDAO;
         private TimeZoneHistoryDAO timeZoneHistoryDAO;
         private Map<String, String> arns = Maps.newHashMap();
+        private Analytics analytics;
 
         public Builder withSns(final AmazonSNS sns) {
             this.sns = sns;
@@ -288,6 +315,11 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return this;
         }
 
+        public Builder withAnalytics(final Analytics analytics) {
+            this.analytics = analytics;
+            return this;
+        }
+
         public MobilePushNotificationProcessor build() {
             checkNotNull(sns, "sns can not be null");
             checkNotNull(subscriptionDAO, "subscription can not be null");
@@ -295,10 +327,11 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             checkNotNull(featureFlipper, "featureFlipper can not be null");
             checkNotNull(appStatsDAO, "appStatsDAO can not be null");
             checkNotNull(accountPreferencesDAO, "accountPreferencesDAO can not be null");
+            checkNotNull(analytics, "analytics can not be null");
 
-            NotificationSubscriptionDAOWrapper wrapper = NotificationSubscriptionDAOWrapper.create(subscriptionDAO, sns, arns);
+            final NotificationSubscriptionDAOWrapper wrapper = NotificationSubscriptionDAOWrapper.create(subscriptionDAO, sns, arns);
             return new MobilePushNotificationProcessorImpl(pushNotificationEventDynamoDB, mapper,
-                    featureFlipper, appStatsDAO, accountPreferencesDAO, timeZoneHistoryDAO, wrapper);
+                    featureFlipper, appStatsDAO, accountPreferencesDAO, timeZoneHistoryDAO, wrapper, analytics);
         }
 
     }
