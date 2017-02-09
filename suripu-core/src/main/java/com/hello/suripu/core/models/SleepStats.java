@@ -11,9 +11,6 @@ public class SleepStats {
     public static final int LIGHT_SLEEP_DEPTH_THRESHOLD = 10; // light < 10
     public static final int MEDIUM_SLEEP_DEPTH_THRESHOLD = 70; // medium < 70, sound >= 70
 
-    @JsonIgnore
-    final public long createdAt;
-
     @JsonProperty("sound_sleep")
     final public Integer soundSleepDurationInMinutes;
 
@@ -44,15 +41,13 @@ public class SleepStats {
     @JsonIgnore
     public final boolean isInBedDuration;
 
-    public SleepStats(final long createdAt,
-                      final Integer soundSleepDurationInMinutes,
+    public SleepStats(final Integer soundSleepDurationInMinutes,
                       final Integer mediumSleepDurationInMinutes,
                       final Integer lightSleepDurationInMinutes,
                       final Integer uninterruptedSleepDurationInMinutes,
                       final Integer sleepDurationInMinutes, final boolean isInBedDuration,
                       final Integer numberOfMotionEvents,
                       final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMinutes) {
-        this.createdAt = createdAt;
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
         this.mediumSleepDurationInMinutes = mediumSleepDurationInMinutes;
         this.lightSleepDurationInMinutes = lightSleepDurationInMinutes;
@@ -71,7 +66,6 @@ public class SleepStats {
                       final Integer sleepDurationInMinutes, final boolean isInBedDuration,
                       final Integer numberOfMotionEvents,
                       final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMinutes) {
-        this.createdAt = 0L;
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
         this.mediumSleepDurationInMinutes = mediumSleepDurationInMinutes;
         this.lightSleepDurationInMinutes = lightSleepDurationInMinutes;
@@ -92,9 +86,9 @@ public class SleepStats {
             @JsonProperty("times_awake") Integer numberOfMotionEvents,
             @JsonProperty("time_to_sleep") Integer sleepOnsetTimeMinutes) {
 
-        return new SleepStats(0L, soundSleepDurationInMinutes, 0, 0,uninterruptedSleepDurationInMinutes,
+        return new SleepStats(soundSleepDurationInMinutes, 0, 0,uninterruptedSleepDurationInMinutes,
                 sleepDurationInMinutes, true,
-                numberOfMotionEvents, 0L, 0L,  sleepOnsetTimeMinutes);
+                numberOfMotionEvents, 0L, 0L, sleepOnsetTimeMinutes);
     }
 
     @Override
@@ -126,5 +120,4 @@ public class SleepStats {
     public boolean isFromNull(){
         return Objects.equal(this.soundSleepDurationInMinutes, null);
     }
-
 }

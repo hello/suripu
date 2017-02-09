@@ -192,12 +192,4 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasTimelineLockdown(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_LOCKDOWN, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean useTimelineSleepPeriodEnforcement(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_SLEEP_PERIOD_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
-    }
-
 }

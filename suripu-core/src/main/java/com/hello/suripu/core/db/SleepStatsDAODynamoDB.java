@@ -77,7 +77,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
     public static final String TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME =  "awake_score";
 
     // sleep stats stuff
-    public static final String CREATED_AT_ATTRIBUTE_NAME = "created_at";//
     public static final String SLEEP_DURATION_ATTRIBUTE_NAME = "sleep_duration";
     public static final String IS_INBED_DURATION_ATTRIBUTE_NAME = "is_inbed_duration";
     public static final String LIGHT_SLEEP_ATTRIBUTE_NAME = "light_sleep";
@@ -114,13 +113,13 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
         this.targetAttributes = new HashSet<>();
         this.targetAttributes.addAll(this.mustHaveAttributes);
-        Collections.addAll(targetAttributes, CREATED_AT_ATTRIBUTE_NAME,
+        Collections.addAll(targetAttributes,
                 SLEEP_DURATION_SCORE_ATTRIBUTE_NAME,
                 ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME,
                 TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME,
                 MEDIUM_SLEEP_ATTRIBUTE_NAME,
                 UNINTERRUPTED_SLEEP_ATTRIBUTE_NAME
-                );
+        );
         Collections.addAll(this.targetAttributes, IS_INBED_DURATION_ATTRIBUTE_NAME);
     }
 
@@ -319,9 +318,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         final String dateString = DateTimeUtil.dateToYmdString(date.withTimeAtStartOfDay());
         item.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(dateString));
 
-        final Long createdAt = DateTime.now(DateTimeZone.UTC).getMillis();
-        item.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(createdAt)));
-
         final int dayOfWeek = date.getDayOfWeek();
         item.put(DOW_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(dayOfWeek)));
         item.put(OFFSET_MILLIS_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(offsetMillis)));
@@ -379,8 +375,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     private AggregateSleepStats createAggregateStat(Map<String, AttributeValue> item) {
 
-        final DateTime date = DateTimeUtil.ymdStringToDateTime(item.get(DATE_ATTRIBUTE_NAME).getS());
-        final Integer offset = Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN());
         // score components
         final MotionScore motionScore = new MotionScore(
                 Integer.valueOf(item.get(NUM_MOTIONS_ATTRIBUTE_NAME).getN()),
@@ -395,7 +389,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         final Integer lightSleep = Integer.valueOf(item.get(LIGHT_SLEEP_ATTRIBUTE_NAME).getN());
         final Integer sleepDuration = Integer.valueOf(item.get(SLEEP_DURATION_ATTRIBUTE_NAME).getN());
         final Integer mediumSleep, uninterruptedSleep;
-        final Long createdAt;
 
         if (item.containsKey(MEDIUM_SLEEP_ATTRIBUTE_NAME)) {
             mediumSleep = Integer.valueOf(item.get(MEDIUM_SLEEP_ATTRIBUTE_NAME).getN());
@@ -407,15 +400,8 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         } else {
             uninterruptedSleep = soundSleep;
         }
-        if (item.containsKey(CREATED_AT_ATTRIBUTE_NAME)){
-            createdAt = Long.valueOf(item.get(CREATED_AT_ATTRIBUTE_NAME).getN());
-        } else{
-            createdAt =  0L;
-        }
-
 
         final SleepStats stats = new SleepStats(
-                createdAt,
                 soundSleep,
                 mediumSleep,
                 lightSleep,
@@ -430,8 +416,8 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
         AggregateSleepStats.Builder builder = new AggregateSleepStats.Builder()
                 .withAccountId(Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()))
-                .withDateTime(date)
-                .withOffsetMillis(offset)
+                .withDateTime(DateTimeUtil.ymdStringToDateTime(item.get(DATE_ATTRIBUTE_NAME).getS()))
+                .withOffsetMillis(Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN()))
                 .withSleepScore(Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN()))
                 .withVersion(item.get(VERSION_ATTRIBUTE_NAME).getS())
                 .withMotionScore(motionScore)

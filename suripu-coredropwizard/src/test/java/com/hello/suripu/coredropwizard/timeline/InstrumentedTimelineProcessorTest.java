@@ -13,7 +13,6 @@ import com.hello.suripu.core.db.SenseDataDAODynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MotionScore;
-import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -125,8 +124,8 @@ public class InstrumentedTimelineProcessorTest {
 
 
     final public static List<LoggingProtos.TimelineLog> getLogsFromTimeline(InstrumentedTimelineProcessor timelineProcessor) {
-        final SleepPeriod sleepPeriod = SleepPeriod.night();
-        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(), sleepPeriod,Optional.<TimelineFeedback>absent());
+
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());
 
         TestCase.assertTrue(timelineResult.timelines.size() > 0);
         TestCase.assertTrue(timelineResult.logV2.isPresent());
@@ -149,7 +148,7 @@ public class InstrumentedTimelineProcessorTest {
 
 
 
-   // @Test
+    // @Test
     public void testTimelineProcessorSimple() {
 
         {
@@ -193,8 +192,7 @@ public class InstrumentedTimelineProcessorTest {
         FeedbackReadDAO feedbackReadDAO = helpers.feedbackDAO;
         final Optional <TimelineFeedback> timelineFeedback;
         timelineFeedback = Optional.of(feedbackReadDAO.getCorrectedForNight(accountId, targetDate).get(0));
-        final SleepPeriod sleepPeriod = SleepPeriod.night();
-        final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,sleepPeriod,timelineFeedback);
+        final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,timelineFeedback);
         for (final SleepSegment segment: timelineResult.timelines.get(0).events) {
             final int offset = segment.getOffsetMillis();
             final long timeUTC = segment.getTimestamp();
@@ -241,8 +239,7 @@ public class InstrumentedTimelineProcessorTest {
         FeedbackReadDAO feedbackReadDAO = helpers.feedbackDAO;
         final Optional <TimelineFeedback> timelineFeedback;
         timelineFeedback = Optional.of(feedbackReadDAO.getCorrectedForNight(accountId, targetDate).get(0));
-        final SleepPeriod sleepPeriod = SleepPeriod.night();
-        final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,sleepPeriod, timelineFeedback);
+        final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,timelineFeedback);
         for (final SleepSegment segment: timelineResult.timelines.get(0).events) {
             final int offset = segment.getOffsetMillis();
             final long timeUTC = segment.getTimestamp();
