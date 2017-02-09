@@ -119,7 +119,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                 TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME,
                 MEDIUM_SLEEP_ATTRIBUTE_NAME,
                 UNINTERRUPTED_SLEEP_ATTRIBUTE_NAME
-        );
+                );
         Collections.addAll(this.targetAttributes, IS_INBED_DURATION_ATTRIBUTE_NAME);
     }
 

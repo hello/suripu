@@ -270,7 +270,7 @@ public class InstrumentedTimelineProcessorTest {
         TestCase.assertTrue(wakeEvent);TestCase.assertTrue(alarmEvent);
     }
 
-    //@Test
+   //@Test
     public void testcomputeSleepScoreVersionTransition(){
         final MotionScore testMotionScore = new MotionScore(19, 20, 3500F, 25000, 75);
         final SleepScore testSleepScoreV2 = new SleepScore(88, testMotionScore, 89, 100, 0, "v2");
