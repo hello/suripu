@@ -125,8 +125,8 @@ public class InstrumentedTimelineProcessorTest {
 
 
     final public static List<LoggingProtos.TimelineLog> getLogsFromTimeline(InstrumentedTimelineProcessor timelineProcessor) {
-        final SleepPeriod sleepPeriod = SleepPeriod.night();
-        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(), sleepPeriod,Optional.<TimelineFeedback>absent());
+        final SleepPeriod sleepPeriod = SleepPeriod.night(DateTime.now(DateTimeZone.UTC));
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(DateTimeZone.UTC), sleepPeriod,Optional.<TimelineFeedback>absent());
 
         TestCase.assertTrue(timelineResult.timelines.size() > 0);
         TestCase.assertTrue(timelineResult.logV2.isPresent());
@@ -193,7 +193,7 @@ public class InstrumentedTimelineProcessorTest {
         FeedbackReadDAO feedbackReadDAO = helpers.feedbackDAO;
         final Optional <TimelineFeedback> timelineFeedback;
         timelineFeedback = Optional.of(feedbackReadDAO.getCorrectedForNight(accountId, targetDate).get(0));
-        final SleepPeriod sleepPeriod = SleepPeriod.night();
+        final SleepPeriod sleepPeriod = SleepPeriod.night(targetDate);
         final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,sleepPeriod,timelineFeedback);
         for (final SleepSegment segment: timelineResult.timelines.get(0).events) {
             final int offset = segment.getOffsetMillis();
@@ -241,7 +241,7 @@ public class InstrumentedTimelineProcessorTest {
         FeedbackReadDAO feedbackReadDAO = helpers.feedbackDAO;
         final Optional <TimelineFeedback> timelineFeedback;
         timelineFeedback = Optional.of(feedbackReadDAO.getCorrectedForNight(accountId, targetDate).get(0));
-        final SleepPeriod sleepPeriod = SleepPeriod.night();
+        final SleepPeriod sleepPeriod = SleepPeriod.night(targetDate);
         final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,sleepPeriod, timelineFeedback);
         for (final SleepSegment segment: timelineResult.timelines.get(0).events) {
             final int offset = segment.getOffsetMillis();
