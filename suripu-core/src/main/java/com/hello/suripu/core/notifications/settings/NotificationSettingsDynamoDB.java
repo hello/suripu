@@ -53,7 +53,7 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
     }
 
     private NotificationSetting createDefault(final Long accountId, final NotificationSetting.Type type) {
-        return new NotificationSetting(accountId, type, DEFAULT_ENABLED, Optional.absent());
+        return new NotificationSetting(accountId,type,DEFAULT_ENABLED,Optional.absent());
     }
 
     @Override
@@ -79,7 +79,8 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
             final Iterator<Item> itemIterator = page.iterator();
             while(itemIterator.hasNext()) {
                 final NotificationSetting setting = fromItem(itemIterator.next());
-                defaults.put(setting.type(), setting);
+                defaults.put(setting.type
+                        , setting);
             }
         }
 
@@ -109,12 +110,7 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
     NotificationSetting fromItem(final Item item) {
         final NotificationSetting.Type type = NotificationSetting.Type.valueOf(item.getString(SettingAttribute.TYPE.name));
         final String schedule = item.hasAttribute(SettingAttribute.SCHEDULE.name) ? item.getString(SettingAttribute.SCHEDULE.name) : "";
-        final NotificationSetting setting = new NotificationSetting(
-                item.getLong(SettingAttribute.ACCOUNT_ID.name),
-                type,
-                item.getBOOL(SettingAttribute.ENABLED.name),
-                NotificationSchedule.fromString(schedule)
-        );
+        final NotificationSetting setting = new NotificationSetting(item.getLong(SettingAttribute.ACCOUNT_ID.name), type, item.getBOOL(SettingAttribute.ENABLED.name), NotificationSchedule.fromString(schedule));
 
         return setting;
     }
