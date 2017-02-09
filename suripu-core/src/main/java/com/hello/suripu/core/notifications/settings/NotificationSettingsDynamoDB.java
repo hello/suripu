@@ -79,7 +79,7 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
             final Iterator<Item> itemIterator = page.iterator();
             while(itemIterator.hasNext()) {
                 final NotificationSetting setting = fromItem(itemIterator.next());
-                defaults.put(setting.type(), setting);
+                defaults.put(setting.type, setting);
             }
         }
 
