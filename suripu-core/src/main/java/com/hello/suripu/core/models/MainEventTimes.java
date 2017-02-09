@@ -25,7 +25,7 @@ public class MainEventTimes {
 
     public static MainEventTimes create (final long inBedTime, final int inBedOffset, final long sleepTime, final int sleepOffset, final long wakeUpTime, final int wakeUpOffset, final long outOfBedTime, final int outOfBedOffset, final long createdAt){
         final DateTime inBedTimeLocalUTC = new DateTime(inBedTime + inBedOffset, DateTimeZone.UTC);
-        final SleepPeriod sleepPeriod = SleepPeriod.getSleepPeriod(inBedTimeLocalUTC);
+        final SleepPeriod sleepPeriod = SleepPeriod.create(inBedTimeLocalUTC);
         final EventTime inBedEventTime = new EventTime(inBedTime, inBedOffset);
         final EventTime sleepEventTime = new EventTime(sleepTime, sleepOffset);
         final EventTime wakeUpEventTime = new EventTime(wakeUpTime, wakeUpOffset);
@@ -46,8 +46,9 @@ public class MainEventTimes {
         return new MainEventTimes(sleepPeriod, createdAt);
     }
 
-    public static MainEventTimes create (final SleepPeriod.Period period, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
-        final SleepPeriod sleepPeriod = SleepPeriod.getSleepPeriod(period);
+    public static MainEventTimes create (final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
+        final DateTime inBedTimeLocalUTC = new DateTime(inBedEventTime.TIME+ inBedEventTime.OFFSET, DateTimeZone.UTC);
+        final SleepPeriod sleepPeriod = SleepPeriod.create(inBedTimeLocalUTC);
         return new MainEventTimes(sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
     }
 
