@@ -298,12 +298,12 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public com.google.common.base.Optional<AggregateSleepStats> getSingleStat(Long accountId, String date) {
-            return null;
+            return Optional.absent();
         }
 
         @Override
         public ImmutableList<AggregateSleepStats> getBatchStats(Long accountId, String startDate, String endDate) {
-            return null;
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
     };
 
