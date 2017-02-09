@@ -107,7 +107,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
         }
     }
 
-    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:00";
+    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd"; // limiting to once a day
     private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
 
     public PushNotificationEventDynamoDB(final AmazonDynamoDB client, final String tablePrefix) {
@@ -169,7 +169,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     protected Map<String, AttributeValue> toAttributeMap(final PushNotificationEvent model) {
         final ImmutableMap.Builder<String, AttributeValue> builder = ImmutableMap.builder();
         builder.put(Attribute.ACCOUNT_ID.shortName(), toAttributeValue(model.accountId))
-                .put(Attribute.TIMESTAMP_TYPE.shortName(), getRangeKey(model.timestamp, Optional.of(model.type)))
+                .put(Attribute.TIMESTAMP_TYPE.shortName(), getRangeKey(new DateTime(model.timestamp, model.timeZone), Optional.of(model.type)))
                 .put(Attribute.TYPE.shortName(), toAttributeValue(model.type.shortName()))
                 .put(Attribute.TIMESTAMP.shortName(), toAttributeValue(model.timestamp))
                 .put(Attribute.BODY.shortName(), toAttributeValue(model.helloPushMessage.body))
@@ -224,8 +224,9 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
                 LOGGER.error("error=InternalServerErrorException account_id={}", event.accountId);
             } catch (ConditionalCheckFailedException ccfe) {
                 // The item already exists or we already have an item with this timestamp / account ID!
-                LOGGER.warn("warn=item-already-exists account_id={} timestamp={}",
-                        event.accountId, event.timestamp);
+                final String key = getRangeKey(new DateTime(event.timestamp, event.timeZone), Optional.of(event.type)).getS();
+                LOGGER.warn("warn=item-already-exists account_id={} key={} timestamp={}",
+                        event.accountId, key, event.timestamp);
                 return false;
             }
             backoff(numTries);
