@@ -12,6 +12,11 @@ import javax.validation.constraints.NotNull;
  */
 public class FirehoseConfiguration {
     @Valid
+    @JsonProperty("debug")
+    private Boolean debug = false;
+    public Boolean debug() { return this.debug; }
+
+    @Valid
     @NotNull
     @JsonProperty
     private String region;
