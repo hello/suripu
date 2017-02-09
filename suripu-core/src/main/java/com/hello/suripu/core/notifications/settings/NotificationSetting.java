@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder= NotificationSetting.Builder.class)
 public class NotificationSetting {
@@ -134,8 +135,4 @@ public class NotificationSetting {
             return new NotificationSetting(accountId, type, enabled, schedule);
         }
     }
-
-
-
-
 }

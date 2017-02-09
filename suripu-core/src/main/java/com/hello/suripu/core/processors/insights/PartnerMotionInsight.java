@@ -53,12 +53,14 @@ public class PartnerMotionInsight {
             return Optional.absent();
         }
 
+        final int numComparisons = Math.min(mySleepStats.size(), partnerSleepStats.size());
+
         Float myMotionTtl = 0f;
         Float partnerMotionTtl = 0f;
-        for (AggregateSleepStats mySleepStat : mySleepStats) {
+        for (AggregateSleepStats mySleepStat : mySleepStats.subList(0, numComparisons)) {
             myMotionTtl = myMotionTtl + mySleepStat.motionScore.numMotions;
         }
-        for (AggregateSleepStats partnerSleepStat : partnerSleepStats) {
+        for (AggregateSleepStats partnerSleepStat : partnerSleepStats.subList(0, numComparisons)) {
             partnerMotionTtl = partnerMotionTtl + partnerSleepStat.motionScore.numMotions;
         }
 
@@ -81,12 +83,28 @@ public class PartnerMotionInsight {
         final Text text;
         if (motionDifference < -1) {
             final Integer percentage = (int) ((motionDifference / myMotionTtl) * -100);
-            text = PartnerMotionMsgEN.getBadPartner(percentage);
+
+            if (percentage < 100) {
+                text = PartnerMotionMsgEN.getBadPartner(percentage);
+            } else if (percentage == 100) {
+                text = PartnerMotionMsgEN.getTwiceBadPartner();
+            } else {
+                text = PartnerMotionMsgEN.getVeryBadPartner();
+            }
+
         } else if (motionDifference <= 1) {
             text = PartnerMotionMsgEN.getEgalitarian();
         } else {
             final Integer percentage = (int) ((motionDifference / partnerMotionTtl) * 100);
-            text = PartnerMotionMsgEN.getBadMe(percentage);
+
+            if (percentage < 100) {
+                text = PartnerMotionMsgEN.getBadMe(percentage);
+            } else if (percentage == 100) {
+                text = PartnerMotionMsgEN.getTwiceBadMe();
+            } else {
+                text = PartnerMotionMsgEN.getVeryBadMe();
+            }
+
         }
 
         return text;
