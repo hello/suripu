@@ -8,30 +8,30 @@ import com.hello.suripu.core.trends.v2.TimeScale;
 public enum ActionType {
     LOGIN("login"), // set
     LOGOUT("logout"),
-    TRENDS_WEEK("trends_week"),
-    TRENDS_MONTH("trends_month"),
-    TRENDS_QUARTER("trends_quarter"),
-    TIMELINE_V1("timeline_v1"),
+    TRENDS_WEEK("trends_week"), // set
+    TRENDS_MONTH("trends_month"),   // set
+    TRENDS_QUARTER("trends_quarter"),   // set
     TIMELINE_V2("timeline_v2"), // set
     TIMELINE_FEEDBACK("timeline_feedback"), // set
     TIMELINE_CORRECT("timeline_correct"), // set
     PILL_PAIR("pill_pair"),
-    PILL_UNPAIR("pill_unpair"),
+    PILL_UNPAIR("pill_unpair"), // set
     SENSE_PAIR("sense_pair"),
-    SENSE_UNPAIR("sense_unpair"),
+    SENSE_UNPAIR("sense_unpair"), // set
+    FACTORY_RESET_UNPAIR("factory_reset_unpair"), // set
     ALARM_SET("alarm_set"),
     ALARM_GET("alarm_get"),
     INSIGHTS_DETAILS("insights_detail"),
-    FORCE_OTA("force_ota"),
-    PASSWORD_RESET("password_reset"),
+    FORCE_OTA("force_ota"), // set
+    PASSWORD_RESET("password_reset"),   // set
     PHOTO_UPLOAD("photo_upload"),
     PROVISION_SENSE("provision_sense"),
     PROVISION_PILL("provision_pill"),
     QUESTION_GET("question_get"),   // set
     QUESTION_SAVE("question_save"), // set
     QUESTION_SKIP("question_skip"), // set
-    ROOM_CONDITIONS_CURRENT("room_conditions_current"),
-    ROOM_CONDITIONS_BATCH("room_conditions_batch"),
+    ROOM_CONDITIONS_CURRENT("room_conditions_current"), // set
+    ROOM_CONDITIONS_BATCH("room_conditions_batch"), // set
     ALERTS("alerts"),
     EXPANSION_SET_STATE("expansion_set_state"),
     EXPANSION_SET_CONFIG("expansion_set_config"),
