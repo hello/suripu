@@ -2,79 +2,62 @@ package com.hello.suripu.core.db;
 
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.AttributeUpdate;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
-import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.ReturnValue;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.google.common.collect.Sets;
-import com.hello.suripu.core.db.dynamo.Attribute;
-import com.hello.suripu.core.db.dynamo.Util;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
+import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.QueryRequest;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.hello.suripu.core.db.dynamo.Expressions;
+import com.hello.suripu.core.db.dynamo.expressions.Expression;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.util.DateTimeUtil;
-import org.apache.commons.collections.map.HashedMap;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by jarredheinrich on 2/7/17.
  */
-public class MainEventTimesDynamoDB implements MainEventTimesDAO{
+public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes> implements MainEventTimesDAO{
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MainEventTimesDynamoDB.class);
 
-    private final Table table;
-
-    public static enum AttributeName implements Attribute {
-        ACCOUNT_ID("account_id", "N"), // hash-key
-        DATE("date", "S"), // range-key
-        MORNING_IN_BED_TIME("morning_in_bed_time", "N"),
-        MORNING_IN_BED_OFFSET("morning_in_bed_offset", "N"),
-        MORNING_SLEEP_TIME("morning_sleep_time", "N"),
-        MORNING_SLEEP_OFFSET("morning_sleep_offset", "N"),
-        MORNING_WAKE_UP_TIME("morning_wake_up_time", "N"),
-        MORNING_WAKE_UP_OFFSET("morning_wake_up_offset", "N"),
-        MORNING_OUT_OF_BED_TIME("morning_out_of_bed_time", "N"),
-        MORNING_OUT_OF_BED_OFFSET("morning_out_of_bed_offset", "N"),
-        MORNING_CREATED_AT("morning_created_at", "N"),
-        //afternoon_evening
-        AFTERNOON_IN_BED_TIME("afternoon_in_bed_time", "N"),
-        AFTERNOON_IN_BED_OFFSET("afternoon_in_bed_offset", "N"),
-        AFTERNOON_SLEEP_TIME("afternoon_sleep_time", "N"),
-        AFTERNOON_SLEEP_OFFSET("afternoon_sleep_offset", "N"),
-        AFTERNOON_WAKE_UP_TIME("afternoon_wake_up_time", "N"),
-        AFTERNOON_WAKE_UP_OFFSET("afternoon_wake_up_offset", "N"),
-        AFTERNOON_OUT_OF_BED_TIME("afternoon_out_of_bed_time", "N"),
-        AFTERNOON_OUT_OF_BED_OFFSET("afternoon_out_of_bed_offset", "N"),
-        AFTERNOON_CREATED_AT("afternoon_created_at", "N"),
-        //night
-        NIGHT_IN_BED_TIME("night_in_bed_time", "N"),
-        NIGHT_IN_BED_OFFSET("night_in_bed_offset", "N"),
-        NIGHT_SLEEP_TIME("night_sleep_time", "N"),
-        NIGHT_SLEEP_OFFSET("night_sleep_offset", "N"),
-        NIGHT_WAKE_UP_TIME("night_wake_up_time", "N"),
-        NIGHT_WAKE_UP_OFFSET("night_wake_up_offset", "N"),
-        NIGHT_OUT_OF_BED_TIME("night_out_of_bed_time", "N"),
-        NIGHT_OUT_OF_BED_OFFSET("night_out_of_bed_offset", "N"),
-        NIGHT_CREATED_AT("night_created_at", "N");
+    public enum Attribute implements com.hello.suripu.core.db.dynamo.Attribute {
+        ACCOUNT_ID("account", "N"), // Hash key
+        SLEEP_PERIOD("sleep_period", "S"),
+        DATE_SLEEP_PERIOD("date|sleep_period", "S"), // Range key // <utc_timestamp>|<external_device_id>
+        DATE("date", "S"),
+        CREATED_AT("created_at", "S"),
+        IN_BED_TIME("in_bed_time", "S"),
+        IN_BED_OFFSET("in_bed_offset", "S"),
+        SLEEP_TIME("sleep_time", "S"),
+        SLEEP_OFFSET("sleep_offset", "S"),
+        WAKE_UP_TIME("wake_up_time", "S"),
+        WAKE_UP_OFFSET("wake_up_offset", "S"),
+        OUT_OF_BED_TIME("out_of_bed_time", "S"),
+        OUT_OF_BED_OFFSET("out_of_bed_offset", "S"),
+        ;
 
         private final String name;
         private final String type;
 
-        AttributeName(final String name, final String type) {
+        Attribute(final String name, final String type) {
             this.name = name;
             this.type = type;
         }
@@ -94,280 +77,290 @@ public class MainEventTimesDynamoDB implements MainEventTimesDAO{
             return type;
         }
 
-        public static Set<String> getAllAttributes() {
-            final Set<String> attributes = Sets.newHashSet();
-            for (final Attribute attribute : MainEventTimesDynamoDB.AttributeName.values()) {
-                attributes.add(attribute.shortName());
+
+        AttributeValue get(final Map<String, AttributeValue> item) {
+            return item.get(this.shortName());
+        }
+
+        String getString(final Map<String, AttributeValue> item) {
+            final AttributeValue av = get(item);
+            if (av == null) {
+                return "";
             }
-            return attributes;
+            return av.getS();
         }
-    }
-    private enum EventAttributes{
-        MORNING_IN_BED(AttributeName.MORNING_IN_BED_TIME,AttributeName.MORNING_IN_BED_OFFSET),
-        MORNING_SLEEP(AttributeName.MORNING_SLEEP_TIME,AttributeName.MORNING_SLEEP_OFFSET),
-        MORNING_WAKE_UP(AttributeName.MORNING_WAKE_UP_TIME,AttributeName.MORNING_WAKE_UP_OFFSET),
-        MORNING_OUT_OF_BED(AttributeName.MORNING_OUT_OF_BED_TIME,AttributeName.MORNING_OUT_OF_BED_OFFSET),
 
-        AFTERNOON_IN_BED(AttributeName.AFTERNOON_IN_BED_TIME,AttributeName.AFTERNOON_IN_BED_OFFSET),
-        AFTERNOON_SLEEP(AttributeName.AFTERNOON_SLEEP_TIME,AttributeName.AFTERNOON_SLEEP_OFFSET),
-        AFTERNOON_WAKE_UP(AttributeName.AFTERNOON_WAKE_UP_TIME,AttributeName.AFTERNOON_WAKE_UP_OFFSET),
-        AFTERNOON_OUT_OF_BED(AttributeName.AFTERNOON_OUT_OF_BED_TIME,AttributeName.AFTERNOON_OUT_OF_BED_OFFSET),
-
-        NIGHT_IN_BED(AttributeName.NIGHT_IN_BED_TIME,AttributeName.NIGHT_IN_BED_OFFSET),
-        NIGHT_SLEEP(AttributeName.NIGHT_SLEEP_TIME,AttributeName.NIGHT_SLEEP_OFFSET),
-        NIGHT_WAKE_UP(AttributeName.NIGHT_WAKE_UP_TIME,AttributeName.NIGHT_WAKE_UP_OFFSET),
-        NIGHT_OUT_OF_BED(AttributeName.NIGHT_OUT_OF_BED_TIME,AttributeName.NIGHT_OUT_OF_BED_OFFSET);
-
-
-        private final AttributeName eventTime;
-        private final AttributeName eventOffset;
-        EventAttributes(final AttributeName eventTime, final AttributeName eventOffset) {
-            this.eventTime = eventTime;
-            this.eventOffset = eventOffset;
-        }
-        public static  Map<Event.Type, EventAttributes> getEventAttributeForPeriod(SleepPeriod.Period period){
-            final Map<Event.Type, EventAttributes> eventAttributesMap = new HashedMap();
-            if (period == SleepPeriod.Period.MORNING){
-                eventAttributesMap.put(Event.Type.IN_BED, MORNING_IN_BED);
-                eventAttributesMap.put(Event.Type.SLEEP, MORNING_SLEEP);
-                eventAttributesMap.put(Event.Type.WAKE_UP, MORNING_WAKE_UP);
-                eventAttributesMap.put(Event.Type.OUT_OF_BED, MORNING_OUT_OF_BED);
+        Long getLong(final Map<String, AttributeValue> item) {
+            final AttributeValue av = get(item);
+            if (av == null) {
+                return null;
             }
-            else if (period == SleepPeriod.Period.AFTERNOON_EVENING) {
-                eventAttributesMap .put(Event.Type.IN_BED, AFTERNOON_IN_BED);
-                eventAttributesMap.put(Event.Type.SLEEP, AFTERNOON_SLEEP);
-                eventAttributesMap.put(Event.Type.WAKE_UP, AFTERNOON_WAKE_UP);
-                eventAttributesMap.put(Event.Type.OUT_OF_BED, AFTERNOON_OUT_OF_BED);
+            return Long.valueOf(av.getN());
+        }
+
+        Integer getInteger(final Map<String, AttributeValue> item) {
+            final AttributeValue av = get(item);
+            if (av == null) {
+                return null;
             }
+            return Integer.valueOf(av.getN());
+        }
 
-            else {
-                eventAttributesMap .put(Event.Type.IN_BED, NIGHT_IN_BED);
-                eventAttributesMap .put(Event.Type.SLEEP, NIGHT_SLEEP);
-                eventAttributesMap .put(Event.Type.WAKE_UP, NIGHT_WAKE_UP);
-                eventAttributesMap .put(Event.Type.OUT_OF_BED, NIGHT_OUT_OF_BED);
+        DateTime getDateTime(final Map<String, AttributeValue> item) {
+            final Long l = getLong(item);
+            if (l == null) {
+                return null;
             }
-
-            return eventAttributesMap ;
+            return new DateTime(l, DateTimeZone.UTC);
         }
 
     }
-    private static String getCreatedAtAttributeName(final SleepPeriod.Period period){
-       if(period == SleepPeriod.Period.MORNING){
-           return AttributeName.MORNING_CREATED_AT.shortName();
-       }
-       if(period == SleepPeriod.Period.AFTERNOON_EVENING){
-           return AttributeName.AFTERNOON_CREATED_AT.shortName();
-       }
-       return AttributeName.NIGHT_CREATED_AT.shortName();
 
+    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd";
+    private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
+
+    public MainEventTimesDynamoDB(final AmazonDynamoDB client, final String tablePrefix) {
+        super(client, tablePrefix);
     }
 
-    private static class EventTimeAttributeNames {
-        final String createdAt;
-        final String inBedTime;
-        final String inBedOffset;
-        final String sleepTime;
-        final String sleepOffset;
-        final String wakeUpTime;
-        final String wakeUpOffset;
-        final String outOfBedTime;
-        final String outOfBedOffset;
-
-        EventTimeAttributeNames(final String createdAt, final String inBedTimeAttributeName, final String inBedOffsetAttributeName,
-                                final String sleepTimeAttributeName, final String sleepOffsetAttributeName,
-                                final String wakeUpTimeAttributeName, final String wakeUpOffsetAttributeName,
-                                final String outOfBedTimeAttributeName, final String outOfBedOffsetAttributeName) {
-            this.createdAt = createdAt;
-            this.inBedTime = inBedTimeAttributeName;
-            this.inBedOffset = inBedOffsetAttributeName;
-            this.sleepTime = sleepTimeAttributeName;
-            this.sleepOffset = sleepOffsetAttributeName;
-            this.wakeUpTime = wakeUpTimeAttributeName;
-            this.wakeUpOffset = wakeUpOffsetAttributeName;
-            this.outOfBedTime = outOfBedTimeAttributeName;
-            this.outOfBedOffset = outOfBedOffsetAttributeName;
-        }
-        public static EventTimeAttributeNames getEventAttributeNames(final SleepPeriod.Period period) {
-            final String createdAtAttributeName = getCreatedAtAttributeName(period);
-            final Map<Event.Type, EventAttributes> eventAttributesMap = EventAttributes.getEventAttributeForPeriod(period);
-            final String inBedTimeAttributeName = eventAttributesMap.get(Event.Type.IN_BED).eventTime.shortName();
-            final String inBedOffsetAttributeName = eventAttributesMap.get(Event.Type.IN_BED).eventOffset.shortName();
-            final String sleepTimeAttributeName = eventAttributesMap.get(Event.Type.SLEEP).eventTime.shortName();
-            final String sleepOffsetAttributeName = eventAttributesMap.get(Event.Type.SLEEP).eventOffset.shortName();
-            final String wakeIpTimeAttributeName = eventAttributesMap.get(Event.Type.WAKE_UP).eventTime.shortName();
-            final String wakeUpOffsetAttributeName = eventAttributesMap.get(Event.Type.WAKE_UP).eventOffset.shortName();
-            final String outOfBedTimeAttributeName = eventAttributesMap.get(Event.Type.OUT_OF_BED).eventTime.shortName();
-            final String outOfBedOffsetAttributeName = eventAttributesMap.get(Event.Type.OUT_OF_BED).eventOffset.shortName();
-            return new EventTimeAttributeNames(createdAtAttributeName, inBedTimeAttributeName, inBedOffsetAttributeName,
-                    sleepTimeAttributeName, sleepOffsetAttributeName,
-                    wakeIpTimeAttributeName, wakeUpOffsetAttributeName,
-                    outOfBedTimeAttributeName, outOfBedOffsetAttributeName);
-        }
+    //region TimeSeriesDAODynamoDB
+    @Override
+    protected Logger logger() {
+        return LOGGER;
     }
 
-    private MainEventTimesDynamoDB(final Table table){
-        this.table = table;
-
-
+    @Override
+    protected Integer maxQueryAttempts() {
+        return 5;
     }
 
-    public static MainEventTimesDynamoDB create(final AmazonDynamoDB client, final String tableName) {
-        final DynamoDB dynamoDB = new DynamoDB(client);
-        final Table table = dynamoDB.getTable(tableName);
-        return new MainEventTimesDynamoDB(table);
+    @Override
+    protected Integer maxBatchWriteAttempts() {
+        return 5;
     }
 
-    public static TableDescription createTable(final AmazonDynamoDB client, final String tableName) {
-
-        final CreateTableResult result = Util.createTable(client, tableName, AttributeName.ACCOUNT_ID, AttributeName.DATE, 1L, 1L);
-
-        return result.getTableDescription();
+    @Override
+    protected String hashKeyName() {
+        return MainEventTimesDynamoDB.Attribute.ACCOUNT_ID.shortName();
     }
 
-    public Map<SleepPeriod.Period, MainEventTimes> getEventTimes(final Long accountId, final DateTime targetDate){
-        //final PrimaryKey key = new PrimaryKey(AttributeName.ACCOUNT_ID.shortName(), accountId);
-        //final RangeKeyCondition rangeKey = new RangeKeyCondition(AttributeName.DATE.shortName()).eq(date);
-        final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
-        final Item item = table.getItem(AttributeName.ACCOUNT_ID.shortName(), accountId, AttributeName.DATE.shortName(),targetDateString);
-        if (item == null){
-            LOGGER.debug("msg=get-main-events-fail-main-events-missing account_id={} date={}", accountId, targetDateString);
-            final Map<SleepPeriod.Period, MainEventTimes> mainEventMap =  new HashMap<>();
-            return mainEventMap;
-        }
-
-        final Map<SleepPeriod.Period, MainEventTimes> mainEventMap = fromItem(item);
-        return mainEventMap;
+    @Override
+    protected String rangeKeyName() {
+        return Attribute.DATE_SLEEP_PERIOD.shortName();
     }
 
-    public boolean updateEventTimes(final Long accountId, final DateTime targetDate, final MainEventTimes mainEventTimes){
-
-        final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
-
-
-        if (!mainEventTimes.hasValidEventTimes()){
-            LOGGER.error("error=update-sleep-period-event-times-failed reason=invalid-event-times account_id={} date={} sleep_period={}", accountId, targetDateString, mainEventTimes.sleepPeriod.period);
-            return false;
-        }
-        final List<AttributeUpdate> attributeUpdateList = getAttributeUpdateList(mainEventTimes);
-
-        final UpdateItemSpec updateItemSpec = new UpdateItemSpec()
-                .withPrimaryKey(AttributeName.ACCOUNT_ID.shortName(), accountId, AttributeName.DATE.shortName(), targetDateString)
-                .withReturnValues(ReturnValue.ALL_NEW)
-                .withAttributeUpdate(attributeUpdateList);
-
-        final UpdateItemOutcome updatedItem = table.updateItem(updateItemSpec);
-        final Item item = updatedItem.getItem();
-        //check for all four eventTimes and createdAt
-        final EventTimeAttributeNames eventTimeAttributeNames = EventTimeAttributeNames.getEventAttributeNames(mainEventTimes.sleepPeriod.period);
-        final boolean hasAttributes = hasSleepPeriod(eventTimeAttributeNames, item);
-        if(!hasAttributes){
-            LOGGER.error("error=update-sleep-period-event-times-failed reason=missing-event-times account_id={} date={} sleep_period={}", accountId, targetDateString, mainEventTimes.sleepPeriod.period);
-            return false;
-        }
-
-        final boolean hasCorrectValues = hasCorrectEventTimes(item, mainEventTimes);
-        if (!hasCorrectValues){
-            LOGGER.error("error=update-sleep-period-event-times-failed reason=incorrected-event_time account_id={} date={} sleep_period={}", accountId, targetDateString, mainEventTimes.sleepPeriod.period);
-            return false;
-        }
-        return true;
+    @Override
+    protected String hashKeyType() {
+        return MainEventTimesDynamoDB.Attribute.ACCOUNT_ID.type();
     }
 
-    private List<AttributeUpdate> getAttributeUpdateList(final MainEventTimes mainEventTimes){
-
-        final EventTimeAttributeNames eventTimeAttributeNames = EventTimeAttributeNames.getEventAttributeNames(mainEventTimes.sleepPeriod.period);
-
-        final AttributeUpdate createdAtUpdate = new AttributeUpdate(eventTimeAttributeNames.createdAt);
-        createdAtUpdate.put(mainEventTimes.createdAt);
-
-        final AttributeUpdate inBedTimeUpdate = new AttributeUpdate(eventTimeAttributeNames.inBedTime);
-        final AttributeUpdate inBedOffsetUpdate = new AttributeUpdate(eventTimeAttributeNames.inBedOffset);
-        inBedTimeUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.IN_BED).TIME);
-        inBedOffsetUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.IN_BED).OFFSET);
-
-        final AttributeUpdate sleepTimeUpdate = new AttributeUpdate(eventTimeAttributeNames.sleepTime);
-        final AttributeUpdate sleepOffsetUpdate = new AttributeUpdate(eventTimeAttributeNames.sleepOffset);
-        sleepTimeUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.SLEEP).TIME);
-        sleepOffsetUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.SLEEP).OFFSET);
-
-        final AttributeUpdate wakeUpTimeUpdate = new AttributeUpdate(eventTimeAttributeNames.wakeUpTime);
-        final AttributeUpdate wakeUpOffsetUpdate = new AttributeUpdate(eventTimeAttributeNames.wakeUpOffset);
-        wakeUpTimeUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.WAKE_UP).TIME);
-        wakeUpOffsetUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.WAKE_UP).OFFSET);
-
-        final AttributeUpdate outOfBedTimeUpdate = new AttributeUpdate(eventTimeAttributeNames.outOfBedTime);
-        final AttributeUpdate outOfBedOffsetUpdate = new AttributeUpdate(eventTimeAttributeNames.outOfBedOffset);
-        outOfBedTimeUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).TIME);
-        outOfBedOffsetUpdate.put(mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).OFFSET);
-
-        final List<AttributeUpdate> attributeUpdateList = Arrays.asList(createdAtUpdate, inBedTimeUpdate, inBedOffsetUpdate,
-                sleepTimeUpdate, sleepOffsetUpdate, wakeUpTimeUpdate, wakeUpOffsetUpdate, outOfBedTimeUpdate, outOfBedOffsetUpdate);
-        return attributeUpdateList;
+    @Override
+    protected String rangeKeyType() {
+        return Attribute.DATE_SLEEP_PERIOD.type();
     }
 
-    private Map<SleepPeriod.Period, MainEventTimes> fromItem(final Item item){
-        final Map<SleepPeriod.Period, MainEventTimes> sleepPeriodEventTimesMap = new HashMap<>();
+    @Override
+    protected String getHashKey(final AttributeValue attributeValue) {
+        return attributeValue.getN();
+    }
 
-        //Search for main events in all three sleep periods
-        for (final SleepPeriod.Period period : SleepPeriod.Period.getAllPeriods()){
-            final EventTimeAttributeNames eventTimeAttributeNames = EventTimeAttributeNames.getEventAttributeNames(period);
+    @Override
+    protected String getRangeKey(final AttributeValue attributeValue) {
+        return attributeValue.getS();
+    }
 
-            if (hasSleepPeriod(eventTimeAttributeNames, item)){
-                final long createdAt = item.getLong(eventTimeAttributeNames.createdAt);
+    @Override
+    protected DateTime getTimestamp(final MainEventTimes model) {
+        return model.sleepPeriod.targetDate;
+    }
 
-                final long inBedTime =item.getLong(eventTimeAttributeNames.inBedTime);
-                final int inBedOffset =item.getInt(eventTimeAttributeNames.inBedOffset);
-                final MainEventTimes.EventTime inBedEventTime = new MainEventTimes.EventTime(inBedTime, inBedOffset);
+    @Override
+    protected Map<String, AttributeValue> toAttributeMap(final MainEventTimes model) {
+        final ImmutableMap.Builder<String, AttributeValue> builder = ImmutableMap.builder();
+        builder.put(MainEventTimesDynamoDB.Attribute.ACCOUNT_ID.shortName(), toAttributeValue(model.accountId))
+                .put(Attribute.DATE_SLEEP_PERIOD.shortName(), getRangeKey(model.sleepPeriod.targetDate, Optional.of(model.sleepPeriod.period)))
+                .put(Attribute.SLEEP_PERIOD.shortName(), toAttributeValue(model.sleepPeriod.period.name()))
+                .put(Attribute.DATE.shortName(), toAttributeValue(model.sleepPeriod.targetDate))
+                .put(Attribute.CREATED_AT.shortName(), toAttributeValue(model.createdAt))
 
-                final long sleepTime =item.getLong(eventTimeAttributeNames.sleepTime);
-                final int sleepEventOffset =item.getInt(eventTimeAttributeNames.sleepOffset);
-                final MainEventTimes.EventTime sleepEventTime = new MainEventTimes.EventTime(sleepTime, sleepEventOffset);
+                .put(Attribute.IN_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.IN_BED).TIME))
+                .put(Attribute.IN_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.IN_BED).OFFSET))
 
-                final long wakeUpTime =item.getLong(eventTimeAttributeNames.wakeUpTime);
-                final int wakeUpOffset =item.getInt(eventTimeAttributeNames.wakeUpOffset);
-                final MainEventTimes.EventTime wakeUpEventTime = new MainEventTimes.EventTime(wakeUpTime, wakeUpOffset);
+                .put(Attribute.SLEEP_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.SLEEP).TIME))
+                .put(Attribute.SLEEP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.SLEEP).OFFSET))
 
-                final long outOfBedTime =item.getLong(eventTimeAttributeNames.outOfBedTime);
-                final int outOfBedOffset =item.getInt(eventTimeAttributeNames.outOfBedOffset);
-                final MainEventTimes.EventTime outOfBedEventTime = new MainEventTimes.EventTime(outOfBedTime, outOfBedOffset);
+                .put(Attribute.WAKE_UP_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).TIME))
+                .put(Attribute.WAKE_UP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).OFFSET))
 
-                final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
-                sleepPeriodEventTimesMap.put(period, mainEventTimes);
+                .put(Attribute.OUT_OF_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).TIME))
+                .put(Attribute.OUT_OF_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).OFFSET));
+
+        return builder.build();
+    }
+
+    @Override
+    public String getTableName(final DateTime dateTime) {
+        // Yearly tables
+        return tablePrefix;
+    }
+
+    @Override
+    public List<String> getTableNames(final DateTime start, final DateTime end) {
+        // Yearly tables
+        final List<DateTime> dateTimes = DateTimeUtil.dateTimesForStartOfYearBetweenDates(start, end);
+        final List<String> names = new ArrayList<>(dateTimes.size());
+        for (final DateTime dateTime: dateTimes) {
+            final String tableName = getTableName(dateTime);
+            if (!names.contains(tableName)) { // O(n) but if you're worried about that you don't understand this class.
+                names.add(tableName);
             }
         }
-
-        return sleepPeriodEventTimesMap;
+        return names;
     }
+    //endregion TimeSeriesDAODynamoDB
 
-    private boolean hasSleepPeriod(final EventTimeAttributeNames eventTimeAttributeNames, final Item item){
+    //region write
+    public Boolean insert(final MainEventTimes mainEventTimes) {
 
-        final boolean hasCreatedAt = item.hasAttribute(eventTimeAttributeNames.createdAt);
-        final boolean hasInBed = item.hasAttribute(eventTimeAttributeNames.inBedTime) && item.hasAttribute(eventTimeAttributeNames.inBedOffset);
-        final boolean hasSleep = item.hasAttribute(eventTimeAttributeNames.sleepTime) && item.hasAttribute(eventTimeAttributeNames.sleepOffset);
-        final boolean hasWakeUp = item.hasAttribute(eventTimeAttributeNames.wakeUpTime) && item.hasAttribute(eventTimeAttributeNames.wakeUpOffset);
-        final boolean hasOutOfBed = item.hasAttribute(eventTimeAttributeNames.wakeUpOffset) && item.hasAttribute(eventTimeAttributeNames.outOfBedTime);
-        return hasCreatedAt && hasInBed && hasSleep && hasWakeUp && hasOutOfBed;
-    }
 
-    private boolean hasCorrectEventTimes(final Item item, final MainEventTimes mainEventTimes){
-
-        final MainEventTimes updatedMainEvent = fromItem(item).get(mainEventTimes.sleepPeriod.period);
-        final List<Event.Type> mainEventTypes = Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP,Event.Type.OUT_OF_BED);
-
-        if(updatedMainEvent.createdAt != mainEventTimes.createdAt){
-            return false;
-        }
-
-        for (final Event.Type mainEventType : mainEventTypes){
-
-            final boolean correctTime = updatedMainEvent.eventTimeMap.get(mainEventType).TIME.longValue() == mainEventTimes.eventTimeMap.get(mainEventType).TIME.longValue();
-            final boolean correctOffset = updatedMainEvent.eventTimeMap.get(mainEventType).OFFSET.intValue() == mainEventTimes.eventTimeMap.get(mainEventType).OFFSET.intValue();
-            if(!correctTime || !correctOffset){
+        int numTries = 0;
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(getTableName(mainEventTimes.sleepPeriod.targetDate))
+                .withItem(toAttributeMap(mainEventTimes))
+                // Ensure that the item does not exist. If it exists, this throws a ConditionalCheckFailedException.
+                .withExpected(ImmutableMap.of(Attribute.DATE_SLEEP_PERIOD.shortName(), new ExpectedAttributeValue(false)));
+        do {
+            try {
+                dynamoDBClient.putItem(putItemRequest);
+                return true;
+            } catch (ProvisionedThroughputExceededException ptee) {
+                LOGGER.error("error=ProvisionedThroughputExceededException account_id={}", mainEventTimes.accountId);
+            } catch (InternalServerErrorException isee) {
+                LOGGER.error("error=InternalServerErrorException account_id={}", mainEventTimes.accountId);
+            } catch (ConditionalCheckFailedException ccfe) {
+                // The item already exists or we already have an item with this timestamp / account ID!
+                LOGGER.warn("warn=item-already-exists account_id={} timestamp={}",
+                        mainEventTimes.accountId, mainEventTimes.sleepPeriod.targetDate);
                 return false;
             }
-        }
-        return true;
+            backoff(numTries);
+            numTries++;
+        } while (numTries < maxBatchWriteAttempts());
+        return false;
+    }
+    //endregion write
 
+
+    //region query
+    private Expression getKeyConditionExpression(final Long accountId, final DateTime start, final DateTime end, final Optional<SleepPeriod.Period> period) {
+        return Expressions.and(
+                Expressions.equals(MainEventTimesDynamoDB.Attribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(Attribute.DATE_SLEEP_PERIOD, getRangeKey(start, period), getRangeKey(end, period))
+        );
+    }
+
+    public Response<List<MainEventTimes>> query(final Long accountId, final DateTime start, final DateTime end, final SleepPeriod.Period sleepPeriod) {
+        final Expression keyConditionExpression = getKeyConditionExpression(accountId, start, end, Optional.of(sleepPeriod));
+        final Expression filterExpression = Expressions.equals(Attribute.SLEEP_PERIOD, new AttributeValue().withS(sleepPeriod.name()));
+        final Response<List<Map<String, AttributeValue>>> response = queryTables(getTableNames(start, end), keyConditionExpression, filterExpression, ImmutableSet.copyOf(MainEventTimesDynamoDB.Attribute.values()));
+
+        final List<MainEventTimes> sleepPeriodMainEventTimesMap = toMainEventTimesList(response.data);
+        return Response.into(sleepPeriodMainEventTimesMap, response);
+    }
+
+    public Response<List<MainEventTimes>> query(final Long accountId, final DateTime start, final DateTime end) {
+        final Expression keyConditionExpression = getKeyConditionExpression(accountId, start, end, Optional.absent());
+        final Response<List<Map<String, AttributeValue>>> response = queryTables(getTableNames(start, end), keyConditionExpression, ImmutableSet.copyOf(MainEventTimesDynamoDB.Attribute.values()));
+
+        final List<MainEventTimes> events = toMainEventTimesList(response.data);
+        return Response.into(events, response);
+    }
+
+    /**
+     * Overridden to ensure consistent reads.
+     */
+    @Override
+    protected Response<List<Map<String, AttributeValue>>> query(final QueryRequest originalQueryRequest) {
+        final QueryRequest consistentQueryRequest = originalQueryRequest.clone().withConsistentRead(true);
+        return super.query(consistentQueryRequest);
+    }
+    //endregion query
+
+
+    //region private helpers
+    private static AttributeValue toAttributeValue(final String s) {
+        return new AttributeValue().withS(s);
+    }
+
+    private static AttributeValue toAttributeValue(final Long l) {
+        return new AttributeValue().withN(l.toString());
+    }
+
+    private static AttributeValue toAttributeValue(final Integer i) {
+        return new AttributeValue().withN(i.toString());
+    }
+
+
+    private static AttributeValue toAttributeValue(final DateTime dt) {
+        return toAttributeValue(dt.getMillis());
+    }
+
+    private static AttributeValue getRangeKey(final DateTime dateTime, final Optional<SleepPeriod.Period> type) {
+        if (type.isPresent()) {
+            return getRangeKey(dateTime, type.get().shortName());
+        }
+        return getRangeKey(dateTime, "");
+    }
+
+    private static AttributeValue getRangeKey(final DateTime dateTime, final String type) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + type);
+    }
+
+    private static MainEventTimes toMainEventTimes(final Map<String, AttributeValue> item) {
+        final ImmutableMap<Event.Type, MainEventTimes.EventTime > eventTimeMap = ImmutableMap.<Event.Type, MainEventTimes.EventTime>builder()
+                .put(Event.Type.IN_BED, new MainEventTimes.EventTime(Attribute.IN_BED_TIME.getLong(item), Attribute.IN_BED_OFFSET.getInteger(item)))
+                .put(Event.Type.SLEEP, new MainEventTimes.EventTime(Attribute.SLEEP_TIME.getLong(item), Attribute.SLEEP_OFFSET.getInteger(item)))
+                .put(Event.Type.WAKE_UP, new MainEventTimes.EventTime(Attribute.WAKE_UP_TIME.getLong(item), Attribute.WAKE_UP_OFFSET.getInteger(item)))
+                .put(Event.Type.OUT_OF_BED, new MainEventTimes.EventTime(Attribute.OUT_OF_BED_TIME.getLong(item), Attribute.OUT_OF_BED_OFFSET.getInteger(item)))
+                .build();
+        final SleepPeriod.Period period = SleepPeriod.Period.fromString(Attribute.SLEEP_PERIOD.getString(item));
+        final MainEventTimes mainEventTimes= MainEventTimes.createMainEventTimes(
+                Attribute.ACCOUNT_ID.getLong(item),
+                SleepPeriod.createSleepPeriod(period, Attribute.DATE.getDateTime(item)),
+                Attribute.CREATED_AT.getLong(item),
+                eventTimeMap
+        );
+        return mainEventTimes;
+
+    }
+
+    private static Map<SleepPeriod.Period, MainEventTimes> toSleepPeriodMainEventTimesMap(final List<Map<String, AttributeValue>> items) {
+        final Map<SleepPeriod.Period, MainEventTimes> sleepPeriodMainEventTimeMap= new HashMap<>();
+        for (final Map<String, AttributeValue> item : items) {
+            final MainEventTimes mainEventTimes = toMainEventTimes(item);
+            sleepPeriodMainEventTimeMap.put(mainEventTimes.sleepPeriod.period, mainEventTimes);
+        }
+        return sleepPeriodMainEventTimeMap;
+    }
+
+    private static List<MainEventTimes> toMainEventTimesList(final List<Map<String, AttributeValue>> items) {
+        final List<MainEventTimes> mainEventTimesList= new ArrayList<>(items.size());
+        for (final Map<String, AttributeValue> item : items) {
+            mainEventTimesList.add(toMainEventTimes(item));
+        }
+
+        return mainEventTimesList;
+    }
+
+    //endregion private helpers
+
+    public boolean updateEventTimes(MainEventTimes mainEventTimes){
+        return insert(mainEventTimes);
+
+    }
+
+    public List<MainEventTimes> getEventTimes(Long accountId, DateTime date){
+        return query(accountId, date, date.plusDays(1)).data;
     }
 
 }

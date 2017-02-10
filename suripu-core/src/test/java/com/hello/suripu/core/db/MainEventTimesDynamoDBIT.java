@@ -2,14 +2,15 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MainEventTimes;
-import com.hello.suripu.core.models.SleepPeriod;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by jarredheinrich on 2/8/17.
@@ -29,40 +29,55 @@ public class MainEventTimesDynamoDBIT {
     private final static Logger LOGGER = LoggerFactory.getLogger(MainEventTimesDynamoDBIT.class);
 
     private BasicAWSCredentials awsCredentials;
-    private AmazonDynamoDBClient amazonDynamoDBClient;
+    private final ClientConfiguration clientConfiguration = new ClientConfiguration();
+    private final String endpoint = "http://localhost:7777";
+    private AmazonDynamoDB amazonDynamoDBClient;
     private MainEventTimesDynamoDB mainEventTimesDynamoDB;
-    private final String tableName = "test_main_event_times";
+
+    private static final String TABLE_NAME= "integration_test_main_events_table";
+
+
+
+    //region setUp/tearDown
 
     @Before
-    public void setUp(){
+    public void setUp() throws Exception {
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
-        final ClientConfiguration clientConfiguration = new ClientConfiguration();
         clientConfiguration.setMaxErrorRetry(0);
         this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
+        this.mainEventTimesDynamoDB = new MainEventTimesDynamoDB(amazonDynamoDBClient, TABLE_NAME);
 
-        cleanUp();
+        tearDown();
+        final List<String> tables = ImmutableList.of(TABLE_NAME);
 
         try {
-            LOGGER.debug("-------- Creating Table {} ---------", tableName);
-            final TableDescription result = MainEventTimesDynamoDB.createTable(this.amazonDynamoDBClient, tableName);
-            LOGGER.debug("Created dynamoDB table {}", result);
-            this.mainEventTimesDynamoDB = MainEventTimesDynamoDB.create(this.amazonDynamoDBClient, tableName);
-        }catch (ResourceInUseException rie){
+            for (final String tableName : tables) {
+                LOGGER.debug("-------- Creating Table {} ---------", tableName);
+                final CreateTableResult result = mainEventTimesDynamoDB.createTable(tableName);
+                LOGGER.debug("Created dynamoDB table {}", result.getTableDescription());
+            }
+        } catch (ResourceInUseException rie){
             LOGGER.warn("Problem creating table");
         }
     }
 
     @After
-    public void cleanUp(){
-        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
-                .withTableName(this.tableName);
-        try {
-            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
-        }catch (ResourceNotFoundException ex){
-            LOGGER.warn("Can not delete non existing table");
+    public void tearDown() throws Exception {
+        final List<String> tables = ImmutableList.of(TABLE_NAME);
+        for (final String name: tables) {
+            final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
+                    .withTableName(name);
+            try {
+                this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+            }catch (ResourceNotFoundException ex){
+                LOGGER.warn("Can not delete non existing table {}", name);
+            }
         }
     }
+
+    //endregion setUp/tearDown
+
 
     @Test
     public void testUpdateMainEventTimes() throws Exception {
@@ -76,10 +91,10 @@ public class MainEventTimesDynamoDBIT {
         DateTime targetDate = inBedDateTime.withTimeAtStartOfDay();
         final int offset = -28800000;
 
-        final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(inBedDateTime.getMillis(), offset,
+        final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
                 sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
 
-        boolean updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(accountId,targetDate, mainEventTimesMorning);
+        boolean updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesMorning);
         assert(updateSuccessful);
 
         inBedDateTime = inBedDateTime.plusHours(15);
@@ -88,10 +103,10 @@ public class MainEventTimesDynamoDBIT {
         outOfBedDateTime = outOfBedDateTime.plusHours(15);
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
-        final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(inBedDateTime.getMillis(), offset,
+        final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
                 sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
 
-        updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(accountId,targetDate, mainEventTimesNight);
+        updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
         assert(updateSuccessful);
 
     }
@@ -108,13 +123,13 @@ public class MainEventTimesDynamoDBIT {
         DateTime targetDate = inBedDateTime.withTimeAtStartOfDay();
         final int offset = -28800000;
 
-        final Map<SleepPeriod.Period, MainEventTimes> sleepPeriodMainEventsEmpyMap = mainEventTimesDynamoDB.getEventTimes(accountId,targetDate);
-        assert(sleepPeriodMainEventsEmpyMap .isEmpty());
+        final List<MainEventTimes> sleepPeriodMainEventsEmptyList = mainEventTimesDynamoDB.getEventTimes(accountId,targetDate);
+        assert(sleepPeriodMainEventsEmptyList.isEmpty());
 
-        final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(inBedDateTime.getMillis(), offset,
+        final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
                 sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
 
-        mainEventTimesDynamoDB.updateEventTimes(accountId,targetDate, mainEventTimesMorning);
+        mainEventTimesDynamoDB.updateEventTimes(mainEventTimesMorning);
 
         inBedDateTime = inBedDateTime.plusHours(15);
         sleepDateTime = sleepDateTime.plusHours(15);
@@ -122,17 +137,29 @@ public class MainEventTimesDynamoDBIT {
         outOfBedDateTime = outOfBedDateTime.plusHours(15);
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
-        final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(inBedDateTime.getMillis(), offset,
+        final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
                 sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
 
-        mainEventTimesDynamoDB.updateEventTimes(accountId,targetDate, mainEventTimesNight);
+        mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
 
-        final Map<SleepPeriod.Period, MainEventTimes> sleepPeriodMainEventsMap = mainEventTimesDynamoDB.getEventTimes(accountId,targetDate);
-        assert(sleepPeriodMainEventsMap.containsKey(SleepPeriod.Period.MORNING));
-        assert(sleepPeriodMainEventsMap.containsKey(SleepPeriod.Period.NIGHT));
 
-        final MainEventTimes updatedNightEvents = sleepPeriodMainEventsMap.get(SleepPeriod.Period.NIGHT);
-        final MainEventTimes updatedMorningEvents = sleepPeriodMainEventsMap.get(SleepPeriod.Period.MORNING);
+        inBedDateTime =  new DateTime(2017, 1,2, 5, 15, 00, DateTimeZone.forID("America/Los_Angeles"));
+        sleepDateTime = sleepDateTime.plusHours(15);
+        wakeUpDateTime = wakeUpDateTime.plusHours(15);
+        outOfBedDateTime = outOfBedDateTime.plusHours(15);
+        createdAtDateTime = createdAtDateTime.plusHours(15);
+
+        final MainEventTimes mainEventTimesNextMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
+
+        mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
+
+
+        final List<MainEventTimes> sleepPeriodMainEventsList = mainEventTimesDynamoDB.getEventTimes(accountId,targetDate);
+        assert(sleepPeriodMainEventsList.size() == 2);
+
+        final MainEventTimes updatedNightEvents = sleepPeriodMainEventsList.get(1);
+        final MainEventTimes updatedMorningEvents = sleepPeriodMainEventsList.get(0);
 
         assert(updatedNightEvents.createdAt == mainEventTimesNight.createdAt);
         assert(updatedMorningEvents.createdAt == mainEventTimesMorning.createdAt);
