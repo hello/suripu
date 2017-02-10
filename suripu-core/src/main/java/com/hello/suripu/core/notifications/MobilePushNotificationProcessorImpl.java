@@ -15,8 +15,8 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.MobilePushRegistration;
 import com.hello.suripu.core.models.TimeZoneHistory;
-import com.hello.suripu.core.preferences.AccountPreferencesDAO;
-import com.hello.suripu.core.preferences.PreferenceName;
+import com.hello.suripu.core.notifications.settings.NotificationSetting;
+import com.hello.suripu.core.notifications.settings.NotificationSettingsDAO;
 import com.librato.rollout.RolloutClient;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.MessageBuilder;
@@ -49,7 +49,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
     private final PushNotificationEventDynamoDB pushNotificationEventDynamoDB;
     private final RolloutClient featureFlipper;
     private final AppStatsDAO appStatsDAO;
-    private final AccountPreferencesDAO accountPreferencesDAO;
+    private final NotificationSettingsDAO settingsDAO;
     private final TimeZoneHistoryDAO timeZoneHistoryDAO;
     private final NotificationSubscriptionDAOWrapper wrapper;
     private final Analytics analytics;
@@ -58,7 +58,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                                                 final ObjectMapper mapper,
                                                 final RolloutClient featureFlipper,
                                                 final AppStatsDAO appStatsDAO,
-                                                final AccountPreferencesDAO accountPreferencesDAO,
+                                                final NotificationSettingsDAO settingsDAO,
                                                 final TimeZoneHistoryDAO timeZoneHistoryDAO,
                                                 final NotificationSubscriptionDAOWrapper wrapper,
                                                 final Analytics analytics) {
@@ -66,7 +66,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         this.mapper = mapper;
         this.featureFlipper = featureFlipper;
         this.appStatsDAO = appStatsDAO;
-        this.accountPreferencesDAO = accountPreferencesDAO;
+        this.settingsDAO = settingsDAO;
         this.timeZoneHistoryDAO = timeZoneHistoryDAO;
         this.wrapper = wrapper;
         this.analytics = analytics;
@@ -85,13 +85,10 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return;
         }
 
-        final Map<PreferenceName, Boolean> preferences = accountPreferencesDAO.get(event.accountId);
-
-
         if(PushNotificationEventType.SLEEP_SCORE.equals(event.type)) {
-            final boolean enabled = preferences.getOrDefault(PreferenceName.PUSH_SCORE, false);
+            final boolean enabled = settingsDAO.isOn(event.accountId, NotificationSetting.Type.SLEEP_SCORE);
             if(!enabled) {
-                LOGGER.info("account_id={} preference={} enabled={}", event.accountId, PreferenceName.PUSH_SCORE, enabled);
+                LOGGER.info("account_id={} setting={} enabled={}", event.accountId, NotificationSetting.Type.SLEEP_SCORE, enabled);
                 return;
             }
 
@@ -265,7 +262,7 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         private ObjectMapper mapper = new ObjectMapper();
         private RolloutClient featureFlipper;
         private AppStatsDAO appStatsDAO;
-        private AccountPreferencesDAO accountPreferencesDAO;
+        private NotificationSettingsDAO settingsDAO;
         private TimeZoneHistoryDAO timeZoneHistoryDAO;
         private Map<String, String> arns = Maps.newHashMap();
         private Analytics analytics;
@@ -300,8 +297,8 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return this;
         }
 
-        public Builder withAccountPreferencesDAO(final AccountPreferencesDAO accountPreferencesDAO) {
-            this.accountPreferencesDAO = accountPreferencesDAO;
+        public Builder withSettingsDAO(final NotificationSettingsDAO settingsDAO) {
+            this.settingsDAO = settingsDAO;
             return this;
         }
 
@@ -326,12 +323,12 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             checkNotNull(pushNotificationEventDynamoDB, "pushNotificationEventDynamoDB can not be null");
             checkNotNull(featureFlipper, "featureFlipper can not be null");
             checkNotNull(appStatsDAO, "appStatsDAO can not be null");
-            checkNotNull(accountPreferencesDAO, "accountPreferencesDAO can not be null");
+            checkNotNull(settingsDAO, "settingsDAO can not be null");
             checkNotNull(analytics, "analytics can not be null");
 
             final NotificationSubscriptionDAOWrapper wrapper = NotificationSubscriptionDAOWrapper.create(subscriptionDAO, sns, arns);
             return new MobilePushNotificationProcessorImpl(pushNotificationEventDynamoDB, mapper,
-                    featureFlipper, appStatsDAO, accountPreferencesDAO, timeZoneHistoryDAO, wrapper, analytics);
+                    featureFlipper, appStatsDAO, settingsDAO, timeZoneHistoryDAO, wrapper, analytics);
         }
 
     }
