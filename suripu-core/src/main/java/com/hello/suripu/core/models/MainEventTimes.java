@@ -18,14 +18,13 @@ import java.util.Map;
  */
 public class MainEventTimes {
     //private final List<Event.Type> REQUIRED_EVENT_TYPES =  Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP);
-    public final SleepPeriod SLEEP_PERIOD;
-    public final Map<Event.Type, EventTime> EVENT_TIME_MAP;
-
-    public final long CREATED_AT;
+    public final SleepPeriod sleepPeriod;
+    public final Map<Event.Type, EventTime> eventTimeMap;
+    public final long createdAt;
 
     public static MainEventTimes create (final long inBedTime, final int inBedOffset, final long sleepTime, final int sleepOffset, final long wakeUpTime, final int wakeUpOffset, final long outOfBedTime, final int outOfBedOffset, final long createdAt){
         final DateTime inBedTimeLocalUTC = new DateTime(inBedTime + inBedOffset, DateTimeZone.UTC);
-        final SleepPeriod sleepPeriod = SleepPeriod.create(inBedTimeLocalUTC);
+        final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(inBedTimeLocalUTC);
         final EventTime inBedEventTime = new EventTime(inBedTime, inBedOffset);
         final EventTime sleepEventTime = new EventTime(sleepTime, sleepOffset);
         final EventTime wakeUpEventTime = new EventTime(wakeUpTime, wakeUpOffset);
@@ -48,7 +47,7 @@ public class MainEventTimes {
 
     public static MainEventTimes create (final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
         final DateTime inBedTimeLocalUTC = new DateTime(inBedEventTime.TIME+ inBedEventTime.OFFSET, DateTimeZone.UTC);
-        final SleepPeriod sleepPeriod = SleepPeriod.create(inBedTimeLocalUTC);
+        final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(inBedTimeLocalUTC);
         return new MainEventTimes(sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
     }
 
@@ -57,19 +56,19 @@ public class MainEventTimes {
     }
 
     public MainEventTimes (final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
-        this.SLEEP_PERIOD = sleepPeriod;
-        this.CREATED_AT = createdAt;
-        this.EVENT_TIME_MAP = new HashMap<>();
-        this.EVENT_TIME_MAP.put(Event.Type.IN_BED, inBedEventTime);
-        this.EVENT_TIME_MAP.put(Event.Type.SLEEP, sleepEventTime);
-        this.EVENT_TIME_MAP.put(Event.Type.WAKE_UP, wakeUpEventTime);
-        this.EVENT_TIME_MAP.put(Event.Type.OUT_OF_BED, outOfBedEventTime);
+        this.sleepPeriod = sleepPeriod;
+        this.createdAt = createdAt;
+        this.eventTimeMap = new HashMap<>();
+        this.eventTimeMap.put(Event.Type.IN_BED, inBedEventTime);
+        this.eventTimeMap.put(Event.Type.SLEEP, sleepEventTime);
+        this.eventTimeMap.put(Event.Type.WAKE_UP, wakeUpEventTime);
+        this.eventTimeMap.put(Event.Type.OUT_OF_BED, outOfBedEventTime);
     }
 
     public MainEventTimes (final SleepPeriod sleepPeriod, final long createdAt){
-        this.SLEEP_PERIOD = sleepPeriod;
-        this.CREATED_AT = createdAt;
-        this.EVENT_TIME_MAP = new HashMap<>();
+        this.sleepPeriod = sleepPeriod;
+        this.createdAt = createdAt;
+        this.eventTimeMap = new HashMap<>();
 
     }
 
@@ -90,7 +89,7 @@ public class MainEventTimes {
         final List<Event.Type> MAIN_EVENT_TYPES = Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP,Event.Type.OUT_OF_BED);
 
         for (final Event.Type eventType : MAIN_EVENT_TYPES){
-            if (!this.EVENT_TIME_MAP.containsKey(eventType)){
+            if (!this.eventTimeMap.containsKey(eventType)){
                 return false;
             }
         }
@@ -104,33 +103,33 @@ public class MainEventTimes {
             return mainEvents;
         }
         mainEvents.add(Event.createFromType(Event.Type.IN_BED,
-                EVENT_TIME_MAP.get(Event.Type.IN_BED).TIME,
-                EVENT_TIME_MAP.get(Event.Type.IN_BED).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                EVENT_TIME_MAP.get(Event.Type.IN_BED).OFFSET,
+                eventTimeMap.get(Event.Type.IN_BED).TIME,
+                eventTimeMap.get(Event.Type.IN_BED).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.IN_BED).OFFSET,
                 Optional.of(English.IN_BED_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
         mainEvents.add(Event.createFromType(Event.Type.SLEEP,
-                EVENT_TIME_MAP.get(Event.Type.SLEEP).TIME,
-                EVENT_TIME_MAP.get(Event.Type.SLEEP).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                EVENT_TIME_MAP.get(Event.Type.SLEEP).OFFSET,
+                eventTimeMap.get(Event.Type.SLEEP).TIME,
+                eventTimeMap.get(Event.Type.SLEEP).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.SLEEP).OFFSET,
                 Optional.of(English.FALL_ASLEEP_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
         mainEvents.add(Event.createFromType(Event.Type.WAKE_UP,
-                EVENT_TIME_MAP.get(Event.Type.WAKE_UP).TIME,
-                EVENT_TIME_MAP.get(Event.Type.WAKE_UP).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                EVENT_TIME_MAP.get(Event.Type.WAKE_UP).OFFSET,
+                eventTimeMap.get(Event.Type.WAKE_UP).TIME,
+                eventTimeMap.get(Event.Type.WAKE_UP).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.WAKE_UP).OFFSET,
                 Optional.of(English.WAKE_UP_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
         mainEvents.add(Event.createFromType(Event.Type.OUT_OF_BED,
-                EVENT_TIME_MAP.get(Event.Type.OUT_OF_BED).TIME,
-                EVENT_TIME_MAP.get(Event.Type.OUT_OF_BED).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                EVENT_TIME_MAP.get(Event.Type.OUT_OF_BED).OFFSET,
+                eventTimeMap.get(Event.Type.OUT_OF_BED).TIME,
+                eventTimeMap.get(Event.Type.OUT_OF_BED).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.OUT_OF_BED).OFFSET,
                 Optional.of(English.OUT_OF_BED_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));

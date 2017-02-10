@@ -1,38 +1,72 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by jarredheinrich on 2/2/17.
  */
 public class SleepPeriod {
-    public final SleepPeriod.Period PERIOD;
-    public final Map<Boundary, Integer> HOURS_OFFSET;
-    public final DateTime TARGET_DATE;
+    public final SleepPeriod.Period period;
+    public final ImmutableMap<Boundary, Integer> hoursOffset;
+    public final DateTime targetDate;
 
     public SleepPeriod(final SleepPeriod.Period sleepPeriod, final DateTime targetDate) {
-        this.PERIOD = sleepPeriod;
-        this.TARGET_DATE = targetDate.withTimeAtStartOfDay();
-        this.HOURS_OFFSET = new HashMap<>();
-        if (sleepPeriod == SleepPeriod.Period.MORNING) {
-            this.HOURS_OFFSET.put(Boundary.START,4);
-            this.HOURS_OFFSET.put(Boundary.END_IN_BED, 12);
-            this.HOURS_OFFSET.put(Boundary.END_DATA, 20);
+        this.period = sleepPeriod;
+        this.targetDate = targetDate.withTimeAtStartOfDay();
 
+        if (sleepPeriod == SleepPeriod.Period.MORNING) {
+            this.hoursOffset = ImmutableMap.<Boundary, Integer>builder()
+                    .put(Boundary.START,4)
+                    .put(Boundary.END_IN_BED, 12)
+                    .put(Boundary.END_DATA, 20)
+                    .build();
         } else if (sleepPeriod == SleepPeriod.Period.AFTERNOON_EVENING) {
-            this.HOURS_OFFSET.put(Boundary.START,12);
-            this.HOURS_OFFSET.put(Boundary.END_IN_BED, 20);
-            this.HOURS_OFFSET.put(Boundary.END_DATA, 28);
+            this.hoursOffset = ImmutableMap.<Boundary, Integer>builder()
+                    .put(Boundary.START,12)
+                    .put(Boundary.END_IN_BED, 20)
+                    .put(Boundary.END_DATA, 28)
+                    .build();
         } else{
-            this.HOURS_OFFSET.put(Boundary.START, 20);
-            this.HOURS_OFFSET.put(Boundary.END_IN_BED, 28);
-            this.HOURS_OFFSET.put(Boundary.END_DATA, 36);
+            this.hoursOffset = ImmutableMap.<Boundary, Integer>builder()
+                    .put(Boundary.START,20)
+                    .put(Boundary.END_IN_BED, 28)
+                    .put(Boundary.END_DATA, 36)
+                    .build();
         }
+    }
+
+    public static SleepPeriod createSleepPeriod(final DateTime inBedTime){
+        final Integer inBedHour = inBedTime.getHourOfDay();
+        if (inBedHour >= 4 && inBedHour < 12){
+            final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
+            return SleepPeriod.morning(targetDate);
+        } else if (inBedHour >= 12 && inBedHour < 20){
+            final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
+            return SleepPeriod.afternoonEvening(targetDate);
+        } else {
+            final DateTime targetDate;
+            if (inBedHour < 4){
+                targetDate = inBedTime.withTimeAtStartOfDay().minusDays(1);
+            }else{
+                targetDate = inBedTime.withTimeAtStartOfDay();
+            }
+            return SleepPeriod.night(targetDate);
+        }
+    }
+
+    public static SleepPeriod createSleepPeriod(final Period period, final DateTime targetDate){
+        if (period == Period.MORNING){
+            return SleepPeriod.morning(targetDate);
+        }
+        if(period == period.AFTERNOON_EVENING){
+            return SleepPeriod.afternoonEvening(targetDate);
+        }
+        return SleepPeriod.night(targetDate);
+
     }
 
     public static SleepPeriod night(final DateTime targetDate){
@@ -101,52 +135,22 @@ public class SleepPeriod {
     }
 
     public DateTime getSleepPeriodTime(final Boundary boundary){
-        switch(PERIOD) {
+        switch(period) {
             case MORNING:
-                return TARGET_DATE.withTimeAtStartOfDay().plusHours(this.HOURS_OFFSET.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
             case AFTERNOON_EVENING:
-                return TARGET_DATE.withTimeAtStartOfDay().plusHours(this.HOURS_OFFSET.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
             default:
-                return TARGET_DATE.withTimeAtStartOfDay().plusHours(this.HOURS_OFFSET.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
         }
     }
 
 
-    public static SleepPeriod create(final DateTime inBedTime){
-        final Integer inBedHour = inBedTime.getHourOfDay();
-        if (inBedHour >= 4 && inBedHour < 12){
-            final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
-            return SleepPeriod.morning(targetDate);
-        } else if (inBedHour >= 12 && inBedHour < 20){
-            final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
-            return SleepPeriod.afternoonEvening(targetDate);
-        } else {
-            final DateTime targetDate;
-            if (inBedHour < 4){
-                targetDate = inBedTime.withTimeAtStartOfDay().minusDays(1);
-            }else{
-                targetDate = inBedTime.withTimeAtStartOfDay();
-            }
-            return SleepPeriod.night(targetDate);
-        }
-    }
 
-
-    public static SleepPeriod create(final Period period, final DateTime targetDate){
-        if (period == Period.MORNING){
-            return SleepPeriod.morning(targetDate);
-        }
-        if(period == period.AFTERNOON_EVENING){
-            return SleepPeriod.afternoonEvening(targetDate);
-        }
-        return SleepPeriod.night(targetDate);
-
-
-    }
 
     public boolean sleepEventInSleepPeriod(final DateTime inBedTime){
-        final SleepPeriod eventSleepPeriod = create(inBedTime);
-        if (this.PERIOD == eventSleepPeriod.PERIOD){
+        final SleepPeriod eventSleepPeriod = createSleepPeriod(inBedTime);
+        if (this.period == eventSleepPeriod.period){
             return true;
         }
         return false;

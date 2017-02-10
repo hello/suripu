@@ -134,15 +134,15 @@ public class MainEventTimesDynamoDBIT {
         final MainEventTimes updatedNightEvents = sleepPeriodMainEventsMap.get(SleepPeriod.Period.NIGHT);
         final MainEventTimes updatedMorningEvents = sleepPeriodMainEventsMap.get(SleepPeriod.Period.MORNING);
 
-        assert(updatedNightEvents.CREATED_AT == mainEventTimesNight.CREATED_AT);
-        assert(updatedMorningEvents.CREATED_AT == mainEventTimesMorning.CREATED_AT);
+        assert(updatedNightEvents.createdAt == mainEventTimesNight.createdAt);
+        assert(updatedMorningEvents.createdAt == mainEventTimesMorning.createdAt);
         final List<Event.Type> mainEventTypes = Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP,Event.Type.OUT_OF_BED);
         for (final Event.Type mainEventType : mainEventTypes) {
 
-            assert (updatedMorningEvents.EVENT_TIME_MAP.get(mainEventType).TIME.longValue() == mainEventTimesMorning.EVENT_TIME_MAP.get(mainEventType).TIME.longValue());
-            assert (updatedMorningEvents.EVENT_TIME_MAP.get(mainEventType).OFFSET.intValue() == mainEventTimesMorning.EVENT_TIME_MAP.get(mainEventType).OFFSET.intValue());
-            assert (updatedNightEvents.EVENT_TIME_MAP.get(mainEventType).TIME.longValue() == mainEventTimesNight.EVENT_TIME_MAP.get(mainEventType).TIME.longValue());
-            assert (updatedNightEvents.EVENT_TIME_MAP.get(mainEventType).OFFSET.intValue() == mainEventTimesNight.EVENT_TIME_MAP.get(mainEventType).OFFSET.intValue());
+            assert (updatedMorningEvents.eventTimeMap.get(mainEventType).TIME.longValue() == mainEventTimesMorning.eventTimeMap.get(mainEventType).TIME.longValue());
+            assert (updatedMorningEvents.eventTimeMap.get(mainEventType).OFFSET.intValue() == mainEventTimesMorning.eventTimeMap.get(mainEventType).OFFSET.intValue());
+            assert (updatedNightEvents.eventTimeMap.get(mainEventType).TIME.longValue() == mainEventTimesNight.eventTimeMap.get(mainEventType).TIME.longValue());
+            assert (updatedNightEvents.eventTimeMap.get(mainEventType).OFFSET.intValue() == mainEventTimesNight.eventTimeMap.get(mainEventType).OFFSET.intValue());
         }
     }
 
