@@ -10,6 +10,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 
+import java.util.UUID;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @JsonDeserialize(builder = Account.Builder.class)
@@ -24,6 +26,9 @@ public class Account {
     @JsonIgnore
     public final Optional<Long> id;
 
+    @JsonIgnore
+    public final Optional<UUID> externalId;
+
     @JsonProperty("id")
     public String generateExternalId() {
 //        final StringBuilder sb = new StringBuilder();
@@ -33,8 +38,16 @@ public class Account {
 //
 //        final String digest = DigestUtils.md5Hex(sb.toString());
 //        return digest;
-        return (id.isPresent()) ? id.get().toString() : "0";
+        return id.or(0L).toString();
     }
+
+    @JsonProperty("ext_id")
+    public String extId() {
+        // Default to internal ID to not eff MP
+        final String internalId = id.or(0L).toString();
+        return externalId.isPresent() ? externalId.toString() : internalId;
+    }
+
 
     @JsonProperty("email")
     public final String email;
@@ -108,6 +121,8 @@ public class Account {
     @JsonProperty("profile_photo")
     public final Optional<MultiDensityImage> profilePhoto;
 
+
+
     /**
      *
      * @param id
@@ -123,6 +138,7 @@ public class Account {
      * @param DOB
      */
     private Account(final Optional<Long> id,
+                    final Optional<UUID> externalId,
                     final String email,
                     final String password,
                     final Integer tzOffsetMillis,
@@ -143,6 +159,7 @@ public class Account {
     ) {
 
         this.id = id;
+        this.externalId = externalId;
         this.email = email;
         this.password = password;
         this.tzOffsetMillis = tzOffsetMillis;
@@ -175,10 +192,11 @@ public class Account {
      */
     public static Account fromRegistration(final Registration registration, final Long id) {
         final String firstname = (registration.firstname == null) ? registration.name : registration.firstname;
-        return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
-                registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender, registration.genderName, registration.height, registration.weight, registration.created,
-                registration.created.getMillis(), registration.DOB, Boolean.FALSE,
-                registration.latitude, registration.longitude, Optional.<MultiDensityImage>absent());
+
+        return new Account(Optional.fromNullable(id), Optional.absent(), registration.email, registration.password, registration.tzOffsetMillis,
+                registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender,
+                registration.genderName, registration.height, registration.weight,registration.created, registration.created.getMillis(),
+                registration.DOB, Boolean.FALSE, registration.latitude, registration.longitude, Optional.absent());
     }
 
     /**
@@ -202,6 +220,7 @@ public class Account {
 
     public static class Builder {
         private Optional<Long> id;
+        private Optional<UUID> externalID;
         private String name;
         private String firstname;
         private Optional<String> lastname;
@@ -222,6 +241,7 @@ public class Account {
 
         public Builder() {
             this.id = Optional.absent();
+            this.externalID = Optional.absent();
             this.name = "";
             this.firstname = "";
             this.lastname = Optional.absent();
@@ -242,6 +262,7 @@ public class Account {
 
         public Builder(final Account account) {
             this.id = account.id;
+            this.externalID = account.externalId;
             this.email = account.email;
             this.password = account.password;
             this.tzOffsetMillis = account.tzOffsetMillis;
@@ -329,6 +350,11 @@ public class Account {
             return this;
         }
 
+        public Builder withExternalId(final UUID uuid) {
+            this.externalID = Optional.fromNullable(uuid);
+            return this;
+        }
+
         @JsonProperty("tz")
         public Builder withTzOffsetMillis(final Integer tzOffsetMillis) {
             this.tzOffsetMillis = tzOffsetMillis;
@@ -397,7 +423,7 @@ public class Account {
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tzOffsetMillis, name, firstname, lastname, gender, genderName, height, weight,
+            return new Account(id, externalID, email, password, tzOffsetMillis, name, firstname, lastname, gender, genderName, height, weight,
                     created, lastModified, DOB, emailVerified, latitude, longitude, profilePhoto);
         }
     }
@@ -406,7 +432,7 @@ public class Account {
     public String toString() {
         return MoreObjects.toStringHelper(Account.class)
                 .add("id", (id.isPresent()) ? id.get() : "N/A")
-                .add("external_id", generateExternalId())
+                .add("external_id", externalId.or(new UUID(0L, 0L)))
                 .add("email", email)
                 .add("password", obscurePassword(password))
                 .add("tz", tzOffsetMillis)
@@ -443,6 +469,7 @@ public class Account {
     public static Account normalizeWithId(final Account account, final Long accountId) {
         return new Account(
                 Optional.fromNullable(accountId),
+                account.externalId,
                 account.email.toLowerCase().trim(),
                 account.password,
                 account.tzOffsetMillis,
@@ -463,9 +490,9 @@ public class Account {
         );
     }
 
-    public static Account forApplication(final Long aaplicationId, final Account account) {
+    public static Account forApplication(final Long applicationId, final Account account) {
 //        return new Account();
-        return null;
+        return account;
     }
 
     @JsonIgnore
