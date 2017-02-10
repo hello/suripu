@@ -87,6 +87,18 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
         return ORDERING.stream().map(t -> defaults.get(t)).collect(Collectors.toList());
     }
 
+    @Override
+    public boolean isOn(Long accountId, NotificationSetting.Type type) {
+        final List<NotificationSetting> settings = get(accountId);
+        for(NotificationSetting setting : settings) {
+            if(type.equals(setting.type)) {
+                return setting.enabled();
+            }
+        }
+
+        return false;
+    }
+
 
     Item toItem(final NotificationSetting setting) {
         if(!setting.accountId.isPresent()) {
