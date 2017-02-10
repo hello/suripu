@@ -1,19 +1,28 @@
 package com.hello.suripu.core.notifications;
 
 import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.EndpointDisabledException;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AppStatsDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.MobilePushRegistration;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
+import com.hello.suripu.core.preferences.PreferenceName;
 import com.librato.rollout.RolloutClient;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.MessageBuilder;
+import com.segment.analytics.messages.TrackMessage;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Minutes;
 import org.slf4j.Logger;
@@ -33,31 +42,34 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MobilePushNotificationProcessorImpl.class);
 
+    private final static String SEGMENT_TRACKNAME = "Push Notifications";
+
     private final ObjectMapper mapper;
 
-    private final AmazonSNS sns;
-    private final NotificationSubscriptionsReadDAO subscriptionDAO;
     private final PushNotificationEventDynamoDB pushNotificationEventDynamoDB;
     private final RolloutClient featureFlipper;
     private final AppStatsDAO appStatsDAO;
     private final AccountPreferencesDAO accountPreferencesDAO;
     private final TimeZoneHistoryDAO timeZoneHistoryDAO;
+    private final NotificationSubscriptionDAOWrapper wrapper;
+    private final Analytics analytics;
 
-    private MobilePushNotificationProcessorImpl(final AmazonSNS sns, final NotificationSubscriptionsReadDAO subscriptionDAO,
-                                               final PushNotificationEventDynamoDB pushNotificationEventDynamoDB,
-                                               final ObjectMapper mapper,
-                                               final RolloutClient featureFlipper,
-                                               final AppStatsDAO appStatsDAO,
-                                               final AccountPreferencesDAO accountPreferencesDAO,
-                                                final TimeZoneHistoryDAO timeZoneHistoryDAO) {
-        this.sns = sns;
-        this.subscriptionDAO = subscriptionDAO;
+    private MobilePushNotificationProcessorImpl(final PushNotificationEventDynamoDB pushNotificationEventDynamoDB,
+                                                final ObjectMapper mapper,
+                                                final RolloutClient featureFlipper,
+                                                final AppStatsDAO appStatsDAO,
+                                                final AccountPreferencesDAO accountPreferencesDAO,
+                                                final TimeZoneHistoryDAO timeZoneHistoryDAO,
+                                                final NotificationSubscriptionDAOWrapper wrapper,
+                                                final Analytics analytics) {
         this.pushNotificationEventDynamoDB = pushNotificationEventDynamoDB;
         this.mapper = mapper;
         this.featureFlipper = featureFlipper;
         this.appStatsDAO = appStatsDAO;
         this.accountPreferencesDAO = accountPreferencesDAO;
         this.timeZoneHistoryDAO = timeZoneHistoryDAO;
+        this.wrapper = wrapper;
+        this.analytics = analytics;
     }
 
     @Override
@@ -67,63 +79,111 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return;
         }
 
-
-
-        if(PushNotificationEventType.SLEEP_SCORE.equals(event.type)) {
-            final Optional<DateTime> lastViewed = appStatsDAO.getQuestionsLastViewed(event.accountId);
-            if(!lastViewed.isPresent()) {
-                LOGGER.warn("action=no-last-viewed account_id={}", event.accountId);
-                return;
-            }
-
-            final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryDAO.getCurrentTimeZone(event.accountId);
-            if(!timeZoneHistoryOptional.isPresent()) {
-                LOGGER.error("error=missing-timezone-history account_id={}", event.accountId);
-                return;
-            }
-            final DateTimeZone dateTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
-            final DateTime lastViewedLocalTime = new DateTime(lastViewed.get(), dateTimeZone).withTimeAtStartOfDay();
-            final DateTime nowLocalTime = DateTime.now().withTimeAtStartOfDay();
-            final int minutes = Minutes.minutesBetween(nowLocalTime, lastViewedLocalTime).getMinutes();
-            if(minutes > 0) {
-                LOGGER.warn("action=skip-push-notification account_id={} last_seen={}", event.accountId, lastViewedLocalTime);
-                return;
-            }
-        }
-
-        // We often want at-most-once delivery of push notifications, so we insert the record to DDB first.
-        // That way if something later in this method fails, we won't accidentally send the same notification twice.
-        final boolean successfullyInserted = pushNotificationEventDynamoDB.insert(event);
-        if (!successfullyInserted) {
-            LOGGER.warn("action=insert-push-notification account_id={} type={}", event.accountId, event.type);
+        final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryDAO.getCurrentTimeZone(event.accountId);
+        if(!timeZoneHistoryOptional.isPresent()) {
+            LOGGER.error("error=missing-timezone-history account_id={}", event.accountId);
             return;
         }
 
-        final Long accountId = 4187L; //event.accountId;
+        final Map<PreferenceName, Boolean> preferences = accountPreferencesDAO.get(event.accountId);
+
+
+        if(PushNotificationEventType.SLEEP_SCORE.equals(event.type)) {
+            final boolean enabled = preferences.getOrDefault(PreferenceName.PUSH_SCORE, false);
+            if(!enabled) {
+                LOGGER.info("account_id={} preference={} enabled={}", event.accountId, PreferenceName.PUSH_SCORE, enabled);
+                return;
+            }
+
+            if(featureFlipper.userFeatureActive(FeatureFlipper.APP_LAST_SEEN_PUSH_ENABLED, event.accountId, Collections.EMPTY_LIST)) {
+                final Optional<DateTime> lastViewed = appStatsDAO.getQuestionsLastViewed(event.accountId);
+                if (lastViewed.isPresent()) {
+
+                    final DateTimeZone dateTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
+                    final DateTime lastViewedLocalTime = new DateTime(lastViewed.get(), dateTimeZone).withTimeAtStartOfDay();
+                    final DateTime nowLocalTime = DateTime.now().withTimeAtStartOfDay();
+                    final int minutes = Minutes.minutesBetween(nowLocalTime, lastViewedLocalTime).getMinutes();
+                    if (minutes > 0) {
+                        LOGGER.warn("action=skip-push-notification status=app-opened account_id={} last_seen={}", event.accountId, lastViewedLocalTime);
+                        return;
+                    }
+                }
+            }
+        }
+
+
+        final DateTimeZone tz = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
+
+        final PushNotificationEvent eventAdjusted = PushNotificationEvent.newBuilder()
+                .withAccountId(event.accountId)
+                .withType(event.type)
+                .withHelloPushMessage(event.helloPushMessage)
+                .withSenseId(event.senseId.orNull())
+                .withTimestamp(event.timestamp)
+                .withTimeZone(tz)
+                .build();
+
+        // We often want at-most-once delivery of push notifications, so we insert the record to DDB first.
+        // That way if something later in this method fails, we won't accidentally send the same notification twice.
+        final boolean successfullyInserted = pushNotificationEventDynamoDB.insert(eventAdjusted);
+        if (!successfullyInserted) {
+            LOGGER.warn("action=duplicate-push-notification account_id={} type={}", event.accountId, event.type);
+            return;
+        }
+
+        final Long accountId = event.accountId;
         final HelloPushMessage pushMessage = event.helloPushMessage;
 
-        final List<MobilePushRegistration> registrations = subscriptionDAO.getSubscriptions(accountId);
+        final List<MobilePushRegistration> registrations = wrapper.dao().getMostRecentSubscriptions(accountId, 5);
+        LOGGER.info("action=list-registrations account_id={} num_subscriptions={}", event.accountId, registrations.size());
+
+        final List<MobilePushRegistration> toDelete = Lists.newArrayList();
+
         for (final MobilePushRegistration reg : registrations) {
             if(reg.endpoint.isPresent()) {
                 final MobilePushRegistration.OS os = MobilePushRegistration.OS.fromString(reg.os);
                 final Optional<String> message = makeMessage(os, pushMessage);
                 if(!message.isPresent()) {
-                    LOGGER.info("Did not get any suitable message for {}", reg);
+                    LOGGER.warn("warn=failed-to-generate-message os={} push_message={}", os, pushMessage);
                     continue;
                 }
-                LOGGER.info(message.get());
+
                 final PublishRequest pr = new PublishRequest();
                 pr.setMessageStructure("json");
                 pr.setMessage(message.get());
-                LOGGER.info("message={}", message.get());
                 pr.setTargetArn(reg.endpoint.get());
+
                 try {
-                    final PublishResult result = sns.publish(pr);
-                    LOGGER.info("message_id={}", result.getMessageId());
-                } catch (Exception e) {
-                    LOGGER.error("Failed sending message : {}", e.getMessage());
+                    final PublishResult result = wrapper.sns().publish(pr);
+                    LOGGER.info("account_id={} message_id={} os={} version={}", event.accountId, result.getMessageId(), reg.os, reg.appVersion);
+
+                    final Map<String, String> tags = ImmutableMap.of(
+                            "type",event.type.shortName(),
+                            "app_version", reg.appVersion,
+                            "platform", reg.os,
+                            "version", reg.version
+                    );
+
+                    final MessageBuilder mb = TrackMessage.builder(SEGMENT_TRACKNAME)
+                            .userId(String.valueOf(reg.accountId.or(0L)))
+                            .properties(tags)
+                            .timestamp(DateTime.now(DateTimeZone.UTC).toDate());
+
+                    analytics.enqueue(mb);
+                } catch (final EndpointDisabledException endpointDisabled) {
+                    toDelete.add(reg);
                 }
+                catch (Exception e) {
+                    LOGGER.error("error=failed-sending-sns-message message={}", e.getMessage());
+                }
+
+
             }
+        }
+
+        for(final MobilePushRegistration registration : toDelete) {
+            LOGGER.info("action=delete-by-device-token account_id={} device_token={} os={}", registration.accountId.or(0L), registration.deviceToken, registration.os);
+            wrapper.dao().deleteByDeviceToken(registration.deviceToken);
         }
     }
 
@@ -163,17 +223,16 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
         final Map<String, String> content = new HashMap<>();
         final Map<String, Object> appMessageMap = new HashMap<>();
 
-        content.put("message", message.body);
-        content.put("target", message.target);
-        content.put("details", message.details);
-
-        appMessageMap.put("collapse_key", "Welcome");
-//        appMessageMap.put("delay_while_idle", true);
-//        appMessageMap.put("time_to_live", 125);
-//        appMessageMap.put("dry_run", false);
+        content.put("hlo_title", "Sense – XXXX");
+        content.put("hlo_body", message.body);
+        content.put("hlo_type", message.target);
+        content.put("hlo_detail", message.details);
+        appMessageMap.put("time_to_live", DateTimeConstants.SECONDS_PER_HOUR * 23);
         appMessageMap.put("data", content);
 
-
+//        appMessageMap.put("collapse_key", "Welcome");
+//        appMessageMap.put("delay_while_idle", true);
+//        appMessageMap.put("dry_run", false);
 
         try {
             final String jsonString = mapper.writeValueAsString(appMessageMap);
@@ -201,20 +260,22 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
     public static class Builder {
 
         private AmazonSNS sns;
-        private NotificationSubscriptionsReadDAO subscriptionDAO;
+        private NotificationSubscriptionsDAO subscriptionDAO;
         private PushNotificationEventDynamoDB pushNotificationEventDynamoDB;
         private ObjectMapper mapper = new ObjectMapper();
         private RolloutClient featureFlipper;
         private AppStatsDAO appStatsDAO;
         private AccountPreferencesDAO accountPreferencesDAO;
         private TimeZoneHistoryDAO timeZoneHistoryDAO;
+        private Map<String, String> arns = Maps.newHashMap();
+        private Analytics analytics;
 
         public Builder withSns(final AmazonSNS sns) {
             this.sns = sns;
             return this;
         }
 
-        public Builder withSubscriptionDAO(final NotificationSubscriptionsReadDAO subscriptionDAO) {
+        public Builder withSubscriptionDAO(final NotificationSubscriptionsDAO subscriptionDAO) {
             this.subscriptionDAO = subscriptionDAO;
             return this;
         }
@@ -249,6 +310,16 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             return this;
         }
 
+        public Builder withArns(Map<String,String> arns) {
+            this.arns.putAll(arns);
+            return this;
+        }
+
+        public Builder withAnalytics(final Analytics analytics) {
+            this.analytics = analytics;
+            return this;
+        }
+
         public MobilePushNotificationProcessor build() {
             checkNotNull(sns, "sns can not be null");
             checkNotNull(subscriptionDAO, "subscription can not be null");
@@ -256,9 +327,11 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
             checkNotNull(featureFlipper, "featureFlipper can not be null");
             checkNotNull(appStatsDAO, "appStatsDAO can not be null");
             checkNotNull(accountPreferencesDAO, "accountPreferencesDAO can not be null");
+            checkNotNull(analytics, "analytics can not be null");
 
-            return new MobilePushNotificationProcessorImpl(sns, subscriptionDAO, pushNotificationEventDynamoDB, mapper,
-                    featureFlipper, appStatsDAO, accountPreferencesDAO, timeZoneHistoryDAO);
+            final NotificationSubscriptionDAOWrapper wrapper = NotificationSubscriptionDAOWrapper.create(subscriptionDAO, sns, arns);
+            return new MobilePushNotificationProcessorImpl(pushNotificationEventDynamoDB, mapper,
+                    featureFlipper, appStatsDAO, accountPreferencesDAO, timeZoneHistoryDAO, wrapper, analytics);
         }
 
     }
