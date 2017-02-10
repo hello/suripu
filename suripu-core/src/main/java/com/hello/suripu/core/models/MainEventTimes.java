@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.translations.English;
 import org.joda.time.DateTime;
@@ -9,9 +10,7 @@ import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by jarredheinrich on 2/7/17.
@@ -19,10 +18,27 @@ import java.util.Map;
 public class MainEventTimes {
     //private final List<Event.Type> REQUIRED_EVENT_TYPES =  Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP);
     public final SleepPeriod sleepPeriod;
-    public final Map<Event.Type, EventTime> eventTimeMap;
+    public final ImmutableMap<Event.Type, EventTime> eventTimeMap;
     public final long createdAt;
 
-    public static MainEventTimes create (final long inBedTime, final int inBedOffset, final long sleepTime, final int sleepOffset, final long wakeUpTime, final int wakeUpOffset, final long outOfBedTime, final int outOfBedOffset, final long createdAt){
+    private MainEventTimes (final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
+        this.sleepPeriod = sleepPeriod;
+        this.createdAt = createdAt;
+        this.eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
+                .put(Event.Type.IN_BED, inBedEventTime)
+                .put(Event.Type.SLEEP, sleepEventTime)
+                .put(Event.Type.WAKE_UP, wakeUpEventTime)
+                .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
+                .build();
+    }
+
+    private MainEventTimes (final SleepPeriod sleepPeriod, final long createdAt){
+        this.sleepPeriod = sleepPeriod;
+        this.createdAt = createdAt;
+        this.eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder().build();
+    }
+
+    public static MainEventTimes createMainEventTimes (final long inBedTime, final int inBedOffset, final long sleepTime, final int sleepOffset, final long wakeUpTime, final int wakeUpOffset, final long outOfBedTime, final int outOfBedOffset, final long createdAt){
         final DateTime inBedTimeLocalUTC = new DateTime(inBedTime + inBedOffset, DateTimeZone.UTC);
         final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(inBedTimeLocalUTC);
         final EventTime inBedEventTime = new EventTime(inBedTime, inBedOffset);
@@ -33,8 +49,7 @@ public class MainEventTimes {
 
     }
 
-    public static MainEventTimes create(final SleepPeriod sleepPeriod, final long createdAt, final TimelineAlgorithmResult timelineAlgorithmResult){
-
+    public static MainEventTimes createMainEventTimes (final SleepPeriod sleepPeriod, final long createdAt, final TimelineAlgorithmResult timelineAlgorithmResult){
         if(timelineAlgorithmResult.mainEvents.containsKey(Event.Type.IN_BED) && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.SLEEP)  && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.WAKE_UP)  && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.OUT_OF_BED) ) {
             final EventTime inBedEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.IN_BED).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.IN_BED).getTimezoneOffset());
             final EventTime sleepEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.SLEEP).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.SLEEP).getTimezoneOffset());
@@ -45,34 +60,19 @@ public class MainEventTimes {
         return new MainEventTimes(sleepPeriod, createdAt);
     }
 
-    public static MainEventTimes create (final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
+    public static MainEventTimes createMainEventTimes (final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
         final DateTime inBedTimeLocalUTC = new DateTime(inBedEventTime.TIME+ inBedEventTime.OFFSET, DateTimeZone.UTC);
         final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(inBedTimeLocalUTC);
         return new MainEventTimes(sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
     }
 
-    public static MainEventTimes create (final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
+    public static MainEventTimes createMainEventTimes (final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
        return new MainEventTimes(sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
     }
 
-    public MainEventTimes (final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
-        this.sleepPeriod = sleepPeriod;
-        this.createdAt = createdAt;
-        this.eventTimeMap = new HashMap<>();
-        this.eventTimeMap.put(Event.Type.IN_BED, inBedEventTime);
-        this.eventTimeMap.put(Event.Type.SLEEP, sleepEventTime);
-        this.eventTimeMap.put(Event.Type.WAKE_UP, wakeUpEventTime);
-        this.eventTimeMap.put(Event.Type.OUT_OF_BED, outOfBedEventTime);
+    public static MainEventTimes createMainEventTimesEmpty(final SleepPeriod sleepPeriod, final long createdAt){
+        return new MainEventTimes(sleepPeriod, createdAt);
     }
-
-    public MainEventTimes (final SleepPeriod sleepPeriod, final long createdAt){
-        this.sleepPeriod = sleepPeriod;
-        this.createdAt = createdAt;
-        this.eventTimeMap = new HashMap<>();
-
-    }
-
-
 
     public static class EventTime {
         public final Long TIME;
@@ -83,7 +83,6 @@ public class MainEventTimes {
             this.OFFSET= offset;
         }
     }
-
 
     public boolean hasValidEventTimes(){
         final List<Event.Type> MAIN_EVENT_TYPES = Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP,Event.Type.OUT_OF_BED);

@@ -331,7 +331,7 @@ public class MainEventTimesDynamoDB implements MainEventTimesDAO{
                 final int outOfBedOffset =item.getInt(eventTimeAttributeNames.outOfBedOffset);
                 final MainEventTimes.EventTime outOfBedEventTime = new MainEventTimes.EventTime(outOfBedTime, outOfBedOffset);
 
-                final MainEventTimes mainEventTimes = MainEventTimes.create(createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
+                final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
                 sleepPeriodEventTimesMap.put(period, mainEventTimes);
             }
         }
