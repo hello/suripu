@@ -61,6 +61,18 @@ public class Account {
     @JsonProperty("gender")
     public final Gender gender;
 
+
+    private final String genderName;
+
+    @JsonProperty("gender_name")
+    public final String genderName() {
+        if(Gender.OTHER.equals(gender)) {
+            return genderName;
+        }
+
+        return "";
+    }
+
     @JsonProperty("height")
     public final Integer height;
 
@@ -118,6 +130,7 @@ public class Account {
                     final String firstname,
                     final Optional<String> lastname,
                     final Gender gender,
+                    final String genderName,
                     final Integer height,
                     final Integer weight,
                     final DateTime created,
@@ -138,6 +151,7 @@ public class Account {
         this.firstname = firstname;
         this.lastname = lastname;
         this.gender = gender;
+        this.genderName = genderName;
         this.height = height;
         this.weight = weight;
 
@@ -162,7 +176,7 @@ public class Account {
     public static Account fromRegistration(final Registration registration, final Long id) {
         final String firstname = (registration.firstname == null) ? registration.name : registration.firstname;
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
-                registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender, registration.height, registration.weight, registration.created,
+                registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender, registration.genderName, registration.height, registration.weight, registration.created,
                 registration.created.getMillis(), registration.DOB, Boolean.FALSE,
                 registration.latitude, registration.longitude, Optional.<MultiDensityImage>absent());
     }
@@ -192,6 +206,7 @@ public class Account {
         private String firstname;
         private Optional<String> lastname;
         private Gender gender;
+        private String genderName;
         private Integer height;
         private Integer weight;
         private String password;
@@ -211,6 +226,7 @@ public class Account {
             this.firstname = "";
             this.lastname = Optional.absent();
             this.gender = Gender.OTHER;
+            this.genderName = "";
             this.height = 0;
             this.weight = 0;
             this.password = "";
@@ -233,6 +249,7 @@ public class Account {
             this.firstname = account.firstname;
             this.lastname = account.lastname;
             this.gender = account.gender;
+            this.genderName = account.genderName;
             this.height = account.height;
             this.weight = account.weight;
             this.created = account.created;
@@ -273,6 +290,12 @@ public class Account {
         @JsonIgnore
         public Builder withGender(final Gender gender) {
             this.gender = gender;
+            return this;
+        }
+
+        @JsonProperty("gender_name")
+        public Builder withGenderName(final String genderName) {
+            this.genderName = (genderName == null) ? "" : genderName;
             return this;
         }
 
@@ -374,7 +397,7 @@ public class Account {
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tzOffsetMillis, name, firstname, lastname, gender, height, weight,
+            return new Account(id, email, password, tzOffsetMillis, name, firstname, lastname, gender, genderName, height, weight,
                     created, lastModified, DOB, emailVerified, latitude, longitude, profilePhoto);
         }
     }
@@ -394,6 +417,7 @@ public class Account {
                 .add("height", height)
                 .add("weight", weight)
                 .add("gender", gender)
+                .add("gender_name", genderName)
                 .add("created", created)
                 .add("last_modified", lastModified)
                 .add("DOB", DOB)
@@ -426,6 +450,7 @@ public class Account {
                 account.firstname,
                 account.lastname,
                 account.gender,
+                account.genderName,
                 account.height,
                 account.weight,
                 account.created,
