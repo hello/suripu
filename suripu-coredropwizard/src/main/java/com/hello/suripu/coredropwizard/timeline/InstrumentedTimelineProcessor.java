@@ -747,6 +747,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
 
 
+        //removes sleep motion events during a sleep disturbance
         final List<Event> filteredEvents = timelineUtils.cleanEventWindow(nonSignificantFilteredEvents);
 
         /* convert valid events to segment, compute sleep stats and score */

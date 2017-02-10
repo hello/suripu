@@ -165,6 +165,9 @@ public class TimelineUtils {
 
     public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions, final boolean hasSleepDisturbance) {
         int minSleepDepth = 0;
+        //sleepDepth < 5 = "awake" for sleep motion, but is not reflected in sleep stats times awake.
+        //Users can thumb over sleep motion that is < 5 and see a message of 'awake'
+        //setting minSleepDepth to 5 removes this inconsistency.
         if (hasSleepDisturbance){
             minSleepDepth = 5;
         }
@@ -482,6 +485,7 @@ public class TimelineUtils {
         return result;
     }
 
+    //removes sleep motion events during a sleep disturbance
     public List<Event> cleanEventWindow(final List<Event> eventList){
         final long disturbanceBlackOut = DateTimeConstants.MILLIS_PER_MINUTE * 20;
         if(eventList.size() == 0){
@@ -1492,6 +1496,7 @@ public class TimelineUtils {
         return events;
     }
 
+    //Searches for instances where a user moves for more than 15 seconds within a 4 minute period
     public List<Event> getSleepDisturbanceEvents(final OneDaysTrackerMotion oneDaysTrackerMotion, final Long sleepTime, final Long wakeTime, final TimeZoneOffsetMap timeZoneOffsetMap){
         final long sleepBuffer = 30 * DateTimeConstants.MILLIS_PER_MINUTE; // ignores first 30 minutes of sleep motions
         final long wakeBuffer= 60 * DateTimeConstants.MILLIS_PER_MINUTE; //ignores last 60 minutes of sleep motion
@@ -1511,7 +1516,7 @@ public class TimelineUtils {
         return sleepDisturbanceEvents;
     }
 
-    // computes periods of disturbed sleep using on duration. Over 16 seconds of movement within a 4 minute window initiates a state of disturbed sleep that persists until there is no motion for 7 minutes
+    // computes periods of disturbed sleep using on duration. Over 15 seconds of movement within a 4 minute window initiates a state of disturbed sleep that persists until there is no motion for 7 minutes
     public Map<Long, Long> getSleepDisturbances(final List<TrackerMotion> trackerMotions){
 
         final int onDurationSumThreshold = 15; //secs
