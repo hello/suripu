@@ -309,7 +309,7 @@ public class MainEventTimesDynamoDB implements MainEventTimesDAO{
         final Map<SleepPeriod.Period, MainEventTimes> sleepPeriodEventTimesMap = new HashMap<>();
 
         //Search for main events in all three sleep periods
-        for (final SleepPeriod.Period period : SleepPeriod.getAll()){
+        for (final SleepPeriod.Period period : SleepPeriod.Period.getAllPeriods()){
             final EventTimeAttributeNames eventTimeAttributeNames = EventTimeAttributeNames.getEventAttributeNames(period);
 
             if (hasSleepPeriod(eventTimeAttributeNames, item)){

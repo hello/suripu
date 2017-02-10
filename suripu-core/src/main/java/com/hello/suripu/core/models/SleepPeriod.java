@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 
@@ -69,6 +70,15 @@ public class SleepPeriod {
 
     }
 
+    public static List<SleepPeriod> createAllSleepPeriods(final DateTime targetDate){
+        final ImmutableList<SleepPeriod> sleepPeriods = ImmutableList.<SleepPeriod>builder()
+                .add(SleepPeriod.morning(targetDate))
+                .add(SleepPeriod.afternoonEvening(targetDate))
+                .add(SleepPeriod.night(targetDate))
+                .build();
+        return sleepPeriods;
+    }
+
     public static SleepPeriod night(final DateTime targetDate){
         return new SleepPeriod(Period.NIGHT, targetDate);
     }
@@ -110,6 +120,14 @@ public class SleepPeriod {
             return NONE;
         }
 
+        public static List<SleepPeriod.Period> getAllPeriods(){
+            final List<SleepPeriod.Period> periods = new ArrayList<>();
+            periods.add(Period.MORNING);
+            periods.add(Period.AFTERNOON_EVENING);
+            periods.add(Period.NIGHT);
+            return periods;
+        }
+
 
     }
 
@@ -145,9 +163,6 @@ public class SleepPeriod {
         }
     }
 
-
-
-
     public boolean sleepEventInSleepPeriod(final DateTime inBedTime){
         final SleepPeriod eventSleepPeriod = createSleepPeriod(inBedTime);
         if (this.period == eventSleepPeriod.period){
@@ -156,12 +171,5 @@ public class SleepPeriod {
         return false;
     }
 
-    public static List<SleepPeriod.Period> getAll(){
-        final List<SleepPeriod.Period> periods = new ArrayList<>();
-        periods.add(Period.MORNING);
-        periods.add(Period.AFTERNOON_EVENING);
-        periods.add(Period.NIGHT);
-        return periods;
-    }
 
 }
