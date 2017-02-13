@@ -126,6 +126,36 @@ public class InsightsDAODynamoDBIT {
     }
 
     @Test
+    public void testGetInsightsByDate_future() throws Exception {
+        // Set up some test data in the table
+        final List<InsightCard> insightCards = new ArrayList<>();
+        final Long accountId = 0L;
+
+        insertInsight(insightCards, accountId, "2015-05-06T23:17:25.162Z", Optional.<MultiDensityImage>absent());
+
+        insertInsight(insightCards, accountId, "2015-05-05T23:17:25.162Z", Optional.<MultiDensityImage>absent());
+
+        insertInsight(insightCards, accountId, "2015-05-04T20:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-03T01:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-02T01:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-01T01:17:25.162Z", Optional.<MultiDensityImage>absent());
+
+        insightsDAODynamoDB.insertListOfInsights(insightCards);
+
+        final int limit = insightCards.size() + 1;
+        System.out.print(insightCards.size());
+
+        // Test reverse chronological order
+        final List<InsightCard> insightsReverseChronological = insightsDAODynamoDB.getInsightsByDate(accountId, DateTime.parse("2015-05-05T08:00:00.000Z"), false, limit);
+        assertThat(insightsReverseChronological.size(), is(5));
+
+        // Chronological order
+        final List<InsightCard> insightsChronological = insightsDAODynamoDB.getInsightsByDate(accountId, DateTime.parse("2015-05-05T08:00:00.000Z"), true, limit);
+        assertThat(insightsChronological.size(), is(2));
+
+    }
+
+    @Test
     public void testGetInsightsByDateWithImages() {
         final List<InsightCard> insightCards = new ArrayList<>();
         final Long accountId = 0L;
