@@ -23,7 +23,7 @@ public class SleepPeriodTest {
         withinSleepPeriod = sleepPeriod.sleepEventInSleepPeriod(DateTime.now(DateTimeZone.UTC).withHourOfDay(13));
         assert(!withinSleepPeriod);
 
-        sleepPeriod = SleepPeriod.afternoonEvening(DateTime.now(DateTimeZone.UTC));
+        sleepPeriod = SleepPeriod.afternoon(DateTime.now(DateTimeZone.UTC));
         withinSleepPeriod = sleepPeriod.sleepEventInSleepPeriod(DateTime.now(DateTimeZone.UTC).withHourOfDay(13));
         assert(withinSleepPeriod);
         withinSleepPeriod = sleepPeriod.sleepEventInSleepPeriod(DateTime.now(DateTimeZone.UTC).withHourOfDay(21));

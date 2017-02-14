@@ -61,7 +61,7 @@ public class SleepPeriod {
             return SleepPeriod.morning(targetDate);
         } else if (inBedHour >= AFTERNOON_START_HOUR && inBedHour < AFTERNOON_IN_BED_END_HOUR){
             final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
-            return SleepPeriod.afternoonEvening(targetDate);
+            return SleepPeriod.afternoon(targetDate);
         } else {
             final DateTime targetDate;
             if (inBedHour < MORNING_START_HOUR){
@@ -78,7 +78,7 @@ public class SleepPeriod {
             return SleepPeriod.morning(targetDate);
         }
         if(period == period.AFTERNOON){
-            return SleepPeriod.afternoonEvening(targetDate);
+            return SleepPeriod.afternoon(targetDate);
         }
         return SleepPeriod.night(targetDate);
 
@@ -87,17 +87,40 @@ public class SleepPeriod {
     public static List<SleepPeriod> createAllSleepPeriods(final DateTime targetDate){
         final ImmutableList<SleepPeriod> sleepPeriods = ImmutableList.<SleepPeriod>builder()
                 .add(SleepPeriod.morning(targetDate))
-                .add(SleepPeriod.afternoonEvening(targetDate))
+                .add(SleepPeriod.afternoon(targetDate))
                 .add(SleepPeriod.night(targetDate))
                 .build();
         return sleepPeriods;
     }
 
+    public SleepPeriod nextSleepPeriod(){
+        if (this.period == Period.NIGHT){
+           final DateTime nextDay =this.targetDate.plusDays(1);
+           return SleepPeriod.morning(nextDay);
+        }
+        if (this.period == Period.MORNING){
+            return SleepPeriod.afternoon(this.targetDate);
+        }
+        return SleepPeriod.night(this.targetDate);
+    }
+
+    public SleepPeriod previousSleepPeriod(){
+        if (this.period == Period.MORNING){
+            final DateTime previousDay =this.targetDate.minusDays(1);
+            return SleepPeriod.night(previousDay);
+        }
+        if (this.period == Period.AFTERNOON){
+            return SleepPeriod.morning(this.targetDate);
+        }
+        return SleepPeriod.afternoon(this.targetDate);
+    }
+
+
     public static SleepPeriod night(final DateTime targetDate){
         return new SleepPeriod(Period.NIGHT, targetDate);
     }
 
-    public static  SleepPeriod afternoonEvening(final DateTime targetDate){
+    public static  SleepPeriod afternoon(final DateTime targetDate){
         return new SleepPeriod(Period.AFTERNOON, targetDate);
     }
 
@@ -186,74 +209,41 @@ public class SleepPeriod {
 
     }
 
-    public DateTime getSleepPeriodTime(final Boundary boundary){
+
+    public DateTime getSleepPeriodTime(final Boundary boundary, final int offsetMillis){
         switch(period) {
             case MORNING:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
             case AFTERNOON:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
             default:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
         }
     }
 
-    public DateTime getTargetSleepPeriodTime(final Boundary boundary){
+    public DateTime getTargetSleepPeriodTime(final Boundary boundary, final int offsetMillis){
         final int  queueProcessorOffset = 2;//hours;
         switch(period) {
             case MORNING:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
             case AFTERNOON:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
             default:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary));
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
         }
     }
 
-    public static SleepPeriod create(final DateTime inBedTime){
-        final Integer inBedHour = inBedTime.getHourOfDay();
-        if (inBedHour >= MORNING_START_HOUR && inBedHour < MORNING_IN_BED_END_HOUR){
-            final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
-            return SleepPeriod.morning(targetDate);
-        } else if (inBedHour >= AFTERNOON_START_HOUR && AFTERNOON_IN_BED_END_HOUR < 20){
-            final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
-            return SleepPeriod.afternoonEvening(targetDate);
-        } else {
-            final DateTime targetDate;
-            if (MORNING_START_HOUR < 4){
-                targetDate = inBedTime.withTimeAtStartOfDay().minusDays(1);
-            }else{
-                targetDate = inBedTime.withTimeAtStartOfDay();
-            }
-            return SleepPeriod.night(targetDate);
+    public static List<SleepPeriod> getSleepPeriodQueue(final DateTime targetDate, final DateTime currentTimeLocal){
+        if (currentTimeLocal.minusHours(4).isAfter(targetDate.withTimeAtStartOfDay().getMillis())){
+            return createAllSleepPeriods(targetDate);
         }
-    }
-
-    public static SleepPeriod create(final Period period, final DateTime targetDate){
-        if (period == Period.MORNING){
-            return SleepPeriod.morning(targetDate);
+        final SleepPeriod currentSleepPeriod = createSleepPeriod(currentTimeLocal);
+        final List<SleepPeriod> sleepPeriods = new ArrayList<>();
+        for(int i = 0; i < currentSleepPeriod.period.getValue(); i++){
+            sleepPeriods.add(createSleepPeriod(Period.fromInteger(i), targetDate));
         }
-        if(period == period.AFTERNOON){
-            return SleepPeriod.afternoonEvening(targetDate);
-        }
-        return SleepPeriod.night(targetDate);
-
-    }
-
-    //get list of last 3 sleep periods
-    public static List<SleepPeriod> getTargetPeriods(final DateTime targetDate, final DateTime currentTimeLocal){
-        final DateTime currentDate = currentTimeLocal.withTimeAtStartOfDay();
-        final SleepPeriod currentSleepPeriod = create(currentTimeLocal);
-        int lastSleepPeriodVal = currentSleepPeriod.period.getValue() -1 ;
-        final SleepPeriod lastSleepPeriod;
-        if (lastSleepPeriodVal < Period.MORNING.getValue()){
-            lastSleepPeriodVal = Period.NIGHT.getValue();
-            final DateTime lastSleepPeriodDate = currentDate.minusDays(1);
-            lastSleepPeriod = create(Period.fromInteger(lastSleepPeriodVal), lastSleepPeriodDate);
-        } else {
-            lastSleepPeriod = create(Period.fromInteger(lastSleepPeriodVal), currentDate);
-        }
-        return Collections.EMPTY_LIST;
-
+        sleepPeriods.add(currentSleepPeriod);
+        return sleepPeriods;
     }
 
     public boolean sleepEventInSleepPeriod(final DateTime inBedTime){

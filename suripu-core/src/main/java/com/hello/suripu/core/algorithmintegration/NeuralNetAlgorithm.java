@@ -13,6 +13,7 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
@@ -300,7 +301,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData, final SleepPeriod sleepPeriod, final TimelineLog log, final long accountId, final boolean feedbackChanged, final Set<String> features) {
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData);

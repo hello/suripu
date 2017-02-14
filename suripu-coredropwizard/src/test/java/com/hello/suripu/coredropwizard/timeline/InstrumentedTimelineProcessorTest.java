@@ -115,7 +115,7 @@ public class InstrumentedTimelineProcessorTest {
 
         instrumentedTimelineProcessor = InstrumentedTimelineProcessor.createTimelineProcessor(
                 helpers.pillDataReadDAO,helpers.deviceReadDAO,helpers.deviceDataReadAllSensorsDAO,
-                helpers.ringTimeHistoryDAODynamoDB,helpers.feedbackDAO, helpers.sleepHmmDAO,helpers.accountDAO,helpers.sleepStatsDAO,
+                helpers.ringTimeHistoryDAODynamoDB,helpers.feedbackDAO, helpers.sleepHmmDAO,helpers.accountDAO,helpers.sleepStatsDAO, helpers.mainEventTimesDAO,
                 new SenseDataDAODynamoDB(pairingDAO, helpers.deviceDataReadAllSensorsDAO, helpers.senseColorDAO, helpers.calibrationDAO),helpers.timeZoneHistoryDAO, helpers.priorsDAO,helpers.featureExtractionModelsDAO,
                 helpers.defaultModelEnsembleDAO,helpers.userTimelineTestGroupDAO,
                 helpers.sleepScoreParametersDAO,
@@ -125,7 +125,7 @@ public class InstrumentedTimelineProcessorTest {
 
     final public static List<LoggingProtos.TimelineLog> getLogsFromTimeline(InstrumentedTimelineProcessor timelineProcessor) {
 
-        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(DateTimeZone.UTC),Optional.<TimelineFeedback>absent());
 
         TestCase.assertTrue(timelineResult.timelines.size() > 0);
         TestCase.assertTrue(timelineResult.logV2.isPresent());

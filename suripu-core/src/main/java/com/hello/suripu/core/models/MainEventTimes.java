@@ -121,7 +121,7 @@ public class MainEventTimes {
 
         mainEvents.add(Event.createFromType(Event.Type.SLEEP,
                 eventTimeMap.get(Event.Type.SLEEP).time,
-                eventTimeMap.get(Event.Type.SLEEP).time+DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.SLEEP).time +DateTimeConstants.MILLIS_PER_MINUTE,
                 eventTimeMap.get(Event.Type.SLEEP).offset,
                 Optional.of(English.FALL_ASLEEP_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),

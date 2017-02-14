@@ -12,6 +12,7 @@ import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
+import com.hello.suripu.core.db.MainEventTimesDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
@@ -28,12 +29,14 @@ import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepStats;
@@ -304,6 +307,29 @@ public class InstrumentedTimelineProcessorHelpers {
         @Override
         public ImmutableList<AggregateSleepStats> getBatchStats(Long accountId, String startDate, String endDate) {
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        }
+    };
+
+    final public MainEventTimesDAO mainEventTimesDAO = new MainEventTimesDAO() {
+        @Override
+        public boolean updateEventTimes(MainEventTimes mainEventTimes) {
+            return true;
+        }
+
+        @Override
+        public List<MainEventTimes> getEventTimesForDate(Long accountId, DateTime targetDate) {
+            return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        public List<MainEventTimes> getEventTimes(Long accountId, DateTime startDate, DateTime endDate) {
+            return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        public List<MainEventTimes> getSleepPeriodEventTimes(Long accountId, DateTime date, SleepPeriod sleepPeriod) {
+            return Collections.EMPTY_LIST;
+
         }
     };
 

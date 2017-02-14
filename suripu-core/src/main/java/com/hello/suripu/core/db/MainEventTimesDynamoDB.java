@@ -357,13 +357,21 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
 
     //endregion private helpers
 
-    public boolean updateEventTimes(MainEventTimes mainEventTimes){
-        return insert(mainEventTimes);
 
+    public boolean updateEventTimes(final MainEventTimes mainEventTimes){
+        return insert(mainEventTimes);
     }
 
-    public List<MainEventTimes> getEventTimes(Long accountId, DateTime date){
-        return query(accountId, date, date.plusDays(1)).data;
+    public List<MainEventTimes> getEventTimesForDate(final Long accountId, final DateTime targetDate){
+        return query(accountId, targetDate, targetDate.plusDays(1)).data;
+    }
+
+    public List<MainEventTimes> getEventTimes(final Long accountId, final DateTime startDate, final DateTime endDate){
+        return query(accountId, startDate, endDate.plusDays(1)).data;
+    }
+
+    public List<MainEventTimes> getSleepPeriodEventTimes(final Long accountId, final DateTime date, final SleepPeriod sleepPeriod){
+        return query(accountId, date, date.plusDays(1), sleepPeriod.period).data;
     }
 
 }

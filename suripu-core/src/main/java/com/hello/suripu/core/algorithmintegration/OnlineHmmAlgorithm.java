@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.TimelineError;
@@ -50,7 +51,7 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final TimelineLog log, final long accountId, final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final SleepPeriod sleepPeriod, final TimelineLog log, final long accountId, final boolean feedbackChanged, final Set<String> features) {
 
         LOGGER.info("alg=ONLINE-HMM account_id={}",accountId);
 
