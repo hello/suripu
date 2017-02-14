@@ -125,7 +125,7 @@ public class InsightsDAODynamoDBIT {
         assertThat(insightsChronological.get(3).image.isPresent(), is(false));
     }
 
-//    @Test
+    @Test
     public void testGetInsightsByDate_future() throws Exception {
         // Set up some test data in the table
         final List<InsightCard> insightCards = new ArrayList<>();
