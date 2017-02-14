@@ -222,7 +222,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     }
 
-    
+
     @Override
     public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId, final String startDate, final String endDate) {
 

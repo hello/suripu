@@ -21,6 +21,7 @@ public enum DynamoDBTableName {
     ANALYTICS_TRACKING("analytics_tracking"),
     INSIGHTS("insights"),
     INSIGHTS_LAST_SEEN("insights_last_seen"),
+    MAIN_EVENT_TIMES("main_event_times"),
     MARKETING_INSIGHTS_SEEN("marketing_insights_seen"),
     NOTIFICATIONS("notifications"),
     ONLINE_HMM_MODELS("online_hmm_models"),
