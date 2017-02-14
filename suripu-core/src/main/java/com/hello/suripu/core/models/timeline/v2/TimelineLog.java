@@ -61,7 +61,6 @@ public class TimelineLog {
         invalidNightErrorMap.put(TimelineError.UNEXEPECTED, ErrorType.UNEXEPECTED);
 
 
-
         algorithmTypeMap = HashBiMap.create();
         algorithmTypeMap.put(AlgorithmType.NONE,AlgType.NO_ALGORITHM);
         algorithmTypeMap.put(AlgorithmType.WUPANG,AlgType.WUPANG);

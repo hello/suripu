@@ -685,6 +685,7 @@ public class TimelineUtils {
                 if (firstInBedTimestampMillis == 0L) {
                     firstInBedTimestampMillis = segment.getTimestamp();
                 }
+
             }
 
             if(segment.getType() == Event.Type.SLEEP){
