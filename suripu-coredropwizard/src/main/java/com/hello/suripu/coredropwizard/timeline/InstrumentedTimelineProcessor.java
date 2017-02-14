@@ -299,11 +299,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             algorithmChain.addFirst(AlgorithmType.ONLINE_HMM);
         }
 
-        //If ff for both NN, only use the newest NN
-        if (this.hasNeuralNetAlgorithmEnabled(accountId) && !this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
-            algorithmChain.addFirst(AlgorithmType.NEURAL_NET);
-        }
-
+        //only use the newest NN
         if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
         }
