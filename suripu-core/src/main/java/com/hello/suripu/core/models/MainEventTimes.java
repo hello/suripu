@@ -22,9 +22,9 @@ public class MainEventTimes {
     public Long accountId;
     public final SleepPeriod sleepPeriod;
     public final ImmutableMap<Event.Type, EventTime> eventTimeMap;
-    public final long createdAt;
+    public final EventTime createdAt;
 
-    private MainEventTimes (final Long accountId, final SleepPeriod sleepPeriod, final long createdAt,  Map<Event.Type, EventTime> eventTimeMap){
+    private MainEventTimes (final Long accountId, final SleepPeriod sleepPeriod, final EventTime createdAt, Map<Event.Type, EventTime> eventTimeMap){
         this.accountId = accountId;
         this.sleepPeriod = sleepPeriod;
         this.createdAt = createdAt;
@@ -32,12 +32,12 @@ public class MainEventTimes {
     }
 
     public static class EventTime {
-        public final Long TIME;
-        public final Integer OFFSET;
+        public final Long time;
+        public final Integer offset;
 
         public EventTime(final Long time, final Integer offset){
-            this.TIME = time;
-            this.OFFSET= offset;
+            this.time = time;
+            this.offset= offset;
         }
     }
 
@@ -45,13 +45,14 @@ public class MainEventTimes {
     public static MainEventTimes createMainEventTimes (final long accountId, final long inBedTime, final int inBedOffset,
                                                        final long sleepTime, final int sleepOffset, final long wakeUpTime,
                                                        final int wakeUpOffset, final long outOfBedTime, final int outOfBedOffset,
-                                                       final long createdAt){
+                                                       final long createdAtTime, final int createdAtOffset){
         final DateTime inBedTimeLocalUTC = new DateTime(inBedTime + inBedOffset, DateTimeZone.UTC);
         final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(inBedTimeLocalUTC);
         final EventTime inBedEventTime = new EventTime(inBedTime, inBedOffset);
         final EventTime sleepEventTime = new EventTime(sleepTime, sleepOffset);
         final EventTime wakeUpEventTime = new EventTime(wakeUpTime, wakeUpOffset);
         final EventTime outOfBedEventTime = new EventTime(outOfBedTime, outOfBedOffset);
+        final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
         final ImmutableMap<Event.Type, EventTime> eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
                 .put(Event.Type.IN_BED, inBedEventTime)
                 .put(Event.Type.SLEEP, sleepEventTime)
@@ -61,8 +62,10 @@ public class MainEventTimes {
         return new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap);
     }
 
-    public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAt,
+    public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset,
                                                        final TimelineAlgorithmResult timelineAlgorithmResult){
+        final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
+
         if(timelineAlgorithmResult.mainEvents.containsKey(Event.Type.IN_BED) && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.SLEEP)  && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.WAKE_UP)  && timelineAlgorithmResult.mainEvents.containsKey(Event.Type.OUT_OF_BED) ) {
             final EventTime inBedEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.IN_BED).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.IN_BED).getTimezoneOffset());
             final EventTime sleepEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.SLEEP).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.SLEEP).getTimezoneOffset());
@@ -80,12 +83,14 @@ public class MainEventTimes {
         return new MainEventTimes(accountId, sleepPeriod, createdAt, new HashMap<>());
     }
 
-    public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAt, final Map<Event.Type, EventTime> mainEventTimeMap){
+    public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset, final Map<Event.Type, EventTime> mainEventTimeMap){
+        final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
         return new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap);
     }
 
 
-    public static MainEventTimes createMainEventTimesEmpty (final long accountId, final SleepPeriod sleepPeriod, final long createdAt){
+    public static MainEventTimes createMainEventTimesEmpty (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset){
+        final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
         return new MainEventTimes(accountId, sleepPeriod, createdAt,  new HashMap<>());
     }
 
@@ -107,33 +112,33 @@ public class MainEventTimes {
             return mainEvents;
         }
         mainEvents.add(Event.createFromType(Event.Type.IN_BED,
-                eventTimeMap.get(Event.Type.IN_BED).TIME,
-                eventTimeMap.get(Event.Type.IN_BED).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                eventTimeMap.get(Event.Type.IN_BED).OFFSET,
+                eventTimeMap.get(Event.Type.IN_BED).time,
+                eventTimeMap.get(Event.Type.IN_BED).time+DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.IN_BED).offset,
                 Optional.of(English.IN_BED_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
         mainEvents.add(Event.createFromType(Event.Type.SLEEP,
-                eventTimeMap.get(Event.Type.SLEEP).TIME,
-                eventTimeMap.get(Event.Type.SLEEP).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                eventTimeMap.get(Event.Type.SLEEP).OFFSET,
+                eventTimeMap.get(Event.Type.SLEEP).time,
+                eventTimeMap.get(Event.Type.SLEEP).time+DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.SLEEP).offset,
                 Optional.of(English.FALL_ASLEEP_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
         mainEvents.add(Event.createFromType(Event.Type.WAKE_UP,
-                eventTimeMap.get(Event.Type.WAKE_UP).TIME,
-                eventTimeMap.get(Event.Type.WAKE_UP).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                eventTimeMap.get(Event.Type.WAKE_UP).OFFSET,
+                eventTimeMap.get(Event.Type.WAKE_UP).time,
+                eventTimeMap.get(Event.Type.WAKE_UP).time+DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.WAKE_UP).offset,
                 Optional.of(English.WAKE_UP_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
         mainEvents.add(Event.createFromType(Event.Type.OUT_OF_BED,
-                eventTimeMap.get(Event.Type.OUT_OF_BED).TIME,
-                eventTimeMap.get(Event.Type.OUT_OF_BED).TIME +DateTimeConstants.MILLIS_PER_MINUTE,
-                eventTimeMap.get(Event.Type.OUT_OF_BED).OFFSET,
+                eventTimeMap.get(Event.Type.OUT_OF_BED).time,
+                eventTimeMap.get(Event.Type.OUT_OF_BED).time+DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.OUT_OF_BED).offset,
                 Optional.of(English.OUT_OF_BED_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));

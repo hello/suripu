@@ -92,7 +92,7 @@ public class MainEventTimesDynamoDBIT {
         final int offset = -28800000;
 
         final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
 
         boolean updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesMorning);
         assert(updateSuccessful);
@@ -104,7 +104,7 @@ public class MainEventTimesDynamoDBIT {
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
         final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
 
         updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
         assert(updateSuccessful);
@@ -127,7 +127,7 @@ public class MainEventTimesDynamoDBIT {
         assert(sleepPeriodMainEventsEmptyList.isEmpty());
 
         final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
 
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesMorning);
 
@@ -138,7 +138,7 @@ public class MainEventTimesDynamoDBIT {
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
         final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
 
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
 
@@ -150,7 +150,7 @@ public class MainEventTimesDynamoDBIT {
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
         final MainEventTimes mainEventTimesNextMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis());
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
 
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
 
@@ -161,15 +161,15 @@ public class MainEventTimesDynamoDBIT {
         final MainEventTimes updatedNightEvents = sleepPeriodMainEventsList.get(1);
         final MainEventTimes updatedMorningEvents = sleepPeriodMainEventsList.get(0);
 
-        assert(updatedNightEvents.createdAt == mainEventTimesNight.createdAt);
-        assert(updatedMorningEvents.createdAt == mainEventTimesMorning.createdAt);
+        assert(updatedNightEvents.createdAt.time.longValue() == mainEventTimesNight.createdAt.time.longValue());
+        assert(updatedMorningEvents.createdAt.time.longValue() == mainEventTimesMorning.createdAt.time.longValue());
         final List<Event.Type> mainEventTypes = Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP,Event.Type.OUT_OF_BED);
         for (final Event.Type mainEventType : mainEventTypes) {
 
-            assert (updatedMorningEvents.eventTimeMap.get(mainEventType).TIME.longValue() == mainEventTimesMorning.eventTimeMap.get(mainEventType).TIME.longValue());
-            assert (updatedMorningEvents.eventTimeMap.get(mainEventType).OFFSET.intValue() == mainEventTimesMorning.eventTimeMap.get(mainEventType).OFFSET.intValue());
-            assert (updatedNightEvents.eventTimeMap.get(mainEventType).TIME.longValue() == mainEventTimesNight.eventTimeMap.get(mainEventType).TIME.longValue());
-            assert (updatedNightEvents.eventTimeMap.get(mainEventType).OFFSET.intValue() == mainEventTimesNight.eventTimeMap.get(mainEventType).OFFSET.intValue());
+            assert (updatedMorningEvents.eventTimeMap.get(mainEventType).time.longValue() == mainEventTimesMorning.eventTimeMap.get(mainEventType).time.longValue());
+            assert (updatedMorningEvents.eventTimeMap.get(mainEventType).offset.intValue() == mainEventTimesMorning.eventTimeMap.get(mainEventType).offset.intValue());
+            assert (updatedNightEvents.eventTimeMap.get(mainEventType).time.longValue() == mainEventTimesNight.eventTimeMap.get(mainEventType).time.longValue());
+            assert (updatedNightEvents.eventTimeMap.get(mainEventType).offset.intValue() == mainEventTimesNight.eventTimeMap.get(mainEventType).offset.intValue());
         }
     }
 

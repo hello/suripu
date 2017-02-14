@@ -43,7 +43,8 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
         SLEEP_PERIOD("sleep_period", "S"),
         DATE_SLEEP_PERIOD("date|sleep_period", "S"), // Range key // <utc_timestamp>|<external_device_id>
         DATE("date", "S"),
-        CREATED_AT("created_at", "S"),
+        CREATED_AT_TIME("created_at_time", "S"),
+        CREATED_AT_OFFSET("created_at_offset", "S"),
         IN_BED_TIME("in_bed_time", "S"),
         IN_BED_OFFSET("in_bed_offset", "S"),
         SLEEP_TIME("sleep_time", "S"),
@@ -181,19 +182,20 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 .put(Attribute.DATE_SLEEP_PERIOD.shortName(), getRangeKey(model.sleepPeriod.targetDate, Optional.of(model.sleepPeriod.period)))
                 .put(Attribute.SLEEP_PERIOD.shortName(), toAttributeValue(model.sleepPeriod.period.name()))
                 .put(Attribute.DATE.shortName(), toAttributeValue(model.sleepPeriod.targetDate))
-                .put(Attribute.CREATED_AT.shortName(), toAttributeValue(model.createdAt))
+                .put(Attribute.CREATED_AT_TIME.shortName(), toAttributeValue(model.createdAt.time))
+                .put(Attribute.CREATED_AT_OFFSET.shortName(), toAttributeValue(model.createdAt.offset))
 
-                .put(Attribute.IN_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.IN_BED).TIME))
-                .put(Attribute.IN_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.IN_BED).OFFSET))
+                .put(Attribute.IN_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.IN_BED).time))
+                .put(Attribute.IN_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.IN_BED).offset))
 
-                .put(Attribute.SLEEP_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.SLEEP).TIME))
-                .put(Attribute.SLEEP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.SLEEP).OFFSET))
+                .put(Attribute.SLEEP_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.SLEEP).time))
+                .put(Attribute.SLEEP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.SLEEP).offset))
 
-                .put(Attribute.WAKE_UP_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).TIME))
-                .put(Attribute.WAKE_UP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).OFFSET))
+                .put(Attribute.WAKE_UP_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).time))
+                .put(Attribute.WAKE_UP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).offset))
 
-                .put(Attribute.OUT_OF_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).TIME))
-                .put(Attribute.OUT_OF_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).OFFSET));
+                .put(Attribute.OUT_OF_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).time))
+                .put(Attribute.OUT_OF_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).offset));
 
         return builder.build();
     }
@@ -327,7 +329,8 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
         final MainEventTimes mainEventTimes= MainEventTimes.createMainEventTimes(
                 Attribute.ACCOUNT_ID.getLong(item),
                 SleepPeriod.createSleepPeriod(period, Attribute.DATE.getDateTime(item)),
-                Attribute.CREATED_AT.getLong(item),
+                Attribute.CREATED_AT_TIME.getLong(item),
+                Attribute.CREATED_AT_OFFSET.getInteger(item),
                 eventTimeMap
         );
         return mainEventTimes;

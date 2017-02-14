@@ -211,15 +211,15 @@ public class SleepPeriod {
 
     public static SleepPeriod create(final DateTime inBedTime){
         final Integer inBedHour = inBedTime.getHourOfDay();
-        if (inBedHour >= 4 && inBedHour < 12){
+        if (inBedHour >= MORNING_START_HOUR && inBedHour < MORNING_IN_BED_END_HOUR){
             final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
             return SleepPeriod.morning(targetDate);
-        } else if (inBedHour >= 12 && inBedHour < 20){
+        } else if (inBedHour >= AFTERNOON_START_HOUR && AFTERNOON_IN_BED_END_HOUR < 20){
             final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
             return SleepPeriod.afternoonEvening(targetDate);
         } else {
             final DateTime targetDate;
-            if (inBedHour < 4){
+            if (MORNING_START_HOUR < 4){
                 targetDate = inBedTime.withTimeAtStartOfDay().minusDays(1);
             }else{
                 targetDate = inBedTime.withTimeAtStartOfDay();
@@ -245,8 +245,8 @@ public class SleepPeriod {
         final SleepPeriod currentSleepPeriod = create(currentTimeLocal);
         int lastSleepPeriodVal = currentSleepPeriod.period.getValue() -1 ;
         final SleepPeriod lastSleepPeriod;
-        if (lastSleepPeriodVal <0){
-            lastSleepPeriodVal = 3;
+        if (lastSleepPeriodVal < Period.MORNING.getValue()){
+            lastSleepPeriodVal = Period.NIGHT.getValue();
             final DateTime lastSleepPeriodDate = currentDate.minusDays(1);
             lastSleepPeriod = create(Period.fromInteger(lastSleepPeriodVal), lastSleepPeriodDate);
         } else {
