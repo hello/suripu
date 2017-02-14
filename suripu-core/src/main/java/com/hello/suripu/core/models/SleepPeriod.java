@@ -12,6 +12,19 @@ import java.util.List;
  * Created by jarredheinrich on 2/2/17.
  */
 public class SleepPeriod {
+    private final static int MORNING_START_HOUR = 4;
+    private final static int MORNING_IN_BED_END_HOUR = 12;
+    private final static int MORNING_DATA_END_HOUR = 20;
+
+    private final static int AFTERNOON_START_HOUR = 12;
+    private final static int AFTERNOON_IN_BED_END_HOUR = 20;
+    private final static int AFTERNOON_DATA_END_HOUR = 28;
+
+    private final static int NIGHT_START_HOUR = 20;
+    private final static int NIGHT_IN_BED_END_HOUR = 28;
+    private final static int NIGHT_DATA_END_HOUR = 36;
+
+
     public final SleepPeriod.Period period;
     public final ImmutableMap<Boundary, Integer> hoursOffset;
     public final DateTime targetDate;
@@ -22,36 +35,36 @@ public class SleepPeriod {
 
         if (sleepPeriod == SleepPeriod.Period.MORNING) {
             this.hoursOffset = ImmutableMap.<Boundary, Integer>builder()
-                    .put(Boundary.START,4)
-                    .put(Boundary.END_IN_BED, 12)
-                    .put(Boundary.END_DATA, 20)
+                    .put(Boundary.START,MORNING_START_HOUR)
+                    .put(Boundary.END_IN_BED, MORNING_IN_BED_END_HOUR)
+                    .put(Boundary.END_DATA, MORNING_DATA_END_HOUR)
                     .build();
         } else if (sleepPeriod == SleepPeriod.Period.AFTERNOON) {
             this.hoursOffset = ImmutableMap.<Boundary, Integer>builder()
-                    .put(Boundary.START,12)
-                    .put(Boundary.END_IN_BED, 20)
-                    .put(Boundary.END_DATA, 28)
+                    .put(Boundary.START,AFTERNOON_START_HOUR)
+                    .put(Boundary.END_IN_BED, AFTERNOON_IN_BED_END_HOUR)
+                    .put(Boundary.END_DATA, AFTERNOON_DATA_END_HOUR)
                     .build();
         } else{
             this.hoursOffset = ImmutableMap.<Boundary, Integer>builder()
-                    .put(Boundary.START,20)
-                    .put(Boundary.END_IN_BED, 28)
-                    .put(Boundary.END_DATA, 36)
+                    .put(Boundary.START, NIGHT_START_HOUR)
+                    .put(Boundary.END_IN_BED, NIGHT_IN_BED_END_HOUR)
+                    .put(Boundary.END_DATA, NIGHT_DATA_END_HOUR)
                     .build();
         }
     }
 
     public static SleepPeriod createSleepPeriod(final DateTime inBedTime){
         final Integer inBedHour = inBedTime.getHourOfDay();
-        if (inBedHour >= 4 && inBedHour < 12){
+        if (inBedHour >= MORNING_START_HOUR && inBedHour < MORNING_IN_BED_END_HOUR){
             final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
             return SleepPeriod.morning(targetDate);
-        } else if (inBedHour >= 12 && inBedHour < 20){
+        } else if (inBedHour >= AFTERNOON_START_HOUR && inBedHour < AFTERNOON_IN_BED_END_HOUR){
             final DateTime targetDate = inBedTime.withTimeAtStartOfDay();
             return SleepPeriod.afternoonEvening(targetDate);
         } else {
             final DateTime targetDate;
-            if (inBedHour < 4){
+            if (inBedHour < MORNING_START_HOUR){
                 targetDate = inBedTime.withTimeAtStartOfDay().minusDays(1);
             }else{
                 targetDate = inBedTime.withTimeAtStartOfDay();

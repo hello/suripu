@@ -10,6 +10,7 @@ import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,30 +24,11 @@ public class MainEventTimes {
     public final ImmutableMap<Event.Type, EventTime> eventTimeMap;
     public final long createdAt;
 
-    private MainEventTimes (final Long accountId, final SleepPeriod sleepPeriod, final long createdAt, final EventTime inBedEventTime, final EventTime sleepEventTime,final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
-        this.accountId = accountId;
-        this.sleepPeriod = sleepPeriod;
-        this.createdAt = createdAt;
-        this.eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
-                .put(Event.Type.IN_BED, inBedEventTime)
-                .put(Event.Type.SLEEP, sleepEventTime)
-                .put(Event.Type.WAKE_UP, wakeUpEventTime)
-                .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
-                .build();
-    }
-
     private MainEventTimes (final Long accountId, final SleepPeriod sleepPeriod, final long createdAt,  Map<Event.Type, EventTime> eventTimeMap){
         this.accountId = accountId;
         this.sleepPeriod = sleepPeriod;
         this.createdAt = createdAt;
         this.eventTimeMap = ImmutableMap.copyOf(eventTimeMap);
-    }
-
-    private MainEventTimes (final Long accountId, final SleepPeriod sleepPeriod, final long createdAt){
-        this.accountId = accountId;
-        this.sleepPeriod = sleepPeriod;
-        this.createdAt = createdAt;
-        this.eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder().build();
     }
 
     public static class EventTime {
@@ -70,7 +52,13 @@ public class MainEventTimes {
         final EventTime sleepEventTime = new EventTime(sleepTime, sleepOffset);
         final EventTime wakeUpEventTime = new EventTime(wakeUpTime, wakeUpOffset);
         final EventTime outOfBedEventTime = new EventTime(outOfBedTime, outOfBedOffset);
-        return new MainEventTimes(accountId, sleepPeriod,createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
+        final ImmutableMap<Event.Type, EventTime> eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
+                .put(Event.Type.IN_BED, inBedEventTime)
+                .put(Event.Type.SLEEP, sleepEventTime)
+                .put(Event.Type.WAKE_UP, wakeUpEventTime)
+                .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
+                .build();
+        return new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap);
     }
 
     public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAt,
@@ -80,23 +68,16 @@ public class MainEventTimes {
             final EventTime sleepEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.SLEEP).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.SLEEP).getTimezoneOffset());
             final EventTime wakeUpEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.WAKE_UP).getTimezoneOffset());
             final EventTime outOfBedEventTime = new EventTime(timelineAlgorithmResult.mainEvents.get(Event.Type.OUT_OF_BED).getStartTimestamp(), timelineAlgorithmResult.mainEvents.get(Event.Type.OUT_OF_BED).getTimezoneOffset());
-            return new MainEventTimes(accountId, sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
+            final ImmutableMap<Event.Type, EventTime> eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
+                    .put(Event.Type.IN_BED, inBedEventTime)
+                    .put(Event.Type.SLEEP, sleepEventTime)
+                    .put(Event.Type.WAKE_UP, wakeUpEventTime)
+                    .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
+                    .build();
+
+            return new MainEventTimes(accountId, sleepPeriod, createdAt,eventTimeMap);
         }
-        return new MainEventTimes(accountId, sleepPeriod, createdAt);
-    }
-
-    public static MainEventTimes createMainEventTimes (final long accountId, final long createdAt, final EventTime inBedEventTime,
-                                                       final EventTime sleepEventTime,final EventTime wakeUpEventTime,
-                                                       final EventTime outOfBedEventTime){
-        final DateTime inBedTimeLocalUTC = new DateTime(inBedEventTime.TIME+ inBedEventTime.OFFSET, DateTimeZone.UTC);
-        final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(inBedTimeLocalUTC);
-        return new MainEventTimes(accountId, sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
-    }
-
-    public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAt,
-                                                       final EventTime inBedEventTime, final EventTime sleepEventTime,
-                                                       final EventTime wakeUpEventTime, final EventTime outOfBedEventTime){
-        return new MainEventTimes(accountId, sleepPeriod, createdAt, inBedEventTime, sleepEventTime, wakeUpEventTime, outOfBedEventTime);
+        return new MainEventTimes(accountId, sleepPeriod, createdAt, new HashMap<>());
     }
 
     public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAt, final Map<Event.Type, EventTime> mainEventTimeMap){
@@ -105,7 +86,7 @@ public class MainEventTimes {
 
 
     public static MainEventTimes createMainEventTimesEmpty (final long accountId, final SleepPeriod sleepPeriod, final long createdAt){
-        return new MainEventTimes(accountId, sleepPeriod, createdAt);
+        return new MainEventTimes(accountId, sleepPeriod, createdAt,  new HashMap<>());
     }
 
     public boolean hasValidEventTimes(){
