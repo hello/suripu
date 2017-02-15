@@ -11,6 +11,7 @@ import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
@@ -53,7 +54,6 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
-import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.processors.PartnerMotion;
@@ -519,7 +519,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
-        final List<TrackerMotion> trackerMotions = Lists.newArrayList();
+        List<TrackerMotion> trackerMotions = Lists.newArrayList();
 
         if (!filteredOriginalPartnerMotions.isEmpty()) {
 
@@ -534,10 +534,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                     LOGGER.error(e.getMessage());
                     trackerMotions.addAll(filteredOriginalMotions);
                 }
-            }
-            else if (this.hasMotionMaskPartnerFilter(accountId) && filteredOriginalMotions.get(0).motionMask.isPresent() &&  filteredOriginalPartnerMotions.get(0).motionMask.isPresent()){
-                trackerMotions.addAll(MotionMaskPartnerFilter.partnerFiltering(filteredOriginalMotions, filteredOriginalPartnerMotions));
-                LOGGER.info("action=using-motion-mask-partner-filter account_id={} removed-motions={}", accountId, filteredOriginalMotions.size() - trackerMotions.size());
             }
             else if (this.hasHmmPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using hmm partner filter");
@@ -558,10 +554,25 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 trackerMotions.addAll(filteredOriginalMotions);
             }
 
+            //motion mask filtering additive with other filters
+            if (this.hasMotionMaskPartnerFilter(accountId) && filteredOriginalMotions.get(0).motionMask.isPresent() &&  filteredOriginalPartnerMotions.get(0).motionMask.isPresent()){
+                int t1 = trackerMotions.size();
+                System.out.print(trackerMotions.size());
+                System.out.print(", ");
+                trackerMotions = MotionMaskPartnerFilter.partnerFiltering(trackerMotions, filteredOriginalPartnerMotions);
+                LOGGER.info("action=using-motion-mask-partner-filter account_id={} removed-motions={}", accountId, filteredOriginalMotions.size() - trackerMotions.size());
+                System.out.print(trackerMotions.size());
+                System.out.print(",");
+                System.out.print(t1- trackerMotions.size());
+                System.out.println();
+            }
+            trackerMotions.clear();
+
         }
         else {
             trackerMotions.addAll(filteredOriginalMotions);
         }
+        trackerMotions.clear();
 
         if (trackerMotions.isEmpty()) {
             LOGGER.debug("No tracker motion data ID for account_id = {} and day = {}", accountId, starteTimeLocalUTC);
