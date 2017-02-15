@@ -556,23 +556,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
             //motion mask filtering additive with other filters
             if (this.hasMotionMaskPartnerFilter(accountId) && filteredOriginalMotions.get(0).motionMask.isPresent() &&  filteredOriginalPartnerMotions.get(0).motionMask.isPresent()){
-                int t1 = trackerMotions.size();
-                System.out.print(trackerMotions.size());
-                System.out.print(", ");
                 trackerMotions = MotionMaskPartnerFilter.partnerFiltering(trackerMotions, filteredOriginalPartnerMotions);
                 LOGGER.info("action=using-motion-mask-partner-filter account_id={} removed-motions={}", accountId, filteredOriginalMotions.size() - trackerMotions.size());
-                System.out.print(trackerMotions.size());
-                System.out.print(",");
-                System.out.print(t1- trackerMotions.size());
-                System.out.println();
             }
-            trackerMotions.clear();
 
         }
         else {
             trackerMotions.addAll(filteredOriginalMotions);
         }
-        trackerMotions.clear();
 
         if (trackerMotions.isEmpty()) {
             LOGGER.debug("No tracker motion data ID for account_id = {} and day = {}", accountId, starteTimeLocalUTC);
