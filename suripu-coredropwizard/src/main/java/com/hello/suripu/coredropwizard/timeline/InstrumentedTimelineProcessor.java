@@ -123,6 +123,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
     public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 9;
+    public final static int MIN_TRACKER_MOTION_COUNT_MORNING = 30;
+    public final static int MIN_TRACKER_MOTION_COUNT_AFTERNOON = 30;
+    public final static int MIN_TRACKER_MOTION_COUNT_NIGHT = 9;
+
     public final static float MIN_FRACTION_UNIQUE_MOTION = 0.5f;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
@@ -347,11 +351,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return TimelineResult.create(populateTimelines.timelines, sleepPeriodResult.timelineLog);
     }
 
-    public Optional<Long> getPreviousOutOfBedTime(final SleepPeriod targetSleepPeriod, final Map<SleepPeriod.Period, MainEventTimes> targetSleepEventsMap, final Map<SleepPeriod.Period, MainEventTimes> prevSleepEventsMap) {
+    public Optional<Long> getPreviousOutOfBedTime(final SleepPeriod targetSleepPeriod, final Map<SleepPeriod.Period, MainEventTimes> targetSleepEventsMap, final Map<SleepPeriod.Period, MainEventTimes> prevTargetDateSleepEventsMap) {
 
         if (targetSleepPeriod.period == SleepPeriod.Period.MORNING) {
-            if (prevSleepEventsMap.containsKey(SleepPeriod.Period.NIGHT)) {
-                return Optional.of(prevSleepEventsMap.get(SleepPeriod.Period.NIGHT).eventTimeMap.get(Event.Type.OUT_OF_BED).time);
+            if (prevTargetDateSleepEventsMap.containsKey(SleepPeriod.Period.NIGHT)) {
+                return Optional.of(prevTargetDateSleepEventsMap.get(SleepPeriod.Period.NIGHT).eventTimeMap.get(Event.Type.OUT_OF_BED).time);
             } else {
                 return Optional.absent();
             }
@@ -393,8 +397,22 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final OneDaysSensorData fullDaySensorData = fullDaysSensorDataOptional.get();
         //search for previous day and target day
         final List<MainEventTimes> generatedMainEventTimesList = mainEventTimesDAO.getEventTimes(accountId, targetDate.minusDays(1), targetDate.plusDays(1));
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+        final Optional<List<MainEventTimes>> partnerMainEventTimesListOptional;
+        final Map<SleepPeriod.Period, MainEventTimes> prevTargetDatePartnerSleepEventsMap = new HashMap<>();
+        final Map<SleepPeriod.Period, MainEventTimes> targetDatePartnerSleepEventsMap = new HashMap<>();
+
+        if (optionalPartnerAccountId.isPresent()){
+            partnerMainEventTimesListOptional = Optional.of(mainEventTimesDAO.getEventTimes(optionalPartnerAccountId.get(), targetDate.minusDays(1), targetDate.plusDays(1)));
+            prevTargetDatePartnerSleepEventsMap.putAll(getSleepEventsMapForDate(partnerMainEventTimesListOptional.get(), targetDate.minusDays(1)));
+            targetDatePartnerSleepEventsMap.putAll(getSleepEventsMapForDate(generatedMainEventTimesList, targetDate));
+        }
+
+
         final Map<SleepPeriod.Period, MainEventTimes> prevTargetDateSleepEventsMap = getSleepEventsMapForDate(generatedMainEventTimesList, targetDate.minusDays(1));
         final Map<SleepPeriod.Period, MainEventTimes> targetDateSleepEventsMap = getSleepEventsMapForDate(generatedMainEventTimesList, targetDate);
+
+
         final Map<SleepPeriod.Period, SleepPeriodResult> targetSleepPeriodResultsMap = new HashMap<>();
 
         for (int sleepPeriodInt = 0; sleepPeriodInt < sleepPeriodQueue.size(); sleepPeriodInt++) {
@@ -446,6 +464,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         String timelineMessage = "";
         List<Insight> timelineInsight = new ArrayList<>();
         final TimelineLog log = new TimelineLog(accountId, targetDate.getMillis());
+        System.out.print(accountId);
 
         for (SleepPeriod.Period period : targetDateSleepEventsMap.keySet()) {
             final SleepPeriodResult targetSleepPeriodResult = targetSleepPeriodResultsMap.get(period);
@@ -457,6 +476,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 LOGGER.warn("invalid sleep score");
                 continue;
             }
+            System.out.print(" ");
+            System.out.print(period.shortName().charAt(0));
             final int targetScore = targetPeriodPopulatedTimelines.timelines.get(0).score;
             if (targetScore >= sleepScore){
                 sleepScore = targetScore;
@@ -466,6 +487,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
             allPeriodEvents.addAll(targetPeriodPopulatedTimelines.timelines.get(0).events);
         }
+        System.out.println();
 
         if (allPeriodEvents.size() > 4) {
             final Timeline timeline = Timeline.create(sleepScore, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), allPeriodEvents, timelineInsight,sleepStats);
@@ -545,8 +567,22 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         //check to see if there's an issue with the data
         final boolean userLowerMotionCountThreshold = useNoMotionEnforcement(accountId);
+        final int minMotionCountThreshold;
+        if(useTimelineSleepPeriods(accountId)){
+            if (sleepPeriod.period == SleepPeriod.Period.MORNING){
+                minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT_MORNING;
+            } else if (sleepPeriod.period == SleepPeriod.Period.AFTERNOON){
+                minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT_AFTERNOON;
+            } else{
+                minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT_NIGHT;
+            }
+        }else if(userLowerMotionCountThreshold){
+            minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD;
+        }else{
+            minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT;
+        }
 
-        final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorDataSleepPeriod.oneDaysTrackerMotion.processedtrackerMotions, sensorDataSleepPeriod.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold);
+        final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorDataSleepPeriod.oneDaysTrackerMotion.processedtrackerMotions, sensorDataSleepPeriod.oneDaysPartnerMotion.filteredOriginalTrackerMotions, minMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
@@ -1029,7 +1065,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData, final boolean useLowerMotionCountThreshold){
+    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData, final int minMotionCountThreshold){
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
@@ -1039,7 +1075,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //If greater than MinTracker Motion Count - continue
         // if FF for lower motion count threshold, if between lower motion threshold and high motion threshold, check percent unique motions for parter data.
         // if lower than lower motion count threshold, reject
-        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT && !useLowerMotionCountThreshold ){
+        if(originalMotionData.size() < minMotionCountThreshold){
             return TimelineError.NOT_ENOUGH_DATA;
         } else if (originalMotionData.size() >= MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD && originalMotionData.size() < MIN_TRACKER_MOTION_COUNT) {
             final float percentUniqueMotions = PartnerDataUtils.getPercentUniqueMovements(originalMotionData, originalPartnerTrackerMotionData);
