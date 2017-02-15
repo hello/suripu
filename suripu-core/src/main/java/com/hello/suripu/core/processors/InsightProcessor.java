@@ -33,6 +33,7 @@ import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.CaffeineAlarm;
+import com.hello.suripu.core.processors.insights.CorrelationTemperature;
 import com.hello.suripu.core.processors.insights.GoalsInsights;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
@@ -581,6 +582,9 @@ public class InsightProcessor {
         switch (category) {
             case PARTNER_MOTION:
                 insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB, dateVisible);
+                break;
+            case CORRELATION_TEMP:
+                insightCardOptional = CorrelationTemperature.getInsights(accountId, sleepStatsDAODynamoDB, dateVisible);
                 break;
         }
 

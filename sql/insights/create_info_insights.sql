@@ -691,3 +691,11 @@ UPDATE info_insight_cards SET text='Depriving yourself of adequate sleep can imp
 Over time, chronic sleep deprivation may increase the risk of other serious health issues as well. These include cancer, heart disease, and Alzheimer''s disease.
 
 Even if you''re not always able to get a full night of sleep, it''s important to maintain a consistent wake time. Waking up at the same time each morning helps keep your circadian rhythm strong and promotes healthy sleep hygiene, which helps you make the most out of the sleep you do get. This won''t make up for a lack of sleep though, so try to give yourself the opportunity to get a full night''s sleep each and every night.' WHERE category='sleep_deprivation';
+
+--temperature correlation insight 2017-02-21
+ALTER TYPE insight_category ADD VALUE 'correlation_temp';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('correlation_temp', 'Find your ideal temperature', 'Temperature',
+'Warmer temperatures can keep you tossing and turning during the night, which can make it difficult to fall asleep and achieve and maintain deep sleep. When the days start getting warmer, keep your blinds shut, and consider opening your windows in the evening to let in cooler night air. Removing layers of sleepwear and bedding will also help, but try keeping your socks on. While it sounds counterproductive, keeping your feet, hands, and head warm can promote vasodilation, which is the widening of your blood vessels. This helps your body get rid of excess heat and keep cool. You can achieve similar results with a hot shower or bath before bed. Drinking cold water will also help you stay cool (and hydrated) but don''t overdo it -- you don''t want to interrupt your sleep for a bathroom break.');
+
