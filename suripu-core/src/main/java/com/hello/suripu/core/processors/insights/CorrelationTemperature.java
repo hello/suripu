@@ -21,7 +21,7 @@ public class CorrelationTemperature {
                 CorrelationTemperatureMsgEN.TEMP_CORR_MARKETING_TITLE,
                 CorrelationTemperatureMsgEN.TEMP_CORR_MARKETING_MSG,
                 InsightCard.Category.CORRELATION_TEMP,
-                InsightCard.TimePeriod.WEEKLY,
+                InsightCard.TimePeriod.MONTHLY,
                 publicationDateUTC,
                 InsightCard.InsightType.DEFAULT));
     }
