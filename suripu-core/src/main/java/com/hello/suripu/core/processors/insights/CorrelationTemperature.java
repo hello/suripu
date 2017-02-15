@@ -15,17 +15,7 @@ public class CorrelationTemperature {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CorrelationTemperature.class);
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DateTime publicationDateLocal) {
-
-        //Get dateVisibleUTC
-        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
-        if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight-absent insight=correlation_temperature reason=timezoneoffset-absent account_id={}", accountId);
-            return Optional.absent(); //cannot compute insight without timezone info
-        }
-
-        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
-        final DateTime publicationDateUTC = publicationDateLocal.minusMillis(timeZoneOffset);
+    public static Optional<InsightCard> getInsights(final Long accountId, final DateTime publicationDateUTC) {
 
         return Optional.of(InsightCard.createBasicInsightCard(accountId,
                 CorrelationTemperatureMsgEN.TEMP_CORR_MARKETING_TITLE,
