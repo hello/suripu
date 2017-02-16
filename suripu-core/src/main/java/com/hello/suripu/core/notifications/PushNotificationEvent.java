@@ -86,17 +86,18 @@ public class PushNotificationEvent {
             this.accountId = pushNotificationEvent.accountId;
             this.type = pushNotificationEvent.type;
             this.timestamp = pushNotificationEvent.timestamp;
+            this.helloPushMessage = pushNotificationEvent.helloPushMessage;
             this.senseId = pushNotificationEvent.senseId;
             this.timeZone = pushNotificationEvent.timeZone;
             this.periodicity = pushNotificationEvent.periodicity;
         }
 
         public PushNotificationEvent build() {
-            checkNotNull(accountId);
-            checkNotNull(type);
-            checkNotNull(helloPushMessage);
-            checkNotNull(timeZone);
-            final DateTime eventTimestamp = timestamp == null ? DateTime.now(DateTimeZone.UTC) : timestamp;
+            checkNotNull(accountId,"accountId cannot be null");
+            checkNotNull(type, "type cannot be null");
+            checkNotNull(helloPushMessage, "message cannot be null");
+            checkNotNull(timeZone, "timezone cannot be null");
+            final DateTime eventTimestamp = timestamp == null ? DateTime.now(timeZone) : timestamp;
             return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId, timeZone, periodicity);
         }
 
