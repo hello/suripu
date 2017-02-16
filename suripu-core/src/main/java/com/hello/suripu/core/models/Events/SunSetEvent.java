@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
 
@@ -10,8 +11,8 @@ import com.hello.suripu.core.translations.English;
 public class SunSetEvent extends Event {
     private int sleepDepth = 0;
 
-    public SunSetEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth){
-        super(Event.Type.SUNSET, startTimestamp, endTimestamp, offsetMillis);
+    public SunSetEvent(final SleepPeriod.Period sleepPeriod, final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth){
+        super(Event.Type.SUNSET, sleepPeriod, startTimestamp, endTimestamp, offsetMillis);
         this.sleepDepth = sleepDepth;
     }
 

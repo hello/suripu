@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
 
@@ -10,11 +11,12 @@ import com.hello.suripu.core.translations.English;
 public class SleepMotionEvent extends Event {
     private int sleepDepth = 0;
 
-    public SleepMotionEvent(final long startTimestamp,
-                       final long endTimestamp,
-                       final int offsetMillis,
-                       final int sleepDepth){
-        super(Event.Type.SLEEP_MOTION, startTimestamp, endTimestamp, offsetMillis);
+    public SleepMotionEvent(final SleepPeriod.Period sleepPeriod,
+                            final long startTimestamp,
+                            final long endTimestamp,
+                            final int offsetMillis,
+                            final int sleepDepth){
+        super(Event.Type.SLEEP_MOTION, sleepPeriod, startTimestamp, endTimestamp, offsetMillis);
         this.sleepDepth = sleepDepth;
     }
 

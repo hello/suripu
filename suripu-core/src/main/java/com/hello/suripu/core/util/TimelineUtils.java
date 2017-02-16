@@ -177,7 +177,7 @@ public class TimelineUtils {
         final Long trackerId = positiveMotions.get(0).trackerId;
         for(final TrackerMotion trackerMotion : positiveMotions) {
 
-            final MotionEvent motionEvent = new MotionEvent(
+            final MotionEvent motionEvent = MotionEvent.createForNight(
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
@@ -359,7 +359,7 @@ public class TimelineUtils {
             // Null event before out of bed but no in bed event presents, or
             // any Null events when there is no in/out of bed events present.
             // turn it to blue sleep event, let's don't be aggressive.
-            newEventList.add(new SleepingEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+            newEventList.add(SleepingEvent.createForNight(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
 
         }
 
@@ -1073,7 +1073,7 @@ public class TimelineUtils {
             if (diffInMinutes > thresholdInMinutes) {
                 if(map.containsKey(current.getMillis())) {
                     final MotionEvent motion = map.get(current.getMillis());
-                    return Optional.of(new FallingAsleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
+                    return Optional.of(FallingAsleepEvent.createForNight(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
 
                 }
                 break;  // Get the first event
@@ -1144,10 +1144,10 @@ public class TimelineUtils {
 //                events.add(event);
 
                 final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
-                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+                events.add(LightsOutEvent.createForNight(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
 
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
-                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
+                events.add(LightEvent.createForNight(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
             }
             // TODO: daylight spike event -- unsure what the value might be at this moment
         }
@@ -1188,11 +1188,11 @@ public class TimelineUtils {
             final int offsetMillis = segment.offsetMillis;
 
             if (segmentType == LightSegment.Type.LIGHTS_OUT) {
-                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+                events.add(LightsOutEvent.createForNight(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
-                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
+                events.add(LightEvent.createForNight(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
             } else if(segmentType == LightSegment.Type.NONE){
-                events.add(new LightEvent(startTimestamp, endTimestamp, offsetMillis, "Light"));
+                events.add(LightEvent.createForNight(startTimestamp, endTimestamp, offsetMillis, "Light"));
             }
             // TODO: daylight spike event -- unsure what the value might be at this moment
         }
@@ -1282,7 +1282,7 @@ public class TimelineUtils {
             final long timestamp = segment.getStartTimestamp();
             final int sleepDepth = (sleepDepths.containsKey(timestamp)) ? sleepDepths.get(timestamp) : 0;
 
-            events.add(new NoiseEvent(timestamp, segment.getEndTimestamp(), segment.getOffsetMillis(), sleepDepth));
+            events.add(NoiseEvent.createForNight(timestamp, segment.getEndTimestamp(), segment.getOffsetMillis(), sleepDepth));
 
             if (events.size() >= MAX_SOUND_EVENT_SIZE) {
                 break;
@@ -1360,19 +1360,19 @@ public class TimelineUtils {
         final Segment outOfBedSegment = segments.outOfBed;
 
         //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        final Event inBedEvent = new InBedEvent(goToBedSegment.getStartTimestamp(),
+        final Event inBedEvent = InBedEvent.createForNight(goToBedSegment.getStartTimestamp(),
                 goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 goToBedSegment.getOffsetMillis());
 
-        final Event fallAsleepEvent = new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
+        final Event fallAsleepEvent = FallingAsleepEvent.createForNight(fallAsleepSegment.getStartTimestamp(),
                 fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 fallAsleepSegment.getOffsetMillis());
 
-        final Event wakeUpEvent = new WakeupEvent(wakeUpSegment.getStartTimestamp(),
+        final Event wakeUpEvent = WakeupEvent.createForNight(wakeUpSegment.getStartTimestamp(),
                 wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 wakeUpSegment.getOffsetMillis());
 
-        final Event outOfBedEvent = new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
+        final Event outOfBedEvent = OutOfBedEvent.createForNight(outOfBedSegment.getStartTimestamp(),
                 outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 outOfBedSegment.getOffsetMillis());
 

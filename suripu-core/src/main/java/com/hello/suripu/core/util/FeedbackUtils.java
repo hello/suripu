@@ -107,28 +107,28 @@ public class FeedbackUtils {
         Event event;
         switch (feedback.eventType) {
             case WAKE_UP:
-                event = new WakeupEvent(
+                event = WakeupEvent.createForNight(
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case SLEEP:
-                event = new FallingAsleepEvent(
+                event = FallingAsleepEvent.createForNight(
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case IN_BED:
-                event = new InBedEvent(
+                event = InBedEvent.createForNight(
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case OUT_OF_BED:
-                event = new OutOfBedEvent(
+                event = OutOfBedEvent.createForNight(
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis

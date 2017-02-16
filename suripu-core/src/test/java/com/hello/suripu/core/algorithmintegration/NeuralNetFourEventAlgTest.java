@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
@@ -125,7 +126,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
         }
 
 
-        final List<Event> eventTimes = getEventTimes(offsetMap, startTimeLocalUTC.getMillis(), sleepSegments, xPartial);
+        final List<Event> eventTimes = getEventTimes(offsetMap, startTimeLocalUTC.getMillis(), SleepPeriod.night(date), sleepSegments, xPartial);
         assert(eventTimes.size() == 4);
         assert(eventTimes.get(0).getStartTimestamp() == 1463786220000L);
         assert(eventTimes.get(1).getStartTimestamp() == 1463787660000L);

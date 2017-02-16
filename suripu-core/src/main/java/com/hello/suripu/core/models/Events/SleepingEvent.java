@@ -1,15 +1,20 @@
 package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 
 public class SleepingEvent extends Event {
 
     private Integer sleepDepth = 0;
 
-    public SleepingEvent(long startTimestamp, long endTimestamp, int timezoneOffset, final Integer sleepDepth) {
-        super(Type.SLEEPING, startTimestamp, endTimestamp, timezoneOffset);
+    public SleepingEvent(SleepPeriod.Period sleepPeriod, long startTimestamp, long endTimestamp, int timezoneOffset, final Integer sleepDepth) {
+        super(Type.SLEEPING, sleepPeriod, startTimestamp, endTimestamp, timezoneOffset);
         this.sleepDepth = sleepDepth;
+    }
+
+    public static SleepingEvent createForNight(long startTimestamp, long endTimestamp, int timezoneOffset, final Integer sleepDepth){
+        return new SleepingEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, timezoneOffset, sleepDepth);
     }
 
     @Override

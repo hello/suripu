@@ -1,11 +1,13 @@
 package com.hello.suripu.core.models.timeline.v2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 
 import java.util.Collections;
@@ -35,6 +37,10 @@ public class TimelineEvent {
     @JsonProperty("event_type")
     public final EventType eventType;
 
+    //@JsonProperty("sleep_period")
+    @JsonIgnore
+    public final SleepPeriod.Period sleepPeriod;
+
     @JsonProperty("valid_actions")
     public final List<ValidAction> validActions;
 
@@ -45,6 +51,7 @@ public class TimelineEvent {
                           final Integer sleepDepth,
                           final SleepState sleepState,
                           final EventType eventType,
+                          final SleepPeriod.Period sleepPeriod,
                           final List<ValidAction> validActions) {
         this.timestamp = timestamp;
         this.timezoneOffset = timezoneOffset;
@@ -53,6 +60,7 @@ public class TimelineEvent {
         this.sleepDepth = sleepDepth;
         this.sleepState = sleepState;
         this.eventType = eventType;
+        this.sleepPeriod = sleepPeriod;
         this.validActions = validActions;
     }
 
@@ -62,8 +70,9 @@ public class TimelineEvent {
                                        final String message,
                                        final Integer sleepDepth,
                                        final SleepState sleepState,
-                                       final EventType eventType) {
-        return new TimelineEvent(timestamp, timezoneOffset, durationInSeconds, message, sleepDepth, sleepState, eventType, Collections.EMPTY_LIST);
+                                       final EventType eventType,
+                                       final SleepPeriod.Period sleepPeriod) {
+        return new TimelineEvent(timestamp, timezoneOffset, durationInSeconds, message, sleepDepth, sleepState, eventType, sleepPeriod, Collections.EMPTY_LIST);
     }
 
 
@@ -72,6 +81,7 @@ public class TimelineEvent {
     public static TimelineEvent fromV1(final SleepSegment segment) {
         SleepState sleepState;
         EventType eventType;
+        SleepPeriod.Period sleepPeriod = segment.getSleepPeriod();
         if (segment.getType() == Event.Type.NONE) {
             sleepState = SleepState.AWAKE;
             eventType = EventType.IN_BED;
@@ -88,6 +98,7 @@ public class TimelineEvent {
                 segment.getSleepDepth(),
                 sleepState,
                 eventType,
+                sleepPeriod,
                 ValidAction.from(segment.getType())
         );
     }

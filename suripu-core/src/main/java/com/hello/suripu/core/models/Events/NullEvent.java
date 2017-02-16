@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
 
@@ -12,7 +13,7 @@ public class NullEvent extends Event {
     private int sleepDepth = 0;
 
     public NullEvent(final long startTimestamp, final long endTimestamp, final int timezoneOffset, final int sleepDepth) {
-        super(Type.NONE, startTimestamp, endTimestamp, timezoneOffset);
+        super(Type.NONE, SleepPeriod.Period.NONE, startTimestamp, endTimestamp, timezoneOffset);
         this.sleepDepth = sleepDepth;
     }
 

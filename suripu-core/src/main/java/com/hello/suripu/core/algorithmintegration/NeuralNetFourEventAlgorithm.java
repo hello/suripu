@@ -9,6 +9,7 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
@@ -375,7 +376,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData, final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData);
@@ -434,7 +435,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
                 return Optional.absent();
             }
-            final List<Event> events = getEventTimes(offsetMap,t0, sleepSegments, xPartial);
+            final List<Event> events = getEventTimes(offsetMap,t0, SleepPeriod.night(oneDaysSensorData.date), sleepSegments, xPartial);
 
             final Map<Event.Type,Event> eventMap = Maps.newHashMap();
             for (final Event event : events) {
@@ -476,7 +477,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return Optional.absent();
     }
 
-    static protected List<Event> getEventTimes(final TreeMap<Long,Integer> offsetMap, final long t0,  final Integer[] sleepSegments, final double[][] xPartial) {
+    static protected List<Event> getEventTimes(final TreeMap<Long,Integer> offsetMap, final long t0, final SleepPeriod sleepPeriod, final Integer[] sleepSegments, final double[][] xPartial) {
 
 
         final int timeSteps = xPartial[0].length;
@@ -506,6 +507,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         //create all events
 
         events.add(Event.createFromType(Event.Type.IN_BED,
+                sleepPeriod.period,
                 inBedTime,
                 inBedTime+DateTimeConstants.MILLIS_PER_MINUTE,
                 getOffset(inBedTime,offsetMap),
@@ -514,6 +516,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 Optional.<Integer>absent()));
 
         events.add(Event.createFromType(Event.Type.SLEEP,
+                sleepPeriod.period,
                 sleepTime,
                 sleepTime+DateTimeConstants.MILLIS_PER_MINUTE,
                 getOffset(sleepTime,offsetMap),
@@ -522,6 +525,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 Optional.<Integer>absent()));
 
         events.add(Event.createFromType(Event.Type.WAKE_UP,
+                sleepPeriod.period,
                 wakeTime,
                 wakeTime+DateTimeConstants.MILLIS_PER_MINUTE,
                 getOffset(wakeTime,offsetMap),
@@ -530,6 +534,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 Optional.<Integer>absent()));
 
         events.add(Event.createFromType(Event.Type.OUT_OF_BED,
+                sleepPeriod.period,
                 outOfBedTime,
                 outOfBedTime+DateTimeConstants.MILLIS_PER_MINUTE,
                 getOffset(outOfBedTime,offsetMap),

@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
 
@@ -10,14 +11,18 @@ import com.hello.suripu.core.translations.English;
 public class WakeupEvent extends Event {
     private final String wakeupMessage;
 
-    public WakeupEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
-        super(Type.WAKE_UP, startTimestamp, endTimestamp, timezoneOffset);
+    public WakeupEvent(SleepPeriod.Period sleepPeriod, long startTimestamp, long endTimestamp, int timezoneOffset) {
+        super(Type.WAKE_UP, sleepPeriod, startTimestamp, endTimestamp, timezoneOffset);
         this.wakeupMessage = English.WAKE_UP_MESSAGE;
     }
 
-    public WakeupEvent(long startTimestamp, long endTimestamp, int timezoneOffset, final String wakeupMessage) {
-        super(Type.WAKE_UP, startTimestamp, endTimestamp, timezoneOffset);
+    public WakeupEvent(SleepPeriod.Period sleepPeriod,long startTimestamp, long endTimestamp, int timezoneOffset, final String wakeupMessage) {
+        super(Type.WAKE_UP, sleepPeriod, startTimestamp, endTimestamp, timezoneOffset);
         this.wakeupMessage = wakeupMessage;
+    }
+
+    public static WakeupEvent createForNight(long startTimestamp, long endTimestamp, int timezoneOffset) {
+        return new WakeupEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, timezoneOffset);
     }
 
     @Override

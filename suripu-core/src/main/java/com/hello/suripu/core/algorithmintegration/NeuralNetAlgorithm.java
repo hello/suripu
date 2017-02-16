@@ -37,6 +37,7 @@ import java.util.UUID;
 /**
  * Created by benjo on 2/23/16.
  */
+@Deprecated
 public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
     public static final String DEFAULT_SLEEP_NET_ID = "SLEEP";

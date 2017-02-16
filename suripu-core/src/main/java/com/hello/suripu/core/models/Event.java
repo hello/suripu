@@ -79,6 +79,9 @@ public abstract class Event {
     @JsonProperty("type")
     private Type type;
 
+    @JsonProperty("sleepPeriod")
+    private SleepPeriod.Period sleepPeriod;
+
     @JsonProperty("startTimestamp")
     private long startTimestamp;
 
@@ -88,8 +91,9 @@ public abstract class Event {
     @JsonProperty("timezoneOffset")
     private int timezoneOffset;
 
-    public Event(final Type type, final long startTimestamp, final long endTimestamp, final int timezoneOffset){
+    public Event(final Type type, final SleepPeriod.Period sleepPeriod, final long startTimestamp, final long endTimestamp, final int timezoneOffset){
         setType(type);
+        this.sleepPeriod = sleepPeriod;
         this.startTimestamp = startTimestamp;
         this.endTimestamp = endTimestamp;
         this.timezoneOffset = timezoneOffset;
@@ -113,6 +117,8 @@ public abstract class Event {
         return type;
     }
 
+    public final SleepPeriod.Period getSleepPeriod()  {return this.sleepPeriod;}
+
     protected final void setType(final Type type){
         this.type = type;
     }
@@ -120,35 +126,35 @@ public abstract class Event {
     public static Event extend(final Event event, final long startTimestamp, final long endTimestamp){
         switch (event.getType()){
             case MOTION:
-                return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+                return new MotionEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEPING:
-                return new SleepingEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+                return new SleepingEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP_MOTION:
-                return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+                return new SleepMotionEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP:
-                return new FallingAsleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new FallingAsleepEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case IN_BED:
-                return new InBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new InBedEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case OUT_OF_BED:
-                return new OutOfBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new OutOfBedEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset());
             case WAKE_UP:
-                return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new WakeupEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NONE:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SUNRISE:
-                return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth(), event.getSoundInfo());
+                return new SunRiseEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth(), event.getSoundInfo());
             case SUNSET:
-                return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+                return new SunSetEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case PARTNER_MOTION:
-                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+                return new PartnerMotionEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case LIGHT:
-                return new LightEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new LightEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case LIGHTS_OUT:
-                return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new LightsOutEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset());
             case ALARM:
-                return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new AlarmEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NOISE:
-                return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+                return new NoiseEvent(event.getSleepPeriod(),startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
@@ -158,35 +164,35 @@ public abstract class Event {
     public static Event extend(final Event event, final long startTimestamp, final long endTimestamp, final int sleepDepth){
         switch (event.getType()){
             case MOTION:
-                return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+                return new MotionEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case SLEEP_MOTION:
-                return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+                return new SleepMotionEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case SLEEP:
-                return new FallingAsleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new FallingAsleepEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case WAKE_UP:
-                return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new WakeupEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset());
             case IN_BED:
-                return new InBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new InBedEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case OUT_OF_BED:
-                return new OutOfBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new OutOfBedEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NONE:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case SUNRISE:
-                return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth, event.getSoundInfo());
+                return new SunRiseEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth, event.getSoundInfo());
             case SUNSET:
-                return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+                return new SunSetEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case PARTNER_MOTION:
-                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+                return new PartnerMotionEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case LIGHT:
-                return new LightEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new LightEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case LIGHTS_OUT:
-                return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new LightsOutEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset());
             case ALARM:
-                return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new AlarmEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset());
             case SLEEPING:
-                return new SleepingEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+                return new SleepingEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case NOISE:
-                    return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+                    return new NoiseEvent(event.getSleepPeriod(), startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
@@ -195,6 +201,7 @@ public abstract class Event {
 
     @JsonCreator
     public static Event createFromType(@JsonProperty("type") final Type type,
+                                       @JsonProperty("sleepPeriod") final SleepPeriod.Period sleepPeriod,
                                        @JsonProperty("startTimestamp") final long startTimestamp,
                                        @JsonProperty("endTimestamp") final long endTimestamp,
                                        @JsonProperty("timezoneOffset") final int offsetMillis,
@@ -202,6 +209,7 @@ public abstract class Event {
                                        @JsonProperty("soundInfo") final SleepSegment.SoundInfo soundInfoOptional,
                                        @JsonProperty("sleepDepth") final Integer sleepDepth){
         return createFromType(type,
+                sleepPeriod,
                 startTimestamp,
                 endTimestamp,
                 offsetMillis,
@@ -213,6 +221,7 @@ public abstract class Event {
 
 
     public static Event createFromType(final Type type,
+                                       final SleepPeriod.Period sleepPeriod,
                                        final long startTimestamp,
                                        final long endTimestamp,
                                        final int offsetMillis,
@@ -224,37 +233,37 @@ public abstract class Event {
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");
                 }
-                return new MotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+                return new MotionEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SLEEPING:
                 if(!sleepDepth.isPresent()) {
                     throw new IllegalArgumentException("sleepDepth required");
                 }
-                return new SleepingEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+                return new SleepingEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SLEEP_MOTION:
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");
                 }
-                return new SleepMotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+                return new SleepMotionEvent(sleepPeriod,  startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SLEEP:
                 if(!messageOptional.isPresent()){
                     throw new IllegalArgumentException("message required.");
                 }
-                return new FallingAsleepEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+                return new FallingAsleepEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case WAKE_UP:
                 if (messageOptional.isPresent()) {
-                    return new WakeupEvent(startTimestamp, endTimestamp, offsetMillis,messageOptional.get());
+                    return new WakeupEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis,messageOptional.get());
                 }
                 else {
-                    return new WakeupEvent(startTimestamp, endTimestamp, offsetMillis);
+                    return new WakeupEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis);
                 }
 
             case IN_BED:
                 if(!messageOptional.isPresent()){
                     throw new IllegalArgumentException("message required.");
                 }
-                return new InBedEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+                return new InBedEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case OUT_OF_BED:
-                return new OutOfBedEvent(startTimestamp, endTimestamp, offsetMillis);
+                return new OutOfBedEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis);
             case NONE:
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");
@@ -264,32 +273,32 @@ public abstract class Event {
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");
                 }
-                return new SunRiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get(),
+                return new SunRiseEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, sleepDepth.get(),
                         soundInfoOptional.isPresent() ? soundInfoOptional.get(): null);
             case SUNSET:
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");
                 }
-                return new SunSetEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+                return new SunSetEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case PARTNER_MOTION:
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");
                 }
-                return new PartnerMotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+                return new PartnerMotionEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case LIGHT:
                 if(!messageOptional.isPresent()){
                     throw new IllegalArgumentException("message required.");
                 }
-                return new LightEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+                return new LightEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case LIGHTS_OUT:
-                return new LightsOutEvent(startTimestamp, endTimestamp, offsetMillis);
+                return new LightsOutEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis);
             case ALARM:
                 if (!messageOptional.isPresent()) {
                     throw new IllegalArgumentException("message required.");
                 }
-                return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+                return new AlarmEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case NOISE:
-                return new NoiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+                return new NoiseEvent(sleepPeriod, startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             default:
                 if(!sleepDepth.isPresent()){
                     throw new IllegalArgumentException("sleepDepth required.");
@@ -297,6 +306,36 @@ public abstract class Event {
                 return new NullEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
 
         }
+    }
+
+    public static Event createFromType(final Type type,
+                                       final long startTimestamp,
+                                       final long endTimestamp,
+                                       final int offsetMillis,
+                                       final Optional<String> messageOptional,
+                                       final Optional<SleepSegment.SoundInfo> soundInfoOptional,
+                                       final Optional<Integer> sleepDepth){
+        return createFromType(type, SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, offsetMillis, messageOptional, soundInfoOptional, sleepDepth);
+    }
+
+
+    @JsonCreator
+    public static Event createFromType(@JsonProperty("type") final Type type,
+                                       @JsonProperty("startTimestamp") final long startTimestamp,
+                                       @JsonProperty("endTimestamp") final long endTimestamp,
+                                       @JsonProperty("timezoneOffset") final int offsetMillis,
+                                       @JsonProperty("description") final String messageOptional,
+                                       @JsonProperty("soundInfo") final SleepSegment.SoundInfo soundInfoOptional,
+                                       @JsonProperty("sleepDepth") final Integer sleepDepth){
+        return createFromType(type,
+                SleepPeriod.Period.NIGHT,
+                startTimestamp,
+                endTimestamp,
+                offsetMillis,
+                Optional.fromNullable(messageOptional),
+                Optional.fromNullable(soundInfoOptional),
+                Optional.fromNullable(sleepDepth));
+
     }
 
     @JsonProperty("description")
@@ -329,6 +368,7 @@ public abstract class Event {
         final Event convertedObject = (Event) other;
 
         return  Objects.equal(this.type, convertedObject.type)
+                && Objects.equal(this.sleepPeriod, convertedObject.sleepPeriod)
                 && Objects.equal(this.startTimestamp, convertedObject.startTimestamp)
                 && Objects.equal(this.endTimestamp, convertedObject.endTimestamp)
                 && Objects.equal(this.timezoneOffset, convertedObject.timezoneOffset);
