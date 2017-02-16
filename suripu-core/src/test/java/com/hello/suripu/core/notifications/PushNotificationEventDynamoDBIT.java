@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -233,10 +234,6 @@ public class PushNotificationEventDynamoDBIT {
         final Long account2 = 2L;
         final DateTime startTime = new DateTime(2016, 10, 24, 0, 0, DateTimeZone.UTC);
         final String sense1 = "sense1";
-        final String insight = "insight";
-        final String pillBattery = "pillBattery";
-        final String senseStatus = "senseStatus";
-        final String pillStatus = "pillStatus";
 
         final List<PushNotificationEvent> account1Events = new ArrayList();
         account1Events.add(PushNotificationEvent.newBuilder()
@@ -256,7 +253,7 @@ public class PushNotificationEventDynamoDBIT {
                 .withAccountId(account1)
                 .withTimestamp(startTime.plusMonths(5)) // 2017 now
                 .withHelloPushMessage(new HelloPushMessage("body3", "target3", "details3"))
-                .withType(PushNotificationEventType.PILL_BATTERY)
+                .withType(PushNotificationEventType.INSIGHT)
                 .build());
 
         final List<PushNotificationEvent> account2Events = new ArrayList();
@@ -275,12 +272,12 @@ public class PushNotificationEventDynamoDBIT {
         }
 
         assertTrue("should be empty", dao.query(account1, startTime.minusHours(12), startTime.minusHours(1)).data.isEmpty());
-        assertThat(dao.query(account1, startTime, startTime.plusHours(1)).data, is(account1Events.subList(0, 1)));
-        assertThat(dao.query(account1, startTime, startTime.plusDays(1)).data, is(account1Events.subList(0, 2)));
-        assertThat(dao.query(account1, startTime, startTime.plusYears(1)).data, is(account1Events));
-        assertThat(dao.query(account1, startTime.plusYears(1), startTime.plusYears(2)).data.isEmpty(), is(true));
-        assertThat(dao.query(account2, startTime, startTime.plusMinutes(60)).data, is(account2Events));
-        assertThat(dao.query(-1L, startTime, startTime.plusYears(2)).data.isEmpty(), is(true));
+        assertThat("first",dao.query(account1, startTime, startTime.plusHours(1)).data, is(account1Events.subList(0, 1)));
+        assertThat("second",dao.query(account1, startTime, startTime.plusDays(1)).data, is(account1Events.subList(0, 2)));
+        assertThat("third",dao.query(account1, startTime, startTime.plusYears(1)).data, is(account1Events));
+        assertThat("fourth",dao.query(account1, startTime.plusYears(1), startTime.plusYears(2)).data.isEmpty(), is(true));
+        assertThat("fifth",dao.query(account2, startTime, startTime.plusMinutes(60)).data, is(account2Events));
+        assertThat("sixth", dao.query(-1L, startTime, startTime.plusYears(2)).data.isEmpty(), is(true));
     }
 
     @Test
@@ -288,10 +285,6 @@ public class PushNotificationEventDynamoDBIT {
         final Long account1 = 1L;
         final DateTime startTime = new DateTime(2016, 10, 24, 0, 0, DateTimeZone.UTC);
         final String sense1 = "sense1";
-        final String insight = "insight";
-        final String pillBattery = "pillBattery";
-        final String senseStatus = "senseStatus";
-        final String pillStatus = "pillStatus";
 
         final List<PushNotificationEvent> account1Events = new ArrayList();
         account1Events.add(PushNotificationEvent.newBuilder()
@@ -323,7 +316,55 @@ public class PushNotificationEventDynamoDBIT {
                 is(account1Events.subList(1, 2)));
         assertThat("third", dao.query(account1, startTime, startTime.plusYears(2), PushNotificationEventType.PILL_BATTERY).data,
                 is(account1Events.subList(2, 3)));
-        assertThat("fourth", dao.query(account1, startTime, startTime.plusMinutes(30), PushNotificationEventType.SENSE_STATUS).data.isEmpty(),
-                is(true));
+        assertTrue("fourth", dao.query(account1, startTime, startTime.plusMinutes(30), PushNotificationEventType.SENSE_STATUS).data.isEmpty());
+    }
+
+    @Test
+    public void testForPeriodicty() {
+
+        final Long account1 = 1L;
+        final DateTime startTime = new DateTime(2016, 10, 24, 0, 0, DateTimeZone.UTC);
+        final String sense1 = "sense1";
+
+        final List<PushNotificationEvent> account1Events = new ArrayList();
+        account1Events.add(PushNotificationEvent.newBuilder()
+                .withAccountId(account1)
+                .withTimestamp(startTime)
+                .withHelloPushMessage(new HelloPushMessage("body1", "target1", "details1"))
+                .withType(PushNotificationEventType.SLEEP_SCORE)
+                .withPeriodicity(Periodicity.DAILY)
+                .build());
+        account1Events.add(PushNotificationEvent.newBuilder()
+                .withAccountId(account1)
+                .withTimestamp(startTime.plusHours(1))
+                .withHelloPushMessage(new HelloPushMessage("body2", "target2", "details2"))
+                .withType(PushNotificationEventType.SLEEP_SCORE)
+                .withPeriodicity(Periodicity.DAILY)
+                .withSenseId(sense1)
+                .build());
+
+        account1Events.add(PushNotificationEvent.newBuilder()
+                .withAccountId(account1)
+                .withTimestamp(startTime)
+                .withHelloPushMessage(new HelloPushMessage("body1", "target1", "details1"))
+                .withType(PushNotificationEventType.PILL_BATTERY)
+                .withPeriodicity(Periodicity.WEEKLY)
+                .build());
+        account1Events.add(PushNotificationEvent.newBuilder()
+                .withAccountId(account1)
+                .withTimestamp(startTime.plusDays(7))
+                .withHelloPushMessage(new HelloPushMessage("body2", "target2", "details2"))
+                .withType(PushNotificationEventType.PILL_BATTERY)
+                .withPeriodicity(Periodicity.WEEKLY)
+                .withSenseId(sense1)
+                .build());
+
+        for (final PushNotificationEvent event: account1Events) {
+            dao.insert(event);
+        }
+
+        assertEquals("only one per period", 1, dao.query(account1, startTime, startTime.plusDays(2), PushNotificationEventType.SLEEP_SCORE).data.size());
+        assertEquals("only one per period", 2, dao.query(account1, startTime, startTime.plusWeeks(2), PushNotificationEventType.PILL_BATTERY).data.size());
+
     }
 }
