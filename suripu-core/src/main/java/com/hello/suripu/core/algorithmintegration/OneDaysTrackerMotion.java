@@ -29,7 +29,7 @@ public class OneDaysTrackerMotion {
 
 
 
-    public OneDaysTrackerMotion removeMotionsOutsideSleepPeriod(final Long startTime, final Long endTime) {
+    public OneDaysTrackerMotion getMotionsForTimeWindow(final Long startTime, final Long endTime) {
         final List<TrackerMotion> currentPeriodProcessedtrackerMotions = new ArrayList<>();
         for (final TrackerMotion trackerMotion : this.processedtrackerMotions){
             if (trackerMotion.timestamp >=startTime && trackerMotion.timestamp < endTime){

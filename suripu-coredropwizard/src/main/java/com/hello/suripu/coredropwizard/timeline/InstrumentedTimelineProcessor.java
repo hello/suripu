@@ -433,14 +433,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 //Check if a valid timeline previously generated after end of data for period and populate timeline
                 if (generatedMainEventTimes.hasValidEventTimes() && generatedMainEventTimes.createdAt.time >= targetSleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())).getMillis()) {
                     attemptTimeline = false;
-                    final OneDaysSensorData sleepPeriodSensorData = fullDaySensorData.removePrevPeriodData(prevOutOfBedTimeOptional, targetSleepPeriod);
+                    final OneDaysSensorData sleepPeriodSensorData = fullDaySensorData.getForSleepPeriod(prevOutOfBedTimeOptional, targetSleepPeriod);
                     final SleepPeriodResult targetSleepPeriodResult = new SleepPeriodResult(generatedMainEventTimes, sleepPeriodSensorData, timeZoneOffsetMap, new TimelineLog(accountId, targetDate.withZone(DateTimeZone.UTC).getMillis()));
                     targetSleepPeriodResultsMap.put(targetSleepPeriod.period, targetSleepPeriodResult);
                 }
                 if (generatedMainEventTimes.hasValidEventTimes() && generatedMainEventTimes.createdAt.time < targetSleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())).getMillis()) {
                     if(isTimelineLockdownValid(generatedMainEventTimes, fullDaySensorData)){
                         attemptTimeline = false;
-                        final OneDaysSensorData sleepPeriodSensorData = fullDaySensorData.removePrevPeriodData(prevOutOfBedTimeOptional, targetSleepPeriod);
+                        final OneDaysSensorData sleepPeriodSensorData = fullDaySensorData.getForSleepPeriod(prevOutOfBedTimeOptional, targetSleepPeriod);
                         final SleepPeriodResult targetSleepPeriodResult = new SleepPeriodResult(generatedMainEventTimes, sleepPeriodSensorData, timeZoneOffsetMap, new TimelineLog(accountId, targetDate.withZone(DateTimeZone.UTC).getMillis()));
                         targetSleepPeriodResultsMap.put(targetSleepPeriod.period, targetSleepPeriodResult);
                     }
@@ -537,7 +537,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final DateTime currentTimeUTC = DateTime.now().withZone(DateTimeZone.UTC);
         final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
 
-        final OneDaysSensorData sensorDataSleepPeriod = sensorData.removePrevPeriodData(prevOutOfBedTimeOptional, sleepPeriod);
+        final OneDaysSensorData sensorDataSleepPeriod = sensorData.getForSleepPeriod(prevOutOfBedTimeOptional, sleepPeriod);
 
         //chain of fail-overs of algorithm (i.e)
         final LinkedList<AlgorithmType> algorithmChain = Lists.newLinkedList();

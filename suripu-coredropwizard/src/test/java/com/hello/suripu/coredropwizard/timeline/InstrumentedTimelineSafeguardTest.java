@@ -273,7 +273,7 @@ public class InstrumentedTimelineSafeguardTest {
 
         originalMotionDataLowerThreshold.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, 20));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, 9));
 
         TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalMotionDataLowerThreshold, 20));
 

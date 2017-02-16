@@ -66,7 +66,7 @@ public class AllSensorSampleList {
 
     }
 
-    public AllSensorSampleList removeSensorDataOutsideSleepPeriod(final long startTime, final long endTime){
+    public AllSensorSampleList getSensorDataForTimeWindow(final long startTime, final long endTime){
         final List<Sensor> sensorList = getAvailableSensors();
         final AllSensorSampleList currentPeriodSensorSampleList = new AllSensorSampleList();
 
