@@ -111,18 +111,10 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
 
         final DateTimeZone tz = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
 
-        final PushNotificationEvent eventAdjusted = PushNotificationEvent.newBuilder()
-                .withAccountId(event.accountId)
-                .withType(event.type)
-                .withHelloPushMessage(event.helloPushMessage)
-                .withSenseId(event.senseId.orNull())
-                .withTimestamp(event.timestamp)
-                .withTimeZone(tz)
-                .build();
-
+        final PushNotificationEvent eventWithTz = new PushNotificationEvent.Builder(event).withTimeZone(tz).build();
         // We often want at-most-once delivery of push notifications, so we insert the record to DDB first.
         // That way if something later in this method fails, we won't accidentally send the same notification twice.
-        final boolean successfullyInserted = pushNotificationEventDynamoDB.insert(eventAdjusted);
+        final boolean successfullyInserted = pushNotificationEventDynamoDB.insert(eventWithTz);
         if (!successfullyInserted) {
             LOGGER.warn("action=duplicate-push-notification account_id={} type={}", event.accountId, event.type);
             return;

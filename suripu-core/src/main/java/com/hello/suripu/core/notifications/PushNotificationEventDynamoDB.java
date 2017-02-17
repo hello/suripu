@@ -107,7 +107,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
         }
     }
 
-    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd"; // limiting to once a day
+    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:00:00"; // limiting to once a day
     private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
 
     public PushNotificationEventDynamoDB(final AmazonDynamoDB client, final String tablePrefix) {
@@ -169,7 +169,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
     protected Map<String, AttributeValue> toAttributeMap(final PushNotificationEvent model) {
         final ImmutableMap.Builder<String, AttributeValue> builder = ImmutableMap.builder();
         builder.put(Attribute.ACCOUNT_ID.shortName(), toAttributeValue(model.accountId))
-                .put(Attribute.TIMESTAMP_TYPE.shortName(), getRangeKey(new DateTime(model.timestamp, model.timeZone), Optional.of(model.type)))
+                .put(Attribute.TIMESTAMP_TYPE.shortName(), getRangeKeyInsert(model))
                 .put(Attribute.TYPE.shortName(), toAttributeValue(model.type.shortName()))
                 .put(Attribute.TIMESTAMP.shortName(), toAttributeValue(model.timestamp))
                 .put(Attribute.BODY.shortName(), toAttributeValue(model.helloPushMessage.body))
@@ -224,7 +224,7 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
                 LOGGER.error("error=InternalServerErrorException account_id={}", event.accountId);
             } catch (ConditionalCheckFailedException ccfe) {
                 // The item already exists or we already have an item with this timestamp / account ID!
-                final String key = getRangeKey(new DateTime(event.timestamp, event.timeZone), Optional.of(event.type)).getS();
+                final String key = getRangeKeyInsert(event).getS();
                 LOGGER.warn("warn=item-already-exists account_id={} key={} timestamp={}",
                         event.accountId, key, event.timestamp);
                 return false;
@@ -239,9 +239,10 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
 
     //region query
     private Expression getKeyConditionExpression(final Long accountId, final DateTime start, final DateTime end, final Optional<PushNotificationEventType> type) {
+        final PushNotificationEventType eventType = type.or(PushNotificationEventType.GENERIC);
         return Expressions.and(
                 Expressions.equals(Attribute.ACCOUNT_ID, toAttributeValue(accountId)),
-                Expressions.between(Attribute.TIMESTAMP_TYPE, getRangeKey(start, type), getRangeKey(end, type))
+                Expressions.between(Attribute.TIMESTAMP_TYPE, getRangeKey(start, eventType), getRangeKey(end, eventType))
         );
     }
 
@@ -286,11 +287,13 @@ public class PushNotificationEventDynamoDB extends TimeSeriesDAODynamoDB<PushNot
         return toAttributeValue(dt.getMillis());
     }
 
-    private static AttributeValue getRangeKey(final DateTime dateTime, final Optional<PushNotificationEventType> type) {
-        if (type.isPresent()) {
-            return getRangeKey(dateTime, type.get().shortName());
-        }
-        return getRangeKey(dateTime, "");
+    // We normalize keys by periodicity
+    private static AttributeValue getRangeKeyInsert(final PushNotificationEvent event) {
+        return getRangeKey(SortKeyNormalizer.normalize(event), event.type);
+    }
+
+    private static AttributeValue getRangeKey(final DateTime dateTime, PushNotificationEventType type) {
+        return getRangeKey(dateTime, type.shortName());
     }
 
     private static AttributeValue getRangeKey(final DateTime dateTime, final String type) {
