@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -234,16 +233,26 @@ public class SleepPeriod {
     }
 
     public static List<SleepPeriod> getSleepPeriodQueue(final DateTime targetDate, final DateTime currentTimeLocal){
-        if (currentTimeLocal.minusHours(4).isAfter(targetDate.withTimeAtStartOfDay().getMillis())){
+
+        //previous day
+        if (currentTimeLocal.isBefore(targetDate.plusDays(1).withTimeAtStartOfDay().plusHours(8).getMillis())){
             return createAllSleepPeriods(targetDate);
         }
-        final SleepPeriod currentSleepPeriod = createSleepPeriod(currentTimeLocal);
-        final List<SleepPeriod> sleepPeriods = new ArrayList<>();
-        for(int i = 0; i < currentSleepPeriod.period.getValue(); i++){
-            sleepPeriods.add(createSleepPeriod(Period.fromInteger(i), targetDate));
+        if (currentTimeLocal.isBefore(targetDate.plusDays(1).withTimeAtStartOfDay().plusHours(16).getMillis())){
+            final List<SleepPeriod> sleepPeriods = new ArrayList<>();
+            sleepPeriods.add(SleepPeriod.afternoon(targetDate));
+            sleepPeriods.add(SleepPeriod.night(targetDate));
+            sleepPeriods.add(SleepPeriod.morning(targetDate.plusDays(1)));
+            return sleepPeriods;
         }
-        sleepPeriods.add(currentSleepPeriod);
-        return sleepPeriods;
+        else{
+            final List<SleepPeriod> sleepPeriods = new ArrayList<>();
+            sleepPeriods.add(SleepPeriod.night(targetDate));
+            sleepPeriods.add(SleepPeriod.morning(targetDate.plusDays(1)));
+            sleepPeriods.add(SleepPeriod.afternoon(targetDate.plusDays(1)));
+
+            return sleepPeriods;
+        }
     }
 
     public boolean sleepEventInSleepPeriod(final DateTime inBedTime){

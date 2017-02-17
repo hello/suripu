@@ -301,8 +301,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
 
+        //hack
+        DateTime currentLocalTime = DateTime.now();
         if(useTimelineSleepPeriods(accountId)){
-            return retrieveTimelineForAllSleepPeriods(accountId, targetDate, newFeedback);
+            return retrieveTimelineForAllSleepPeriods(accountId, targetDate, currentLocalTime, newFeedback);
         }
         return retrieveTimelinesForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate),Optional.absent(), newFeedback);
         
@@ -378,11 +380,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     }
 
-    public TimelineResult retrieveTimelineForAllSleepPeriods(final Long accountId, final DateTime targetDate,  final Optional<TimelineFeedback> newFeedback) {
+    public TimelineResult retrieveTimelineForAllSleepPeriods(final Long accountId, final DateTime targetDate, final DateTime currentTimeLocal, final Optional<TimelineFeedback> newFeedback) {
         //TODO fix log message
 
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, targetDate.plusHours(44), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
-        final DateTime currentTimeLocal = DateTime.now(DateTimeZone.forID(timeZoneOffsetMap.getTimeZoneIdWithUTCDefault(DateTime.now(DateTimeZone.UTC).getMillis())));
         final List<SleepPeriod> sleepPeriodQueue = SleepPeriod.getSleepPeriodQueue(targetDate, currentTimeLocal);
 
         final Optional<OneDaysSensorData> fullDaysSensorDataOptional = getSensorData(accountId, SleepPeriod.morning(targetDate).getTargetSleepPeriodTime(SleepPeriod.Boundary.START, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())), SleepPeriod.night(targetDate).getTargetSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())), currentTimeLocal, Optional.absent());
@@ -415,10 +416,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final Map<SleepPeriod.Period, SleepPeriodResult> targetSleepPeriodResultsMap = new HashMap<>();
 
-        for (int sleepPeriodInt = 0; sleepPeriodInt < sleepPeriodQueue.size(); sleepPeriodInt++) {
+        for (final SleepPeriod targetSleepPeriod : sleepPeriodQueue) {
             //start with the assumption we need to a timeline for each sleep period
             boolean attemptTimeline = true;
-            final SleepPeriod targetSleepPeriod = SleepPeriod.createSleepPeriod(SleepPeriod.Period.fromInteger(sleepPeriodInt), targetDate);
 
             //check for adjacent previous sleepPeriod for out of bed time;
             final Optional<Long> prevOutOfBedTimeOptional = getPreviousOutOfBedTime(targetSleepPeriod, targetDateSleepEventsMap, prevTargetDateSleepEventsMap);
