@@ -868,6 +868,24 @@ public final class State {
      * <code>optional .AudioState audio_state = 2;</code>
      */
     com.hello.suripu.api.input.State.AudioStateOrBuilder getAudioStateOrBuilder();
+
+    /**
+     * <code>optional uint32 volume = 3;</code>
+     */
+    boolean hasVolume();
+    /**
+     * <code>optional uint32 volume = 3;</code>
+     */
+    int getVolume();
+
+    /**
+     * <code>optional bool voice_control_enabled = 4;</code>
+     */
+    boolean hasVoiceControlEnabled();
+    /**
+     * <code>optional bool voice_control_enabled = 4;</code>
+     */
+    boolean getVoiceControlEnabled();
   }
   /**
    * Protobuf type {@code SenseState}
@@ -938,6 +956,16 @@ public final class State {
                 audioState_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              volume_ = input.readUInt32();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              voiceControlEnabled_ = input.readBool();
               break;
             }
           }
@@ -1043,9 +1071,41 @@ public final class State {
       return audioState_;
     }
 
+    public static final int VOLUME_FIELD_NUMBER = 3;
+    private int volume_;
+    /**
+     * <code>optional uint32 volume = 3;</code>
+     */
+    public boolean hasVolume() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional uint32 volume = 3;</code>
+     */
+    public int getVolume() {
+      return volume_;
+    }
+
+    public static final int VOICE_CONTROL_ENABLED_FIELD_NUMBER = 4;
+    private boolean voiceControlEnabled_;
+    /**
+     * <code>optional bool voice_control_enabled = 4;</code>
+     */
+    public boolean hasVoiceControlEnabled() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional bool voice_control_enabled = 4;</code>
+     */
+    public boolean getVoiceControlEnabled() {
+      return voiceControlEnabled_;
+    }
+
     private void initFields() {
       senseId_ = "";
       audioState_ = com.hello.suripu.api.input.State.AudioState.getDefaultInstance();
+      volume_ = 0;
+      voiceControlEnabled_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1076,6 +1136,12 @@ public final class State {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(2, audioState_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt32(3, volume_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBool(4, voiceControlEnabled_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1092,6 +1158,14 @@ public final class State {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, audioState_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(3, volume_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(4, voiceControlEnabled_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1219,6 +1293,10 @@ public final class State {
           audioStateBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        volume_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        voiceControlEnabled_ = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -1259,6 +1337,14 @@ public final class State {
         } else {
           result.audioState_ = audioStateBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.volume_ = volume_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.voiceControlEnabled_ = voiceControlEnabled_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1282,6 +1368,12 @@ public final class State {
         }
         if (other.hasAudioState()) {
           mergeAudioState(other.getAudioState());
+        }
+        if (other.hasVolume()) {
+          setVolume(other.getVolume());
+        }
+        if (other.hasVoiceControlEnabled()) {
+          setVoiceControlEnabled(other.getVoiceControlEnabled());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1512,6 +1604,70 @@ public final class State {
         return audioStateBuilder_;
       }
 
+      private int volume_ ;
+      /**
+       * <code>optional uint32 volume = 3;</code>
+       */
+      public boolean hasVolume() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional uint32 volume = 3;</code>
+       */
+      public int getVolume() {
+        return volume_;
+      }
+      /**
+       * <code>optional uint32 volume = 3;</code>
+       */
+      public Builder setVolume(int value) {
+        bitField0_ |= 0x00000004;
+        volume_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 volume = 3;</code>
+       */
+      public Builder clearVolume() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        volume_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private boolean voiceControlEnabled_ ;
+      /**
+       * <code>optional bool voice_control_enabled = 4;</code>
+       */
+      public boolean hasVoiceControlEnabled() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bool voice_control_enabled = 4;</code>
+       */
+      public boolean getVoiceControlEnabled() {
+        return voiceControlEnabled_;
+      }
+      /**
+       * <code>optional bool voice_control_enabled = 4;</code>
+       */
+      public Builder setVoiceControlEnabled(boolean value) {
+        bitField0_ |= 0x00000008;
+        voiceControlEnabled_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool voice_control_enabled = 4;</code>
+       */
+      public Builder clearVoiceControlEnabled() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        voiceControlEnabled_ = false;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SenseState)
     }
 
@@ -1545,9 +1701,10 @@ public final class State {
       "\n\013state.proto\"h\n\nAudioState\022\025\n\rplaying_a" +
       "udio\030\001 \002(\010\022\030\n\020duration_seconds\030\002 \001(\r\022\021\n\t" +
       "file_path\030\003 \001(\t\022\026\n\016volume_percent\030\004 \001(\r\"" +
-      "@\n\nSenseState\022\020\n\010sense_id\030\001 \002(\t\022 \n\013audio" +
-      "_state\030\002 \001(\0132\013.AudioStateB\034\n\032com.hello.s" +
-      "uripu.api.input"
+      "o\n\nSenseState\022\020\n\010sense_id\030\001 \002(\t\022 \n\013audio" +
+      "_state\030\002 \001(\0132\013.AudioState\022\016\n\006volume\030\003 \001(" +
+      "\r\022\035\n\025voice_control_enabled\030\004 \001(\010B\034\n\032com." +
+      "hello.suripu.api.input"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1572,7 +1729,7 @@ public final class State {
     internal_static_SenseState_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_SenseState_descriptor,
-        new java.lang.String[] { "SenseId", "AudioState", });
+        new java.lang.String[] { "SenseId", "AudioState", "Volume", "VoiceControlEnabled", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -141,6 +141,8 @@ public class Particulates {
                                                          final Optional<Calibration> calibrationOptional) {
 
         final DeviceId deviceId = DeviceId.create(deviceAccountPair.externalDeviceId);
+
+        //TODO: convert to CalibratedDeviceData format (see Humidity insight)
         final Response<ImmutableList<Integer>> response = deviceDataDAO.getAirQualityRawList(accountId, deviceId, startTimestamp, endTimestamp, startLocalTimestamp, endLocalTimestamp);
 
         final List<Float> airQualityList = Lists.newArrayList();

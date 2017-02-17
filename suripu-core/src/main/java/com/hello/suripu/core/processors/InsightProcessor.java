@@ -17,9 +17,12 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.MarketingInsightsSeenDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.insights.InsightsLastSeen;
 import com.hello.suripu.core.insights.InsightsLastSeenDAO;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -89,6 +92,7 @@ public class InsightProcessor {
     private final DeviceReadDAO deviceReadDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
+    private final SenseColorDAO senseColorDAO;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final InsightsLastSeenDAO insightsLastSeenDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -113,6 +117,7 @@ public class InsightProcessor {
                             @NotNull final DeviceReadDAO deviceReadDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
+                            @NotNull final SenseColorDAO senseColorDAO,
                             @NotNull final InsightsDAODynamoDB insightsDAODynamoDB,
                             @NotNull final InsightsLastSeenDAO insightsLastSeenDAO,
                             @NotNull final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
@@ -128,6 +133,7 @@ public class InsightProcessor {
         this.deviceReadDAO = deviceReadDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
+        this.senseColorDAO = senseColorDAO;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.insightsLastSeenDAO = insightsLastSeenDAO;
         this.preferencesDAO = preferencesDAO;
@@ -458,21 +464,23 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    @VisibleForTesting
     public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category, final RolloutClient featureFlipper) {
 
         final DateTimeFormatter timeFormat;
         final TemperatureUnit tempUnit;
 
+        final Optional<Calibration> calibrationOptional = calibrationDAO.getStrict(deviceAccountPair.externalDeviceId);
+        final Optional<Device.Color> colorOptional = senseColorDAO.getColorForSense(deviceAccountPair.externalDeviceId);
+
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
-            case AIR_QUALITY:
+            case AIR_QUALITY: //TODO syntax change
                 insightCardOptional = Particulates.getInsights(accountId, deviceAccountPair, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
                 break;
-            case BED_LIGHT_DURATION:
+            case BED_LIGHT_DURATION: //TODO modify thresholds
                 insightCardOptional = BedLightDuration.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
-            case BED_LIGHT_INTENSITY_RATIO:
+            case BED_LIGHT_INTENSITY_RATIO: //TODO calibration interpretation?
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case CAFFEINE:
@@ -501,19 +509,16 @@ public class InsightProcessor {
                 insightCardOptional = GoalsInsights.getWakeVarianceInsight(accountId);
                 break;
             case HUMIDITY:
-                insightCardOptional = Humidity.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                insightCardOptional = Humidity.getInsights(accountId, deviceAccountPair, colorOptional, calibrationOptional, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
             case LEARN:
                 insightCardOptional = MarketingInsights.getLearnInsight(accountId);
                 break;
-            case LIGHT:
-                insightCardOptional = Lights.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
+            case LIGHT: //TODO recalculate data
+                insightCardOptional = Lights.getInsights(accountId, deviceAccountPair, colorOptional, calibrationOptional, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
                 break;
             case LOVE:
                 insightCardOptional = MarketingInsights.getLoveInsight(accountId);
-                break;
-            case PARTNER_MOTION:
-                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
                 break;
             case PLAY:
                 insightCardOptional = MarketingInsights.getPlayInsight(accountId);
@@ -535,7 +540,7 @@ public class InsightProcessor {
                 timeFormat = this.getTimeFormat(accountId);
                 insightCardOptional = SleepAlarm.getInsights(sleepStatsDAODynamoDB, accountReadDAO, accountId, timeFormat);
                 break;
-            case SOUND:
+            case SOUND: //TODO
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceAccountPair, deviceDataDAODynamoDB, sleepStatsDAODynamoDB);
                 break;
             case SWIM:
@@ -543,7 +548,7 @@ public class InsightProcessor {
                 break;
             case TEMPERATURE:
                 tempUnit = this.getTemperatureUnitString(accountId);
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceAccountPair, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceAccountPair, colorOptional, calibrationOptional, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
                 break;
             case WAKE_VARIANCE:
                 final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
@@ -560,7 +565,7 @@ public class InsightProcessor {
             }
 
             // save to dynamo
-            LOGGER.info("action=generated_insight_card category={} accountId={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
+            LOGGER.info("action=generated_insight_card category={} account_id={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
             final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now(DateTimeZone.UTC));
             this.insightsLastSeenDAO.markLastSeen(newInsight);
@@ -569,6 +574,31 @@ public class InsightProcessor {
 
         return Optional.absent();
     }
+
+    public Optional<InsightCard.Category> generateFutureInsightsByCategory(final Long accountId, final InsightCard.Category category, final DateTime dateVisible) {
+
+        Optional<InsightCard> insightCardOptional = Optional.absent();
+        switch (category) {
+            case PARTNER_MOTION:
+                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB, dateVisible);
+                break;
+        }
+
+        if (insightCardOptional.isPresent()) {
+            if (marketingInsightPool.contains(category)) {
+                marketingInsightsSeenDAODynamoDB.updateSeenCategories(accountId, category);
+            }
+
+            // save to dynamo
+            LOGGER.info("action=generated_insight_card category={} account_id={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
+            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+            final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, dateVisible);
+            this.insightsLastSeenDAO.markLastSeen(newInsight);
+            return Optional.of(category);
+        }
+
+        return Optional.absent();
+        }
 
     public static Optional<String> getInsightPreviewForCategory(final InsightCard.Category category,
                                                                 final TrendsInsightsDAO trendsInsightsDAO)
@@ -654,6 +684,7 @@ public class InsightProcessor {
         private @Nullable DeviceReadDAO deviceReadDAO;
         private @Nullable TrendsInsightsDAO trendsInsightsDAO;
         private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
+        private @Nullable SenseColorDAO senseColorDAO;
         private @Nullable InsightsDAODynamoDB insightsDAODynamoDB;
         private @Nullable InsightsLastSeenDAO insightsLastSeenDAO;
         private @Nullable SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -673,6 +704,11 @@ public class InsightProcessor {
         public Builder withSenseDAOs(final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
             this.deviceReadDAO = deviceReadDAO;
             this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
+            return this;
+        }
+
+        public Builder withSenseColorDAO(final SenseColorDAO senseColorDAO) {
+            this.senseColorDAO = senseColorDAO;
             return this;
         }
 
@@ -723,6 +759,7 @@ public class InsightProcessor {
             checkNotNull(deviceReadDAO, "deviceReadDAO can not be null");
             checkNotNull(trendsInsightsDAO, "trendsInsightsDAO can not be null");
             checkNotNull(scoreDAODynamoDB, "scoreDAODynamoDB can not be null");
+            checkNotNull(senseColorDAO, "senseColorDAO can not be null");
             checkNotNull(insightsDAODynamoDB, "insightsDAODynamoDB can not be null");
             checkNotNull(insightsLastSeenDAO, "insightsLastSeenDAO can not be null");
             checkNotNull(sleepStatsDAODynamoDB, "sleepStatsDAODynamoDB can not be null");
@@ -738,6 +775,7 @@ public class InsightProcessor {
                     deviceReadDAO,
                     trendsInsightsDAO,
                     scoreDAODynamoDB,
+                    senseColorDAO,
                     insightsDAODynamoDB,
                     insightsLastSeenDAO,
                     sleepStatsDAODynamoDB,

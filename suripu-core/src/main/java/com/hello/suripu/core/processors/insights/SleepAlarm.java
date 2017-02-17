@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.util.AccountUtils;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.Account;
@@ -15,7 +16,6 @@ import com.hello.suripu.core.util.InsightUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Years;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,15 +62,13 @@ public class SleepAlarm {
             wakeTimeList.add(wakeTime);
         }
 
-        final DateTime dob;
         final Optional<Account> account = accountReadDAO.getById(accountId);
-        if (account.isPresent()) {
-            dob = account.get().DOB;
-        } else {
-            dob = DateTime.now(DateTimeZone.UTC);
+        if (!account.isPresent()) {
+            LOGGER.error("error=account-absent insight=sleep-alarm account_id={}", accountId);
+            return Optional.absent();
         }
 
-        final Integer userAge = Years.yearsBetween(dob, DateTime.now(DateTimeZone.UTC)).toPeriod().getYears();
+        final Integer userAge = AccountUtils.getUserAgeYears(account.get());
 
         final Optional<InsightCard> card = processSleepAlarm(accountId, wakeTimeList, userAge, timeFormat);
         return card;
@@ -138,6 +136,8 @@ public class SleepAlarm {
 
         return Boolean.TRUE;
     }
+
+
 
     @VisibleForTesting
     public static Integer getRecommendedSleepDurationMinutes(final Integer userAge) {

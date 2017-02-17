@@ -19,6 +19,13 @@ public class NewDynamoDBConfiguration {
         return region;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("default_endpoint")
+    private String defaultEndpoint;
+    public String defaultEndpoint() {
+        return defaultEndpoint;
+    }
 
     @Valid
     @NotNull

@@ -3,26 +3,17 @@ package com.hello.suripu.coredropwizard.clients;
 import com.google.common.base.Optional;
 import com.hello.messeji.api.AudioCommands;
 import com.hello.messeji.api.Messeji;
+import com.hello.suripu.core.messeji.MessejiApi;
+import com.hello.suripu.core.messeji.Sender;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
 
 /**
  * Created by jakepiccolo on 2/22/16.
  */
-public abstract class MessejiClient {
-    public abstract Optional<Long> sendMessage(final String senseId, final Messeji.Message message);
+public abstract class MessejiClient implements MessejiApi {
 
-    public static class Sender {
-        private String id;
-
-        private Sender(final String id) {
-            this.id = id;
-        }
-
-        public static Sender fromAccountId(final Long accountId) {
-            return new Sender(String.format("account:%s", accountId));
-        }
-    }
+    public abstract Optional<Long> sendMessage(String senseId, Messeji.Message message);
 
     protected static String logFormatMessage(final Messeji.Message message) {
         final StringBuilder builder = new StringBuilder();
@@ -46,6 +37,7 @@ public abstract class MessejiClient {
         return builder.toString();
     }
 
+    @Override
     public Optional<Long> playAudio(final String senseId, final Sender sender, final Long order, final Duration duration, final Sound sound,
                                     final Integer fadeInSeconds, final Integer fadeOutSeconds, final Integer volumePercent, final Integer timeoutFadeOutSeconds)
     {
@@ -60,7 +52,7 @@ public abstract class MessejiClient {
         }
         final Messeji.Message message = Messeji.Message.newBuilder()
                 .setOrder(order)
-                .setSenderId(sender.id)
+                .setSenderId(sender.id())
                 .setType(Messeji.Message.Type.PLAY_AUDIO)
                 .setPlayAudio(playBuilder.build())
                 .build();
@@ -68,12 +60,35 @@ public abstract class MessejiClient {
         return sendMessage(senseId, message);
     }
 
+    @Override
     public Optional<Long> stopAudio(final String senseId, final Sender sender, final Long order, final int fadeOutDurationSeconds) {
         final Messeji.Message message = Messeji.Message.newBuilder()
                 .setOrder(order)
-                .setSenderId(sender.id)
+                .setSenderId(sender.id())
                 .setType(Messeji.Message.Type.STOP_AUDIO)
                 .setStopAudio(AudioCommands.StopAudio.newBuilder().setFadeOutDurationSeconds(fadeOutDurationSeconds).build())
+                .build();
+        return sendMessage(senseId, message);
+    }
+
+    @Override
+    public Optional<Long> mute(final String senseId, final Sender sender, final Long order, final boolean mute) {
+        final Messeji.Message message = Messeji.Message.newBuilder()
+                .setOrder(order)
+                .setSenderId(sender.id())
+                .setType(Messeji.Message.Type.VOICE_CONTROL)
+                .setVoiceControl(AudioCommands.VoiceControl.newBuilder().setEnable(!mute).build())
+                .build();
+        return sendMessage(senseId, message);
+    }
+
+    @Override
+    public Optional<Long> setSystemVolume(final String senseId, final Sender sender, final Long order, final int volume) {
+        final Messeji.Message message = Messeji.Message.newBuilder()
+                .setOrder(order)
+                .setSenderId(sender.id())
+                .setType(Messeji.Message.Type.SET_VOLUME)
+                .setVolume(AudioCommands.Volume.newBuilder().setVolume(volume).build())
                 .build();
         return sendMessage(senseId, message);
     }

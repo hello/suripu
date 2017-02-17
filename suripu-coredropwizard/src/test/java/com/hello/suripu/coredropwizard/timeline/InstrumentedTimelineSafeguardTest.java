@@ -8,8 +8,11 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
+import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import junit.framework.TestCase;
@@ -27,6 +30,8 @@ public class InstrumentedTimelineSafeguardTest {
     final long hourInMillis = 3600000L;
     final int hourInMinutes = 60;
     final private ImmutableList<Event> emptyEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
+    final long accountId = 0L;
+    final AlgorithmType algType = AlgorithmType.NONE;
 
     private Event getEvent(Event.Type type, final long time) {
         return Event.createFromType(type, time, time + 60000L, 0, Optional.of("BLAH BLAH"), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
@@ -71,16 +76,16 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(duration1, 7 * hourInMinutes);
         TestCase.assertEquals(duration2, 1 * hourInMinutes);
 
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, emptyEvents));
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsDurationFail, emptyEvents));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsOrderFail1, emptyEvents));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsOrderFail2, emptyEvents));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsOrderFail3, emptyEvents));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, emptyEvents));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsDurationFail, emptyEvents));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsOrderFail1, emptyEvents));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsOrderFail2, emptyEvents));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsOrderFail3, emptyEvents));
 
         ImmutableList<Sample> light = ImmutableList.copyOf(getContiguousLightSensorData(t0, 8 * hourInMillis));
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, light).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsDurationFail, emptyEvents, light).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, light).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light).equals(TimelineError.NO_ERROR));
 
 
     }
@@ -103,7 +108,7 @@ public class InstrumentedTimelineSafeguardTest {
         goodExtraEvents.add(getEvent(Event.Type.IN_BED, t0 + (long) (5.5 * hourInMillis)));
         goodExtraEvents.add(getEvent(Event.Type.SLEEP, t0 + (long) (6.5 * hourInMillis)));
 
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
 
     }
 
@@ -154,12 +159,12 @@ public class InstrumentedTimelineSafeguardTest {
         extraEventsThatShortenTheDuration.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (3.5 * hourInMillis)));
         extraEventsThatShortenTheDuration.add(getEvent(Event.Type.SLEEP, t0 + (long) (4.5 * hourInMillis)));
 
-        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents1)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents2)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents3)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents4)));
-        TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents5)));
+        TestCase.assertTrue(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents1)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents2)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents3)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents4)));
+        TestCase.assertFalse(safeguards.checkEventOrdering(accountId, algType, mainEventsSucceed, ImmutableList.copyOf(badExtraEvents5)));
 
 
         final int duration1 = safeguards.getTotalSleepDurationInMinutes(mainEventsSucceed.fallAsleep.get(), mainEventsSucceed.wakeUp.get(), ImmutableList.copyOf(extraEventsThatShortenTheDuration));
@@ -194,8 +199,8 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(res1, 30);
         TestCase.assertEquals(res2, 120);
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
 
     }
 
@@ -205,9 +210,11 @@ public class InstrumentedTimelineSafeguardTest {
 
         final List<TrackerMotion> originalMotionData = Lists.newArrayList();
         final List<TrackerMotion> filteredMotionData = Lists.newArrayList();
+        final List<TrackerMotion> originalPartnerMotionData = Lists.newArrayList();
+        final List<TrackerMotion> originalMotionDataLowerThreshold = Lists.newArrayList();
 
 
-        TestCase.assertTrue(InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData) == TimelineError.NO_DATA);
+        TestCase.assertTrue(InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData, originalPartnerMotionData, false) == TimelineError.NO_DATA);
         /*@JsonProperty("id") final long id,
                          @JsonProperty("account_id") final long accountId,
                          @JsonProperty("tracker_id") final Long trackerId,
@@ -226,36 +233,51 @@ public class InstrumentedTimelineSafeguardTest {
         for (int i = 0; i < InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT - 1; i++) {
             originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * i,lowval,0,0L,0L,0L));
         }
+        for (int i = 0; i < InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD - 1; i++) {
+            originalMotionDataLowerThreshold.add(new TrackerMotion(0L,0L,0L,t1 + 5400000L * i,highval,0,0L,0L,0L));
+        }
 
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
 
         originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.LOW_AMP_DATA, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+        TestCase.assertEquals(TimelineError.LOW_AMP_DATA, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
 
         originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * (InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT + 1),highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.TIMESPAN_TOO_SHORT, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+        TestCase.assertEquals(TimelineError.TIMESPAN_TOO_SHORT, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
 
         originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
 
         for (int i = 0; i < InstrumentedTimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT - 1; i++) {
             filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * i,lowval,0,0L,0L,0L));
         }
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
 
         filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
 
         filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
+
+        originalMotionDataLowerThreshold.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
+
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
+
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalMotionDataLowerThreshold, true));
+
+
 
     }
 
@@ -329,5 +351,34 @@ public class InstrumentedTimelineSafeguardTest {
 
 
 
+    }
+
+    @Test
+    public void testTimezoneOffsetMapping() {
+        final List<Sample> samples = Lists.newArrayList();
+        final long startUTC = 1478408400000L;//1478394000000L; //2016-11-05 18:00:00 local
+        final long endUTC = 1478433600000L; //2016-11-06 16:00:00 local
+        final String timeZoneID = "America/Los_Angeles";
+        final TimeZoneHistory timeZoneHistory1 = new TimeZoneHistory(1468408400000L, -25200000, timeZoneID);
+        final TimeZoneHistory timeZoneHistory2 = new TimeZoneHistory(1428408400000L, 3600000, "Europe/Berlin");
+        final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
+        timeZoneHistoryList.add(timeZoneHistory1); timeZoneHistoryList.add(timeZoneHistory2);
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryList);
+        int offsetA = -25200000;
+        int offsetB = -28800000;
+        long tf = 0;
+        long tOfChange = 1478422740000L;
+
+        final int offsetFirst = timeZoneOffsetMap.getOffsetWithDefaultAsZero(startUTC);
+        final int offsetBefore = timeZoneOffsetMap.getOffsetWithDefaultAsZero(startUTC - 60000L);
+        final int offsetAt = timeZoneOffsetMap.getOffsetWithDefaultAsZero(tOfChange);
+        final int offsetAfter = timeZoneOffsetMap.getOffsetWithDefaultAsZero(tOfChange + 60001L);
+        final int offsetLast = timeZoneOffsetMap.getOffsetWithDefaultAsZero(endUTC + 5*60000L);
+
+        TestCase.assertEquals(offsetA,offsetFirst);
+        TestCase.assertEquals(offsetA,offsetBefore);
+        TestCase.assertEquals(offsetA,offsetAt);
+        TestCase.assertEquals(offsetB,offsetAfter);
+        TestCase.assertEquals(offsetB,offsetLast);
     }
 }

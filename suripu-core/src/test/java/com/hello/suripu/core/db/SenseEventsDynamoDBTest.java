@@ -19,7 +19,7 @@ import java.util.Set;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class SenseEventsDAOTest {
+public class SenseEventsDynamoDBTest {
 
 
     @Test public void testSplitKey() {
@@ -31,7 +31,7 @@ public class SenseEventsDAOTest {
 
     @Test public void testTransformEmptyList() {
         final List<DeviceEvents> deviceEventsList = Lists.newArrayList();
-        final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
+        final Multimap<String, String> groupedEvents = SenseEventsDynamoDB.transform(deviceEventsList);
         assertThat(groupedEvents.isEmpty(), is(true));
     }
 
@@ -48,9 +48,9 @@ public class SenseEventsDAOTest {
         deviceEventsList.add(deviceEvents2);
 
 
-        final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
+        final Multimap<String, String> groupedEvents = SenseEventsDynamoDB.transform(deviceEventsList);
         assertThat(groupedEvents.asMap().size(), is(1));
-        final String key = "ABC|" + SenseEventsDAO.dateTimeToString(now);
+        final String key = "ABC|" + SenseEventsDynamoDB.dateTimeToString(now);
         final Collection<String> res = groupedEvents.get(key);
         assertThat(res == null, is(false));
         assertThat(res.size(), is(2));
@@ -68,9 +68,9 @@ public class SenseEventsDAOTest {
         deviceEventsList.add(deviceEvents2);
 
 
-        final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
+        final Multimap<String, String> groupedEvents = SenseEventsDynamoDB.transform(deviceEventsList);
         assertThat(groupedEvents.size(), is(2));
-        final String key = "ABC|" + SenseEventsDAO.dateTimeToString(now);
+        final String key = "ABC|" + SenseEventsDynamoDB.dateTimeToString(now);
         final Collection<String> res = groupedEvents.get(key);
         assertThat(res == null, is(false));
         assertThat(res.size(), is(1));
@@ -80,40 +80,40 @@ public class SenseEventsDAOTest {
     @Test public void fromDynamoDBItemFailureCases() {
         // Empty map
         final Map<String, AttributeValue> emptyMap = Maps.newHashMap();
-        Optional<DeviceEvents> deviceEventsOptional = SenseEventsDAO.fromDynamoDBItem(emptyMap);
+        Optional<DeviceEvents> deviceEventsOptional = SenseEventsDynamoDB.fromDynamoDBItem(emptyMap);
         assertThat(deviceEventsOptional.isPresent(), is(false));
 
 
         // Null map
         final Map<String, AttributeValue> nullMap = null;
-        deviceEventsOptional = SenseEventsDAO.fromDynamoDBItem(nullMap);
+        deviceEventsOptional = SenseEventsDynamoDB.fromDynamoDBItem(nullMap);
         assertThat(deviceEventsOptional.isPresent(), is(false));
 
 
         // Missing attributes
         final Map<String, AttributeValue> incompleteMap = Maps.newHashMap();
-        incompleteMap.put(SenseEventsDAO.DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS("test"));
-        incompleteMap.put(SenseEventsDAO.CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(SenseEventsDAO.dateTimeToString(DateTime.now(DateTimeZone.UTC))));
+        incompleteMap.put(SenseEventsDynamoDB.DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS("test"));
+        incompleteMap.put(SenseEventsDynamoDB.CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(SenseEventsDynamoDB.dateTimeToString(DateTime.now(DateTimeZone.UTC))));
         // omitting events attribute
-        deviceEventsOptional = SenseEventsDAO.fromDynamoDBItem(incompleteMap);
+        deviceEventsOptional = SenseEventsDynamoDB.fromDynamoDBItem(incompleteMap);
         assertThat(deviceEventsOptional.isPresent(), is(false));
     }
 
     @Test public void parseDateTimeStringWithoutTimezone() {
         final String testDateTimeSting = "2015-04-16 15:00:52";
-        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        final DateTime adjustedCreatedTs = SenseEventsDynamoDB.stringToDateTime(testDateTimeSting);
         assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
     }
 
     @Test public void parseDateTimeStringWithTimezoneContainingPlus() {
         final String testDateTimeSting = "2015-04-16 15:00:52+0000";
-        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        final DateTime adjustedCreatedTs = SenseEventsDynamoDB.stringToDateTime(testDateTimeSting);
         assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
     }
 
     @Test public void parseDateTimeStringWithTimezoneEndsWithZ() {
         final String testDateTimeSting = "2015-04-16 15:00:52Z";
-        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        final DateTime adjustedCreatedTs = SenseEventsDynamoDB.stringToDateTime(testDateTimeSting);
         assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
     }
 }

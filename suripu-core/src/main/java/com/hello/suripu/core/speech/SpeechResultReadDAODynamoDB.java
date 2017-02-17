@@ -144,6 +144,10 @@ public class SpeechResultReadDAODynamoDB implements SpeechResultReadDAO {
             builder.withCommand(item.getString(SpeechToTextAttribute.COMMAND.shortName()));
         }
 
+        if (item.hasAttribute(SpeechToTextAttribute.FIRMWARE_VERSION.shortName())) {
+            builder.withFirmwareVersion(item.getInt(SpeechToTextAttribute.FIRMWARE_VERSION.shortName()));
+        }
+
         return builder.build();
     }
 }

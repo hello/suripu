@@ -1,8 +1,12 @@
 package com.hello.suripu.algorithm.event;
 
+import com.hello.suripu.algorithm.core.AmplitudeData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -29,4 +33,36 @@ public class SleepCycleAlgorithmTest {
         assertThat(fakeSmartAlarmTime.isAfter(alarmSetTime), is(false));
 
     }
+
+    @Test
+    public void testIsUserAwakeInGivenDataSpan() {
+        List<AmplitudeData> amplitudeDatasAwakeOD = new ArrayList<>();
+        List<AmplitudeData> amplitudeDatasAwakeKickOffs = new ArrayList<>();
+        List<AmplitudeData> amplitudeDatasAwakeMotion = new ArrayList<>();
+        List<AmplitudeData> amplitudeDatasSleeping = new ArrayList<>();
+
+        for (int i = 0; i<7; i+=1){
+            final AmplitudeData amplitudeDataOD = new AmplitudeData(0L, SleepCycleAlgorithm.AWAKE_ON_DURATION_THRESHOLD +1, 0);
+            final AmplitudeData amplitudeDataKickoff = new AmplitudeData(0L, SleepCycleAlgorithm.AWAKE_KICKOFF_THRESHOLD +1, 0);
+            final AmplitudeData amplitudeDataMotion = new AmplitudeData(0L, SleepCycleAlgorithm.AWAKE_AMPLITUDE_THRESHOLD_MILLIG -4 + i, 0);
+            final AmplitudeData amplitudeDataSleeping = new AmplitudeData(0L, 0.0, 0);
+
+            amplitudeDatasAwakeOD.add(amplitudeDataOD);
+            amplitudeDatasAwakeKickOffs.add(amplitudeDataKickoff);
+            amplitudeDatasAwakeMotion.add(amplitudeDataMotion);
+            amplitudeDatasSleeping.add(amplitudeDataSleeping);
+        }
+
+        boolean isAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeDatasSleeping,amplitudeDatasSleeping,amplitudeDatasSleeping,true);
+        assertThat(isAwake, is(false));
+        isAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeDatasAwakeMotion,amplitudeDatasSleeping,amplitudeDatasSleeping,true);
+        assertThat(isAwake, is(true));
+        isAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeDatasSleeping,amplitudeDatasAwakeKickOffs,amplitudeDatasSleeping,true);
+        assertThat(isAwake, is(true));
+        isAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeDatasSleeping,amplitudeDatasSleeping,amplitudeDatasAwakeOD,true);
+        assertThat(isAwake, is(true));
+        isAwake = SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeDatasSleeping,amplitudeDatasSleeping,amplitudeDatasAwakeOD,false);
+        assertThat(isAwake, is(false));
+    }
+
 }

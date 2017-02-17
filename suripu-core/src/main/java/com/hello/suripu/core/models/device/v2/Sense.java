@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.core.sense.metadata.HumanReadableHardwareVersion;
+import com.hello.suripu.core.sense.metadata.SenseMetadata;
 import org.joda.time.DateTime;
 
 import java.util.HashMap;
@@ -42,6 +43,8 @@ public class Sense {
         UNKNOWN
     }
 
+    private static final String DEFAULT_FW_VERSION = "--";
+
     @JsonIgnore
     public final Long internalId;
 
@@ -49,7 +52,7 @@ public class Sense {
     public final String externalId;
 
     @JsonProperty("firmware_version")
-    public final Optional<String> firmwareVersionOptional;
+    public final String firmwareVersionOptional;
 
     @JsonProperty("state")
     public final State state;
@@ -65,9 +68,16 @@ public class Sense {
 
     private final HardwareVersion hardwareVersion;
 
-    private Sense(final Long internalId, final String externalId, final Optional<String> firmwareVersionOptional, final State state, final Optional<DateTime> lastUpdatedOptional, final Color color, final Optional<WifiInfo> wifiInfoOptional, final HardwareVersion hardwareVersion) {
-        this.internalId = internalId;
-        this.externalId = externalId;
+    @JsonProperty("hw_version")
+    public HumanReadableHardwareVersion hardwareVersion() {
+        return readableHwVersion.getOrDefault(hardwareVersion, HumanReadableHardwareVersion.UNKNOWN);
+    }
+
+
+
+    private Sense(final DeviceAccountPair pair, final String firmwareVersionOptional, final State state, final Optional<DateTime> lastUpdatedOptional, final Color color, final Optional<WifiInfo> wifiInfoOptional, final HardwareVersion hardwareVersion) {
+        this.internalId = pair.internalDeviceId;
+        this.externalId = pair.externalDeviceId;
         this.firmwareVersionOptional = firmwareVersionOptional;
         this.state = state;
         this.lastUpdatedOptional = lastUpdatedOptional;
@@ -78,17 +88,17 @@ public class Sense {
 
     public static Sense create(final DeviceAccountPair senseAccountPair, final Optional<DeviceStatus> senseStatusOptional, Color color, final Optional<WifiInfo> wifiInfoOptional, final HardwareVersion hardwareVersion) {
         if (!senseStatusOptional.isPresent()) {
-            return new Sense(senseAccountPair.internalDeviceId, senseAccountPair.externalDeviceId, Optional.<String>absent(), State.UNKNOWN, Optional.<DateTime>absent(), color, wifiInfoOptional, hardwareVersion);
+            return new Sense(senseAccountPair, DEFAULT_FW_VERSION, State.UNKNOWN, Optional.<DateTime>absent(), color, wifiInfoOptional, hardwareVersion);
         }
         final DeviceStatus senseStatus = senseStatusOptional.get();
-        return new Sense(senseAccountPair.internalDeviceId, senseAccountPair.externalDeviceId, Optional.of(senseStatus.firmwareVersion), State.NORMAL, Optional.of(senseStatus.lastSeen), color, wifiInfoOptional, hardwareVersion);
+        return new Sense(senseAccountPair, senseStatus.firmwareVersion, State.NORMAL, Optional.of(senseStatus.lastSeen), color, wifiInfoOptional, hardwareVersion);
     }
 
-    @JsonProperty("hw_version")
-    public HumanReadableHardwareVersion hardwareVersion() {
-        if(readableHwVersion.containsKey(hardwareVersion)) {
-            return readableHwVersion.get(hardwareVersion);
+    public static Sense create(final DeviceAccountPair senseAccountPair, final Optional<DeviceStatus> senseStatusOptional, final Optional<WifiInfo> wifiInfoOptional, final SenseMetadata metadata) {
+        if (!senseStatusOptional.isPresent()) {
+            return new Sense(senseAccountPair, DEFAULT_FW_VERSION, State.UNKNOWN, Optional.<DateTime>absent(), metadata.color(), wifiInfoOptional, metadata.hardwareVersion());
         }
-        return HumanReadableHardwareVersion.UNKNOWN;
+        final DeviceStatus senseStatus = senseStatusOptional.get();
+        return new Sense(senseAccountPair, senseStatus.firmwareVersion, State.NORMAL, Optional.of(senseStatus.lastSeen), metadata.color(), wifiInfoOptional, metadata.hardwareVersion());
     }
 }

@@ -22,13 +22,6 @@ public class AmazonDynamoDBClientFactory {
 
     private final static ClientConfiguration DEFAULT_CLIENT_CONFIGURATION = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
 
-    @Deprecated
-    public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider) {
-
-        final NewDynamoDBConfiguration dynamoDBConfiguration = new NewDynamoDBConfiguration();
-        return new AmazonDynamoDBClientFactory(awsCredentialsProvider, DEFAULT_CLIENT_CONFIGURATION, dynamoDBConfiguration);
-    }
-
     public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider, final ClientConfiguration clientConfiguration, final NewDynamoDBConfiguration dynamoDBConfiguration) {
         return new AmazonDynamoDBClientFactory(awsCredentialsProvider, clientConfiguration, dynamoDBConfiguration);
     }
@@ -58,7 +51,7 @@ public class AmazonDynamoDBClientFactory {
 
 
     public synchronized AmazonDynamoDB getForTable(final DynamoDBTableName tableName) {
-        if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
+        if(!dynamoDBConfiguration.tables().containsKey(tableName) || dynamoDBConfiguration.defaultEndpoint().isEmpty()) {
             throw new IllegalArgumentException("Check configuration. Invalid table name or endpoint name for: " + tableName.toString());
         }
 
@@ -67,11 +60,12 @@ public class AmazonDynamoDBClientFactory {
         // Important: it isn't cached, so any call to this method will return a new client
         if(DynamoDBTableName.FEATURES.equals(tableName)) {
             final AmazonDynamoDB client = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
-            client.setEndpoint(dynamoDBConfiguration.endpoints().get(DynamoDBTableName.FEATURES));
+            client.setEndpoint(dynamoDBConfiguration.endpoints().getOrDefault(DynamoDBTableName.FEATURES, dynamoDBConfiguration.defaultEndpoint()));
             return client;
         }
 
-        final String endpoint = dynamoDBConfiguration.endpoints().get(tableName);
+        final String endpoint = dynamoDBConfiguration.endpoints().getOrDefault(tableName, dynamoDBConfiguration.defaultEndpoint());
+
         if(clients.containsKey(endpoint)) {
             return clients.get(endpoint);
         }
@@ -84,11 +78,11 @@ public class AmazonDynamoDBClientFactory {
 
 
     public synchronized AmazonDynamoDB getInstrumented(final DynamoDBTableName tableName, final Class<?> klass) {
-        if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
+        if(!dynamoDBConfiguration.tables().containsKey(tableName) || dynamoDBConfiguration.defaultEndpoint().isEmpty()) {
             throw new IllegalArgumentException("Check configuration. Invalid tableName: " + tableName.toString());
         }
 
-        final String endpoint = dynamoDBConfiguration.endpoints().get(tableName);
+        final String endpoint = dynamoDBConfiguration.endpoints().getOrDefault(tableName, dynamoDBConfiguration.defaultEndpoint());
         if(instrumentedClients.containsKey(klass.getName())) {
             return instrumentedClients.get(klass.getName());
         }

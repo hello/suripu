@@ -35,6 +35,7 @@ public class SleepScoreParametersDynamoDBIT extends DynamoDBIT<SleepScoreParamet
 
         SleepScoreParameters retrievedParameter = dao.getSleepScoreParametersByDate(accoundId, dateTime);
         assertThat(retrievedParameter.durationThreshold, is(100));
+        assertThat(retrievedParameter.motionFrequencyThreshold, is((float) SleepScoreParameters.MISSING_THRESHOLD));
         assertThat(retrievedParameter.accountId, is(accoundId));
 
         insertResult = dao.upsertSleepScoreParameters(accoundId, new SleepScoreParameters(accoundId, dateTime, 200));
@@ -42,6 +43,7 @@ public class SleepScoreParametersDynamoDBIT extends DynamoDBIT<SleepScoreParamet
 
         retrievedParameter = dao.getSleepScoreParametersByDate(accoundId, dateTime);
         assertThat(retrievedParameter.durationThreshold, is(200));
+        assertThat(retrievedParameter.motionFrequencyThreshold, is((float) SleepScoreParameters.MISSING_THRESHOLD));
     }
 
     @Test
@@ -50,25 +52,29 @@ public class SleepScoreParametersDynamoDBIT extends DynamoDBIT<SleepScoreParamet
         final DateTime dateTime = DateTime.now(DateTimeZone.UTC);
 
         Boolean insertResult;
-        insertResult = dao.upsertSleepScoreParameters(accoundId, new SleepScoreParameters(accoundId, dateTime.minusDays(2), 500));
+        insertResult = dao.upsertSleepScoreParameters(accoundId, new SleepScoreParameters(accoundId, dateTime.minusDays(2), 500, .06f));
         assertThat(insertResult, is(true));
 
-        insertResult = dao.upsertSleepScoreParameters(accoundId, new SleepScoreParameters(accoundId, dateTime.minusDays(10), 1000));
+        insertResult = dao.upsertSleepScoreParameters(accoundId, new SleepScoreParameters(accoundId, dateTime.minusDays(10), 1000, 0.23f));
         assertThat(insertResult, is(true));
 
         // this should get the 1000 threshold
         SleepScoreParameters retrievedParameter = dao.getSleepScoreParametersByDate(accoundId, dateTime.minusDays(5));
         assertThat(retrievedParameter.durationThreshold, is(1000));
+        assertThat(retrievedParameter.motionFrequencyThreshold, is(0.23f));
         assertThat(retrievedParameter.accountId, is(accoundId));
 
         // get 500 threshold
         retrievedParameter = dao.getSleepScoreParametersByDate(accoundId, dateTime.minusDays(1));
         assertThat(retrievedParameter.durationThreshold, is(500));
+        assertThat(retrievedParameter.motionFrequencyThreshold, is(0.06f));
         assertThat(retrievedParameter.accountId, is(accoundId));
 
         // no data for this date, should get default
         retrievedParameter = dao.getSleepScoreParametersByDate(accoundId, dateTime.minusDays(20));
-        assertThat(retrievedParameter.durationThreshold, is(SleepScoreParameters.MISSING_DURATION_THRESHOLD));
+        assertThat(retrievedParameter.durationThreshold, is(SleepScoreParameters.MISSING_THRESHOLD));
+        assertThat(retrievedParameter.motionFrequencyThreshold, is((float) SleepScoreParameters.MISSING_THRESHOLD));
+
 
     }
 }

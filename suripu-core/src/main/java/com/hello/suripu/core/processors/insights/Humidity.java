@@ -7,6 +7,10 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
+import com.hello.suripu.core.firmware.HardwareVersion;
+import com.hello.suripu.core.models.CalibratedDeviceData;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -41,6 +45,8 @@ public class Humidity {
 
     public static Optional<InsightCard> getInsights(final Long accountId,
                                                     final DeviceAccountPair deviceAccountPair,
+                                                    final Optional<Device.Color> colorOptional,
+                                                    final Optional<Calibration> calibrationOptional,
                                                     final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
@@ -58,7 +64,7 @@ public class Humidity {
             return Optional.absent();
         }
 
-        final Integer humMedian = getMedianHumidity(deviceDatas);
+        final Integer humMedian = getMedianHumidity(deviceDatas, colorOptional, calibrationOptional);
 
         final Optional<InsightCard> card = processData(accountId, humMedian);
         return card;
@@ -84,11 +90,16 @@ public class Humidity {
     }
 
     @VisibleForTesting
-    public static Integer getMedianHumidity(final List<DeviceData> data) {
+    public static Integer getMedianHumidity(final List<DeviceData> data,
+                                            final Optional<Device.Color> colorOptional,
+                                            final Optional<Calibration> calibrationOptional ) {
+
+        final Device.Color color = colorOptional.or(Device.DEFAULT_COLOR);
 
         final DescriptiveStatistics humStats = new DescriptiveStatistics();
         for (final DeviceData deviceData : data) {
-            humStats.addValue(DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity));
+            final CalibratedDeviceData calibratedDeviceData = new CalibratedDeviceData(deviceData, color, calibrationOptional);
+            humStats.addValue(calibratedDeviceData.humidity());
         }
 
         final Integer medianHumidity = (int) humStats.getPercentile(50);

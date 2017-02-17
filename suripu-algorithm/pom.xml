@@ -9,7 +9,7 @@
 
     <artifactId>suripu-algorithm</artifactId>
     <properties>
-        <google.guava.version>18.0</google.guava.version>
+        <google.guava.version>19.0</google.guava.version>
     </properties>
     <dependencies>
         <dependency>

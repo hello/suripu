@@ -23,12 +23,6 @@ public class FeatureFlippedProcessor {
         return (active) ? -1 : 0;
     }
 
-    protected Boolean hasAlarmInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.ALARM_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
-    }
-    protected Boolean hasSoundInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
-    }
     protected Boolean hasEnvironmentInTimelineScore(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, Collections.EMPTY_LIST);
     }
@@ -58,6 +52,10 @@ public class FeatureFlippedProcessor {
         return  featureFlipper.userFeatureActive(FeatureFlipper.NEURAL_NET_ALGORITHM,accountId,Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasNeuralNetFourEventsAlgorithmEnabled(final Long accountId) {
+        return  featureFlipper.userFeatureActive(FeatureFlipper.NEURAL_NET_FOUR_EVENTS_ALGORITHM,accountId,Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasOnlineHmmLearningEnabled(final Long accountId) {
         return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_LEARNING,accountId,Collections.EMPTY_LIST);
     }
@@ -74,24 +72,12 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.ALL_SENSOR_QUERY_USE_UTC_TS, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasRemoveMotionEventsOutsideSleep(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
-    }
-
     protected Boolean hasSleepScoreDurationWeighting(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_WEIGHTING, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasCalibrationEnabled(final String senseId) {
         return featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasTimelineOrderEnforcement(final long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasInvalidSleepScoreFromFeedbackChecking(final long accountId) {
@@ -188,5 +174,21 @@ public class FeatureFlippedProcessor {
 
     protected Boolean useQuestionAskTime(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ASK_TIME_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean useNoMotionEnforcement(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_NO_MOTION_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean useSleepScoreV5(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_V5, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean useUninterruptedDuration(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_STATS_UNINTERRUPTED_SLEEP, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean useSmartAlarmRefactored(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, accountId, Collections.EMPTY_LIST);
     }
 }

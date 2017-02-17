@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors.insights;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.util.AccountUtils;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.Account;
@@ -42,7 +43,12 @@ public class SleepDeprivation {
         final DateTime currentTimeLocal = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset);
         final DateTime queryEndDate = currentTimeLocal.minusDays(1);//query end date is last night
 
-        final int userAge = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
+        if (!optionalAccount.isPresent()) {
+            LOGGER.error("error=account-absent insight=sleep-deprivation account_id={}", accountId);
+            return Optional.absent();
+        }
+
+        final int userAge = AccountUtils.getUserAgeYears(optionalAccount.get());
 
         if (userAge < MIN_AGE || userAge > MAX_AGE){
             return Optional.absent();

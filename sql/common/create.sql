@@ -429,3 +429,170 @@ CREATE TABLE sense_metadata (
 );
 
 CREATE INDEX sense_id_idx on sense_metadata(sense_id);
+
+-- Added September 20th 2016
+CREATE TABLE external_oauth_states(
+    id BIGSERIAL PRIMARY KEY,
+    auth_state VARCHAR(100),
+    created_at TIMESTAMP default current_timestamp,
+    app_id INTEGER,
+    device_id VARCHAR(255) NOT NULL
+);
+
+CREATE UNIQUE INDEX uniq_auth_state on external_oauth_states(auth_state);
+
+GRANT ALL PRIVILEGES ON external_oauth_states TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE external_oauth_states_id_seq TO ingress_user;
+
+
+CREATE TABLE external_oauth_tokens(
+    id BIGSERIAL PRIMARY KEY,
+    access_token VARCHAR(511),
+    refresh_token VARCHAR(511),
+    access_expires_in INTEGER,
+    refresh_expires_in INTEGER,
+    created_at TIMESTAMP default current_timestamp,
+    app_id INTEGER,
+    device_id VARCHAR(255) NOT NULL
+);
+
+CREATE UNIQUE INDEX uniq_ext_access_token on external_oauth_tokens(access_token);
+CREATE UNIQUE INDEX uniq_ext_refresh_token on external_oauth_tokens(refresh_token);
+
+GRANT ALL PRIVILEGES ON external_oauth_tokens TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE external_oauth_tokens_id_seq TO ingress_user;
+
+-- Added Sept 29th 2016
+-- Expansions replacing 'external applications'
+CREATE TABLE expansions (
+    id SERIAL PRIMARY KEY,
+    service_name VARCHAR (100),
+    device_name VARCHAR (100),
+    description VARCHAR (255),
+    icon text,
+    client_id VARCHAR (100),
+    client_secret VARCHAR (100),
+    api_uri VARCHAR (255),
+    auth_uri VARCHAR (255),
+    token_uri VARCHAR (255),
+    refresh_uri VARCHAR (255),
+    category VARCHAR(50),
+    created TIMESTAMP default current_timestamp,
+    grant_type INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_exp_client_id on expansions(client_id);
+
+GRANT ALL PRIVILEGES ON expansions TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE expansions_id_seq TO ingress_user;
+
+INSERT INTO expansions (service_name, device_name, client_id, client_secret, api_uri, auth_uri, token_uri, refresh_uri, description, grant_type, category) VALUES('Nest', 'Nest Thermostat', 'f2961543-c903-4ad5-bf0f-e502eea8a476', '3kCD53nn0BYcb6e3rl7qPpEG3', 'https://developer-api.nest.com/', 'https://home.nest.com/login/oauth2', 'https://api.home.nest.com/oauth2/access_token', '', 'Nest API Integration', 2, 'temperature');
+INSERT INTO expansions (service_name, device_name, client_id, client_secret, api_uri, auth_uri, token_uri, refresh_uri, description, grant_type, category) VALUES('Hue', 'Hue Light', '0diWnf29t9OkaOowxGYtVYXcn3MSRJni', 'YI0noOhH9AafLAGG', 'https://api.meethue.com/v2/', 'https://api.meethue.com/oauth2/auth?appid=sense-dev', 'https://api.meethue.com/oauth2/token', 'https://api.meethue.com/oauth2/refresh?grant_type=refresh_token', 'Hue API Integration', 2, 'light');
+
+UPDATE expansions SET description = 'Connecting to Sense allows your Nest Learning Thermostat to set a specific temperature ahead of your Sense alarm, letting you wake up to your ideal temperature every morning.' WHERE service_name='Nest';
+UPDATE expansions SET description = 'Connecting to Sense allows your Philips Hue system to activate a scene when Sense''s alarm sounds, letting you wake up to your ideal lighting every morning.' WHERE service_name='Hue';
+
+UPDATE expansions SET icon = '{"phone_1x":"https://hello-dev.s3.amazonaws.com/josef/expansions/icon-nest@1x.png","phone_2x":"https://hello-dev.s3.amazonaws.com/josef/expansions/icon-nest@2x.png","phone_3x":"https://hello-dev.s3.amazonaws.com/josef/expansions/icon-nest@3x.png"}' WHERE service_name='Nest';
+UPDATE expansions SET icon = '{"phone_1x":"https://hello-dev.s3.amazonaws.com/josef/expansions/icon-hue@1x.png","phone_2x":"https://hello-dev.s3.amazonaws.com/josef/expansions/icon-hue@2x.png","phone_3x":"https://hello-dev.s3.amazonaws.com/josef/expansions/icon-hue@3x.png"}' WHERE service_name='Hue';
+
+CREATE TABLE expansion_data (
+	id SERIAL PRIMARY KEY,
+	app_id INTEGER,
+	device_id VARCHAR(255) NOT NULL,
+	created_at TIMESTAMP default current_timestamp,
+	updated_at TIMESTAMP default current_timestamp,
+	data text,
+	enabled boolean
+);
+
+CREATE UNIQUE INDEX uniq_exp_app_device_id on expansion_data(app_id, device_id);
+
+GRANT ALL PRIVILEGES ON expansion_data TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE expansion_data_id_seq TO ingress_user;
+
+
+-- Added Oct 27th 2016
+ALTER TABLE expansions ADD COLUMN company_name VARCHAR (100);
+UPDATE expansions SET company_name='Phillips' WHERE service_name='HUE';
+UPDATE expansions SET company_name='Nest' WHERE service_name='NEST';
+
+ALTER TABLE expansion_data ADD COLUMN account_id bigint default null;
+
+CREATE TABLE alerts (
+    id SERIAL,
+    account_id bigint,
+    title text,
+    body text,
+    created_at timestamp without time zone DEFAULT timezone('utc'::text, now()),
+    seen boolean DEFAULT false
+);
+
+GRANT ALL PRIVILEGES ON alerts TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE alerts_id_seq TO ingress_user;
+
+
+-- Added Feb 3rd, 2017
+CREATE TABLE voice_command_topics (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    icon VARCHAR(255) NOT NULL
+);
+
+GRANT ALL PRIVILEGES ON voice_command_topics TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE voice_command_topics_id_seq TO ingress_user;
+
+CREATE TABLE voice_command_subtopics (
+    id SERIAL PRIMARY KEY,
+    command_title VARCHAR(255) NOT NULL,
+    voice_command_topic_id INTEGER references voice_command_topics(id) NOT NULL
+);
+
+GRANT ALL PRIVILEGES ON voice_command_subtopics TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE voice_command_subtopics_id_seq TO ingress_user;
+
+CREATE TABLE voice_commands(
+    id SERIAL PRIMARY KEY,
+    command VARCHAR(255) NOT NULL,
+    voice_command_subtopic_id INTEGER references voice_command_subtopics(id) NOT NULL
+);
+
+GRANT ALL PRIVILEGES ON voice_commands TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE voice_commands_id_seq TO ingress_user;
+
+
+
+INSERT INTO voice_command_topics (title, description, icon) VALUES
+    ('Alarm and Sleep Sounds', 'Before each command, say "Okay Sense" to set an alarm or begin playing Sleep Sounds.', 'icon_alarms'),
+    ('Sleep', 'Before each command, say "Okay Sense" to ask about your Sleep Score, Sleep Timeline, and Sleep Trends.', 'icon_sleep'),
+    ('Room Conditions', 'Before each command, say "Okay Sense" to ask about your temperature, humidity, air quality, and more.', 'icon_rc'),
+    ('Expansions', 'Before each command, say "Okay Sense" to control your lights or thermostat.', 'icon_expansions');
+
+INSERT INTO voice_command_subtopics(command_title, voice_command_topic_id) VALUES
+    ('Alarms', (SELECT id FROM voice_command_topics where title = 'Alarm and Sleep Sounds')),
+    ('Sleep Sounds', (SELECT id FROM voice_command_topics where title = 'Alarm and Sleep Sounds')),
+    ('Sleep Timeline', (SELECT id FROM voice_command_topics where title = 'Sleep')),
+    ('Temperature', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Humidity', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Noise Level', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Air Quality', (SELECT id FROM voice_command_topics where title = 'Room Conditions')),
+    ('Lights', (SELECT id FROM voice_command_topics where title = 'Expansions')),
+    ('Thermostat', (SELECT id FROM voice_command_topics where title = 'Expansions'));
+
+INSERT INTO voice_commands(command, voice_command_subtopic_id) VALUES
+    ('Wake me up at 10 AM.', (SELECT id FROM voice_command_subtopics where command_title = 'Alarms')),
+    ('Set alarm for tomorrow morning at 8.', (SELECT id FROM voice_command_subtopics where command_title = 'Alarms')),
+    ('Play a Sleep Sound.',  (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Sounds')),
+    ('Play White Noise.',  (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Sounds')),
+    ('How was my sleep last night?', (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Timeline')),
+    ('What was my Sleep Score?', (SELECT id FROM voice_command_subtopics where command_title = 'Sleep Timeline')),
+    ('What is the temperature?', (SELECT id FROM voice_command_subtopics where command_title = 'Temperature')),
+    ('What is the humidity?', (SELECT id FROM voice_command_subtopics where command_title = 'Humidity')),
+    ('How noisy is it?', (SELECT id FROM voice_command_subtopics where command_title = 'Noise Level')),
+    ('What is the noise level?', (SELECT id FROM voice_command_subtopics where command_title = 'Noise Level')),
+    ('How is the air quality?', (SELECT id FROM voice_command_subtopics where command_title = 'Air Quality')),
+    ('Turn the lights on.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Turn the lights off.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Brighten the lights.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Dim the lights.',  (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
+    ('Set the thermostat to 70°.',  (SELECT id FROM voice_command_subtopics where command_title = 'Thermostat'));

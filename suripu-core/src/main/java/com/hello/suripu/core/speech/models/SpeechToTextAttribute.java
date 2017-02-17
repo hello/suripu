@@ -18,7 +18,8 @@ public enum SpeechToTextAttribute  implements Attribute {
     WAKE_CONFIDENCE("wake_conf", "SS", ":wc"), // confidence of all wake-words
     RESULT("cmd_result", "S", ":res"),         // result of speech command (OK, REJECT, TRY_AGAIN, FAILURE)
     RESPONSE_TEXT("resp_text", "S", ":rt"),
-    UPDATED_UTC("updated", "S", ":up");
+    UPDATED_UTC("updated", "S", ":up"),
+    FIRMWARE_VERSION("fw", "N", ":fw");
 
     private final String name;
     private final String type;

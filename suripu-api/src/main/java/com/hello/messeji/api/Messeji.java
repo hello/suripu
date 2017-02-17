@@ -758,6 +758,32 @@ public final class Messeji {
      * <code>optional .StopAudio stop_audio = 6;</code>
      */
     com.hello.messeji.api.AudioCommands.StopAudioOrBuilder getStopAudioOrBuilder();
+
+    /**
+     * <code>optional .Volume volume = 7;</code>
+     */
+    boolean hasVolume();
+    /**
+     * <code>optional .Volume volume = 7;</code>
+     */
+    com.hello.messeji.api.AudioCommands.Volume getVolume();
+    /**
+     * <code>optional .Volume volume = 7;</code>
+     */
+    com.hello.messeji.api.AudioCommands.VolumeOrBuilder getVolumeOrBuilder();
+
+    /**
+     * <code>optional .VoiceControl voice_control = 8;</code>
+     */
+    boolean hasVoiceControl();
+    /**
+     * <code>optional .VoiceControl voice_control = 8;</code>
+     */
+    com.hello.messeji.api.AudioCommands.VoiceControl getVoiceControl();
+    /**
+     * <code>optional .VoiceControl voice_control = 8;</code>
+     */
+    com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder getVoiceControlOrBuilder();
   }
   /**
    * Protobuf type {@code Message}
@@ -864,6 +890,32 @@ public final class Messeji {
               bitField0_ |= 0x00000020;
               break;
             }
+            case 58: {
+              com.hello.messeji.api.AudioCommands.Volume.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                subBuilder = volume_.toBuilder();
+              }
+              volume_ = input.readMessage(com.hello.messeji.api.AudioCommands.Volume.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(volume_);
+                volume_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000040;
+              break;
+            }
+            case 66: {
+              com.hello.messeji.api.AudioCommands.VoiceControl.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000080) == 0x00000080)) {
+                subBuilder = voiceControl_.toBuilder();
+              }
+              voiceControl_ = input.readMessage(com.hello.messeji.api.AudioCommands.VoiceControl.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(voiceControl_);
+                voiceControl_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000080;
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -916,6 +968,14 @@ public final class Messeji {
        * <code>STOP_AUDIO = 1;</code>
        */
       STOP_AUDIO(1, 1),
+      /**
+       * <code>SET_VOLUME = 2;</code>
+       */
+      SET_VOLUME(2, 2),
+      /**
+       * <code>VOICE_CONTROL = 3;</code>
+       */
+      VOICE_CONTROL(3, 3),
       ;
 
       /**
@@ -926,6 +986,14 @@ public final class Messeji {
        * <code>STOP_AUDIO = 1;</code>
        */
       public static final int STOP_AUDIO_VALUE = 1;
+      /**
+       * <code>SET_VOLUME = 2;</code>
+       */
+      public static final int SET_VOLUME_VALUE = 2;
+      /**
+       * <code>VOICE_CONTROL = 3;</code>
+       */
+      public static final int VOICE_CONTROL_VALUE = 3;
 
 
       public final int getNumber() { return value; }
@@ -934,6 +1002,8 @@ public final class Messeji {
         switch (value) {
           case 0: return PLAY_AUDIO;
           case 1: return STOP_AUDIO;
+          case 2: return SET_VOLUME;
+          case 3: return VOICE_CONTROL;
           default: return null;
         }
       }
@@ -1156,6 +1226,48 @@ public final class Messeji {
       return stopAudio_;
     }
 
+    public static final int VOLUME_FIELD_NUMBER = 7;
+    private com.hello.messeji.api.AudioCommands.Volume volume_;
+    /**
+     * <code>optional .Volume volume = 7;</code>
+     */
+    public boolean hasVolume() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional .Volume volume = 7;</code>
+     */
+    public com.hello.messeji.api.AudioCommands.Volume getVolume() {
+      return volume_;
+    }
+    /**
+     * <code>optional .Volume volume = 7;</code>
+     */
+    public com.hello.messeji.api.AudioCommands.VolumeOrBuilder getVolumeOrBuilder() {
+      return volume_;
+    }
+
+    public static final int VOICE_CONTROL_FIELD_NUMBER = 8;
+    private com.hello.messeji.api.AudioCommands.VoiceControl voiceControl_;
+    /**
+     * <code>optional .VoiceControl voice_control = 8;</code>
+     */
+    public boolean hasVoiceControl() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional .VoiceControl voice_control = 8;</code>
+     */
+    public com.hello.messeji.api.AudioCommands.VoiceControl getVoiceControl() {
+      return voiceControl_;
+    }
+    /**
+     * <code>optional .VoiceControl voice_control = 8;</code>
+     */
+    public com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder getVoiceControlOrBuilder() {
+      return voiceControl_;
+    }
+
     private void initFields() {
       senderId_ = "";
       order_ = 0L;
@@ -1163,6 +1275,8 @@ public final class Messeji {
       type_ = com.hello.messeji.api.Messeji.Message.Type.PLAY_AUDIO;
       playAudio_ = com.hello.messeji.api.AudioCommands.PlayAudio.getDefaultInstance();
       stopAudio_ = com.hello.messeji.api.AudioCommands.StopAudio.getDefaultInstance();
+      volume_ = com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance();
+      voiceControl_ = com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1186,6 +1300,18 @@ public final class Messeji {
       }
       if (hasStopAudio()) {
         if (!getStopAudio().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasVolume()) {
+        if (!getVolume().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasVoiceControl()) {
+        if (!getVoiceControl().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -1214,6 +1340,12 @@ public final class Messeji {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeMessage(6, stopAudio_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeMessage(7, volume_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeMessage(8, voiceControl_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -1247,6 +1379,14 @@ public final class Messeji {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, stopAudio_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, volume_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(8, voiceControl_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1359,6 +1499,8 @@ public final class Messeji {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getPlayAudioFieldBuilder();
           getStopAudioFieldBuilder();
+          getVolumeFieldBuilder();
+          getVoiceControlFieldBuilder();
         }
       }
       private static Builder create() {
@@ -1387,6 +1529,18 @@ public final class Messeji {
           stopAudioBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000020);
+        if (volumeBuilder_ == null) {
+          volume_ = com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance();
+        } else {
+          volumeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        if (voiceControlBuilder_ == null) {
+          voiceControl_ = com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance();
+        } else {
+          voiceControlBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -1447,6 +1601,22 @@ public final class Messeji {
         } else {
           result.stopAudio_ = stopAudioBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        if (volumeBuilder_ == null) {
+          result.volume_ = volume_;
+        } else {
+          result.volume_ = volumeBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        if (voiceControlBuilder_ == null) {
+          result.voiceControl_ = voiceControl_;
+        } else {
+          result.voiceControl_ = voiceControlBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1483,6 +1653,12 @@ public final class Messeji {
         if (other.hasStopAudio()) {
           mergeStopAudio(other.getStopAudio());
         }
+        if (other.hasVolume()) {
+          mergeVolume(other.getVolume());
+        }
+        if (other.hasVoiceControl()) {
+          mergeVoiceControl(other.getVoiceControl());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -1504,6 +1680,18 @@ public final class Messeji {
         }
         if (hasStopAudio()) {
           if (!getStopAudio().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasVolume()) {
+          if (!getVolume().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasVoiceControl()) {
+          if (!getVoiceControl().isInitialized()) {
             
             return false;
           }
@@ -2017,6 +2205,238 @@ public final class Messeji {
           stopAudio_ = null;
         }
         return stopAudioBuilder_;
+      }
+
+      private com.hello.messeji.api.AudioCommands.Volume volume_ = com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.AudioCommands.Volume, com.hello.messeji.api.AudioCommands.Volume.Builder, com.hello.messeji.api.AudioCommands.VolumeOrBuilder> volumeBuilder_;
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public boolean hasVolume() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.Volume getVolume() {
+        if (volumeBuilder_ == null) {
+          return volume_;
+        } else {
+          return volumeBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public Builder setVolume(com.hello.messeji.api.AudioCommands.Volume value) {
+        if (volumeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          volume_ = value;
+          onChanged();
+        } else {
+          volumeBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public Builder setVolume(
+          com.hello.messeji.api.AudioCommands.Volume.Builder builderForValue) {
+        if (volumeBuilder_ == null) {
+          volume_ = builderForValue.build();
+          onChanged();
+        } else {
+          volumeBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public Builder mergeVolume(com.hello.messeji.api.AudioCommands.Volume value) {
+        if (volumeBuilder_ == null) {
+          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+              volume_ != com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance()) {
+            volume_ =
+              com.hello.messeji.api.AudioCommands.Volume.newBuilder(volume_).mergeFrom(value).buildPartial();
+          } else {
+            volume_ = value;
+          }
+          onChanged();
+        } else {
+          volumeBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public Builder clearVolume() {
+        if (volumeBuilder_ == null) {
+          volume_ = com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance();
+          onChanged();
+        } else {
+          volumeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        return this;
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.Volume.Builder getVolumeBuilder() {
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return getVolumeFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.VolumeOrBuilder getVolumeOrBuilder() {
+        if (volumeBuilder_ != null) {
+          return volumeBuilder_.getMessageOrBuilder();
+        } else {
+          return volume_;
+        }
+      }
+      /**
+       * <code>optional .Volume volume = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.AudioCommands.Volume, com.hello.messeji.api.AudioCommands.Volume.Builder, com.hello.messeji.api.AudioCommands.VolumeOrBuilder> 
+          getVolumeFieldBuilder() {
+        if (volumeBuilder_ == null) {
+          volumeBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.messeji.api.AudioCommands.Volume, com.hello.messeji.api.AudioCommands.Volume.Builder, com.hello.messeji.api.AudioCommands.VolumeOrBuilder>(
+                  getVolume(),
+                  getParentForChildren(),
+                  isClean());
+          volume_ = null;
+        }
+        return volumeBuilder_;
+      }
+
+      private com.hello.messeji.api.AudioCommands.VoiceControl voiceControl_ = com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.AudioCommands.VoiceControl, com.hello.messeji.api.AudioCommands.VoiceControl.Builder, com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder> voiceControlBuilder_;
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public boolean hasVoiceControl() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.VoiceControl getVoiceControl() {
+        if (voiceControlBuilder_ == null) {
+          return voiceControl_;
+        } else {
+          return voiceControlBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public Builder setVoiceControl(com.hello.messeji.api.AudioCommands.VoiceControl value) {
+        if (voiceControlBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          voiceControl_ = value;
+          onChanged();
+        } else {
+          voiceControlBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public Builder setVoiceControl(
+          com.hello.messeji.api.AudioCommands.VoiceControl.Builder builderForValue) {
+        if (voiceControlBuilder_ == null) {
+          voiceControl_ = builderForValue.build();
+          onChanged();
+        } else {
+          voiceControlBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public Builder mergeVoiceControl(com.hello.messeji.api.AudioCommands.VoiceControl value) {
+        if (voiceControlBuilder_ == null) {
+          if (((bitField0_ & 0x00000080) == 0x00000080) &&
+              voiceControl_ != com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance()) {
+            voiceControl_ =
+              com.hello.messeji.api.AudioCommands.VoiceControl.newBuilder(voiceControl_).mergeFrom(value).buildPartial();
+          } else {
+            voiceControl_ = value;
+          }
+          onChanged();
+        } else {
+          voiceControlBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public Builder clearVoiceControl() {
+        if (voiceControlBuilder_ == null) {
+          voiceControl_ = com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance();
+          onChanged();
+        } else {
+          voiceControlBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.VoiceControl.Builder getVoiceControlBuilder() {
+        bitField0_ |= 0x00000080;
+        onChanged();
+        return getVoiceControlFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder getVoiceControlOrBuilder() {
+        if (voiceControlBuilder_ != null) {
+          return voiceControlBuilder_.getMessageOrBuilder();
+        } else {
+          return voiceControl_;
+        }
+      }
+      /**
+       * <code>optional .VoiceControl voice_control = 8;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.AudioCommands.VoiceControl, com.hello.messeji.api.AudioCommands.VoiceControl.Builder, com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder> 
+          getVoiceControlFieldBuilder() {
+        if (voiceControlBuilder_ == null) {
+          voiceControlBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.messeji.api.AudioCommands.VoiceControl, com.hello.messeji.api.AudioCommands.VoiceControl.Builder, com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder>(
+                  getVoiceControl(),
+                  getParentForChildren(),
+                  isClean());
+          voiceControl_ = null;
+        }
+        return voiceControlBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:Message)
@@ -3389,17 +3809,20 @@ public final class Messeji {
     java.lang.String[] descriptorData = {
       "\n\rmesseji.proto\032\024audio_commands.proto\"B\n" +
       "\025ReceiveMessageRequest\022\020\n\010sense_id\030\001 \002(\t" +
-      "\022\027\n\017message_read_id\030\002 \003(\003\"\304\001\n\007Message\022\021\n" +
+      "\022\027\n\017message_read_id\030\002 \003(\003\"\246\002\n\007Message\022\021\n" +
       "\tsender_id\030\001 \001(\t\022\r\n\005order\030\002 \002(\003\022\022\n\nmessa" +
       "ge_id\030\003 \001(\003\022\033\n\004type\030\004 \002(\0162\r.Message.Type" +
       "\022\036\n\nplay_audio\030\005 \001(\0132\n.PlayAudio\022\036\n\nstop" +
-      "_audio\030\006 \001(\0132\n.StopAudio\"&\n\004Type\022\016\n\nPLAY" +
-      "_AUDIO\020\000\022\016\n\nSTOP_AUDIO\020\001\")\n\014BatchMessage" +
-      "\022\031\n\007message\030\001 \003(\0132\010.Message\"\203\001\n\rMessageS" +
-      "tatus\022\022\n\nmessage_id\030\001 \002(\003\022#\n\005state\030\002 \002(\016",
-      "2\024.MessageStatus.State\"9\n\005State\022\013\n\007PENDI" +
-      "NG\020\000\022\010\n\004SENT\020\001\022\014\n\010RECEIVED\020\002\022\013\n\007EXPIRED\020" +
-      "\003B\027\n\025com.hello.messeji.api"
+      "_audio\030\006 \001(\0132\n.StopAudio\022\027\n\006volume\030\007 \001(\013" +
+      "2\007.Volume\022$\n\rvoice_control\030\010 \001(\0132\r.Voice" +
+      "Control\"I\n\004Type\022\016\n\nPLAY_AUDIO\020\000\022\016\n\nSTOP_" +
+      "AUDIO\020\001\022\016\n\nSET_VOLUME\020\002\022\021\n\rVOICE_CONTROL",
+      "\020\003\")\n\014BatchMessage\022\031\n\007message\030\001 \003(\0132\010.Me" +
+      "ssage\"\203\001\n\rMessageStatus\022\022\n\nmessage_id\030\001 " +
+      "\002(\003\022#\n\005state\030\002 \002(\0162\024.MessageStatus.State" +
+      "\"9\n\005State\022\013\n\007PENDING\020\000\022\010\n\004SENT\020\001\022\014\n\010RECE" +
+      "IVED\020\002\022\013\n\007EXPIRED\020\003B\027\n\025com.hello.messeji" +
+      ".api"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3425,7 +3848,7 @@ public final class Messeji {
     internal_static_Message_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_Message_descriptor,
-        new java.lang.String[] { "SenderId", "Order", "MessageId", "Type", "PlayAudio", "StopAudio", });
+        new java.lang.String[] { "SenderId", "Order", "MessageId", "Type", "PlayAudio", "StopAudio", "Volume", "VoiceControl", });
     internal_static_BatchMessage_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_BatchMessage_fieldAccessorTable = new

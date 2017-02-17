@@ -8,13 +8,15 @@ public enum QueueName {
     AUDIO_FEATURES("audio_features"),
     AUDIO_PRODUCTS("audio_products"),
     ACTIVITY_STREAM("activity_stream"),
+    ALARM_ACTIONS("alarm_actions"),
     REGISTRATIONS("registrations"),
     ENCODE_AUDIO("encode_audio"),
     BATCH_PILL_DATA ("batch_pill_data"),
     SENSE_SENSORS_DATA("sense_sensors_data"),
     SENSE_SENSORS_DATA_FANOUT_ONE("sense_sensors_data_fanout_one"),
     LOGS("logs"),
-    PUSH_NOTIFICATIONS("push_notifications");
+    PUSH_NOTIFICATIONS("push_notifications"),
+    SPEECH_RESULTS("speech_results");
 
     private String value;
 

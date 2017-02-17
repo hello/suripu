@@ -1,12 +1,11 @@
 package com.hello.suripu.coredropwizard.timeline;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
@@ -15,7 +14,6 @@ import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
-import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
@@ -24,18 +22,18 @@ import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
+import com.hello.suripu.core.db.SenseDataDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepScoreParametersDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
-import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
-import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DataCompleteness;
-import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -47,12 +45,15 @@ import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepScore;
+import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserBioInfo;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.processors.PartnerMotion;
@@ -63,13 +64,12 @@ import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.InBedSearcher;
 import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
-import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.SleepScoreUtils;
+import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -100,60 +100,64 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountReadDAO accountDAO;
     private final SleepStatsDAO sleepStatsDAODynamoDB;
+    private final TimeZoneHistoryDAO timeZoneHistoryDAO;
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
     private final TimelineSafeguards timelineSafeguards;
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
-    private final SenseColorDAO senseColorDAO;
-    private final CalibrationDAO calibrationDAO;
+
     private final UserTimelineTestGroupDAO userTimelineTestGroupDAO;
     private final SleepScoreParametersDAO sleepScoreParametersDAO;
+
+    private final SenseDataDAO senseDataDAO;
 
     private final AlgorithmFactory algorithmFactory;
 
     protected Histogram scoreDiff;
 
-    final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
+    public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 9;
+    public final static float MIN_FRACTION_UNIQUE_MOTION = 0.5f;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
-    public final static int MIN_MOTION_AMPLITUDE = 1000;
+    public final static int MIN_MOTION_AMPLITUDE = 500;
+    public final static int TIMEZONE_HISTORY_LIMIT = 5;
     final static long OUTLIER_GUARD_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
     final static long DOMINANT_GROUP_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
 
 
     static public InstrumentedTimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
-                                                                       final DeviceReadDAO deviceDAO,
-                                                                       final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
-                                                                       final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
-                                                                       final FeedbackReadDAO feedbackDAO,
-                                                                       final SleepHmmDAO sleepHmmDAO,
-                                                                       final AccountReadDAO accountDAO,
-                                                                       final SleepStatsDAO sleepStatsDAODynamoDB,
-                                                                       final SenseColorDAO senseColorDAO,
-                                                                       final OnlineHmmModelsDAO priorsDAO,
-                                                                       final FeatureExtractionModelsDAO featureExtractionModelsDAO,
-                                                                       final CalibrationDAO calibrationDAO,
-                                                                       final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
-                                                                       final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
-                                                                       final SleepScoreParametersDAO sleepScoreParametersDAO,
-                                                                       final NeuralNetEndpoint neuralNetEndpoint,
-                                                                       final AlgorithmConfiguration algorithmConfiguration,
-                                                                       final MetricRegistry metrics) {
+                                                                        final DeviceReadDAO deviceDAO,
+                                                                        final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                                                                        final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
+                                                                        final FeedbackReadDAO feedbackDAO,
+                                                                        final SleepHmmDAO sleepHmmDAO,
+                                                                        final AccountReadDAO accountDAO,
+                                                                        final SleepStatsDAO sleepStatsDAODynamoDB,
+                                                                        final SenseDataDAO senseDataDAO,
+                                                                        final TimeZoneHistoryDAO timeZoneHistoryDAO,
+                                                                        final OnlineHmmModelsDAO priorsDAO,
+                                                                        final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                                                                        final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
+                                                                        final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                                                        final SleepScoreParametersDAO sleepScoreParametersDAO,
+                                                                        final Map<AlgorithmType,NeuralNetEndpoint> neuralNetEndpoints,
+                                                                        final AlgorithmConfiguration algorithmConfiguration,
+                                                                        final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
-        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoint,algorithmConfiguration,Optional.<UUID>absent());
+        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoints,algorithmConfiguration,Optional.<UUID>absent());
 
         final Histogram scoreDiff = metrics.histogram(name(InstrumentedTimelineProcessor.class, "sleep-score-diff"));
 
         return new InstrumentedTimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
-                senseColorDAO,
+                senseDataDAO,
+                timeZoneHistoryDAO,
                 Optional.<UUID>absent(),
-                calibrationDAO,
                 userTimelineTestGroupDAO,
                 sleepScoreParametersDAO,
                 algorithmFactory,
@@ -162,26 +166,26 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public InstrumentedTimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid),calibrationDAO,userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseDataDAO, timeZoneHistoryDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
     }
 
     //private SessionLogDebug(final String)
 
     private InstrumentedTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
-                              final DeviceReadDAO deviceDAO,
-                              final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
-                              final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
-                              final FeedbackReadDAO feedbackDAO,
-                              final SleepHmmDAO sleepHmmDAO,
-                              final AccountReadDAO accountDAO,
-                              final SleepStatsDAO sleepStatsDAODynamoDB,
-                              final SenseColorDAO senseColorDAO,
-                              final Optional<UUID> uuid,
-                              final CalibrationDAO calibrationDAO,
-                              final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
-                              final SleepScoreParametersDAO sleepScoreParametersDAO,
-                              final AlgorithmFactory algorithmFactory,
-                              final Histogram scoreDiff) {
+                                          final DeviceReadDAO deviceDAO,
+                                          final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                                          final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
+                                          final FeedbackReadDAO feedbackDAO,
+                                          final SleepHmmDAO sleepHmmDAO,
+                                          final AccountReadDAO accountDAO,
+                                          final SleepStatsDAO sleepStatsDAODynamoDB,
+                                          final SenseDataDAO senseDataDAO,
+                                          final TimeZoneHistoryDAO timeZoneHistoryDAO,
+                                          final Optional<UUID> uuid,
+                                          final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
+                                          final SleepScoreParametersDAO sleepScoreParametersDAO,
+                                          final AlgorithmFactory algorithmFactory,
+                                          final Histogram scoreDiff) {
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -190,8 +194,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
-        this.senseColorDAO = senseColorDAO;
-        this.calibrationDAO = calibrationDAO;
+        this.senseDataDAO = senseDataDAO;
+        this.timeZoneHistoryDAO = timeZoneHistoryDAO;
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
         this.sleepScoreParametersDAO = sleepScoreParametersDAO;
         this.algorithmFactory = algorithmFactory;
@@ -217,7 +221,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return TimelineLog.DEFAULT_TEST_GROUP;
     }
 
-    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId,final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult) {
+    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId,final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
         //return original if not enabled
         if (!this.hasInBedSearchEnabled(accountId)) {
@@ -253,20 +257,20 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 sleepEvent,
                 origResult.mainEvents.get(Event.Type.IN_BED),
                 15, //15 minutes to fall asleep minimum
-                sensorData.trackerMotions);
+                sensorData.oneDaysTrackerMotion.processedtrackerMotions);
 
         //replace original in-bed event with new event
         final List<Event> origEvents = origResult.mainEvents.values().asList();
 
         final List<Event> newEvents = Lists.newArrayList();
-        newEvents.add(inBedEvent);
+        newEvents.add(timeZoneOffsetMap.getEventWithCorrectOffset(inBedEvent));
 
         for (final Event event : origEvents) {
             if (event.getType().equals(Event.Type.IN_BED)) {
                 continue;
             }
 
-            newEvents.add(event);
+            newEvents.add(timeZoneOffsetMap.getEventWithCorrectOffset(event));
         }
 
         //sanity check
@@ -295,8 +299,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             algorithmChain.addFirst(AlgorithmType.ONLINE_HMM);
         }
 
-        if (this.hasNeuralNetAlgorithmEnabled(accountId)) {
-            algorithmChain.addFirst(AlgorithmType.NEURAL_NET);
+        //only use the newest NN
+        if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
+            algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
         }
 
         final DateTime startTimeLocalUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
@@ -324,7 +329,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         //check to see if there's an issue with the data
-        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions, sensorData.trackerMotions);
+        final boolean userLowerMotionCountThreshold = useNoMotionEnforcement(accountId);
+
+        final TimelineError discardReason = isValidNight(accountId, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
@@ -371,14 +378,13 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
 
             resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged,featureFlips);
-
             //got a valid result? poof, we're out.
             if (resultOptional.isPresent()) {
                 break;
             }
         }
 
-
+//
         //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
         if (!resultOptional.isPresent()) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms",accountId, targetDate.toDate());
@@ -388,8 +394,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
         //get result, and refine (optional feature) in-bed time for online HMM
-        final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get());
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
 
+        final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get(), timeZoneOffsetMap);
         List<Event> extraEvents = result.extraEvents;
 
             /* FEATURE FLIP EXTRA EVENTS */
@@ -397,7 +404,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             extraEvents = Collections.EMPTY_LIST;
         }
 
-        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC, result, sensorData);
+
+
+
+        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneOffsetMap, result, sensorData);
 
 
         if (!populateTimelines.isValidSleepScore) {
@@ -419,7 +429,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
+    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
         if(pairs.size() > 1) {
@@ -434,10 +444,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, accountId, startQueryTime, endQueryTime);
 
-        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, timeZoneOffsetMap, DateTime.now(DateTimeZone.UTC));
     }
 
+    protected TimelineAlgorithmResult remapEventOffset(final TimelineAlgorithmResult result, final TimeZoneOffsetMap timeZoneOffsetMap){
 
+
+        return result;
+    }
 
     protected ImmutableList<TrackerMotion> filterPillPairingMotions(final ImmutableList<TrackerMotion> motions, final long accountId) {
         final List<DateTime> pairTimes =  Lists.newArrayList();
@@ -483,15 +497,18 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
+        final Optional<Account> accountOptional = accountDAO.getById(accountId);
+        final UserBioInfo userBioInfo = UserBioInfo.getUserBioInfo(accountOptional, !originalPartnerMotions.isEmpty());
+
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
 
+        //removes motion events less than 2 seconds and < 300 val. groups the remaining motions into groups separated by 2 hours. If largest motion groups is greater than 6 hours hours, drop all motions afterward this motion group.
         if (this.hasOutlierFilterEnabled(accountId)) {
-            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
+            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
         }
-
 
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
 
@@ -537,39 +554,15 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
+        final OneDaysTrackerMotion oneDaysTrackerMotion = new OneDaysTrackerMotion(ImmutableList.copyOf(trackerMotions), ImmutableList.copyOf(filteredOriginalMotions), originalTrackerMotions);
+        final OneDaysTrackerMotion oneDaysPartnerMotion = new OneDaysTrackerMotion(ImmutableList.copyOf(filteredOriginalPartnerMotions), ImmutableList.copyOf(filteredOriginalPartnerMotions), originalPartnerMotions);
+
 
         final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
-
-        // get all sensor data, used for light and sound disturbances, and presleep-insights
-
-        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
-        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-
-        if (!deviceIdPair.isPresent()) {
-            LOGGER.debug("No device ID for account_id = {} and day = {}", accountId, starteTimeLocalUTC);
-            return Optional.absent();
-        }
-
-        final String externalDeviceId = deviceIdPair.get().externalDeviceId;
-        final Long deviceId = deviceIdPair.get().internalDeviceId;
-
-        // get color of sense, yes this matters for the light sensor
-        final Optional<Device.Color> optionalColor = senseColorDAO.getColorForSense(externalDeviceId);
-
-        final Optional<Calibration> calibrationOptional = this.hasCalibrationEnabled(externalDeviceId) ? calibrationDAO.getStrict(externalDeviceId) : Optional.<Calibration>absent();
-
-        // query dates in utc_ts (table has an index for this)
-        LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
-
-        final AllSensorSampleList allSensorSampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
-                starteTimeLocalUTC.minusMillis(tzOffsetMillis).getMillis(),
-                endTimeLocalUTC.minusMillis(tzOffsetMillis).getMillis(),
-                accountId, externalDeviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional,
-                false // Don't use the new audio peak energy since the models haven't trained on it.
-        );
+        final Optional<AllSensorSampleList> allSensorSampleList = senseDataDAO.get(accountId,date,starteTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, tzOffsetMillis);
         LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
 
-        if (allSensorSampleList.isEmpty()) {
+        if (!allSensorSampleList.isPresent() || allSensorSampleList.get().isEmpty()) {
             LOGGER.debug("No sense sensor data ID for account_id = {} and day = {}", accountId, starteTimeLocalUTC);
             return Optional.absent();
         }
@@ -580,13 +573,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             feedbackList.add(newFeedback.get());
         }
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,
-                ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
-                ImmutableList.copyOf(feedbackList),
-                ImmutableList.copyOf(filteredOriginalMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
-                date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
-                tzOffsetMillis));
-
+        return Optional.of(new OneDaysSensorData(allSensorSampleList.get(),oneDaysTrackerMotion, oneDaysPartnerMotion,
+                ImmutableList.copyOf(feedbackList),date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
+                tzOffsetMillis,userBioInfo));
     }
 
     private static class PopulatedTimelines {
@@ -600,39 +589,31 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimelineAlgorithmResult result,
+    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineAlgorithmResult result,
                                                final OneDaysSensorData sensorData) {
 
-        final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
+        final ImmutableList<TrackerMotion> trackerMotions = sensorData.oneDaysTrackerMotion.processedtrackerMotions;
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
-        final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
+        final ImmutableList<TrackerMotion> partnerMotions = sensorData.oneDaysPartnerMotion.processedtrackerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
 
-
-        final SensorDataTimezoneMap sensorDataTimezoneMap = SensorDataTimezoneMap.create(sensorData.allSensorSampleList.get(Sensor.LIGHT));
         //MOVE EVENTS BASED ON FEEDBACK
         FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
-
-        if (this.hasTimelineOrderEnforcement(accountId)) {
-            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, sensorData.timezoneOffsetMillis);
-        }
-        else {
-            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedbackTheOldWay(feedbackList, ImmutableList.copyOf(result.mainEvents.values()), ImmutableList.copyOf(result.extraEvents), sensorData.timezoneOffsetMillis);
-        }
+        //removed FF  TIMELINE_EVENT_ORDER_ENFORCEMENT - at 100 percent
+        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, timeZoneOffsetMap);
 
         //GET SPECIFIC EVENTS
-        final Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
-        final Optional<Event> sleep = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.SLEEP));
-        final Optional<Event> wake = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.WAKE_UP));
-        final Optional<Event> outOfBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
-
+        Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
+        Optional<Event> sleep = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.SLEEP));
+        Optional<Event> wake= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.WAKE_UP));
+        Optional<Event> outOfBed= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
 
         //CREATE SLEEP MOTION EVENTS
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
-        final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
+        final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
         Optional<Long> sleepTime = Optional.absent();
         if (sleep.isPresent()){
@@ -667,43 +648,42 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // SOUND
         int numSoundEvents = 0;
-        if (this.hasSoundInTimeline(accountId)) {
-            final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
+        //removed FF SOUND_EVENTS_IN_TIMELINE - at 100 percent
+        final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
 
-            LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
-            final List<Event> soundEvents = getSoundEvents(
-                    allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
-                    motionEvents,
-                    lightOutTimeOptional,
-                    sleepEventsFromAlgorithm,
-                    this.useHigherThesholdForSoundEvents(accountId));
+        LOGGER.debug("action=get-sound-events account_id={} use_higher_threshold={}", accountId, this.useHigherThesholdForSoundEvents(accountId));
+        final List<Event> soundEvents = getSoundEvents(
+                allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
+                motionEvents,
+                lightOutTimeOptional,
+                sleepEventsFromAlgorithm,
+                this.useHigherThesholdForSoundEvents(accountId));
 
-            for (final Event event : soundEvents) {
-                timelineEvents.put(event.getStartTimestamp(), event);
-            }
-            numSoundEvents = soundEvents.size();
+        for (final Event event : soundEvents) {
+            timelineEvents.put(event.getStartTimestamp(), event);
         }
+        numSoundEvents = soundEvents.size();
+
 
         // ALARM
-        if(this.hasAlarmInTimeline(accountId) && trackerMotions.size() > 0) {
-            final DateTimeZone userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
+        //removed FF ALARM_IN_TIMELINE at 100 percent
+        if(trackerMotions.size() > 0) {
+            final DateTimeZone timeZone = DateTimeZone.forID(timeZoneOffsetMap.getTimeZoneIdWithUTCDefault(targetDate.getMillis()));
             final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
                     targetDate.getMonthOfYear(),
                     targetDate.getDayOfMonth(),
                     targetDate.getHourOfDay(),
-                    targetDate.getMinuteOfHour(),
-                    0,
-                    userTimeZone).minusMinutes(1);
+                    targetDate.getMinuteOfHour(), timeZone).minusMinutes(1);
 
             final DateTime alarmQueryEndTime = new DateTime(endDate.getYear(),
                     endDate.getMonthOfYear(),
                     endDate.getDayOfMonth(),
                     endDate.getHourOfDay(),
-                    endDate.getMinuteOfHour(),
-                    0,
-                    userTimeZone).plusMinutes(1);
+                    endDate.getMinuteOfHour(), timeZone).plusMinutes(1);
 
-            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime, userTimeZone.getOffset(alarmQueryEndTime));
+            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime,
+                    timeZoneOffsetMap);
+
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
@@ -732,19 +712,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // 1. remove motion & null events outside sleep/in-bed period
         List<Event> cleanedUpEvents;
-        if (this.hasRemoveMotionEventsOutsideSleep(accountId)) {
-            // remove motion events outside of sleep and awake
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents, sleep, wake);
-        } else {
-            // remove motion events outside of in-bed and out-bed
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, inBed, outOfBed);
-        }
+        cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents, sleep, wake);
 
         // 2. Grey out events outside in-bed time
-        final Boolean removeGreyOutEvents = this.hasRemoveGreyOutEvents(accountId); // rm grey events totally
 
         final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                inBed, outOfBed, removeGreyOutEvents);
+                inBed, outOfBed);
 
         // 3. remove non-significant that are more than 1/3 of the entire night's time-span
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
@@ -755,11 +728,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
-        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, lightSleepThreshold, hasSleepStatMediumSleep(accountId));
+        final boolean useUninterruptedDuration = useUninterruptedDuration(accountId);
+
+        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId), useUninterruptedDuration);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
-
-        Integer sleepScore = computeAndMaybeSaveScore(sensorData.trackerMotions, sensorData.originalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
@@ -768,6 +742,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
+        //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
+        if (feedbackList.isEmpty() && this.useNoMotionEnforcement(accountId)) {
+            final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+            if (!motionDuringSleep) {
+                LOGGER.warn("action=zeroing-score  account_id={} reason=insufficient-motion-during-sleeptime night_of={}", accountId, targetDate);
+                sleepScore =  0;
+            }
+        }
 
         boolean isValidSleepScore = sleepScore > 0;
 
@@ -792,10 +774,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
 
-        if (hasSleepSegmentOffsetRemapping(accountId)) {
-            reversedSegments = sensorDataTimezoneMap.remapSleepSegmentOffsets(reversedSegments);
-        }
-
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
         return new PopulatedTimelines(Lists.newArrayList(timeline),isValidSleepScore);
@@ -804,14 +782,27 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData){
+    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData,final boolean useLowerMotionCountThreshold){
+
+
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
         }
 
         //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
-        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT){
+        //If greater than MinTracker Motion Count - continue
+        // if FF for lower motion count threshold, if between lower motion threshold and high motion threshold, check percent unique motions for parter data.
+        // if lower than lower motion count threshold, reject
+        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT && !useLowerMotionCountThreshold ){
+            return TimelineError.NOT_ENOUGH_DATA;
+        } else if (originalMotionData.size() >= MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD && originalMotionData.size() < MIN_TRACKER_MOTION_COUNT) {
+            final float percentUniqueMotions = PartnerDataUtils.getPercentUniqueMovements(originalMotionData, originalPartnerTrackerMotionData);
+
+            if (percentUniqueMotions < MIN_FRACTION_UNIQUE_MOTION){
+                return TimelineError.NOT_ENOUGH_DATA;
+            }
+        } else if (originalMotionData.size() < MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD){
             return TimelineError.NOT_ENOUGH_DATA;
         }
 
@@ -898,6 +889,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
+            //tz offset should be correct
             final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
 
             return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
@@ -985,54 +977,73 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
                 trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
-        if (this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
-            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
-                LOGGER.warn("action=enforced-minimum-motion-score: account_id={} night_of={}", accountId, targetDate);
-                motionScore = new MotionScore(motionScore.numMotions, motionScore.motionPeriodMinutes, motionScore.avgAmplitude, motionScore.maxAmplitude, (int) SleepScoreUtils.MOTION_SCORE_MIN);
-            }
-        }
-        else {
-            //original behavior
-            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
-                // if motion score is zero, something is not quite right, don't save score
-                LOGGER.error("action=no-motion-score-generated: account_id={} night_of={}", accountId, targetDate);
-                return 0;
-            }
+        //if motion score is less than the min score - ff'd removed, at 100 percent deployement
+        if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
+            LOGGER.warn("action=enforced-minimum-motion-score: account_id={} night_of={}", accountId, targetDate);
+            motionScore = new MotionScore(motionScore.numMotions, motionScore.motionPeriodMinutes, motionScore.avgAmplitude, motionScore.maxAmplitude, (int) SleepScoreUtils.MOTION_SCORE_MIN);
         }
 
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
         final long targetDateEpoch = targetDate.getMillis();
         final String targetDateStr = DateTimeUtil.dateToYmdString(targetDate);
+
         float sleepScoreV2V4Weighting = SleepScoreUtils.getSleepScoreV2V4Weighting(targetDateEpoch);
+        float sleepScoreV4V5Weighting = SleepScoreUtils.getSleepScoreV4V5Weighting(targetDateEpoch);
 
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-        final int sleepDurationThreshold = sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate).durationThreshold;
+        final SleepScoreParameters sleepScoreParameters= sleepScoreParametersDAO.getSleepScoreParametersByDate(accountId,targetDate);
 
-        boolean usesV4 = sleepScoreV2V4Weighting==1.0f;
-        boolean isInTransition = (sleepScoreV2V4Weighting > 0.0f) || useSleepScoreV4(accountId);
+        final boolean usesV4 = sleepScoreV2V4Weighting==1.0f;
+        final boolean isInTransitionV2V4 = (sleepScoreV2V4Weighting > 0.0f) || useSleepScoreV4(accountId);
 
-        final SleepScore sleepScoreV4, sleepScoreV2, sleepScore;
-        //calculates sleep duration score v4 and sleep score
-        if (usesV4){
-            sleepScore = computeSleepScoreV4(accountId, userAge, sleepDurationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
+        final boolean usesV5 = sleepScoreV4V5Weighting==1.0f;
+        final boolean isInTransitionV4V5 = (sleepScoreV4V5Weighting > 0.0f) || useSleepScoreV5(accountId);
+
+        /*
+         sleepscoreV4: Duration score penalized for motion frequency and agitated sleep
+         sleepscorev5: Duration score penalized for motion frequency based on personalized threshold and agitated sleep
+         sleepscorev2: Duration Score, Motion Score and Environmental score discrete,
+        */
+
+        final SleepScore sleepScoreV2 = computeSleepScoreV2(userAge, sleepStats, environmentScore, motionScore);
+        final SleepScore sleepScoreV4 = computeSleepScoreV4(accountId, userAge, sleepScoreParameters.durationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
+        final SleepScore sleepScoreV5 = computeSleepScoreV5(accountId, userAge, sleepScoreParameters, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
+
+
+        SleepScore sleepScore = sleepScoreV2;
+
+        if (usesV5){
+            //calculates sleep duration score v5 and sleep score
+            sleepScore = sleepScoreV5;
+            //calculates sleep score v4 and v5 linear blend score
+        } else if (isInTransitionV4V5){
+            //full v5 for users who are FF v5
+            if (useSleepScoreV5(accountId)){
+                sleepScoreV4V5Weighting = 1.0f;
+            }
+
+            sleepScore = computeSleepScoreVersionTransition(sleepScoreV4, sleepScoreV5, sleepScoreV4V5Weighting, "v4-v5");
+            //creates log and histogram differences between v4 and v5
+            final int sleepScoreDiff = sleepScoreV5.value - sleepScoreV4.value;
+            STATIC_LOGGER.info("action=sleep-score-v4-v5-difference night_of={} account_id={} v4={} v5={} difference={}", targetDateStr, accountId, sleepScoreV4, sleepScoreV5, sleepScoreDiff);
+            scoreDiff.update(sleepScoreDiff);
+            //calculates sleep duration score v4
+        } else if (usesV4){
+            sleepScore = sleepScoreV4;
             //calculates sleep score v4 and v2 linear blend score
-        } else if (isInTransition){
+        } else if (isInTransitionV2V4){
             //ensures sure that users who are feature flipped get full V4 score
             if (useSleepScoreV4(accountId)){
                 sleepScoreV2V4Weighting = 1.0f;
             }
-            sleepScoreV2 = computeSleepScoreV2(userAge, sleepStats, environmentScore, motionScore);
-            sleepScoreV4 = computeSleepScoreV4(accountId, userAge, sleepDurationThreshold, sleepStats, originalTrackerMotions, environmentScore,  motionScore);
-            sleepScore = computeSleepScoreV2V4Transition(sleepScoreV2, sleepScoreV4, sleepScoreV2V4Weighting);
+
+            sleepScore = computeSleepScoreVersionTransition(sleepScoreV2, sleepScoreV4, sleepScoreV2V4Weighting, "v2-v4");
             //creates log and histogram differences between v2 and v4
             final int sleepScoreDiff = sleepScoreV4.value - sleepScoreV2.value;
             STATIC_LOGGER.info("action=sleep-score-v2-v4-difference night_of={} account_id={} v2={} v4={} difference={}", targetDateStr, accountId, sleepScoreV2, sleepScoreV4, sleepScoreDiff);
             scoreDiff.update(sleepScoreDiff);
-
-            //calculates sleep score v2
-        } else {
-            sleepScore = computeSleepScoreV2(userAge, sleepStats, environmentScore, motionScore);
         }
 
         // Always update stats and scores to Dynamo
@@ -1055,6 +1066,31 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 .withEnvironmentalScore(environmentScore)
                 .withWeighting(sleepScoreWeightingV2)
                 .withTimesAwakePenaltyScore(timesAwakePenalty)
+                .withVersion("v2")
+                .build();
+        return sleepScore;
+    }
+
+
+    private static SleepScore computeSleepScoreV5(final Long accountId, final int userAge, final SleepScoreParameters sleepScoreParameters, final SleepStats sleepStats, final List<TrackerMotion> originalTrackerMotions, final Integer environmentScore, final MotionScore motionScore){
+        //timesAwakePenalty accounted for in durv5 score
+        final Integer timesAwakePenalty = 0;
+        final SleepScore.Weighting sleepScoreWeightingV5 =  new SleepScore.DurationWeightingV5();
+
+        // Calculate the sleep score based on the sub scores and weighting
+        final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepScoreParameters.durationThreshold, sleepStats.sleepDurationInMinutes);
+        final AgitatedSleep agitatedSleep = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+        final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
+        final float motionFrequencyPenalty = SleepScoreUtils.getMotionFrequencyPenalty(motionFrequency, sleepScoreParameters.motionFrequencyThreshold);
+        final Integer durationScoreV5 = SleepScoreUtils.getSleepScoreDurationV5(accountId, sleepDurationScoreV3, motionFrequencyPenalty, sleepStats.numberOfMotionEvents, agitatedSleep);
+
+        final SleepScore sleepScore = new SleepScore.Builder()
+                .withMotionScore(motionScore)
+                .withSleepDurationScore(durationScoreV5)
+                .withEnvironmentalScore(environmentScore)
+                .withWeighting(sleepScoreWeightingV5)
+                .withTimesAwakePenaltyScore(timesAwakePenalty)
+                .withVersion("v5")
                 .build();
         return sleepScore;
     }
@@ -1066,24 +1102,25 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // Calculate the sleep score based on the sub scores and weighting
         final float sleepDurationScoreV3 =  SleepScoreUtils.getSleepScoreDurationV3(userAge, sleepDurationThreshold, sleepStats.sleepDurationInMinutes);
-        final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleep(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
+        final int agitatedSleepDuration = SleepScoreUtils.getAgitatedSleepDuration(originalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
         final MotionFrequency motionFrequency = SleepScoreUtils.getMotionFrequency(originalTrackerMotions, sleepStats.sleepDurationInMinutes, sleepStats.sleepTime, sleepStats.wakeTime);
         final Integer durationScoreV4 = SleepScoreUtils.getSleepScoreDurationV4(accountId, sleepDurationScoreV3, motionFrequency, sleepStats.numberOfMotionEvents, agitatedSleepDuration);
 
-        SleepScore sleepScore = new SleepScore.Builder()
+        final SleepScore sleepScore = new SleepScore.Builder()
                 .withMotionScore(motionScore)
                 .withSleepDurationScore(durationScoreV4)
                 .withEnvironmentalScore(environmentScore)
                 .withWeighting(sleepScoreWeightingV4)
                 .withTimesAwakePenaltyScore(timesAwakePenalty)
+                .withVersion("v4")
                 .build();
         return sleepScore;
     }
 
-    public static SleepScore computeSleepScoreV2V4Transition(final SleepScore sleepScoreV2, final SleepScore sleepScoreV4, final Float sleepScoreV2V4Weighting){
-        final Integer transitionScoreValue = Math.round(sleepScoreV4.value * sleepScoreV2V4Weighting + sleepScoreV2.value * (1 - sleepScoreV2V4Weighting));
-        final SleepScore sleepScoreV2V4= new SleepScore(transitionScoreValue, sleepScoreV4.motionScore, sleepScoreV4.sleepDurationScore, sleepScoreV4.environmentalScore, sleepScoreV4.timesAwakePenaltyScore);
-        return sleepScoreV2V4;
+    public static SleepScore computeSleepScoreVersionTransition(final SleepScore sleepScoreOld, final SleepScore sleepScoreNew, final Float sleepScoreVersionWeighting, final String version){
+        final Integer transitionScoreValue = Math.round(sleepScoreNew.value * sleepScoreVersionWeighting + sleepScoreOld.value * (1 - sleepScoreVersionWeighting));
+        final SleepScore sleepScoreTransition = new SleepScore(transitionScoreValue, sleepScoreNew.motionScore, sleepScoreNew.sleepDurationScore, sleepScoreNew.environmentalScore, sleepScoreNew.timesAwakePenaltyScore,version);
+        return sleepScoreTransition;
     }
 
 

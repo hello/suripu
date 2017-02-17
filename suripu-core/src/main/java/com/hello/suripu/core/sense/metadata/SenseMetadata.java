@@ -9,7 +9,7 @@ public class SenseMetadata {
     private final Sense.Color color;
     private final HardwareVersion hardwareVersion;
 
-    public SenseMetadata(String senseId, Sense.Color color, HardwareVersion hardwareVersion) {
+    private SenseMetadata(String senseId, Sense.Color color, HardwareVersion hardwareVersion) {
         this.senseId = senseId;
         this.color = color;
         this.hardwareVersion = hardwareVersion;
@@ -28,6 +28,10 @@ public class SenseMetadata {
     }
 
     public static SenseMetadata unknown(final String senseId) {
-        return new SenseMetadata(senseId, null, null);
+        return new SenseMetadata(senseId, Sense.Color.UNKNOWN, null);
+    }
+
+    public static SenseMetadata create(final String senseId, final Sense.Color color, final HardwareVersion hardwareVersion) {
+        return new SenseMetadata(senseId,color,hardwareVersion);
     }
 }

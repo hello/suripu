@@ -63,7 +63,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
         try {
 
             final Optional<HmmAlgorithmResults> results = fromHmm(accountId, sensorData.currentTimeUTC, sensorData.startTimeLocalUTC, sensorData.endTimeLocalUTC,
-                    sensorData.trackerMotions,
+                    sensorData.oneDaysTrackerMotion.processedtrackerMotions,
                     sensorData.allSensorSampleList);
 
             if (!results.isPresent()) {
@@ -73,6 +73,8 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
 
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
+                    accountId,
+                    AlgorithmType.HMM,
                     results.get().mainEvents,
                     ImmutableList.copyOf(results.get().allTheOtherWakesAndSleeps.asList()),
                     ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));

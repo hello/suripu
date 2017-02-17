@@ -28,6 +28,7 @@ public class SleepCycleAlgorithm {
     public final static int AWAKE_AMPLITUDE_THRESHOLD_MILLIG = 4500;
     public final static int AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT = 2;
     public final static int AWAKE_KICKOFF_THRESHOLD = 5;
+    public final static int AWAKE_ON_DURATION_THRESHOLD = 9 ;
 
     private DataSource<AmplitudeData> dataSource;
     private int slidingWindowSizeInMinutes = 15;
@@ -108,12 +109,12 @@ public class SleepCycleAlgorithm {
      * @return
      */
     public static DateTime getSmartAlarmTimeUTC(final List<Segment> sleepCycles,
-                                         long dataCollectionMoment, long minAlarmTimeUTC, long alarmDeadlineUTC){
+                                                long dataCollectionMoment, long minAlarmTimeUTC, long alarmDeadlineUTC){
 
         if(minAlarmTimeUTC >= alarmDeadlineUTC || sleepCycles.size() == 0){
             return new DateTime(alarmDeadlineUTC);
         }
-        
+
         final Segment lastCycle = sleepCycles.get(sleepCycles.size() - 1);
         long deepSleepMoment = lastCycle.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE;
 
@@ -257,28 +258,42 @@ public class SleepCycleAlgorithm {
     * In a certain minute, the user moves more than [certain threshold] times.
      */
     public static boolean isUserAwakeInGivenDataSpan(final List<AmplitudeData> maxAmplitude,
-                                                     final List<AmplitudeData> kickOffCounts) {
+                                                     final List<AmplitudeData> kickOffCounts,
+                                                     final List<AmplitudeData> onDurationSeconds, final boolean useOnDuration) {
         return isUserAwakeInGivenDataSpan(
-            maxAmplitude,
-            kickOffCounts,
-            AWAKE_KICKOFF_THRESHOLD,
-            AWAKE_AMPLITUDE_THRESHOLD_MILLIG,
-            AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT
+                maxAmplitude,
+                kickOffCounts, onDurationSeconds,
+                AWAKE_KICKOFF_THRESHOLD,
+                AWAKE_AMPLITUDE_THRESHOLD_MILLIG,
+                AWAKE_AMPLITUDE_THRESHOLD_COUNT_LIMIT, AWAKE_ON_DURATION_THRESHOLD, useOnDuration
         );
     }
 
     public static boolean isUserAwakeInGivenDataSpan(final List<AmplitudeData> maxAmplitude,
                                                      final List<AmplitudeData> kickOffCounts,
+                                                     final List<AmplitudeData> OnDurationSeconds,
                                                      final Integer awakeKickoffThreshold,
                                                      final Integer awakeAmplitudeThresholdMilliG,
-                                                     final Integer ampThresholdCountLimit) {
+                                                     final Integer ampThresholdCountLimit,
+                                                     final Integer awakeOnDurationThreshold,
+                                                     final boolean useOnDuration) {
         if(maxAmplitude.size() != kickOffCounts.size()) {
             return false;
         }
 
         for(final AmplitudeData kickOff:kickOffCounts){
             if(kickOff.amplitude > awakeKickoffThreshold){
+                LOGGER.info("action=triggered-progressive-alarm-kickoff-counts kick_off_counts={}", kickOff.amplitude);
                 return true;
+            }
+        }
+
+        if (useOnDuration) {
+            for (final AmplitudeData onDuration : OnDurationSeconds) {
+                if (onDuration.amplitude > awakeOnDurationThreshold) {
+                    LOGGER.info("action=triggered-progressive-alarm-on-duration on_duration={}", onDuration.amplitude);
+                    return true;
+                }
             }
         }
 
@@ -289,6 +304,7 @@ public class SleepCycleAlgorithm {
             }
 
             if(count >= ampThresholdCountLimit){
+                LOGGER.info("action=triggered-progressive-alarm-amplitude-count amplitude_count={}", count);
                 return true;
             }
         }

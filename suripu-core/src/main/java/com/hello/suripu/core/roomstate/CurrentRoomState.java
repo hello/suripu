@@ -68,6 +68,12 @@ public class CurrentRoomState {
         return (showDust) ? particulates : null;
     }
 
+    // Dust is never null
+    // Dust is NOT used for serialization
+    public State dust() {
+        return particulates;
+    }
+
     public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound) {
         this(temperature, humidity, particulates, light, sound, Boolean.FALSE);
     }
@@ -77,7 +83,7 @@ public class CurrentRoomState {
     }
 
 
-    private CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean showDust) {
+    public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean showDust) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.particulates = particulates;
@@ -128,7 +134,6 @@ public class CurrentRoomState {
         final State particulatesState = getParticulatesState(particulates, dataTimestampUTC, false);
         final State lightState = getLightState(light, dataTimestampUTC, false);
         final State soundState = getSoundState(sound, dataTimestampUTC, false);
-
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState, soundState, true);
         return roomState;
 
@@ -177,7 +182,8 @@ public class CurrentRoomState {
                 new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
                 new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
                 new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
-                new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
+                new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB),
+                true
         );
         return roomState;
     }
@@ -185,6 +191,7 @@ public class CurrentRoomState {
     public static State getTemperatureState(final float temperature, final DateTime dataTimestampUTC, final String tempUnit, final Boolean preSleep) {
         // Global ideal range: 60 -- 70, less than 54 = too cold, above 75= too warm
         // TODO: personalize the range
+
         return classifiers.get(Sensor.TEMPERATURE).classify(temperature,dataTimestampUTC,preSleep, tempUnit);
     }
 

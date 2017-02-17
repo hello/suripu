@@ -23,22 +23,17 @@ public class TemperatureMsgTest {
         Boolean contains;
 
         Text text;
-        text = TemperatureMsgEN.getTempMsgPerfect(10, 20, unit);
+        text = TemperatureMsgEN.getTempMsgPerfect(10, unit);
         contains = text.message.contains(unit);
         LOGGER.debug("perfect msg: {}", text.message);
         assertThat(contains, is(true));
 
-        text = TemperatureMsgEN.getTempMsgTooCold(10, 20, unit, 10);
+        text = TemperatureMsgEN.getTempMsgTooCold(10, unit, 10);
         contains = text.message.contains(unit);
         LOGGER.debug("too cold msg: {}", text.message);
         assertThat(contains, is(true));
 
-        text = TemperatureMsgEN.getTempMsgTooHot(10, 20, unit, 10);
-        contains = text.message.contains(unit);
-        LOGGER.debug("too hot msg: {}", text.message);
-        assertThat(contains, is(true));
-
-        text = TemperatureMsgEN.getTempMsgFluctuate(10, 20, unit, 0, 5);
+        text = TemperatureMsgEN.getTempMsgTooHot(10, unit, 10);
         contains = text.message.contains(unit);
         LOGGER.debug("too hot msg: {}", text.message);
         assertThat(contains, is(true));

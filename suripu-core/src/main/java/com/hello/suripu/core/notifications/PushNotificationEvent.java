@@ -14,19 +14,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class PushNotificationEvent {
     public final Long accountId;
-    public final String type;
+    public final PushNotificationEventType type;
     public final DateTime timestamp;
     public final HelloPushMessage helloPushMessage;
     public final Optional<String> senseId;
+    public final DateTimeZone timeZone;
 
-    protected PushNotificationEvent(final Long accountId, final String type, final DateTime timestamp,
-                                    final HelloPushMessage helloPushMessage, final Optional<String> senseId)
+    protected PushNotificationEvent(final Long accountId, final PushNotificationEventType type, final DateTime timestamp,
+                                    final HelloPushMessage helloPushMessage, final Optional<String> senseId, final DateTimeZone timeZone)
     {
         this.accountId = accountId;
         this.type = type;
         this.timestamp = timestamp;
         this.helloPushMessage = helloPushMessage;
         this.senseId = senseId;
+        this.timeZone = timeZone;
     }
 
 
@@ -53,12 +55,11 @@ public class PushNotificationEvent {
                 .add("type", type)
                 .add("timestamp", timestamp)
                 .add("helloPushMessage", helloPushMessage)
-                .add("senseId", senseId)
+                .add("senseId", senseId.or("missing"))
                 .toString();
     }
 
     //endregion Object overrides
-
 
     //region Builder
 
@@ -68,18 +69,19 @@ public class PushNotificationEvent {
 
     public static class Builder {
         private Long accountId;
-        private String type;
+        private PushNotificationEventType type;
         private DateTime timestamp;
         private HelloPushMessage helloPushMessage;
         private Optional<String> senseId = Optional.absent();
+        private DateTimeZone timeZone = DateTimeZone.UTC;
 
         public PushNotificationEvent build() {
             checkNotNull(accountId);
             checkNotNull(type);
             checkNotNull(helloPushMessage);
-
+            checkNotNull(timeZone);
             final DateTime eventTimestamp = timestamp == null ? DateTime.now(DateTimeZone.UTC) : timestamp;
-            return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId);
+            return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId, timeZone);
         }
 
         public Builder withAccountId(final Long accountId) {
@@ -87,7 +89,7 @@ public class PushNotificationEvent {
             return this;
         }
 
-        public Builder withType(final String type) {
+        public Builder withType(final PushNotificationEventType type) {
             this.type = type;
             return this;
         }
@@ -106,7 +108,17 @@ public class PushNotificationEvent {
         }
 
         public Builder withSenseId(final String senseId) {
-            this.senseId = Optional.fromNullable(senseId);
+            if(senseId != null && senseId.isEmpty()) {
+                this.senseId = Optional.absent();
+            } else {
+                this.senseId = Optional.fromNullable(senseId);
+            }
+
+            return this;
+        }
+
+        public Builder withTimeZone(final DateTimeZone timeZone) {
+            this.timeZone = timeZone;
             return this;
         }
     }
