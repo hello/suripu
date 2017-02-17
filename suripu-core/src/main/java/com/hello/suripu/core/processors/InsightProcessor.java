@@ -581,7 +581,7 @@ public class InsightProcessor {
         //Get dateVisibleUTC
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight-absent insight=correlation_temperature reason=timezoneoffset-absent account_id={}", accountId);
+            LOGGER.info("action=insight-absent insight=correlation_temperature reason=timezoneoffset-absent account_id={}", accountId);
             return Optional.absent(); //cannot compute insight without timezone info
         }
 
