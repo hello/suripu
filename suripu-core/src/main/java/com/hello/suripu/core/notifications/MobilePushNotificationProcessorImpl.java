@@ -106,6 +106,12 @@ public class MobilePushNotificationProcessorImpl implements MobilePushNotificati
                     }
                 }
             }
+        } else if(PushNotificationEventType.PILL_BATTERY.equals(event.type)) {
+            final boolean enabled = settingsDAO.isOn(event.accountId, NotificationSetting.Type.SYSTEM);
+            if(!enabled) {
+                LOGGER.info("account_id={} setting={} enabled={}", event.accountId, NotificationSetting.Type.SYSTEM, enabled);
+                return;
+            }
         }
 
 
