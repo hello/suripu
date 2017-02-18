@@ -386,7 +386,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, targetDate.plusHours(44), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
         final List<SleepPeriod> sleepPeriodQueue = SleepPeriod.getSleepPeriodQueue(targetDate, currentTimeLocal);
 
-        final Optional<OneDaysSensorData> fullDaysSensorDataOptional = getSensorData(accountId, SleepPeriod.morning(targetDate).getTargetSleepPeriodTime(SleepPeriod.Boundary.START, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())), SleepPeriod.night(targetDate).getTargetSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())), currentTimeLocal, Optional.absent());
+        final Optional<OneDaysSensorData> fullDaysSensorDataOptional = getSensorData(accountId, sleepPeriodQueue.get(0).getTargetSleepPeriodTime(SleepPeriod.Boundary.START, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())), sleepPeriodQueue.get(2).getTargetSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())), currentTimeLocal, Optional.absent());
         if (!fullDaysSensorDataOptional.isPresent()) {
             LOGGER.info("msg=no-timeline-generated reason=missing-sensor-data account_id = {} day = {}", accountId, targetDate);
             final TimelineLog log = new TimelineLog(accountId, targetDate.withZone(DateTimeZone.UTC).getMillis());
@@ -589,6 +589,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         switch (discardReason) {
+
             case TIMESPAN_TOO_SHORT:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
@@ -667,7 +668,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), result);
-        if(this.useTimelineSleepPeriods(accountId)){
+        if(this.useTimelineSleepPeriods(accountId) && !newFeedback.isPresent()){
             mainEventTimesDAO.updateEventTimes(mainEventTimes);
         }
 
