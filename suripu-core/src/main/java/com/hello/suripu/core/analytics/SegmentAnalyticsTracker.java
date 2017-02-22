@@ -1,7 +1,9 @@
 package com.hello.suripu.core.analytics;
 
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.device.v2.Pill;
+import com.hello.suripu.core.notifications.settings.NotificationSetting;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.MessageBuilder;
 import com.segment.analytics.messages.TrackMessage;
@@ -11,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SegmentAnalyticsTracker implements AnalyticsTracker {
@@ -47,5 +50,21 @@ public class SegmentAnalyticsTracker implements AnalyticsTracker {
 
             analytics.enqueue(mb);
         }
+    }
+
+    @Override
+    public void trackPushNotificationSettings(final List<NotificationSetting> settings, Long accountId) {
+        final Map<String, String> tags = Maps.newHashMap();
+
+        for(final NotificationSetting setting : settings) {
+            tags.put(setting.type().toLowerCase(), String.valueOf(setting.enabled()));
+        }
+
+        final MessageBuilder mb = TrackMessage.builder("Update Notification Settings")
+                .userId(String.valueOf(accountId))
+                .properties(tags)
+                .timestamp(DateTime.now(DateTimeZone.UTC).toDate());
+
+        analytics.enqueue(mb);
     }
 }
