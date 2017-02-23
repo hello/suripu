@@ -64,7 +64,7 @@ public class Account {
 
     private final String genderName;
 
-    @JsonProperty("gender_name")
+    @JsonProperty("gender_other")
     public final String genderName() {
         if(Gender.OTHER.equals(gender)) {
             return genderName;
@@ -293,7 +293,7 @@ public class Account {
             return this;
         }
 
-        @JsonProperty("gender_name")
+        @JsonProperty("gender_other")
         public Builder withGenderName(final String genderName) {
             this.genderName = (genderName == null) ? "" : genderName;
             return this;

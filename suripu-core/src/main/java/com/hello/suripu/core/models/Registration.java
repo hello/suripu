@@ -67,7 +67,7 @@ public class Registration {
             @JsonProperty("password") final String password,
             @JsonProperty("age") final Integer age,
             @JsonProperty("gender") final Gender gender,
-            @JsonProperty("gender_name") final String genderName,
+            @JsonProperty("gender_other") final String genderName,
             @JsonProperty("height") final Integer height,
             @JsonProperty("weight") final Integer weight,
             @JsonProperty("dob") final DateTime DOB,

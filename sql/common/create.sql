@@ -596,3 +596,7 @@ INSERT INTO voice_commands(command, voice_command_subtopic_id) VALUES
     ('Brighten the lights.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Dim the lights.',  (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Set the thermostat to 70°.',  (SELECT id FROM voice_command_subtopics where command_title = 'Thermostat'));
+
+-- Added Feb 23rd
+
+ALTER TABLE accounts ADD COLUMN gender_name VARCHAR(100);
