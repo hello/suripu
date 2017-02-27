@@ -36,6 +36,7 @@ public class CalibratedDeviceData {
         return SenseOneFiveDataConversion.convertRawToHumidity(deviceData.ambientHumidity);
     }
 
+    //TODO: please refactor me - why is raw=>lux conversion done in DeviceDataDAODynamoDB?
     public float lux() {
         // Sense one
         if(!deviceData.hasExtra()) {
