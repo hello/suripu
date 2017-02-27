@@ -3,10 +3,13 @@ package com.hello.suripu.core.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
+import com.hello.suripu.core.models.Response;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,6 +42,12 @@ public class QuestionUtils {
                 Ordering.natural().onResultOf(assignWeights).sortedCopy(questionList));
 
         return sortedFiltered;
+    }
+
+    //TODO:
+    public static List<Question> getAvailableQuestion(final List<Response> responses, final List<Question> possibleQuestions) {
+
+        return Lists.newArrayList();
     }
 
 }
