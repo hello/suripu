@@ -20,7 +20,7 @@ public class NotificationSetting {
     public static final Map<Type, String> names = ImmutableMap.of(
             NotificationSetting.Type.SLEEP_SCORE, "Sleep Score",
             NotificationSetting.Type.SLEEP_REMINDER, "Sleep Reminder",
-            NotificationSetting.Type.SYSTEM, "System"
+            NotificationSetting.Type.SYSTEM, "System Alerts"
     );
 
     public enum Type {

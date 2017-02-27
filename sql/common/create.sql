@@ -563,10 +563,10 @@ GRANT ALL PRIVILEGES ON SEQUENCE voice_commands_id_seq TO ingress_user;
 
 
 INSERT INTO voice_command_topics (title, description, icon) VALUES
-    ('Alarm and Sleep Sounds', 'Before each command, say "Okay Sense" to set an alarm or begin playing Sleep Sounds.', 'icon-alarms'),
-    ('Sleep', 'Before each command, say "Okay Sense" to ask about your Sleep Score, Sleep Timeline, and Sleep Trends.', 'icon-sleep'),
-    ('Room Conditions', 'Before each command, say "Okay Sense" to ask about your temperature, humidity, air quality, and more.', 'icon-rc'),
-    ('Expansions', 'Before each command, say "Okay Sense" to control your lights or thermostat.', 'icon-expansions');
+    ('Alarm and Sleep Sounds', 'Before each command, say "Okay Sense" to set an alarm or begin playing Sleep Sounds.', 'icon_alarms'),
+    ('Sleep', 'Before each command, say "Okay Sense" to ask about your Sleep Score, Sleep Timeline, and Sleep Trends.', 'icon_sleep'),
+    ('Room Conditions', 'Before each command, say "Okay Sense" to ask about your temperature, humidity, air quality, and more.', 'icon_rc'),
+    ('Expansions', 'Before each command, say "Okay Sense" to control your lights or thermostat.', 'icon_expansions');
 
 INSERT INTO voice_command_subtopics(command_title, voice_command_topic_id) VALUES
     ('Alarms', (SELECT id FROM voice_command_topics where title = 'Alarm and Sleep Sounds')),
@@ -596,3 +596,7 @@ INSERT INTO voice_commands(command, voice_command_subtopic_id) VALUES
     ('Brighten the lights.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Dim the lights.',  (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Set the thermostat to 70°.',  (SELECT id FROM voice_command_subtopics where command_title = 'Thermostat'));
+
+-- Added Feb 23rd
+
+ALTER TABLE accounts ADD COLUMN gender_name VARCHAR(100);

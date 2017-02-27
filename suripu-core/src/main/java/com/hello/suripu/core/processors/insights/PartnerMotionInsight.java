@@ -21,17 +21,7 @@ import org.slf4j.LoggerFactory;
 public class PartnerMotionInsight {
     private static final Logger LOGGER = LoggerFactory.getLogger(PartnerMotionInsight.class);
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceReadDAO deviceReadDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DateTime dateVisibleLocal) {
-
-        //Get dateVisibleUTC
-        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
-        if (!timeZoneOffsetOptional.isPresent()) {
-            LOGGER.debug("action=insight-absent insight=partner_motion reason=timezoneoffset-absent account_id={}", accountId);
-            return Optional.absent(); //cannot compute insight without timezone info
-        }
-
-        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
-        final DateTime dateVisibleUTC = dateVisibleLocal.minusMillis(timeZoneOffset);
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceReadDAO deviceReadDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DateTime dateVisibleUTC) {
 
         //Get partner id
         final Optional<Long> optionalPartnerAccountId = deviceReadDAO.getPartnerAccountId(accountId);

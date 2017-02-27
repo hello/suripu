@@ -32,7 +32,7 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
         }
     }
 
-    private final static boolean DEFAULT_ENABLED = false;
+    private final static boolean DEFAULT_ENABLED = true;
     final private static List<NotificationSetting.Type> ORDERING = Lists.newArrayList(
             NotificationSetting.Type.SLEEP_SCORE,
             NotificationSetting.Type.SYSTEM,
@@ -85,6 +85,18 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
 
         // Return notifications or defaults sorted as client expects it
         return ORDERING.stream().map(t -> defaults.get(t)).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isOn(Long accountId, NotificationSetting.Type type) {
+        final List<NotificationSetting> settings = get(accountId);
+        for(NotificationSetting setting : settings) {
+            if(type.equals(setting.type)) {
+                return setting.enabled();
+            }
+        }
+
+        return false;
     }
 
 

@@ -2,6 +2,7 @@ package com.hello.suripu.core.notifications;
 
 public enum PushNotificationEventType {
 
+    GENERIC("generic"),
     SLEEP_SCORE("sleep_score"),
     SENSE_STATUS("sense_status"),
     PILL_BATTERY("pill_battery"),

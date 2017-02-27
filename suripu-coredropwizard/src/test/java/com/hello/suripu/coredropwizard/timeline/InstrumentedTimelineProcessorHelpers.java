@@ -5,8 +5,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
-import com.hello.suripu.core.algorithmintegration.NeuralNetAlgorithmOutput;
-import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
@@ -300,12 +298,12 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public com.google.common.base.Optional<AggregateSleepStats> getSingleStat(Long accountId, String date) {
-            return null;
+            return Optional.absent();
         }
 
         @Override
         public ImmutableList<AggregateSleepStats> getBatchStats(Long accountId, String startDate, String endDate) {
-            return null;
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
     };
 
