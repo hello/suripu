@@ -50,7 +50,6 @@ public class QuestionCoreProcessor {
 
     private static final int NEW_ACCOUNT_AGE = 1; // less than 1 day
     private static final int MAX_SHOWN_Q = 5;
-    private static final int MAX_DAILY_DEMO_Q = 2;
 
     public QuestionCoreProcessor(final QuestionResponseReadDAO questionResponseReadDAO,
                                  final QuestionResponseDAO questionResponseDAO,
@@ -255,8 +254,8 @@ public class QuestionCoreProcessor {
         final List<Response> demoResponses = questionResponseReadDAO.getAccountResponseByQuestionCategoryStr(accountId, QuestionCategory.DEMO.toString().toLowerCase());
         final List<Question> availableQuestions = QuestionUtils.getAvailableQuestion(demoResponses, demoQuestions);
 
-        final int numDemoQuestions = MAX_SHOWN_Q - numQuestions;
-        return availableQuestions.subList(0, numDemoQuestions); //TODO test size of sublist. What if available is size 0?
+        final int numDemoQuestions = Math.min(MAX_SHOWN_Q - numQuestions, availableQuestions.size());
+        return availableQuestions.subList(0, numDemoQuestions);
     }
 
     /*

@@ -44,10 +44,40 @@ public class QuestionUtils {
         return sortedFiltered;
     }
 
-    //TODO:
+    /*
+    Requirements for being available:
+    1. Have not answered question before
+     */
     public static List<Question> getAvailableQuestion(final List<Response> responses, final List<Question> possibleQuestions) {
+        if (responses.size() == possibleQuestions.size()) {
+            return Lists.newArrayList();
+        } else if (responses.size() == 0) {
+            return possibleQuestions;
+        }
 
-        return Lists.newArrayList();
+        final List<Question> availableQuestions = Lists.newArrayList();
+        for (final Question question : possibleQuestions) {
+            if (questionFree(question, responses)) {
+                availableQuestions.add(question);
+            }
+        }
+
+        return availableQuestions;
+    }
+
+    //TODO: make more efficient
+    private static Boolean questionFree(final Question question, final List<Response> responses) {
+
+        final List<Integer> responseQids = Lists.newArrayList();
+        for (final Response response : responses) {
+            responseQids.add(response.questionId);
+        }
+
+        if (responseQids.contains(question.id)) {
+            return Boolean.FALSE;
+        }
+
+        return Boolean.TRUE;
     }
 
 }

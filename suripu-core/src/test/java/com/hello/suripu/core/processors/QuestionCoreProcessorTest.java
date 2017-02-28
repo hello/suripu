@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hello.suripu.core.processors.QuestionCoreProcessor.getAnomalyQuestions;
+import static com.hello.suripu.core.processors.QuestionCoreProcessor.getDailyQuestions;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -33,27 +34,19 @@ import static org.hamcrest.Matchers.is;
  */
 public class QuestionCoreProcessorTest {
 
-    private final int FAKE_ACCOUNT_AGE_0 = 0;
+    private final int FAKE_ACCOUNT_AGE_NEW = 0;
+    private final int FAKE_ACCOUNT_AGE_OLD = 10;
     private final DateTime FAKE_LOCAL_DAY_0 = DateTime.now();
 
     private final long FAKE_INDEX_LONG = 0L;
 
     private final long FAKE_USER_ID_0 = 9990L;
-    private final long FAKE_USER_ID_1 = 9991L;
-    private final long FAKE_USER_ID_2 = 9992L;
-    private final long FAKE_USER_ID_3 = 9993L;
-    private final long FAKE_USER_ID_4 = 9994L;
-    private final long FAKE_USER_ID_5 = 9995L;
-
-    private final int FAKE_TIMEZONE_OFFSET = 0;
 
     private final long ACCOUNT_QID_FILLER = 99L;
     private final int DEPENDENCY_FILLER = 0;
     private final int PARENT_ID_FILLER = 0;
     private final DateTime DATE_TIME_FILLER_NOW = DateTime.now(DateTimeZone.UTC);
-    private final long ID_FILLER = 0;
     private final String ENGLISH_STR = "EN";
-    private final String RESPONSE_STRING_FILLER = "I feel great";
 
     @Test(expected=Exception.class)
     public void test_buildException() {
@@ -64,7 +57,6 @@ public class QuestionCoreProcessorTest {
                 .withQuestionResponseDAO(mockQuestionResponseReadDAO, mockQuestionResponseDAO)
                 .withQuestions(mockQuestionResponseReadDAO)
                 .build();
-
     }
 
     private ImmutableList<Question> getMockQuestions() {
@@ -152,6 +144,19 @@ public class QuestionCoreProcessorTest {
         return allQuestionIdMap;
     }
 
+    private List<Question> getMockOnboardingQuestions() {
+        final List<Question> allQuestions = getMockQuestions();
+        final List<Question> onboardingQuestions = Lists.newArrayList();
+
+        for (Question question : allQuestions) {
+            if (question.category == QuestionCategory.ONBOARDING) {
+                onboardingQuestions.add(question);
+            }
+        }
+
+        return onboardingQuestions;
+    }
+
     private Integer getMockAnomalyQid() {
 
         final List<Question> allQuestions = getMockQuestions();
@@ -167,11 +172,44 @@ public class QuestionCoreProcessorTest {
         return anomalyQid;
     }
 
+    private List<Question> getMockDailyQuestions() {
 
-    private ImmutableList<Response> getMockResponseUser0() {
-        final List<Response> surveyResponses = new ArrayList<>();
+        final List<Question> allQuestions = getMockQuestions();
+        final List<Question> dailyQuestions = Lists.newArrayList();
 
-        return ImmutableList.copyOf(surveyResponses);
+        for (Question question : allQuestions) {
+            if (question.category == QuestionCategory.DAILY) {
+                dailyQuestions.add(question);
+            }
+        }
+
+        return dailyQuestions;
+    }
+
+    private List<Question> getMockDemoQuestions() {
+        final List<Question> allQuestions = getMockQuestions();
+        final List<Question> demoQuestions = Lists.newArrayList();
+
+        for (Question question : allQuestions) {
+            if (question.category == QuestionCategory.DEMO) {
+                demoQuestions.add(question);
+            }
+        }
+
+        return demoQuestions;
+    }
+
+
+    private ImmutableList<Response> getMockNoOnboardingResponse() {
+        final List<Response> noOnboardingResponses = new ArrayList<>();
+
+        return ImmutableList.copyOf(noOnboardingResponses);
+    }
+
+    private ImmutableList<Response> getMockNoDemoResponse() {
+        final List<Response> noDemoResponses = new ArrayList<>();
+
+        return ImmutableList.copyOf(noDemoResponses);
     }
 
     private QuestionCoreProcessor setUp() {
@@ -183,10 +221,11 @@ public class QuestionCoreProcessorTest {
         final ImmutableList<Question> allQuestions = getMockQuestions();
         Mockito.when(mockQuestionResponseReadDAO.getAllQuestions()).thenReturn(allQuestions);
 
-        //Mock user response
-        final ImmutableList<Response> user0_response = getMockResponseUser0();
-        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_0, QuestionCategory.SURVEY.toString().toLowerCase())).thenReturn(user0_response);
-
+        //Mock user response 0
+        final ImmutableList<Response> noOnboardingResponse = getMockNoOnboardingResponse();
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_0, QuestionCategory.ONBOARDING.toString().toLowerCase())).thenReturn(noOnboardingResponse);
+        final ImmutableList<Response> noDemoResponse = getMockNoDemoResponse();
+        Mockito.when(mockQuestionResponseReadDAO.getAccountResponseByQuestionCategoryStr(FAKE_USER_ID_0, QuestionCategory.DEMO.toString().toLowerCase())).thenReturn(noDemoResponse);
 
         final List<AccountQuestion> noQuestionsSaved = Lists.newArrayList();
         for (Question question : allQuestions) {
@@ -214,6 +253,25 @@ public class QuestionCoreProcessorTest {
                 .withQuestionResponseDAO(mockQuestionResponseReadDAO, mockQuestionResponseDAO)
                 .withQuestions(mockQuestionResponseReadDAO)
                 .build();
+    }
+
+    @Test
+    public void test_getOnboarding_none() {
+
+        final QuestionCoreProcessor mockQuestionCoreProcessor = setUp();
+        final List<Question> availableQuestions = mockQuestionCoreProcessor.getOnboardingQuestions(FAKE_USER_ID_0, FAKE_ACCOUNT_AGE_OLD);
+
+        assertThat(availableQuestions.size(), is(0));
+    }
+
+    @Test
+    public void test_getOnboarding() {
+
+        final QuestionCoreProcessor mockQuestionCoreProcessor = setUp();
+        final List<Question> onboardingQuestions = getMockOnboardingQuestions();
+        final List<Question> availableQuestions = mockQuestionCoreProcessor.getOnboardingQuestions(FAKE_USER_ID_0, FAKE_ACCOUNT_AGE_NEW);
+
+        assertThat(availableQuestions.size(), is(onboardingQuestions.size()));
     }
 
     @Test
@@ -255,36 +313,106 @@ public class QuestionCoreProcessorTest {
     }
 
     @Test
-    public void test_dailyQuestion_none() {
+    public void test_dailyQuestion_none2() {
 
+        final Map<Integer, Question> allQuestionIdMap = getMockQuestionIdMapper();
+        final List<Question> dailyQuestions = getMockDailyQuestions();
+
+        final List<AccountQuestionResponses> todayQuestionResponsesList = Lists.newArrayList();
+        todayQuestionResponsesList.add(new AccountQuestionResponses(FAKE_INDEX_LONG, FAKE_USER_ID_0, dailyQuestions.get(0).id, FAKE_LOCAL_DAY_0, Boolean.TRUE, FAKE_LOCAL_DAY_0));
+
+        List<Question> availableQuestions = getDailyQuestions(allQuestionIdMap, dailyQuestions, todayQuestionResponsesList, FAKE_ACCOUNT_AGE_OLD);
+
+        assertThat(availableQuestions.size(), is(0));
     }
 
     @Test
     public void test_dailyQuestion_type1() {
 
+        final Map<Integer, Question> allQuestionIdMap = getMockQuestionIdMapper();
+        final List<Question> dailyQuestions = getMockDailyQuestions();
+
+        final List<AccountQuestionResponses> todayQuestionResponsesList = Lists.newArrayList();
+        todayQuestionResponsesList.add(new AccountQuestionResponses(FAKE_INDEX_LONG, FAKE_USER_ID_0, dailyQuestions.get(0).id, FAKE_LOCAL_DAY_0, Boolean.FALSE, FAKE_LOCAL_DAY_0));
+
+        List<Question> availableQuestions = getDailyQuestions(allQuestionIdMap, dailyQuestions, todayQuestionResponsesList, FAKE_ACCOUNT_AGE_OLD);
+
+        assertThat(availableQuestions.size(), is(1));
+        assertThat(availableQuestions.get(0).category, is(QuestionCategory.DAILY));
+        assertThat(availableQuestions.get(0).id, is(dailyQuestions.get(0).id));
     }
 
     @Test
     public void test_dailyQuestion_type2() {
 
+        final Map<Integer, Question> allQuestionIdMap = getMockQuestionIdMapper();
+        final List<Question> dailyQuestions = getMockDailyQuestions();
+
+        final List<AccountQuestionResponses> todayQuestionResponsesList = Lists.newArrayList();
+        todayQuestionResponsesList.add(new AccountQuestionResponses(FAKE_INDEX_LONG, FAKE_USER_ID_0, dailyQuestions.get(0).id, FAKE_LOCAL_DAY_0, Boolean.FALSE, FAKE_LOCAL_DAY_0));
+
+        List<Question> availableQuestions = getDailyQuestions(allQuestionIdMap, dailyQuestions, todayQuestionResponsesList, FAKE_ACCOUNT_AGE_OLD + 1);
+
+        assertThat(availableQuestions.size(), is(1));
+        assertThat(availableQuestions.get(0).category, is(QuestionCategory.DAILY));
+        assertThat(availableQuestions.get(0).id, is(dailyQuestions.get(1).id));
     }
 
-//    @Test(expected=Exception.class)
-//    public void test_dailyQuestion_exception() {
-//
-//    }
+    @Test(expected=Exception.class)
+    public void test_dailyQuestion_exception() {
+        final Map<Integer, Question> allQuestionIdMap = getMockQuestionIdMapper();
+        final List<Question> dailyQuestions = Lists.newArrayList(); //No daily questions loaded
 
+        final List<AccountQuestionResponses> todayQuestionResponsesList = Lists.newArrayList();
 
-
+        List<Question> availableQuestions = getDailyQuestions(allQuestionIdMap, dailyQuestions, todayQuestionResponsesList, FAKE_ACCOUNT_AGE_OLD);
+    }
 
     @Test
-    public void test_getSurveyQuestions_user0() {
-
+    public void test_getDemoQuestions_none() {
         final QuestionCoreProcessor mockQuestionCoreProcessor = setUp();
-//        final List<Question> servedQuestions = mockQuestionCoreProcessor.getQuestions(FAKE_USER_ID_0, FAKE_ACCOUNT_AGE_0, FAKE_LOCAL_DAY_0);
 
-//        assertThat(servedQuestions.size(), is(1)); //Only one question from survey asked
-//        assertThat(servedQuestions.get(0).category, is(QuestionCategory.ONBOARDING)); //Ask onboarding question
+        final List<Question> noOnboarding = Lists.newArrayList();
+        final List<Question> noAnomaly = Lists.newArrayList();
+        final List<Question> noDaily = Lists.newArrayList();
+
+        final List<Question> availableQuestions = mockQuestionCoreProcessor.getDemoQuestions(FAKE_USER_ID_0, FAKE_ACCOUNT_AGE_NEW, noOnboarding, noAnomaly, noDaily);
+
+        assertThat(availableQuestions.size(), is(0));
+    }
+
+    @Test
+    public void test_getDemoQuestions_none2() {
+        final QuestionCoreProcessor mockQuestionCoreProcessor = setUp();
+
+        final List<Question> manyOnboarding = Lists.newArrayList(); //Add enough other question types over limit of num allowed
+        final List<Question> allQuestions = getMockQuestions();
+        for (final Question question : allQuestions) {
+            manyOnboarding.add(question);
+        }
+
+        final List<Question> noAnomaly = Lists.newArrayList();
+        final List<Question> noDaily = Lists.newArrayList();
+
+        final List<Question> availableQuestions = mockQuestionCoreProcessor.getDemoQuestions(FAKE_USER_ID_0, FAKE_ACCOUNT_AGE_OLD, manyOnboarding, noAnomaly, noDaily);
+
+        assertThat(availableQuestions.size(), is(0));
+
+    }
+
+    @Test
+    public void test_getDemoQuestions() {
+        final QuestionCoreProcessor mockQuestionCoreProcessor = setUp();
+        final List<Question> demoQuestions = getMockDemoQuestions();
+
+        final List<Question> noOnboarding = Lists.newArrayList();
+        final List<Question> noAnomaly = Lists.newArrayList();
+        final List<Question> noDaily = Lists.newArrayList();
+
+        final List<Question> availableQuestions = mockQuestionCoreProcessor.getDemoQuestions(FAKE_USER_ID_0, FAKE_ACCOUNT_AGE_OLD, noOnboarding, noAnomaly, noDaily);
+
+        assertThat(availableQuestions.size(), is(demoQuestions.size()));
+
     }
 
 }
