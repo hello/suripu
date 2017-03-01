@@ -25,8 +25,8 @@ import java.util.Map;
 /**
  * Created by ksg on 02/28/2017
 */
-public class SleepSoundSettingDynamoDB {
-    private final static Logger LOGGER = LoggerFactory.getLogger(SleepSoundSettingDynamoDB.class);
+public class SleepSoundSettingsDynamoDB {
+    private final static Logger LOGGER = LoggerFactory.getLogger(SleepSoundSettingsDynamoDB.class);
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
@@ -78,7 +78,7 @@ public class SleepSoundSettingDynamoDB {
         return ImmutableMap.of(SleepSoundSettingAttributes.ACCOUNT_ID.shortName(), new AttributeValue().withN(String.valueOf(accountId)));
     }
 
-    public SleepSoundSettingDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
+    public SleepSoundSettingsDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }

@@ -2,7 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.sleep_sounds.SleepSoundSettingDynamoDB;
+import com.hello.suripu.core.db.sleep_sounds.SleepSoundSettingsDynamoDB;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.SleepSoundSetting;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
@@ -14,9 +14,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 /**
- * Created by jakepiccolo on 2/19/16.
+ * Created by ksg 02/28/2017
  */
-public class SleepSoundSettingDynamoDBIT extends DynamoDBIT<SleepSoundSettingDynamoDB> {
+
+public class SleepSoundSettingsDynamoDBIT extends DynamoDBIT<SleepSoundSettingsDynamoDB> {
 
     @Override
     protected CreateTableResult createTable() {
@@ -24,8 +25,8 @@ public class SleepSoundSettingDynamoDBIT extends DynamoDBIT<SleepSoundSettingDyn
     }
 
     @Override
-    protected SleepSoundSettingDynamoDB createDAO() {
-        return new SleepSoundSettingDynamoDB(amazonDynamoDBClient, TABLE_NAME);
+    protected SleepSoundSettingsDynamoDB createDAO() {
+        return new SleepSoundSettingsDynamoDB(amazonDynamoDBClient, TABLE_NAME);
     }
 
     @Test
