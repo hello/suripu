@@ -45,7 +45,7 @@ public class Account {
     public String extId() {
         // Default to internal ID to not eff MP
         final String internalId = id.or(0L).toString();
-        return externalId.isPresent() ? externalId.toString() : internalId;
+        return externalId.isPresent() ? externalId.get().toString() : internalId;
     }
 
 
