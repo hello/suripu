@@ -118,7 +118,7 @@ public class SleepSoundSettingsDynamoDB {
         if ((result.getAttributes() != null) && (result.getAttributes().size() > 0)) {
             // Only log if something changed.
             final String loggableAttributes = Util.getLogFormattedAttributes(result.getAttributes());
-            LOGGER.info("info=changed-sense-state-attributes sense-id={} account_id={} {}", setting.senseId, setting.accountId, loggableAttributes);
+            LOGGER.info("info=changed-sound-setting-attributes sense_id={} account_id={} {}", setting.senseId, setting.accountId, loggableAttributes);
         }
     }
 

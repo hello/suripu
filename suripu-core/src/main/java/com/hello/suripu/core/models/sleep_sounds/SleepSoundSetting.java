@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models.sleep_sounds;
 
+import com.google.common.base.MoreObjects;
+import com.hello.suripu.core.notifications.HelloPushMessage;
 import org.joda.time.DateTime;
 
 /**
@@ -26,4 +28,14 @@ public class SleepSoundSetting {
     public static SleepSoundSetting create(final String senseId, final Long accountId, final DateTime datetime, final Sound sound, final Duration duration, final Integer volumeScalingFactor) {
         return new SleepSoundSetting(senseId, accountId, datetime, sound, duration, volumeScalingFactor);
     }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(HelloPushMessage.class)
+                .add("sound", sound.name)
+                .add("duration", duration.name)
+                .add("volume", volumeScalingFactor)
+                .toString();
+    }
+
 }
