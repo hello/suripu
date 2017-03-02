@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class AccountMapper implements ResultSetMapper<Account> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountMapper.class);
@@ -38,6 +39,7 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withLastModified(r.getLong("last_modified"));
         builder.withCreated(new DateTime(r.getTimestamp("created"), DateTimeZone.UTC));
         builder.withAccountVerified(Boolean.FALSE);
+        builder.withExternalId(UUID.fromString(r.getString("external_id")));
         final Account account = builder.build();
 
         LOGGER.trace("last_modified from DB = {}", r.getLong("last_modified"));

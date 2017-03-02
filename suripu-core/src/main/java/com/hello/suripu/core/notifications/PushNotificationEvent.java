@@ -97,7 +97,8 @@ public class PushNotificationEvent {
             checkNotNull(type, "type cannot be null");
             checkNotNull(helloPushMessage, "message cannot be null");
             checkNotNull(timeZone, "timezone cannot be null");
-            final DateTime eventTimestamp = timestamp == null ? DateTime.now(timeZone) : timestamp;
+
+            final DateTime eventTimestamp = timestamp == null ? DateTime.now(DateTimeZone.UTC) : timestamp;
             return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId, timeZone, periodicity);
         }
 
