@@ -149,4 +149,8 @@ public class BaseResource {
     protected Boolean hasQuestionSurveyProcessorEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_SURVEY_PROCESSOR_ENABLED, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasQuestionCoreProcessorEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_CORE_PROCESSOR_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
 }
