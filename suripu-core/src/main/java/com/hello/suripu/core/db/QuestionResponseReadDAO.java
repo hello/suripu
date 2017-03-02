@@ -113,18 +113,6 @@ public interface QuestionResponseReadDAO {
     ImmutableList<Response> getAccountResponseByQuestionCategoryStr(@Bind("account_id") long account_id,
                                                                     @Bind("question_category") String question_category);
 
-    @RegisterMapper(ResponseMapper.class)
-    @SqlQuery("SELECT R.*, C.response_text FROM responses R " +
-            "INNER JOIN response_choices C ON R.response_id = C.id " +
-            "WHERE account_id = :account_id " +
-                "AND created = :created " +
-                "AND R.question_id IN (SELECT id FROM questions WHERE category = CAST(:question_category AS question_category)) " +
-            "ORDER BY created DESC")
-    ImmutableList<Response> getAccountResponseByQuestionCategoryStrAndCreatedDate(@Bind("account_id") long account_id,
-                                                                                  @Bind("created") DateTime created,
-                                                                                  @Bind("question_category") String question_category);
-
-
     @RegisterMapper(AccountQuestionMapper.class)
     @SqlQuery("SELECT * FROM account_questions WHERE account_id = :account_id and question_id = :question_id ORDER BY id DESC LIMIT :limit")
     ImmutableList<AccountQuestion> getRecentAskedQuestionByQuestionId (@Bind("account_id") final long account_id,
