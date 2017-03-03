@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by jyfan on 2/23/17.
  *
  * Function:
- * 1. Decides which questions should be surfaced each day
+ * 1. Decides which questions should be surfaced each day. Logic is based only on the category parameter.
  * 2. Saves questions surfaced (exception is pre-populated questions e.g. anomaly which are saved even though they
  * may not be surfaced)
  *
@@ -153,7 +153,7 @@ public class QuestionCoreProcessor {
     public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime todayLocal) {
 
         final DateTime expiration = todayLocal.plusDays(1);
-        final ImmutableList<AccountQuestionResponses> todayQuestionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
+        final ImmutableList<AccountQuestionResponses> todayQuestionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration); //Gets questions already asked to user & responses, if any
 
         final List<Question> onboardingQuestions = getOnboardingQuestions(accountId, accountAgeInDays);
         final List<Question> anomalyQuestions = getAnomalyQuestions(this.allQuestionIdMap, todayQuestionResponseList);
@@ -194,6 +194,7 @@ public class QuestionCoreProcessor {
     @VisibleForTesting
     public static List<Question> getAnomalyQuestions(final Map<Integer, Question> allQuestionIdMap, final List<AccountQuestionResponses> todayQuestionResponsesList) {
 
+        // anomaly questions are pre-inserted by the anomaly worker
         // check existence/ answered status
         for (AccountQuestionResponses accountQuestionResponses : todayQuestionResponsesList) {
 
@@ -259,13 +260,15 @@ public class QuestionCoreProcessor {
     }
 
     /*
-    Insert questions
+    Insert questions if it has not already been inserted
     */
     private Integer handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions) {
 
         int saves = 0;
 
         for (Question question : questions) {
+
+            //TODO: make batch
             final Boolean savedQuestion = savedAccountQuestion(accountId, question, todayLocal);
             if (!savedQuestion) {
                 saveQuestion(accountId, question, todayLocal, expireDate);
