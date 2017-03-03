@@ -1,17 +1,22 @@
 package com.hello.suripu.core.db.sleep_sounds;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
-import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
-import com.amazonaws.services.dynamodbv2.model.GetItemResult;
-import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
+import com.amazonaws.services.dynamodbv2.document.AttributeUpdate;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.dynamo.Attribute;
-import com.hello.suripu.core.db.dynamo.Util;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.SleepSoundSetting;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
@@ -20,7 +25,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Created by ksg on 02/28/2017
@@ -28,8 +33,8 @@ import java.util.Map;
 public class SleepSoundSettingsDynamoDB {
     private final static Logger LOGGER = LoggerFactory.getLogger(SleepSoundSettingsDynamoDB.class);
 
-    private final AmazonDynamoDB dynamoDBClient;
-    private final String tableName;
+    private final DynamoDB dynamoDB;
+    private final Table table;
 
 
     public enum SleepSoundSettingAttributes implements Attribute {
@@ -70,37 +75,39 @@ public class SleepSoundSettingsDynamoDB {
         }
     }
 
-    private Map<String, AttributeValue> getKey(final String senseId) {
-        return ImmutableMap.of(SleepSoundSettingAttributes.SENSE_ID.shortName(), new AttributeValue().withS(senseId));
+    private SleepSoundSettingsDynamoDB(final DynamoDB dynamoDB, final Table table) {
+        this.dynamoDB = dynamoDB;
+        this.table = table;
     }
 
-    private Map<String, AttributeValue> getRangeKey(final Long accountId) {
-        return ImmutableMap.of(SleepSoundSettingAttributes.ACCOUNT_ID.shortName(), new AttributeValue().withN(String.valueOf(accountId)));
+    public static SleepSoundSettingsDynamoDB create(final AmazonDynamoDB amazonDynamoDB, final String tableName) {
+        final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
+        final Table table = dynamoDB.getTable(tableName);
+        return new SleepSoundSettingsDynamoDB(dynamoDB, table);
     }
 
-    public SleepSoundSettingsDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
-        this.dynamoDBClient = dynamoDBClient;
-        this.tableName = tableName;
+    public static void createTable(AmazonDynamoDB amazonDynamoDB, String tableName) throws InterruptedException {
+        final CreateTableRequest request = new CreateTableRequest()
+                .withTableName(tableName)
+                .withKeySchema(
+                        new KeySchemaElement().withAttributeName(SleepSoundSettingAttributes.SENSE_ID.shortName()).withKeyType(KeyType.HASH),
+                        new KeySchemaElement().withAttributeName(SleepSoundSettingAttributes.ACCOUNT_ID.shortName()).withKeyType(KeyType.RANGE))
+                .withAttributeDefinitions(
+                        new AttributeDefinition().withAttributeName(SleepSoundSettingAttributes.SENSE_ID.shortName()).withAttributeType(ScalarAttributeType.S),
+                        new AttributeDefinition().withAttributeName(SleepSoundSettingAttributes.ACCOUNT_ID.shortName()).withAttributeType(ScalarAttributeType.N))
+                .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+
+        Table table = new DynamoDB(amazonDynamoDB).createTable(request);
+        table.waitForActive();
     }
 
-    public CreateTableResult createTable(final Long readCapacityUnits, final Long writeCapacityUnits) {
-        return Util.createTable(dynamoDBClient, tableName, SleepSoundSettingAttributes.SENSE_ID, SleepSoundSettingAttributes.ACCOUNT_ID, readCapacityUnits, writeCapacityUnits);
-    }
 
     public Optional<SleepSoundSetting> get(final String senseId, final Long accountId) {
-        final Map<String, AttributeValue> keys = Maps.newHashMap();
-        keys.putAll(getKey(senseId));
-        keys.putAll(getRangeKey(accountId));
-
-        final GetItemRequest getRequest = new GetItemRequest()
-                .withKey(keys)
-                .withTableName(tableName);
-
-        final GetItemResult result = dynamoDBClient.getItem(getRequest);
-        final Map<String, AttributeValue> attributes = result.getItem();
-        if (attributes != null && attributes.containsKey(SleepSoundSettingAttributes.ACCOUNT_ID.shortName())) {
-            return Optional.of(toSoundSetting(attributes));
+        final Item item = table.getItem(SleepSoundSettingAttributes.SENSE_ID.shortName(), senseId, SleepSoundSettingAttributes.ACCOUNT_ID.shortName(), accountId);
+        if (item != null) {
+            return Optional.of(fromItem(item));
         }
+
         return Optional.absent();
     }
 
@@ -108,63 +115,60 @@ public class SleepSoundSettingsDynamoDB {
      * WARNING: Last write wins
      */
     public void update(final SleepSoundSetting setting) {
-        final Map<String, AttributeValue> updateKeys = Maps.newHashMap();
-        updateKeys.putAll(getKey(setting.senseId));
-        updateKeys.putAll(getRangeKey(setting.accountId));
+        final UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey(SleepSoundSettingAttributes.SENSE_ID.shortName(), setting.senseId,
+                        SleepSoundSettingAttributes.ACCOUNT_ID.shortName(), setting.accountId)
+                .withAttributeUpdate(toUpdates(setting))
+                .withReturnValues(ReturnValue.ALL_NEW);
 
-        final UpdateItemResult result = dynamoDBClient.updateItem(tableName, updateKeys, toUpdateItem(setting), "UPDATED_OLD");
-
-        // getAttributes may be null or empty if this is the first time we've created this item or if nothing was changed, respectively.
-        if ((result.getAttributes() != null) && (result.getAttributes().size() > 0)) {
-            // Only log if something changed.
-            final String loggableAttributes = Util.getLogFormattedAttributes(result.getAttributes());
-            LOGGER.info("info=changed-sound-setting-attributes sense_id={} account_id={} {}", setting.senseId, setting.accountId, loggableAttributes);
+        final UpdateItemOutcome outcome = table.updateItem(updateItemSpec);
+        if (outcome.getItem() != null && outcome.getItem().numberOfAttributes() > 0) {
+            final String loggableAttributes = outcome.getItem().attributes().toString();
+            LOGGER.info("info=changed-sound-setting-attributes sense_id={} account_id={} attributes={}", setting.senseId, setting.accountId, loggableAttributes);
+        } else {
+            LOGGER.error("error=fail-to-update-sound-setting sense_id={} account_id={} setting={}",  setting.senseId, setting.accountId, setting.toString());
         }
     }
 
-    private SleepSoundSetting toSoundSetting(final Map<String, AttributeValue> item) {
+    private SleepSoundSetting fromItem(final Item item) {
         final Duration duration = Duration.create(
-                Long.valueOf(item.get(SleepSoundSettingAttributes.DURATION_ID.shortName()).getN()),
-                item.get(SleepSoundSettingAttributes.DURATION_NAME.shortName()).getS(),
-                Integer.valueOf(item.get(SleepSoundSettingAttributes.DURATION_SECONDS.shortName()).getN()));
+                item.getLong(SleepSoundSettingAttributes.DURATION_ID.shortName()),
+                item.getString(SleepSoundSettingAttributes.DURATION_NAME.shortName()),
+                item.getInt(SleepSoundSettingAttributes.DURATION_SECONDS.shortName()));
 
         final Sound sound = Sound.create(
-                Long.valueOf(item.get(SleepSoundSettingAttributes.SOUND_ID.shortName()).getN()),
-                item.get(SleepSoundSettingAttributes.SOUND_PREVIEW_URL.shortName()).getS(),
-                item.get(SleepSoundSettingAttributes.SOUND_NAME.shortName()).getS(),
-                item.get(SleepSoundSettingAttributes.SOUND_PATH.shortName()).getS(),
-                item.get(SleepSoundSettingAttributes.SOUND_URL.shortName()).getS());
+                item.getLong(SleepSoundSettingAttributes.SOUND_ID.shortName()),
+                item.getString(SleepSoundSettingAttributes.SOUND_PREVIEW_URL.shortName()),
+                item.getString(SleepSoundSettingAttributes.SOUND_NAME.shortName()),
+                item.getString(SleepSoundSettingAttributes.SOUND_PATH.shortName()),
+                item.getString(SleepSoundSettingAttributes.SOUND_URL.shortName()));
 
-        final Integer volumeScalingFactor = Integer.valueOf(item.get(SleepSoundSettingAttributes.VOLUME_FACTOR.shortName()).getN());
+        final Integer volumeScalingFactor = item.getInt(SleepSoundSettingAttributes.VOLUME_FACTOR.shortName());
 
-        final String senseId = item.get(SleepSoundSettingAttributes.SENSE_ID.shortName()).getS();
-        final Long accountId = Long.valueOf(item.get(SleepSoundSettingAttributes.ACCOUNT_ID.shortName()).getN());
+        final String senseId = item.getString(SleepSoundSettingAttributes.SENSE_ID.shortName());
+        final Long accountId = item.getLong(SleepSoundSettingAttributes.ACCOUNT_ID.shortName());
 
         final DateTime dateTime = DateTime.parse(
-                item.get(SleepSoundSettingAttributes.DATETIME.shortName()).getS()
+                item.getString(SleepSoundSettingAttributes.DATETIME.shortName())
         ).withZone(DateTimeZone.UTC);
 
         return SleepSoundSetting.create(senseId, accountId, dateTime, sound, duration, volumeScalingFactor);
     }
 
+    private List<AttributeUpdate> toUpdates(final SleepSoundSetting setting) {
+        final List<AttributeUpdate> updates = Lists.newArrayList();
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.DURATION_ID.shortName()).put(setting.duration.id));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.DURATION_NAME.shortName()).put(setting.duration.name));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.DURATION_SECONDS.shortName()).put(setting.duration.durationSeconds.get()));
 
-    private Map<String, AttributeValueUpdate> toUpdateItem(final SleepSoundSetting setting) {
-        final Map<String, AttributeValueUpdate> updates = Maps.newHashMap();
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.SOUND_ID.shortName()).put(setting.sound.id));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.SOUND_PREVIEW_URL.shortName()).put(setting.sound.previewUrl));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.SOUND_NAME.shortName()).put(setting.sound.name));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.SOUND_PATH.shortName()).put(setting.sound.filePath));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.SOUND_URL.shortName()).put(setting.sound.url));
 
-        // updates.put(SleepSoundSettingAttributes.ACCOUNT_ID.shortName(), Util.putAction(setting.accountId));
-        updates.put(SleepSoundSettingAttributes.DATETIME.shortName(), Util.putAction(setting.datetime.toString()));
-
-        updates.put(SleepSoundSettingAttributes.DURATION_ID.shortName(), Util.putAction(setting.duration.id));
-        updates.put(SleepSoundSettingAttributes.DURATION_NAME.shortName(), Util.putAction(setting.duration.name));
-        updates.put(SleepSoundSettingAttributes.DURATION_SECONDS.shortName(), Util.putAction(setting.duration.durationSeconds.get()));
-
-        updates.put(SleepSoundSettingAttributes.SOUND_ID.shortName(), Util.putAction(setting.sound.id));
-        updates.put(SleepSoundSettingAttributes.SOUND_PREVIEW_URL.shortName(), Util.putAction(setting.sound.previewUrl));
-        updates.put(SleepSoundSettingAttributes.SOUND_NAME.shortName(), Util.putAction(setting.sound.name));
-        updates.put(SleepSoundSettingAttributes.SOUND_PATH.shortName(), Util.putAction(setting.sound.filePath));
-        updates.put(SleepSoundSettingAttributes.SOUND_URL.shortName(), Util.putAction(setting.sound.url));
-
-        updates.put(SleepSoundSettingAttributes.VOLUME_FACTOR.shortName(), Util.putAction(setting.volumeScalingFactor));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.VOLUME_FACTOR.shortName()).put(setting.volumeScalingFactor));
+        updates.add(new AttributeUpdate(SleepSoundSettingAttributes.DATETIME.shortName()).put(setting.datetime.toString()));
 
         return updates;
     }
