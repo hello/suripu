@@ -38,7 +38,8 @@ public class Account {
 //
 //        final String digest = DigestUtils.md5Hex(sb.toString());
 //        return digest;
-        return id.or(0L).toString();
+//        return id.or(0L).toString();
+        return extId();
     }
 
     @JsonProperty("ext_id")
