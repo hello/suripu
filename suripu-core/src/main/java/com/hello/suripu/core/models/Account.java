@@ -345,7 +345,6 @@ public class Account {
             return this;
         }
 
-        @JsonProperty("id")
         public Builder withId(final Long id) {
             this.id = Optional.fromNullable(id);
             return this;
