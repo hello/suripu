@@ -41,6 +41,7 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
         this.sleepStats = sleepStats;
     }
 
+
     @Override
     public int compareTo(@NotNull AggregateSleepStats o) {
         return this.dateTime.compareTo(o.dateTime);
