@@ -11,6 +11,7 @@ import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
@@ -19,6 +20,7 @@ import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
+import com.hello.suripu.core.db.MainEventTimesDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
@@ -31,6 +33,7 @@ import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataCompleteness;
@@ -39,11 +42,13 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.MotionFrequency;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepSegment;
@@ -53,7 +58,6 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
-import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.processors.PartnerMotion;
@@ -100,6 +104,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountReadDAO accountDAO;
     private final SleepStatsDAO sleepStatsDAODynamoDB;
+    private final MainEventTimesDAO mainEventTimesDAO;
     private final TimeZoneHistoryDAO timeZoneHistoryDAO;
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
@@ -136,6 +141,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                                                         final SleepHmmDAO sleepHmmDAO,
                                                                         final AccountReadDAO accountDAO,
                                                                         final SleepStatsDAO sleepStatsDAODynamoDB,
+                                                                        final MainEventTimesDAO mainEventTimesDAO,
                                                                         final SenseDataDAO senseDataDAO,
                                                                         final TimeZoneHistoryDAO timeZoneHistoryDAO,
                                                                         final OnlineHmmModelsDAO priorsDAO,
@@ -155,6 +161,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return new InstrumentedTimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
+                mainEventTimesDAO,
                 senseDataDAO,
                 timeZoneHistoryDAO,
                 Optional.<UUID>absent(),
@@ -166,7 +173,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public InstrumentedTimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseDataDAO, timeZoneHistoryDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB, mainEventTimesDAO,senseDataDAO, timeZoneHistoryDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
     }
 
     //private SessionLogDebug(final String)
@@ -179,6 +186,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                           final SleepHmmDAO sleepHmmDAO,
                                           final AccountReadDAO accountDAO,
                                           final SleepStatsDAO sleepStatsDAODynamoDB,
+                                          final MainEventTimesDAO mainEventTimesDAO,
                                           final SenseDataDAO senseDataDAO,
                                           final TimeZoneHistoryDAO timeZoneHistoryDAO,
                                           final Optional<UUID> uuid,
@@ -194,6 +202,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        this.mainEventTimesDAO = mainEventTimesDAO;
         this.senseDataDAO = senseDataDAO;
         this.timeZoneHistoryDAO = timeZoneHistoryDAO;
         this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
@@ -363,48 +372,61 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
 
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
+        final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId,targetDate, SleepPeriod.Period.NIGHT);
+
+        final boolean timelineLockedDown = isLockedDown(accountId, targetDate, computedMainEventTimesOptional, sensorData, useTimelineLockdown(accountId));
+        final MainEventTimes mainEventTimes;
+        final TimelineAlgorithmResult result;
+
+        if(!timelineLockedDown) {
+
         /*  GET THE TIMELINE! */
-        Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
-        final Set<String> featureFlips = getTimelineFeatureFlips(accountId);
+            Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
+            final Set<String> featureFlips = getTimelineFeatureFlips(accountId);
 
 
-        for (final AlgorithmType alg : algorithmChain) {
-            LOGGER.info("action=try_algorithm algorithm_type={}",alg);
-            final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
+            for (final AlgorithmType alg : algorithmChain) {
+                LOGGER.info("action=try_algorithm algorithm_type={}", alg);
+                final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
 
-            if (!timelineAlgorithm.isPresent()) {
-                //assume error reporting is happening in alg, no need to report it here
-                continue;
+                if (!timelineAlgorithm.isPresent()) {
+                    //assume error reporting is happening in alg, no need to report it here
+                    continue;
+                }
+
+                resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged, featureFlips);
+                //got a valid result? poof, we're out.
+                if (resultOptional.isPresent()) {
+                    break;
+                }
             }
-
-            resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged,featureFlips);
-            //got a valid result? poof, we're out.
-            if (resultOptional.isPresent()) {
-                break;
-            }
-        }
 
 //
-        //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
-        if (!resultOptional.isPresent()) {
-            LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms",accountId, targetDate.toDate());
-            log.addMessage(AlgorithmType.NONE,TimelineError.UNEXEPECTED,"no successful algorithms");
-            return TimelineResult.createEmpty(log);
-        }
+            //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
+            if (!resultOptional.isPresent()) {
+                LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms", accountId, targetDate.toDate());
+                log.addMessage(AlgorithmType.NONE, TimelineError.UNEXEPECTED, "no successful algorithms");
+                return TimelineResult.createEmpty(log);
+            }
 
 
-        //get result, and refine (optional feature) in-bed time for online HMM
-        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
-
-        final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get(), timeZoneOffsetMap);
-        List<Event> extraEvents = result.extraEvents;
+            //get result, and refine (optional feature) in-bed time for online HMM
+            result = refineInBedTime(startTimeLocalUTC, endTimeLocalUTC, accountId, sensorData, resultOptional.get(), timeZoneOffsetMap);
+            List<Event> extraEvents = result.extraEvents;
 
             /* FEATURE FLIP EXTRA EVENTS */
-        if (!this.hasExtraEventsEnabled(accountId)) {
-            extraEvents = Collections.EMPTY_LIST;
+            if (!this.hasExtraEventsEnabled(accountId)) {
+                extraEvents = Collections.EMPTY_LIST;
+            }
+
+            //save to main event times
+            mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), result);
+            mainEventTimesDAO.updateEventTimes(mainEventTimes);
+        } else {
+            mainEventTimes = computedMainEventTimesOptional.get();
+            result = new TimelineAlgorithmResult(AlgorithmType.NONE, mainEventTimes.getMainEvents());
         }
-
-
 
 
         final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneOffsetMap, result, sensorData);
@@ -419,6 +441,56 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return TimelineResult.create(populateTimelines.timelines, log);
 
     }
+
+    private boolean isLockedDown(final long accountId, final DateTime targetDate, final Optional<MainEventTimes> computedMainEventTimesOptional, final OneDaysSensorData oneDaysSensorData, final Boolean hasTimelineLockdown){
+        final int sleepDurationDifferenceThreshold = 60; //sleepduration cannot be less than 60 mins of typical duration.
+        final int noMotionWindowMinutes = 60;
+        final int motionCountThreshold = 4;
+        final int minSleepDurationThreshold = 5 * DateTimeConstants.MINUTES_PER_HOUR;
+        int sleepDurationSum = 0;
+        int targetDateSleepDuration = 0;
+
+        if(hasTimelineLockdown && computedMainEventTimesOptional.isPresent()){
+
+            final MainEventTimes computedMainEventTimes = computedMainEventTimesOptional.get();
+            final ImmutableList<AggregateSleepStats> previousSleepStats= sleepStatsDAODynamoDB.getBatchStats(accountId, targetDate.minusDays(14).toString(),targetDate.toString());
+            if (previousSleepStats.size() > 7) { //safeguard for individuals with few / no recent nights that are atypical
+                // calculate mean sleepduration for past two weeks
+                for (final AggregateSleepStats sleepStat : previousSleepStats) {
+                    sleepDurationSum += sleepStat.sleepStats.sleepDurationInMinutes;
+                    if (sleepStat.dateTime.getMillis() == targetDate.getMillis()) {
+                        targetDateSleepDuration = sleepStat.sleepStats.sleepDurationInMinutes;
+                    }
+                }
+                final int meanSleepDuration = sleepDurationSum / previousSleepStats.size();
+                final int minSleepDuration = Math.min(meanSleepDuration - sleepDurationDifferenceThreshold, minSleepDurationThreshold);
+
+                final Boolean hasMotionDuringWindow = motionDuringWindow(oneDaysSensorData.oneDaysTrackerMotion.originalTrackerMotions, computedMainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time, noMotionWindowMinutes, motionCountThreshold);
+                final Boolean hasSufficientSleepDuration = targetDateSleepDuration >= minSleepDuration;
+
+                if (hasMotionDuringWindow && hasSufficientSleepDuration) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean motionDuringWindow(final List<TrackerMotion> trackerMotions, final Long windowStartTime, final int windowDurationMinutes, final int newMotionCountThreshold){
+        final int newMotionTimeWindow = windowDurationMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
+        int newMotionCount = 0;
+        for(final TrackerMotion trackermotion : trackerMotions){
+            if (trackermotion.timestamp > windowStartTime && trackermotion.timestamp <= windowStartTime + newMotionTimeWindow){
+                newMotionCount +=1;
+            }
+        }
+        if (newMotionCount > newMotionCountThreshold){
+            return true;
+        }
+
+        return false;
+    }
+
 
     private Set<String> getTimelineFeatureFlips(final long accountId) {
         final Set<String> featureFlips = Sets.newHashSet();
