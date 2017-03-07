@@ -374,8 +374,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
         final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId,targetDate, SleepPeriod.Period.NIGHT);
+        final ImmutableList<AggregateSleepStats> previousSleepStats= sleepStatsDAODynamoDB.getBatchStats(accountId, targetDate.minusDays(14).toString(),targetDate.toString());
 
-        final boolean timelineLockedDown = isLockedDown(accountId, targetDate, computedMainEventTimesOptional, sensorData, useTimelineLockdown(accountId));
+        final boolean timelineLockedDown = timelineUtils.isLockedDown(previousSleepStats, computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.originalTrackerMotions, useTimelineLockdown(accountId));
         final MainEventTimes mainEventTimes;
         final TimelineAlgorithmResult result;
 
@@ -441,56 +442,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return TimelineResult.create(populateTimelines.timelines, log);
 
     }
-
-    private boolean isLockedDown(final long accountId, final DateTime targetDate, final Optional<MainEventTimes> computedMainEventTimesOptional, final OneDaysSensorData oneDaysSensorData, final Boolean hasTimelineLockdown){
-        final int sleepDurationDifferenceThreshold = 60; //sleepduration cannot be less than 60 mins of typical duration.
-        final int noMotionWindowMinutes = 60;
-        final int motionCountThreshold = 4;
-        final int minSleepDurationThreshold = 5 * DateTimeConstants.MINUTES_PER_HOUR;
-        int sleepDurationSum = 0;
-        int targetDateSleepDuration = 0;
-
-        if(hasTimelineLockdown && computedMainEventTimesOptional.isPresent()){
-
-            final MainEventTimes computedMainEventTimes = computedMainEventTimesOptional.get();
-            final ImmutableList<AggregateSleepStats> previousSleepStats= sleepStatsDAODynamoDB.getBatchStats(accountId, targetDate.minusDays(14).toString(),targetDate.toString());
-            if (previousSleepStats.size() > 7) { //safeguard for individuals with few / no recent nights that are atypical
-                // calculate mean sleepduration for past two weeks
-                for (final AggregateSleepStats sleepStat : previousSleepStats) {
-                    sleepDurationSum += sleepStat.sleepStats.sleepDurationInMinutes;
-                    if (sleepStat.dateTime.getMillis() == targetDate.getMillis()) {
-                        targetDateSleepDuration = sleepStat.sleepStats.sleepDurationInMinutes;
-                    }
-                }
-                final int meanSleepDuration = sleepDurationSum / previousSleepStats.size();
-                final int minSleepDuration = Math.min(meanSleepDuration - sleepDurationDifferenceThreshold, minSleepDurationThreshold);
-
-                final Boolean hasMotionDuringWindow = motionDuringWindow(oneDaysSensorData.oneDaysTrackerMotion.originalTrackerMotions, computedMainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time, noMotionWindowMinutes, motionCountThreshold);
-                final Boolean hasSufficientSleepDuration = targetDateSleepDuration >= minSleepDuration;
-
-                if (hasMotionDuringWindow && hasSufficientSleepDuration) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static boolean motionDuringWindow(final List<TrackerMotion> trackerMotions, final Long windowStartTime, final int windowDurationMinutes, final int newMotionCountThreshold){
-        final int newMotionTimeWindow = windowDurationMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        int newMotionCount = 0;
-        for(final TrackerMotion trackermotion : trackerMotions){
-            if (trackermotion.timestamp > windowStartTime && trackermotion.timestamp <= windowStartTime + newMotionTimeWindow){
-                newMotionCount +=1;
-            }
-        }
-        if (newMotionCount > newMotionCountThreshold){
-            return true;
-        }
-
-        return false;
-    }
-
 
     private Set<String> getTimelineFeatureFlips(final long accountId) {
         final Set<String> featureFlips = Sets.newHashSet();
