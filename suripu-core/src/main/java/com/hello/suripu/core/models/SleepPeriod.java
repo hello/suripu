@@ -234,23 +234,25 @@ public class SleepPeriod {
 
     public static List<SleepPeriod> getSleepPeriodQueue(final DateTime targetDate, final DateTime currentTimeLocal){
 
-        //previous day
-        if (currentTimeLocal.isBefore(targetDate.plusDays(1).withTimeAtStartOfDay().plusHours(8).getMillis())){
+        //for previous complete day -- roll over 3am
+        if (currentTimeLocal.isAfter(targetDate.plusDays(1).withTimeAtStartOfDay().plusHours(3).getMillis())){
             return createAllSleepPeriods(targetDate);
         }
-        if (currentTimeLocal.isBefore(targetDate.plusDays(1).withTimeAtStartOfDay().plusHours(16).getMillis())){
+        //for current day upto night period -- roll over 11am - include afternoon after 7pm
+        if (currentTimeLocal.isAfter(targetDate.withTimeAtStartOfDay().plusHours(19).getMillis())){
             final List<SleepPeriod> sleepPeriods = new ArrayList<>();
+            //sleepPeriods.add(SleepPeriod.night(targetDate.minusDays(1)));
+            sleepPeriods.add(SleepPeriod.morning(targetDate));
             sleepPeriods.add(SleepPeriod.afternoon(targetDate));
-            sleepPeriods.add(SleepPeriod.night(targetDate));
-            sleepPeriods.add(SleepPeriod.morning(targetDate.plusDays(1)));
+
             return sleepPeriods;
         }
+        //for current day morning period only roll over 11 am,
         else{
             final List<SleepPeriod> sleepPeriods = new ArrayList<>();
-            sleepPeriods.add(SleepPeriod.night(targetDate));
-            sleepPeriods.add(SleepPeriod.morning(targetDate.plusDays(1)));
-            sleepPeriods.add(SleepPeriod.afternoon(targetDate.plusDays(1)));
-
+            sleepPeriods.add(SleepPeriod.morning(targetDate));
+            //sleepPeriods.add(SleepPeriod.afternoon(targetDate.minusDays(1)));
+            //sleepPeriods.add(SleepPeriod.night(targetDate.minusDays(1)));
             return sleepPeriods;
         }
     }

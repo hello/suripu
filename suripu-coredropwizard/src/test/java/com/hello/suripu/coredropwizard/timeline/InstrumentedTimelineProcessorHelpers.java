@@ -36,7 +36,6 @@ import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepStats;
@@ -326,11 +325,6 @@ public class InstrumentedTimelineProcessorHelpers {
             return Collections.EMPTY_LIST;
         }
 
-        @Override
-        public List<MainEventTimes> getSleepPeriodEventTimes(Long accountId, DateTime date, SleepPeriod sleepPeriod) {
-            return Collections.EMPTY_LIST;
-
-        }
     };
 
     final public TimeZoneHistoryDAO timeZoneHistoryDAO= new TimeZoneHistoryDAO(){
