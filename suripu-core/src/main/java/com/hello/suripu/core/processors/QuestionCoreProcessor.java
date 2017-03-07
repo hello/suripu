@@ -51,7 +51,7 @@ public class QuestionCoreProcessor {
     private static final int NEW_ACCOUNT_AGE = 1; // less than 1 day
     private static final int MAX_SHOWN_Q = 5;
 
-    public QuestionCoreProcessor(final QuestionResponseReadDAO questionResponseReadDAO,
+    private QuestionCoreProcessor(final QuestionResponseReadDAO questionResponseReadDAO,
                                  final QuestionResponseDAO questionResponseDAO,
                                  final Map<Integer, Question> allQuestionIdMap,
                                  final List<Question> onboardingQuestions,
