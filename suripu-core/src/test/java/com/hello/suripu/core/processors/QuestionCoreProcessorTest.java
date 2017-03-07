@@ -49,14 +49,11 @@ public class QuestionCoreProcessorTest {
     private final String ENGLISH_STR = "EN";
 
     @Test(expected=Exception.class)
-    public void test_buildException() {
+    public void test_initException() {
         QuestionResponseReadDAO mockQuestionResponseReadDAO = Mockito.mock(QuestionResponseReadDAO.class);
         QuestionResponseDAO mockQuestionResponseDAO = Mockito.mock(QuestionResponseDAO.class);
 
-        final QuestionCoreProcessor questionCoreProcessor = new QuestionCoreProcessor.Builder()
-                .withQuestionResponseDAO(mockQuestionResponseReadDAO, mockQuestionResponseDAO)
-                .withQuestions(mockQuestionResponseReadDAO)
-                .build();
+        final QuestionCoreProcessor questionCoreProcessor = QuestionCoreProcessor.create(mockQuestionResponseReadDAO, mockQuestionResponseDAO);
     }
 
     private ImmutableList<Question> getMockQuestions() {
@@ -232,27 +229,20 @@ public class QuestionCoreProcessorTest {
             Mockito.when(mockQuestionResponseReadDAO.getAskedQuestionByQuestionIdCreatedDate(FAKE_USER_ID_0, question.id, DATE_TIME_FILLER_NOW)).thenReturn(ImmutableList.copyOf(noQuestionsSaved));
         }
 
-        final QuestionCoreProcessor questionCoreProcessor = new QuestionCoreProcessor.Builder()
-                .withQuestionResponseDAO(mockQuestionResponseReadDAO, mockQuestionResponseDAO)
-                .withQuestions(mockQuestionResponseReadDAO)
-                .build();
-
+        final QuestionCoreProcessor questionCoreProcessor = QuestionCoreProcessor.create(mockQuestionResponseReadDAO, mockQuestionResponseDAO);
         return questionCoreProcessor;
 
     }
 
     @Test
-    public void test_buildNoException() {
+    public void test_initNoException() {
         QuestionResponseReadDAO mockQuestionResponseReadDAO = Mockito.mock(QuestionResponseReadDAO.class);
         QuestionResponseDAO mockQuestionResponseDAO = Mockito.mock(QuestionResponseDAO.class);
 
         final ImmutableList<Question> allQuestions = getMockQuestions();
         Mockito.when(mockQuestionResponseReadDAO.getAllQuestions()).thenReturn(allQuestions);
 
-        final QuestionCoreProcessor questionCoreProcessor = new QuestionCoreProcessor.Builder()
-                .withQuestionResponseDAO(mockQuestionResponseReadDAO, mockQuestionResponseDAO)
-                .withQuestions(mockQuestionResponseReadDAO)
-                .build();
+        final QuestionCoreProcessor questionCoreProcessor = QuestionCoreProcessor.create(mockQuestionResponseReadDAO, mockQuestionResponseDAO);
     }
 
     @Test

@@ -69,82 +69,58 @@ public class QuestionCoreProcessor {
         this.surveyQuestions = surveyQuestions;
     }
 
-    /*
-    Build processor
-     */
-    public static class Builder {
-        private QuestionResponseReadDAO questionResponseReadDAO;
-        private QuestionResponseDAO questionResponseDAO;
-        private Map<Integer, Question> allQuestionIdMap;
-        private List<Question> onboardingQuestions;
-        private List<Question> anomalyQuestions;
-        private List<Question> dailyQuestions;
-        private List<Question> demoQuestions;
-        private List<Question> surveyQuestions;
-
-        public Builder withQuestionResponseDAO(final QuestionResponseReadDAO questionResponseReadDAO,
+    public static QuestionCoreProcessor create(final QuestionResponseReadDAO questionResponseReadDAO,
                                                final QuestionResponseDAO questionResponseDAO) {
-            this.questionResponseReadDAO = questionResponseReadDAO;
-            this.questionResponseDAO = questionResponseDAO;
-            return this;
-        }
 
-        public Builder withQuestions(final QuestionResponseReadDAO questionResponseReadDAO) {
-            this.allQuestionIdMap = new HashMap<>();
-            this.onboardingQuestions = Lists.newArrayList();
-            this.anomalyQuestions = Lists.newArrayList();
-            this.dailyQuestions = Lists.newArrayList();
-            this.demoQuestions = Lists.newArrayList();
-            this.surveyQuestions = Lists.newArrayList();
-
-            final List<Question> allQuestions = questionResponseReadDAO.getAllQuestions();
-            for (final Question question : allQuestions) {
-
-                this.allQuestionIdMap.put(question.id, question);
-
-                if (question.category == QuestionCategory.ONBOARDING) {
-                    this.onboardingQuestions.add(question);
-                } if (question.category == QuestionCategory.ANOMALY_LIGHT) {
-                    this.anomalyQuestions.add(question);
-                } if (question.category == QuestionCategory.DAILY) {
-                    this.dailyQuestions.add(question);
-                } if (question.category == QuestionCategory.DEMO) {
-                    this.demoQuestions.add(question);
-                } if (question.category == QuestionCategory.SURVEY) {
-                    this.surveyQuestions.add(question);
-                }
+        final List<Question> allQuestions = questionResponseReadDAO.getAllQuestions();
+        if (allQuestions.isEmpty()) {
+            try {
+                throw new Exception("getAllQuestions failed: please check postgres");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+        }
 
-            if (this.dailyQuestions.size() < 2) { //see getDailyQuestions() logic
-                try {
-                    throw new Exception("less than 2 daily questions avail: please check postgres");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        final Map<Integer, Question> allQuestionIdMap = new HashMap<>();
+        final List<Question> onboardingQuestions = Lists.newArrayList();
+        final List<Question> anomalyQuestions = Lists.newArrayList();
+        final List<Question> dailyQuestions = Lists.newArrayList();
+        final List<Question> demoQuestions = Lists.newArrayList();
+        final List<Question> surveyQuestions = Lists.newArrayList();
+
+        for (final Question question : allQuestions) {
+
+            allQuestionIdMap.put(question.id, question);
+
+            if (question.category == QuestionCategory.ONBOARDING) {
+                onboardingQuestions.add(question);
+            } if (question.category == QuestionCategory.ANOMALY_LIGHT) {
+                anomalyQuestions.add(question);
+            } if (question.category == QuestionCategory.DAILY) {
+                dailyQuestions.add(question);
+            } if (question.category == QuestionCategory.DEMO) {
+                demoQuestions.add(question);
+            } if (question.category == QuestionCategory.SURVEY) {
+                surveyQuestions.add(question);
             }
-
-            return this;
         }
 
-        public QuestionCoreProcessor build() {
-            checkNotNull(questionResponseReadDAO, "questionResponseRead cannot be null");
-            checkNotNull(questionResponseDAO, "questionResponse cannot be null");
-            checkNotNull(allQuestionIdMap, "allQuestionIdMapp cannot be null");
-            checkNotNull(onboardingQuestions, "onboardingQuestions cannot be null");
-            checkNotNull(anomalyQuestions, "anomalyQuestions cannot be null");
-            checkNotNull(dailyQuestions, "dailyQuestions cannot be null");
-            checkNotNull(demoQuestions, "demoQuestions cannot be null");
-            checkNotNull(surveyQuestions, "surveyQuestions cannot be null");
-
-            return new QuestionCoreProcessor(this.questionResponseReadDAO,
-                    this.questionResponseDAO,
-                    this.allQuestionIdMap,
-                    this.onboardingQuestions,
-                    this.anomalyQuestions,
-                    this.dailyQuestions,
-                    this.demoQuestions,
-                    this.surveyQuestions);
+        if (dailyQuestions.size() < 2) { //see getDailyQuestions() logic
+            try {
+                throw new Exception("less than 2 daily questions avail: please check postgres");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
+        return new QuestionCoreProcessor(questionResponseReadDAO,
+                questionResponseDAO,
+                allQuestionIdMap,
+                onboardingQuestions,
+                anomalyQuestions,
+                dailyQuestions,
+                demoQuestions,
+                surveyQuestions);
     }
 
     /*
