@@ -149,6 +149,7 @@ public class TimelineUtilsTest {
         // not locked down: lots of motion after oob
         wake = start.plusHours(8).getMillis();
         outOfBed = start.plusHours(8).plusMinutes(1).getMillis();
+        createdAt = start.plusHours(8).plusMinutes(2).getMillis();
         final Optional<MainEventTimes> computedMainEventTimesOptionalFailMotion = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
         isLockedDown= timelineUtils.isLockedDown(ImmutableList.copyOf(prevSleepStats),computedMainEventTimesOptionalFailMotion,ImmutableList.copyOf(originalTrackerMotions), true);
         assert(!isLockedDown);
