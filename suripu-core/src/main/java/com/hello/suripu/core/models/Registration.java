@@ -33,6 +33,7 @@ public class Registration {
     public final String password;
     public final Integer age;
     public final Gender gender;
+    public final String genderName;
     public final Integer height;
     public final Integer weight;
     public final Integer tzOffsetMillis;
@@ -66,6 +67,7 @@ public class Registration {
             @JsonProperty("password") final String password,
             @JsonProperty("age") final Integer age,
             @JsonProperty("gender") final Gender gender,
+            @JsonProperty("gender_other") final String genderName,
             @JsonProperty("height") final Integer height,
             @JsonProperty("weight") final Integer weight,
             @JsonProperty("dob") final DateTime DOB,
@@ -84,6 +86,7 @@ public class Registration {
         this.password = password;
         this.age = age;
         this.gender = (gender == null) ? Gender.OTHER : gender;
+        this.genderName = (genderName == null) ? "" : genderName;
         this.height = height;
         this.weight = weight;
         this.DOB = DOB;
@@ -116,6 +119,7 @@ public class Registration {
             final String hashedPassword,
             final Integer age,
             final Gender gender,
+            final String genderName,
             final Integer height,
             final Integer weight,
             final DateTime DOB,
@@ -131,6 +135,7 @@ public class Registration {
         this.password = hashedPassword;
         this.age = age;
         this.gender = gender;
+        this.genderName = genderName;
         this.height = height;
         this.weight = weight;
         this.DOB = DOB;
@@ -160,6 +165,7 @@ public class Registration {
                 PasswordUtil.encrypt(registration.password),
                 registration.age,
                 registration.gender,
+                registration.genderName,
                 registration.height,
                 registration.weight,
                 registration.DOB,

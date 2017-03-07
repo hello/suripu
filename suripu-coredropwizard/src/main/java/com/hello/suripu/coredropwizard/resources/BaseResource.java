@@ -1,6 +1,7 @@
 package com.hello.suripu.coredropwizard.resources;
 
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.analytics.AnalyticsTracker;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.librato.rollout.RolloutClient;
 import org.slf4j.Logger;
@@ -20,6 +21,9 @@ public class BaseResource {
     @Inject
     RolloutClient featureFlipper;
 
+
+    @Inject
+    public AnalyticsTracker analyticsTracker;
 
     protected BaseResource()  {
         ObjectGraphRoot.getInstance().inject(this);

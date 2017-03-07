@@ -31,8 +31,8 @@ public class SleepDeprivationInsightsTest {
     private final Account FAKE_ACCOUNT = new Account.Builder().withDOB("1980-01-01").build();
     private final DateTime FAKE_TIMESTAMP = DateTime.now(DateTimeZone.UTC).withHourOfDay(12).minusDays(1);
     private final int OFFSET_MILLIS = -28800000;
-    final SleepStats FAKE_SLEEPSTAT_1 = new SleepStats(0,0,0,290,false, 1,0L,0L,5);
-    final SleepStats FAKE_SLEEPSTAT_2  = new SleepStats(0,0,0, 480,false, 1,0L,0L,5);
+    final SleepStats FAKE_SLEEPSTAT_1 = new SleepStats(0,0,0,329,false, 1,0L,0L,5);
+    final SleepStats FAKE_SLEEPSTAT_2  = new SleepStats(0,0,0, 420,false, 1,0L,0L,5);
 
     @Test
     public void testSleepDeprivationInsightGenerated() {
@@ -63,7 +63,7 @@ public class SleepDeprivationInsightsTest {
         Mockito.when(accountReadDAO.getById(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_ACCOUNT));
         Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.<Integer>absent());
 
-        final int testMeanSleepDebt = 190;
+        final int testMeanSleepDebt = 90;
 
         final Optional<InsightCard> insightGenerated = SleepDeprivation.getInsights(sleepStatsDAODynamoDB, accountReadDAO, FAKE_ACCOUNT_ID, true);
         assertThat(insightGenerated.isPresent(), is(Boolean.TRUE));

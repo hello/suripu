@@ -32,7 +32,7 @@ public class NotificationSettingsDynamoDB implements NotificationSettingsDAO {
         }
     }
 
-    private final static boolean DEFAULT_ENABLED = false;
+    private final static boolean DEFAULT_ENABLED = true;
     final private static List<NotificationSetting.Type> ORDERING = Lists.newArrayList(
             NotificationSetting.Type.SLEEP_SCORE,
             NotificationSetting.Type.SYSTEM,
