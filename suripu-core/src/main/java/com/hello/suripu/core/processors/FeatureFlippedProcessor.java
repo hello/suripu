@@ -195,4 +195,8 @@ public class FeatureFlippedProcessor {
     protected Boolean useTimelineSleepPeriods(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_SLEEP_PERIOD, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean isDaySleeper(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.DAY_SLEEPER, accountId, Collections.EMPTY_LIST);
+    }
 }

@@ -60,7 +60,15 @@ public class TimelineResult {
 
     public static TimelineResult create(final List<Timeline> timelines,
                                         final List<TimelineLog> logs) {
-        return new TimelineResult(ImmutableList.copyOf(timelines),Optional.absent(), ImmutableList.copyOf(logs), DataCompleteness.ENOUGH_DATA);
+
+        //hack: set log to last log in list.
+        final Optional<TimelineLog> logOptional;
+        if(logs.size()>0){
+            logOptional = Optional.of(logs.get(logs.size()-1));
+        } else{
+            logOptional = Optional.absent();
+        }
+        return new TimelineResult(ImmutableList.copyOf(timelines), logOptional, ImmutableList.copyOf(logs), DataCompleteness.ENOUGH_DATA);
     }
 
 
