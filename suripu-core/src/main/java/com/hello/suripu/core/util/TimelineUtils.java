@@ -1525,7 +1525,7 @@ public class TimelineUtils {
         return true;
     }
 
-    public boolean isLockedDown(final ImmutableList<AggregateSleepStats> previousSleepStats, final Optional<MainEventTimes> computedMainEventTimesOptional, final ImmutableList<TrackerMotion> originalTrackerMotions, final Boolean hasTimelineLockdown){
+    public boolean isLockedDown(final ImmutableList<AggregateSleepStats> previousSleepStats, final Optional<MainEventTimes> computedMainEventTimesOptional, final ImmutableList<TrackerMotion> processedTrackerMotions, final Boolean hasTimelineLockdown){
         final int sleepDurationDifferenceThreshold = 60; //sleepduration cannot be less than 60 mins of typical duration.
         final int outOfBedToCheckTime = 20;
         final int noMotionWindowMinutes = 60;
@@ -1547,7 +1547,7 @@ public class TimelineUtils {
                 final int minSleepDuration = Math.max(meanSleepDuration - sleepDurationDifferenceThreshold, minSleepDurationThreshold);
 
 
-                final Boolean hasMotionDuringWindow = motionDuringWindow(originalTrackerMotions, computedMainEventTimes.createdAt.time, noMotionWindowMinutes, motionCountThreshold);
+                final Boolean hasMotionDuringWindow = motionDuringWindow(processedTrackerMotions, computedMainEventTimes.createdAt.time, noMotionWindowMinutes, motionCountThreshold);
                 final Boolean hasSufficientSleepDuration = computedSleepDuration >= minSleepDuration;
 
                 if (!hasMotionDuringWindow && hasSufficientSleepDuration) {

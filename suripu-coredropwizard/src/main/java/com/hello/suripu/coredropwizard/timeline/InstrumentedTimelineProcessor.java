@@ -376,7 +376,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId,targetDate, SleepPeriod.Period.NIGHT);
         final ImmutableList<AggregateSleepStats> previousSleepStats= sleepStatsDAODynamoDB.getBatchStats(accountId, targetDate.minusDays(14).toString(),targetDate.toString());
 
-        final boolean timelineLockedDown = timelineUtils.isLockedDown(previousSleepStats, computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.originalTrackerMotions, useTimelineLockdown(accountId));
+        final boolean timelineLockedDown = timelineUtils.isLockedDown(previousSleepStats, computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
         final MainEventTimes mainEventTimes;
         final TimelineAlgorithmResult result;
 
