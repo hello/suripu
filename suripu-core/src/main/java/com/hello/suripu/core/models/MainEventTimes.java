@@ -88,6 +88,45 @@ public class MainEventTimes {
         return new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap);
     }
 
+    public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final Long createdAtTime, final int createdAtOffset, final List<SleepSegment> timelineEvents){
+        long inBedTime = 0L;
+        int inBedOffset = 0;
+        long sleepTime= 0L;
+        int sleepOffset= 0;
+        long wakeUpTime = 0L;
+        int wakeUpOffset = 0;
+        long outOfBedTime = 0L;
+        int outOfBedOffset = 0;
+        for(final SleepSegment sleepSegment: timelineEvents){
+            switch(sleepSegment.getType()){
+                case IN_BED:
+                    inBedTime = sleepSegment.getTimestamp();
+                    inBedOffset = sleepSegment.getOffsetMillis();
+                case SLEEP:
+                    sleepTime = sleepSegment.getTimestamp();
+                    sleepOffset = sleepSegment.getOffsetMillis();
+                case WAKE_UP:
+                    wakeUpTime = sleepSegment.getTimestamp();
+                    wakeUpOffset = sleepSegment.getOffsetMillis();
+                case OUT_OF_BED:
+                    outOfBedTime = sleepSegment.getTimestamp();
+                    outOfBedOffset = sleepSegment.getOffsetMillis();
+                default: continue;
+            }
+        }
+        final EventTime inBedEventTime = new EventTime(inBedTime, inBedOffset);
+        final EventTime sleepEventTime = new EventTime(sleepTime, sleepOffset);
+        final EventTime wakeUpEventTime = new EventTime(wakeUpTime, wakeUpOffset);
+        final EventTime outOfBedEventTime = new EventTime(outOfBedTime, outOfBedOffset);
+        final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
+        final ImmutableMap<Event.Type, EventTime> eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
+                .put(Event.Type.IN_BED, inBedEventTime)
+                .put(Event.Type.SLEEP, sleepEventTime)
+                .put(Event.Type.WAKE_UP, wakeUpEventTime)
+                .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
+                .build();
+        return new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap);
+    }
 
     public static MainEventTimes createMainEventTimesEmpty (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset){
         final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
