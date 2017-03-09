@@ -11,6 +11,7 @@ public enum QuestionCategory {
     ANOMALY_LIGHT("anomaly_light"),
     GOAL_GO_OUTSIDE("goal_go_outside"),
     GOAL("goal"),
+    DEMO("demo"),
     SURVEY("survey");
 
     private String value;
