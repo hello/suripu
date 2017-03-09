@@ -48,14 +48,6 @@ public class QuestionCoreProcessorTest {
     private final DateTime DATE_TIME_FILLER_NOW = DateTime.now(DateTimeZone.UTC);
     private final String ENGLISH_STR = "EN";
 
-    @Test(expected=Exception.class)
-    public void test_initException() {
-        QuestionResponseReadDAO mockQuestionResponseReadDAO = Mockito.mock(QuestionResponseReadDAO.class);
-        QuestionResponseDAO mockQuestionResponseDAO = Mockito.mock(QuestionResponseDAO.class);
-
-        final QuestionCoreProcessor questionCoreProcessor = QuestionCoreProcessor.create(mockQuestionResponseReadDAO, mockQuestionResponseDAO);
-    }
-
     private ImmutableList<Question> getMockQuestions() {
         final List<Question> questions = new ArrayList<>();
 

@@ -74,11 +74,7 @@ public class QuestionCoreProcessor {
 
         final List<Question> allQuestions = questionResponseReadDAO.getAllQuestions();
         if (allQuestions.isEmpty()) {
-            try {
-                throw new Exception("getAllQuestions failed: please check postgres");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            LOGGER.error("error=no-questions source=postgres");
         }
 
         final Map<Integer, Question> allQuestionIdMap = new HashMap<>();
@@ -106,11 +102,7 @@ public class QuestionCoreProcessor {
         }
 
         if (dailyQuestions.size() < 2) { //see getDailyQuestions() logic
-            try {
-                throw new Exception("less than 2 daily questions avail: please check postgres");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                LOGGER.error("error=dailyQuestions source=postgres");
         }
 
         return new QuestionCoreProcessor(questionResponseReadDAO,
