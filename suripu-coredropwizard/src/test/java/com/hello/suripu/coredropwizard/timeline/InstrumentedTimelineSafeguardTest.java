@@ -89,6 +89,8 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
         TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
 
+        //no motion case
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light, ImmutableList.copyOf(Collections.EMPTY_LIST)).equals(TimelineError.NO_MOTION_DURING_SLEEP));
 
     }
 
