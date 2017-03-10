@@ -21,8 +21,7 @@ public class TimelineLockdown {
     private static final int MOTION_COUNT_THRESHOLD = 4;
     private static final int MIN_SLEEP_DURATION = 6 * DateTimeConstants.MINUTES_PER_HOUR;
 
-    //add or the period expires//
-
+    /*Checks if there is a valid timeline previously generated with a sufficient sleep duration and no significant motion in the hour following the timeline creation time */
     public static boolean isLockedDown(final Optional<MainEventTimes> computedMainEventTimesOptional, final ImmutableList<TrackerMotion> processedTrackerMotions, final Boolean hasTimelineLockdown) {
 
         if (!hasTimelineLockdown){
@@ -35,6 +34,8 @@ public class TimelineLockdown {
 
         final MainEventTimes computedMainEventTimes = computedMainEventTimesOptional.get();
 
+        //main event times are saved (as 0) for invalid timelines
+        //if the main event times are invalid, the timeline is not locked down
         if(!computedMainEventTimes.hasValidEventTimes()){
             return false;
         }
@@ -44,10 +45,12 @@ public class TimelineLockdown {
         final Boolean hasMotionDuringWindow = motionDuringWindow(processedTrackerMotions, computedMainEventTimes.createdAt.time, NO_MOTION_WINDOW_MINUTES, MOTION_COUNT_THRESHOLD);
         final Boolean hasSufficientSleepDuration = computedSleepDuration >= MIN_SLEEP_DURATION;
 
+        //if there is too much motion in following window, timeline is not locked down
         if (hasMotionDuringWindow ){
             return false;
         }
 
+        //if the sleep duration is less than 6 hours, the timeline is not locked down
         if(!hasSufficientSleepDuration) {
             return false;
         }
@@ -60,6 +63,7 @@ public class TimelineLockdown {
     public static boolean motionDuringWindow(final List<TrackerMotion> trackerMotions, final Long windowStartTime, final int windowDurationMinutes, final int newMotionCountThreshold) {
         final int newMotionTimeWindow = windowDurationMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
         int newMotionCount = 0;
+        //counts motion events within a specific timewindow
         for (final TrackerMotion trackermotion : trackerMotions) {
             if (trackermotion.timestamp > windowStartTime && trackermotion.timestamp <= windowStartTime + newMotionTimeWindow) {
                 newMotionCount += 1;
