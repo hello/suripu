@@ -11,9 +11,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-/**
+/*
  * Created by jarredheinrich on 3/10/17.
+ * Checks if there is a valid timeline previously generated that is should be used instead of rerunning the timeline algorithm.
+ *  - checks for valid main event times
+ *  - checks for sufficient sleep duration
+ *  - checks for no significant motion in the hour following the timeline creation time
+ *  If there is are valid main event times, with sufficient sleep and no siginficant motion following the creation time,
+ *  the timeline is locked down
  */
+
 public class TimelineLockdown {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineLockdown.class);
 
@@ -21,7 +28,6 @@ public class TimelineLockdown {
     private static final int MOTION_COUNT_THRESHOLD = 4;
     private static final int MIN_SLEEP_DURATION = 6 * DateTimeConstants.MINUTES_PER_HOUR;
 
-    /*Checks if there is a valid timeline previously generated with a sufficient sleep duration and no significant motion in the hour following the timeline creation time */
     public static boolean isLockedDown(final Optional<MainEventTimes> computedMainEventTimesOptional, final ImmutableList<TrackerMotion> processedTrackerMotions, final Boolean hasTimelineLockdown) {
 
         if (!hasTimelineLockdown){
