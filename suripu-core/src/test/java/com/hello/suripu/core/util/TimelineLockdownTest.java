@@ -2,10 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.MainEventTimes;
-import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -31,24 +28,15 @@ public class TimelineLockdownTest {
 
         final List<TrackerMotion> originalTrackerMotions = CSVLoader.loadTrackerMotionFromCSV("fixtures/tracker_motion/nn_raw_tracker_motion.csv");
 
-
-        final SleepStats sleepStats = new SleepStats(0,0,0,0,510,false,0,0L,0L,0);
-        final List<AggregateSleepStats> prevSleepStats = Lists.newArrayList();
-        AggregateSleepStats aggSleepStats = new AggregateSleepStats.Builder()
-                .withSleepStats(sleepStats)
-                .build();
-        for(int i  = 0; i < 7; i++) {
-            prevSleepStats.add(aggSleepStats);
-        }
         //locked down: sufficient duration with minimal motion after oob
-        boolean isLockedDown= TimelineLockdown.isLockedDown(ImmutableList.copyOf(prevSleepStats),computedMainEventTimesOptionalSuccess,ImmutableList.copyOf(originalTrackerMotions), true);
+        boolean isLockedDown= TimelineLockdown.isLockedDown(computedMainEventTimesOptionalSuccess,ImmutableList.copyOf(originalTrackerMotions), true);
         assert(isLockedDown);
 
         //not locked down: insufficient time
         wake = start.plusHours(6).getMillis();
         outOfBed = start.plusHours(9).plusMinutes(5).getMillis();
         final Optional<MainEventTimes> computedMainEventTimesOptionalFailDuration = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
-        isLockedDown= TimelineLockdown.isLockedDown(ImmutableList.copyOf(prevSleepStats),computedMainEventTimesOptionalFailDuration,ImmutableList.copyOf(originalTrackerMotions), true);
+        isLockedDown= TimelineLockdown.isLockedDown(computedMainEventTimesOptionalFailDuration,ImmutableList.copyOf(originalTrackerMotions), true);
         assert(!isLockedDown);
 
         // not locked down: lots of motion after oob
@@ -56,7 +44,7 @@ public class TimelineLockdownTest {
         outOfBed = start.plusHours(8).plusMinutes(1).getMillis();
         createdAt = start.plusHours(8).plusMinutes(2).getMillis();
         final Optional<MainEventTimes> computedMainEventTimesOptionalFailMotion = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
-        isLockedDown= TimelineLockdown.isLockedDown(ImmutableList.copyOf(prevSleepStats),computedMainEventTimesOptionalFailMotion,ImmutableList.copyOf(originalTrackerMotions), true);
+        isLockedDown= TimelineLockdown.isLockedDown(computedMainEventTimesOptionalFailMotion,ImmutableList.copyOf(originalTrackerMotions), true);
         assert(!isLockedDown);
 
     }

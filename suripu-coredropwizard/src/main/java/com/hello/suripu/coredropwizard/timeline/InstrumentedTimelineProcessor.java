@@ -33,7 +33,6 @@ import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataCompleteness;
@@ -375,9 +374,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
         final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId,targetDate, SleepPeriod.Period.NIGHT);
-        final ImmutableList<AggregateSleepStats> previousSleepStats= sleepStatsDAODynamoDB.getBatchStats(accountId, targetDate.minusDays(14).toString(),targetDate.toString());
 
-        final boolean timelineLockedDown = TimelineLockdown.isLockedDown(previousSleepStats, computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
+        final boolean timelineLockedDown = TimelineLockdown.isLockedDown(computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
         final MainEventTimes mainEventTimes;
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
 
