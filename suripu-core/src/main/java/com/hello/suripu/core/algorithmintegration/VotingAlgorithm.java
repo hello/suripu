@@ -62,7 +62,8 @@ public class VotingAlgorithm implements TimelineAlgorithm {
 
             final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.VOTING, votingSleepEventsOptional.get().sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(sensorData.oneDaysTrackerMotion.originalTrackerMotions));
 
             LOGGER.info("alg_status={} account_id={} date={}",timelineError,accountId,sensorData.date.toDate());
 

@@ -76,7 +76,8 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
                     AlgorithmType.ONLINE_HMM,
                     events,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(sensorData.oneDaysTrackerMotion.originalTrackerMotions));
 
             LOGGER.info("alg_status={} account_id={} date={}",error,accountId,sensorData.date.toDate());
 

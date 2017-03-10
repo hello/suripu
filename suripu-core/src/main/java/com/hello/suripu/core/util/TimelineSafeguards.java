@@ -6,6 +6,7 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.TrackerMotion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,10 +208,10 @@ public class TimelineSafeguards {
     }
 
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public TimelineError checkIfValidTimeline (final long accountId, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
+    public TimelineError checkIfValidTimeline (final long accountId, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> originalTrackerMotions) {
 
         //make sure events occur in proper order
-        if (!checkEventOrdering(accountId, algorithmType, sleepEvents,extraEvents)) {
+        if (!checkEventOrdering(accountId, algorithmType, sleepEvents, extraEvents)) {
             return TimelineError.EVENTS_OUT_OF_ORDER;
         }
 
@@ -222,10 +223,10 @@ public class TimelineSafeguards {
         }
 
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
-            final int sleepDurationInMinutes = getTotalSleepDurationInMinutes(sleepEvents.fallAsleep.get(),sleepEvents.wakeUp.get(),extraEvents);
+            final int sleepDurationInMinutes = getTotalSleepDurationInMinutes(sleepEvents.fallAsleep.get(), sleepEvents.wakeUp.get(), extraEvents);
 
             if (sleepDurationInMinutes <= MINIMUM_SLEEP_DURATION_MINUTES) {
-                LOGGER.warn("sleep duration of {} minutes is less than limit {} minutes -- invalidating timeline",sleepDurationInMinutes,MINIMUM_SLEEP_DURATION_MINUTES);
+                LOGGER.warn("action=invalidating-timeline reason=insufficient-sleep-duration account_id={} sleep_duration={} ", accountId, sleepDurationInMinutes);
                 return TimelineError.NOT_ENOUGH_HOURS_OF_SLEEP;
             }
         }
@@ -233,11 +234,21 @@ public class TimelineSafeguards {
         final int maxDataGapInMinutes = getMaximumDataGapInMinutes(lightData);
 
         if (maxDataGapInMinutes > MAXIMUM_ALLOWABLE_DATAGAP) {
-            LOGGER.warn("max data gap {} minutes is greaten than limit {} minutes -- invalidating timeline",maxDataGapInMinutes,MAXIMUM_ALLOWABLE_DATAGAP);
+            LOGGER.warn("action=invalidating-timeline reason=max-data-gap-greater-than-limit account_id={} data-gap-minutes={} limit={} ", accountId, maxDataGapInMinutes, MAXIMUM_ALLOWABLE_DATAGAP);
             return TimelineError.DATA_GAP_TOO_LARGE;
         }
 
+        if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
+            //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
+            final boolean motionDuringSleep = TimelineUtils.motionDuringSleepCheck(originalTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
+            if (!motionDuringSleep) {
+                LOGGER.warn("action=invalidating-timeline reason=insufficient-motion-during-sleeptime account_id={}", accountId);
+                return TimelineError.NO_MOTION_DURING_SLEEP;
+            }
+        }
+
         return TimelineError.NO_ERROR;
+
     }
 
 }

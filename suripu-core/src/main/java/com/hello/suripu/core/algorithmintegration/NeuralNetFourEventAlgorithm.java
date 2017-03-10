@@ -452,7 +452,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.NEURAL_NET_FOUR_EVENT,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.originalTrackerMotions));
 
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {

@@ -9784,7 +9784,7 @@ public final class LoggingProtos {
    *
    * <pre>
    *one log message to rule the algs
-   *think of it as polymorphism--a lot of the optional fields will not be there 
+   *think of it as polymorphism--a lot of the optional fields will not be there
    * </pre>
    */
   public static final class TimelineLog extends
@@ -10254,6 +10254,10 @@ public final class LoggingProtos {
        * <code>EVENTS_OUT_OF_ORDER = 12;</code>
        */
       EVENTS_OUT_OF_ORDER(12, 12),
+      /**
+       * <code>NO_MOTION_DURING_SLEEP = 13;</code>
+       */
+      NO_MOTION_DURING_SLEEP(13, 13),
       ;
 
       /**
@@ -10308,6 +10312,10 @@ public final class LoggingProtos {
        * <code>EVENTS_OUT_OF_ORDER = 12;</code>
        */
       public static final int EVENTS_OUT_OF_ORDER_VALUE = 12;
+      /**
+       * <code>NO_MOTION_DURING_SLEEP = 13;</code>
+       */
+      public static final int NO_MOTION_DURING_SLEEP_VALUE = 13;
 
 
       public final int getNumber() { return value; }
@@ -10327,6 +10335,7 @@ public final class LoggingProtos {
           case 10: return UNEXEPECTED;
           case 11: return DATA_GAP_TOO_LARGE;
           case 12: return EVENTS_OUT_OF_ORDER;
+          case 13: return NO_MOTION_DURING_SLEEP;
           default: return null;
         }
       }
@@ -11481,7 +11490,7 @@ public final class LoggingProtos {
      *
      * <pre>
      *one log message to rule the algs
-     *think of it as polymorphism--a lot of the optional fields will not be there 
+     *think of it as polymorphism--a lot of the optional fields will not be there
      * </pre>
      */
     public static final class Builder extends
@@ -12645,7 +12654,7 @@ public final class LoggingProtos {
       "\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020P",
       "rovisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_" +
       "number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004" +
-      " \001(\t\"\371\007\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
+      " \001(\t\"\225\010\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
       "\022$\n\034timestamp_when_log_generated\030\002 \001(\003\022\031" +
       "\n\021night_of_timeline\030\003 \001(\003\022\'\n\talgorithm\030\004" +
       " \001(\0162\024.TimelineLog.AlgType\022%\n\005error\030\005 \001(" +
@@ -12662,7 +12671,7 @@ public final class LoggingProtos {
       "G\020\003\022\016\n\nONLINE_HMM\020\004\022\016\n\nNEURAL_NET\020\005\022\031\n\025N" +
       "EURAL_NET_FOUR_EVENT\020\006\"O\n\016SleepEventType" +
       "\022\014\n\010NO_EVENT\020\000\022\n\n\006IN_BED\020\001\022\t\n\005SLEEP\020\002\022\010\n" +
-      "\004WAKE\020\003\022\016\n\nOUT_OF_BED\020\004\"\276\002\n\tErrorType\022\014\n",
+      "\004WAKE\020\003\022\016\n\nOUT_OF_BED\020\004\"\332\002\n\tErrorType\022\014\n",
       "\010NO_ERROR\020\000\022\036\n\032INTENDED_ALGORITHM_FAILUR" +
       "E\020\001\022\026\n\022TIMESPAN_TOO_SHORT\020\002\022\023\n\017NOT_ENOUG" +
       "H_DATA\020\003\022\013\n\007NO_DATA\020\004\022\026\n\022LOW_AMPLITUDE_D" +
@@ -12670,8 +12679,9 @@ public final class LoggingProtos {
       "\020\006\022\026\n\022MISSING_KEY_EVENTS\020\007\022\027\n\023INVALID_SL" +
       "EEP_SCORE\020\010\022\031\n\025NOT_ENOUGH_SLEEP_TIME\020\t\022\017" +
       "\n\013UNEXEPECTED\020\n\022\026\n\022DATA_GAP_TOO_LARGE\020\013\022" +
-      "\027\n\023EVENTS_OUT_OF_ORDER\020\014B-\n\034com.hello.su" +
-      "ripu.api.loggingB\rLoggingProtos"
+      "\027\n\023EVENTS_OUT_OF_ORDER\020\014\022\032\n\026NO_MOTION_DU" +
+      "RING_SLEEP\020\rB-\n\034com.hello.suripu.api.log" +
+      "gingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

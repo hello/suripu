@@ -77,7 +77,8 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
                     AlgorithmType.HMM,
                     results.get().mainEvents,
                     ImmutableList.copyOf(results.get().allTheOtherWakesAndSleeps.asList()),
-                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(sensorData.oneDaysTrackerMotion.originalTrackerMotions));
 
             LOGGER.info("alg_status={} account_id={} date={}",error,accountId,sensorData.date.toDate());
 

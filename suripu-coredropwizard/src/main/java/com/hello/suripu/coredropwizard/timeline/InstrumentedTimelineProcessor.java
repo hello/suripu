@@ -742,16 +742,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
-        //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
-        if (feedbackList.isEmpty() && this.useNoMotionEnforcement(accountId)) {
-            final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            if (!motionDuringSleep) {
-                LOGGER.warn("action=zeroing-score  account_id={} reason=insufficient-motion-during-sleeptime night_of={}", accountId, targetDate);
-                sleepScore =  0;
-            }
-        }
-
         boolean isValidSleepScore = sleepScore > 0;
+        if (!isValidSleepScore){
+
+        }
 
         //if there's feedback, sleep score can never be invalid
         if (!feedbackList.isEmpty()) {
