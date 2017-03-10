@@ -379,14 +379,17 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         final boolean timelineLockedDown = TimelineLockdown.isLockedDown(previousSleepStats, computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
         final MainEventTimes mainEventTimes;
-        final TimelineAlgorithmResult result;
+        Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
+
+        /* DEFAULT VALUE IS CACHED TIMELINE MAIN EVENTS */
+        if (computedMainEventTimesOptional.isPresent()) {
+            resultOptional = Optional.of(new TimelineAlgorithmResult(AlgorithmType.NONE, computedMainEventTimesOptional.get().getMainEvents()));
+        }
 
         if(!timelineLockedDown) {
 
-        /*  GET THE TIMELINE! */
-            Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
+            /*  GET THE TIMELINE! */
             final Set<String> featureFlips = getTimelineFeatureFlips(accountId);
-
 
             for (final AlgorithmType alg : algorithmChain) {
                 LOGGER.info("action=try_algorithm algorithm_type={}", alg);
@@ -398,42 +401,31 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 }
 
                 resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, log, accountId, feedbackChanged, featureFlips);
+
                 //got a valid result? poof, we're out.
                 if (resultOptional.isPresent()) {
                     break;
                 }
             }
 
-//
             //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
             if (!resultOptional.isPresent()) {
                 LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms", accountId, targetDate.toDate());
                 log.addMessage(AlgorithmType.NONE, TimelineError.UNEXEPECTED, "no successful algorithms");
                 return TimelineResult.createEmpty(log);
             }
- 
 
-            //get result, and refine (optional feature) in-bed time for online HMM
-            result = refineInBedTime(startTimeLocalUTC, endTimeLocalUTC, accountId, sensorData, resultOptional.get(), timeZoneOffsetMap);
-            List<Event> extraEvents = result.extraEvents;
-
-            /* FEATURE FLIP EXTRA EVENTS */
-            if (!this.hasExtraEventsEnabled(accountId)) {
-                extraEvents = Collections.EMPTY_LIST;
-            }
 
             //save to main event times
-            mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), result);
+            mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), resultOptional.get());
             mainEventTimesDAO.updateEventTimes(mainEventTimes);
-        } else {
-            mainEventTimes = computedMainEventTimesOptional.get();
-            result = new TimelineAlgorithmResult(AlgorithmType.NONE, mainEventTimes.getMainEvents());
         }
 
+        //if we get here we will have a timeline
+        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneOffsetMap, resultOptional.get(), sensorData);
 
-        final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC,timeZoneOffsetMap, result, sensorData);
-
-
+        //if the timeline (too short, but got generated somehow) has an invalid sleep score
+        //then we don't want to give out that timeline
         if (!populateTimelines.isValidSleepScore) {
             log.addMessage(TimelineError.INVALID_SLEEP_SCORE);
             LOGGER.warn("invalid sleep score");

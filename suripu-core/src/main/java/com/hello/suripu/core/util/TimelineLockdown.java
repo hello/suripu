@@ -39,6 +39,11 @@ public class TimelineLockdown {
 
 
         final MainEventTimes computedMainEventTimes = computedMainEventTimesOptional.get();
+
+        if(!computedMainEventTimes.hasValidEventTimes()){
+            return false;
+        }
+
         final int computedSleepDuration = (int) (computedMainEventTimes.eventTimeMap.get(Event.Type.WAKE_UP).time - computedMainEventTimes.eventTimeMap.get(Event.Type.SLEEP).time) / DateTimeConstants.MILLIS_PER_MINUTE;
         int sleepDurationSum = 0;
 
