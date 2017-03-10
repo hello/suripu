@@ -20,7 +20,6 @@ import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
-import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
@@ -36,7 +35,6 @@ import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
-import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -1525,54 +1523,7 @@ public class TimelineUtils {
         return true;
     }
 
-    public boolean isLockedDown(final ImmutableList<AggregateSleepStats> previousSleepStats, final Optional<MainEventTimes> computedMainEventTimesOptional, final ImmutableList<TrackerMotion> processedTrackerMotions, final Boolean hasTimelineLockdown){
-        final int sleepDurationDifferenceThreshold = 60; //sleepduration cannot be less than 60 mins of typical duration.
-        final int outOfBedToCheckTime = 20;
-        final int noMotionWindowMinutes = 60;
-        final int motionCountThreshold = 4;
-        final int minSleepDurationThreshold = 5 * DateTimeConstants.MINUTES_PER_HOUR;
-        int sleepDurationSum = 0;
-
-        if(hasTimelineLockdown && computedMainEventTimesOptional.isPresent()){
-
-            final MainEventTimes computedMainEventTimes = computedMainEventTimesOptional.get();
-            final int computedSleepDuration = (int) (computedMainEventTimes.eventTimeMap.get(Event.Type.WAKE_UP).time - computedMainEventTimes.eventTimeMap.get(Event.Type.SLEEP).time) / DateTimeConstants.MILLIS_PER_MINUTE;
-
-            if (previousSleepStats.size() >= 7) { //safeguard for individuals with few / no recent nights that are atypical
-                // calculate mean sleep duration for past two weeks
-                for (final AggregateSleepStats sleepStat : previousSleepStats) {
-                    sleepDurationSum += sleepStat.sleepStats.sleepDurationInMinutes;
-                }
-                final int meanSleepDuration = sleepDurationSum / previousSleepStats.size();
-                final int minSleepDuration = Math.max(meanSleepDuration - sleepDurationDifferenceThreshold, minSleepDurationThreshold);
 
 
-                final Boolean hasMotionDuringWindow = motionDuringWindow(processedTrackerMotions, computedMainEventTimes.createdAt.time, noMotionWindowMinutes, motionCountThreshold);
-                final Boolean hasSufficientSleepDuration = computedSleepDuration >= minSleepDuration;
-
-                if (!hasMotionDuringWindow && hasSufficientSleepDuration) {
-                    LOGGER.debug("action=main-event_times-locked account_id={} date={}",computedMainEventTimes.accountId, computedMainEventTimes.sleepPeriod.targetDate);
-                    return true;
-                }
-                LOGGER.debug("action=overriding-existing-main-event-times account_id={} date={} new_motion_events={} sleep_duration={}",computedMainEventTimes.accountId, computedMainEventTimes.sleepPeriod.targetDate, computedSleepDuration, hasMotionDuringWindow);
-            }
-        }
-        return false;
-    }
-
-    public boolean motionDuringWindow(final List<TrackerMotion> trackerMotions, final Long windowStartTime, final int windowDurationMinutes, final int newMotionCountThreshold){
-        final int newMotionTimeWindow = windowDurationMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        int newMotionCount = 0;
-        for(final TrackerMotion trackermotion : trackerMotions){
-            if (trackermotion.timestamp > windowStartTime && trackermotion.timestamp <= windowStartTime + newMotionTimeWindow){
-                newMotionCount +=1;
-            }
-        }
-        if (newMotionCount > newMotionCountThreshold){
-            return true;
-        }
-
-        return false;
-    }
 
 }

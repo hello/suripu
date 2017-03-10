@@ -71,6 +71,7 @@ import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
+import com.hello.suripu.core.util.TimelineLockdown;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -376,7 +377,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId,targetDate, SleepPeriod.Period.NIGHT);
         final ImmutableList<AggregateSleepStats> previousSleepStats= sleepStatsDAODynamoDB.getBatchStats(accountId, targetDate.minusDays(14).toString(),targetDate.toString());
 
-        final boolean timelineLockedDown = timelineUtils.isLockedDown(previousSleepStats, computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
+        final boolean timelineLockedDown = TimelineLockdown.isLockedDown(previousSleepStats, computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
         final MainEventTimes mainEventTimes;
         final TimelineAlgorithmResult result;
 
@@ -410,7 +411,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 log.addMessage(AlgorithmType.NONE, TimelineError.UNEXEPECTED, "no successful algorithms");
                 return TimelineResult.createEmpty(log);
             }
-
+ 
 
             //get result, and refine (optional feature) in-bed time for online HMM
             result = refineInBedTime(startTimeLocalUTC, endTimeLocalUTC, accountId, sensorData, resultOptional.get(), timeZoneOffsetMap);
