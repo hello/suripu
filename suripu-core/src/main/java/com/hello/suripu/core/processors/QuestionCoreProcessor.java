@@ -13,6 +13,7 @@ import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
 import com.hello.suripu.core.util.QuestionUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,9 +138,9 @@ public class QuestionCoreProcessor {
 
         //Batch save
         final DateTime expireDate = todayLocal.plusDays(1);
-        handleSaveQuestions(accountId, todayLocal, expireDate, sortedQuestions);
+        List<Question> sortedSavedQuestions = handleSaveQuestions(accountId, todayLocal, expireDate, sortedQuestions);
 
-        return sortedQuestions;
+        return sortedSavedQuestions;
     }
 
     /*
@@ -230,33 +231,35 @@ public class QuestionCoreProcessor {
     /*
     Insert questions if it has not already been inserted
     */
-    private Integer handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions) {
+    private List<Question> handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions) {
 
-        int saves = 0;
-
+        final List<Question> savedQuestions  = Lists.newArrayList();
         for (Question question : questions) {
 
             //TODO: make batch
-            final Boolean savedQuestion = savedAccountQuestion(accountId, question, todayLocal);
-            if (!savedQuestion) {
-                saveQuestion(accountId, question, todayLocal, expireDate);
-                saves += 1;
+            final Boolean alreadySaved = savedAccountQuestion(accountId, question, todayLocal);
+            if (!alreadySaved) {
+                final Long accountQuestionId = saveQuestion(accountId, question, todayLocal, expireDate);
+                final Question savedQuestion = Question.withAccountQId(question, accountQuestionId);
+                savedQuestions.add(savedQuestion);
             }
         }
 
-        return saves;
+        return savedQuestions;
     }
 
-    private void saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
+    private Long saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
         try {
             LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
-            this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
+            return this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
             if (!matcher.find()) {
                 LOGGER.debug("exception={} account_id={}", exception.toString(), accountId);
             }
         }
+
+        return 0L;
     }
 
     private Boolean savedAccountQuestion(final Long accountId, final Question question, final DateTime created) {

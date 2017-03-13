@@ -184,4 +184,23 @@ public class Question {
                             created, question.category, question.dependencyResponse);
     }
 
+    public static Question withAccountQId(final Question question, final Long accountQuestionId) {
+        return new Question(
+                question.id,
+                accountQuestionId,
+                question.text,
+                question.lang,
+                question.type,
+                question.frequency,
+                question.askTime,
+                question.dependency,
+                question.parentId,
+                question.askLocalDate,
+                question.choiceList,
+                question.accountInfo,
+                question.accountCreationDate,
+                question.category,
+                question.dependencyResponse);
+    }
+
 }
