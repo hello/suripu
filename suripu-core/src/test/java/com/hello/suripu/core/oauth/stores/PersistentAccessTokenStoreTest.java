@@ -128,5 +128,10 @@ public class PersistentAccessTokenStoreTest {
         // default behavior for external id is absent
         assertThat(accessTokenOptional.get().externalId.isPresent(), is(false));
         assertThat(accessTokenOptional.get().externalId().equals(String.valueOf(AccessToken.DEFAULT_INTERNAL_ID)), is(true));
+
+        // add external id
+        final UUID uuid = UUID.randomUUID();
+        final AccessToken newToken = AccessToken.createWithExternalId(accessTokenOptional.get(), uuid);
+        assertThat(newToken.externalId().equals(uuid.toString()), is(true));
     }
 }
