@@ -397,4 +397,71 @@ public class QuestionCoreProcessorTest {
 
     }
 
+    @Test
+    public void test_savedQuestionYes() {
+
+        final Long accountQuestionId = 99L;
+        final Integer questionId = 1;
+
+        final ImmutableList<AccountQuestionResponses> todayQuestionResponseList = ImmutableList.copyOf(Lists.newArrayList(new AccountQuestionResponses(accountQuestionId, FAKE_USER_ID_0, questionId, FAKE_LOCAL_DAY_0, Boolean.FALSE, FAKE_LOCAL_DAY_0)));
+        final Question question = new Question(questionId,
+                ACCOUNT_QID_FILLER,
+                "Random fake question?", ENGLISH_STR,
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, Lists.newArrayList(), AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
+                QuestionCategory.ONBOARDING, Lists.newArrayList());
+
+        final Optional<Long> savedAccountQuestion = QuestionCoreProcessor.savedAccountQuestion(question, todayQuestionResponseList);
+
+        assertThat(savedAccountQuestion.isPresent(), is(Boolean.TRUE));
+        assertThat(savedAccountQuestion.get(), is(99L));
+
+        }
+
+    @Test
+    public void test_savedQuestionNo() {
+
+        final Long accountQuestionId = 99L;
+        final Integer questionId = 1;
+
+        final ImmutableList<AccountQuestionResponses> todayQuestionResponseList = ImmutableList.copyOf(Lists.newArrayList());
+        final Question question = new Question(questionId,
+                ACCOUNT_QID_FILLER,
+                "Random fake question?", ENGLISH_STR,
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, Lists.newArrayList(), AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
+                QuestionCategory.ONBOARDING, Lists.newArrayList());
+
+        final Optional<Long> savedAccountQuestion = QuestionCoreProcessor.savedAccountQuestion(question, todayQuestionResponseList);
+
+        assertThat(savedAccountQuestion.isPresent(), is(Boolean.FALSE));
+
+    }
+
+    @Test
+    public void test_savedQuestionNo2() {
+
+        final Long accountQuestionId = 99L;
+        final Integer questionId1 = 1;
+        final Integer questionId2 = 2;
+
+        final ImmutableList<AccountQuestionResponses> todayQuestionResponseList = ImmutableList.copyOf(Lists.newArrayList(new AccountQuestionResponses(accountQuestionId, FAKE_USER_ID_0, questionId1, FAKE_LOCAL_DAY_0, Boolean.FALSE, FAKE_LOCAL_DAY_0)));
+        final Question question = new Question(questionId2,
+                ACCOUNT_QID_FILLER,
+                "Random fake question?", ENGLISH_STR,
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                DEPENDENCY_FILLER, PARENT_ID_FILLER, DATE_TIME_FILLER_NOW, Lists.newArrayList(), AccountInfo.Type.NONE, DATE_TIME_FILLER_NOW,
+                QuestionCategory.ONBOARDING, Lists.newArrayList());
+
+        final Optional<Long> savedAccountQuestion = QuestionCoreProcessor.savedAccountQuestion(question, todayQuestionResponseList);
+
+        assertThat(savedAccountQuestion.isPresent(), is(Boolean.FALSE));
+    }
+
 }

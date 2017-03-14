@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.QuestionResponseDAO;
@@ -138,7 +139,7 @@ public class QuestionCoreProcessor {
 
         //Batch save
         final DateTime expireDate = todayLocal.plusDays(1);
-        List<Question> sortedSavedQuestions = handleSaveQuestions(accountId, todayLocal, expireDate, sortedQuestions);
+        List<Question> sortedSavedQuestions = handleSaveQuestions(accountId, todayLocal, expireDate, sortedQuestions, todayQuestionResponseList);
 
         return sortedSavedQuestions;
     }
@@ -231,14 +232,19 @@ public class QuestionCoreProcessor {
     /*
     Insert questions if it has not already been inserted
     */
-    private List<Question> handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions) {
+    private List<Question> handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions, final ImmutableList<AccountQuestionResponses> todayQuestionResponseList) {
 
         final List<Question> savedQuestions  = Lists.newArrayList();
         for (Question question : questions) {
 
             //TODO: make batch
-            final Boolean alreadySaved = savedAccountQuestion(accountId, question, todayLocal);
-            if (!alreadySaved) {
+            final Optional<Long> savedAccountQuestionId = savedAccountQuestion(question, todayQuestionResponseList);
+            final Boolean alreadySaved = savedAccountQuestionId.isPresent();
+
+            if (alreadySaved) {
+                final Question savedQuestion = Question.withAccountQId(question, savedAccountQuestionId.get());
+                savedQuestions.add(savedQuestion);
+            } else if (!alreadySaved) {
                 final Long accountQuestionId = saveQuestion(accountId, question, todayLocal, expireDate);
                 final Question savedQuestion = Question.withAccountQId(question, accountQuestionId);
                 savedQuestions.add(savedQuestion);
@@ -262,8 +268,16 @@ public class QuestionCoreProcessor {
         return 0L;
     }
 
-    private Boolean savedAccountQuestion(final Long accountId, final Question question, final DateTime created) {
-        final List<AccountQuestion> questions = questionResponseReadDAO.getAskedQuestionByQuestionIdCreatedDate(accountId, question.id, created);
-        return !questions.isEmpty();
+    @VisibleForTesting
+    public static Optional<Long> savedAccountQuestion(final Question question, final ImmutableList<AccountQuestionResponses> todayQuestionResponseList) {
+
+        for (AccountQuestionResponses accountQuestionResponses : todayQuestionResponseList) {
+            if (accountQuestionResponses.questionId.equals(question.id)) {
+                final Long accountQuestionId = accountQuestionResponses.id;
+                return Optional.of(accountQuestionId);
+            }
+        }
+
+        return Optional.absent();
     }
 }
