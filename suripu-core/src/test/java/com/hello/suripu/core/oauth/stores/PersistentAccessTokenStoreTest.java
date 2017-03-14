@@ -124,5 +124,9 @@ public class PersistentAccessTokenStoreTest {
         final ClientCredentials credentials = new ClientCredentials(application.scopes, serialized);
         final Optional<AccessToken> accessTokenOptional = store.getTokenByClientCredentials(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(true));
+
+        // default behavior for external id is absent
+        assertThat(accessTokenOptional.get().externalId.isPresent(), is(false));
+        assertThat(accessTokenOptional.get().externalId().equals(String.valueOf(AccessToken.DEFAULT_INTERNAL_ID)), is(true));
     }
 }

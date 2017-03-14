@@ -15,6 +15,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AccessToken {
 
+    public static final Long DEFAULT_INTERNAL_ID = 0L;
+
     @JsonIgnore
     public final UUID token;
 
@@ -41,7 +43,7 @@ public class AccessToken {
 
     @JsonProperty("account_id")
     public String externalId() {
-        final String internalId = String.valueOf(0L);
+        final String internalId = String.valueOf(DEFAULT_INTERNAL_ID);
         return externalId.isPresent() ? externalId.get().toString() : internalId;
 
     }
