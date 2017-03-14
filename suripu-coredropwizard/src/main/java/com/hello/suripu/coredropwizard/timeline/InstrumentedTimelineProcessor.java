@@ -48,6 +48,7 @@ import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepPeriod;
+import com.hello.suripu.core.models.SleepPeriodResults;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepSegment;
@@ -70,6 +71,7 @@ import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
+import com.hello.suripu.core.util.TimelineLockdown;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -103,13 +105,13 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountReadDAO accountDAO;
     private final SleepStatsDAO sleepStatsDAODynamoDB;
+    private final MainEventTimesDAO mainEventTimesDAO;
     private final TimeZoneHistoryDAO timeZoneHistoryDAO;
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
     private final TimelineSafeguards timelineSafeguards;
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
-    private final MainEventTimesDAO mainEventTimesDAO;
 
     private final UserTimelineTestGroupDAO userTimelineTestGroupDAO;
     private final SleepScoreParametersDAO sleepScoreParametersDAO;
@@ -133,8 +135,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
     public final static int MIN_MOTION_AMPLITUDE = 500;
     public final static int TIMEZONE_HISTORY_LIMIT = 5;
-    final static long OUTLIER_GUARD_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
-    final static long DOMINANT_GROUP_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
+    final static long OUTLIER_GUARD_DURATION = (long) (DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
+    final static long DOMINANT_GROUP_DURATION = (long) (DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
 
 
     static public InstrumentedTimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
@@ -153,18 +155,18 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                                                                         final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
                                                                         final UserTimelineTestGroupDAO userTimelineTestGroupDAO,
                                                                         final SleepScoreParametersDAO sleepScoreParametersDAO,
-                                                                        final Map<AlgorithmType,NeuralNetEndpoint> neuralNetEndpoints,
+                                                                        final Map<AlgorithmType, NeuralNetEndpoint> neuralNetEndpoints,
                                                                         final AlgorithmConfiguration algorithmConfiguration,
                                                                         final MetricRegistry metrics) {
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
 
-        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO,priorsDAO,defaultModelEnsembleDAO,featureExtractionModelsDAO,neuralNetEndpoints,algorithmConfiguration,Optional.<UUID>absent());
+        final AlgorithmFactory algorithmFactory = AlgorithmFactory.create(sleepHmmDAO, priorsDAO, defaultModelEnsembleDAO, featureExtractionModelsDAO, neuralNetEndpoints, algorithmConfiguration, Optional.<UUID>absent());
 
         final Histogram scoreDiff = metrics.histogram(name(InstrumentedTimelineProcessor.class, "sleep-score-diff"));
 
         return new InstrumentedTimelineProcessor(pillDataDAODynamoDB,
-                deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
-                feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
+                deviceDAO, deviceDataDAODynamoDB, ringTimeHistoryDAODynamoDB,
+                feedbackDAO, sleepHmmDAO, accountDAO, sleepStatsDAODynamoDB,
                 mainEventTimesDAO,
                 senseDataDAO,
                 timeZoneHistoryDAO,
@@ -177,7 +179,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     public InstrumentedTimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,mainEventTimesDAO, senseDataDAO, timeZoneHistoryDAO, Optional.of(uuid),userTimelineTestGroupDAO,sleepScoreParametersDAO,algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
+        return new InstrumentedTimelineProcessor(pillDataDAODynamoDB, deviceDAO, deviceDataDAODynamoDB, ringTimeHistoryDAODynamoDB, feedbackDAO, sleepHmmDAO, accountDAO, sleepStatsDAODynamoDB, mainEventTimesDAO, senseDataDAO, timeZoneHistoryDAO, Optional.of(uuid), userTimelineTestGroupDAO, sleepScoreParametersDAO, algorithmFactory.cloneWithNewUUID(Optional.of(uuid)), scoreDiff);
+
     }
 
     //private SessionLogDebug(final String)
@@ -225,7 +228,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final DateTime dateOfNightUTC = targetDateLocalUTC.withZone(DateTimeZone.UTC).minusMillis(timezoneOffsetMillis);
 
         //find out user test group
-        final Optional<Long> groupIdOptional = userTimelineTestGroupDAO.getUserGestGroup(accountId,dateOfNightUTC);
+        final Optional<Long> groupIdOptional = userTimelineTestGroupDAO.getUserGestGroup(accountId, dateOfNightUTC);
 
         if (groupIdOptional.isPresent()) {
             return groupIdOptional.get();
@@ -234,7 +237,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return TimelineLog.DEFAULT_TEST_GROUP;
     }
 
-    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId,final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult, final TimeZoneOffsetMap timeZoneOffsetMap) {
+    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId, final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
         //return original if not enabled
         if (!this.hasInBedSearchEnabled(accountId)) {
@@ -266,7 +269,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final Event sleepEvent = origResult.mainEvents.get(Event.Type.SLEEP);
 
         final Event inBedEvent = InBedSearcher.getInBedPlausiblyBeforeSleep(
-                startTimeUTC,endTimeUTC,
+                startTimeUTC, endTimeUTC,
                 sleepEvent,
                 origResult.mainEvents.get(Event.Type.IN_BED),
                 15, //15 minutes to fall asleep minimum
@@ -295,27 +298,27 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             return origResult;
         }
 
-        return new TimelineAlgorithmResult(origResult.algorithmType,newEvents,origResult.extraEvents.asList());
+        return new TimelineAlgorithmResult(origResult.algorithmType, newEvents, origResult.extraEvents.asList());
 
     }
 
     public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
 
-        if(useTimelineSleepPeriods(accountId)){
+        if (useTimelineSleepPeriods(accountId)) {
             return retrieveTimelineForAllSleepPeriods(accountId, targetDate, newFeedback);
         }
-        return retrieveTimelinesForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate),Optional.absent(), newFeedback);
-        
+        return retrieveTimelineForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate), Optional.absent(), newFeedback);
+
     }
 
-    public TimelineResult retrieveTimelinesForSingleSleepPeriod(final Long accountId, final DateTime targetDate, final SleepPeriod sleepPeriod, final Optional<Long> previousOutOfBedTimeOptional,  final Optional<TimelineFeedback> newFeedback) {
+    public TimelineResult retrieveTimelineForSingleSleepPeriod(final Long accountId, final DateTime targetDate, final SleepPeriod sleepPeriod, final Optional<Long> previousOutOfBedTimeOptional, final Optional<TimelineFeedback> newFeedback) {
 
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, targetDate.withTimeAtStartOfDay().plusHours(44), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
         final DateTime startTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis()));
-        final DateTime endTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis()));;
+        final DateTime endTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis()));
         final DateTime currentTimeUTC = DateTime.now().withZone(DateTimeZone.UTC);
 
-        LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(),accountId,startTimeLocalUTC,endTimeLocalUTC);
+        LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(), accountId, startTimeLocalUTC, endTimeLocalUTC);
 
         final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, startTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, newFeedback);
 
@@ -328,35 +331,41 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
-        final SleepPeriodResults sleepPeriodResults = retrieveSleepPeriodResult(accountId,targetDate, sleepPeriod, sensorData, timeZoneOffsetMap, previousOutOfBedTimeOptional, newFeedback);
+        final SleepPeriodResults sleepPeriodResults = retrieveSleepPeriodResult(accountId, targetDate, sleepPeriod, sensorData, timeZoneOffsetMap, previousOutOfBedTimeOptional, newFeedback);
 
-        if(!sleepPeriodResults.resultsOptional.isPresent()){
+        if (!sleepPeriodResults.resultsOptional.isPresent()) {
             LOGGER.warn("invalid timeline");
 
             return TimelineResult.createEmpty(sleepPeriodResults.timelineLog, English.TIMELINE_NO_SLEEP_DATA, sleepPeriodResults.dataCompleteness);
         }
 
 
-        if (!sleepPeriodResults.resultsOptional.get().populatedTimelines.isValidSleepScore) {
+        if (!sleepPeriodResults.isValid) {
             sleepPeriodResults.timelineLog.addMessage(TimelineError.INVALID_SLEEP_SCORE);
             LOGGER.warn("invalid sleep score");
             //if new results, save results even if invalid.
-            if(sleepPeriodResults.newResults){
-                final MainEventTimes mainEventTimesEmpty = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod,DateTime.now(DateTimeZone.UTC).getMillis(), 0 );
+            if (sleepPeriodResults.isNewResult) {
+                final MainEventTimes mainEventTimesEmpty = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
 
             }
             return TimelineResult.createEmpty(sleepPeriodResults.timelineLog, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
         }
 
+//        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,targetDate.withTimeAtStartOfDay(), sleepScore.value, sleepScore, sleepStats, userOffsetMillis);
+//        LOGGER.debug("action=updated-stats-score updated={} account_id={} score={}, stats={}", updatedStats, accountId, sleepScore, sleepStats);
+
+
         //fix main events
-        final MainEventTimes mainEventTimesFinal = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).events);
+        final MainEventTimes mainEventTimesFinal = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepPeriodResults.resultsOptional.get().timeline.events);
         //if new results, save results.
-        if(sleepPeriodResults.newResults || newFeedback.isPresent()){
+        if (sleepPeriodResults.isNewResult || newFeedback.isPresent()) {
             mainEventTimesDAO.updateEventTimes(mainEventTimesFinal);
         }
-        return TimelineResult.create(sleepPeriodResults.resultsOptional.get().populatedTimelines.timelines, sleepPeriodResults.timelineLog);
+        return TimelineResult.create(Lists.newArrayList(sleepPeriodResults.resultsOptional.get().timeline), sleepPeriodResults.timelineLog);
     }
+
+
 
     public Optional<Long> getPreviousOutOfBedTime(final SleepPeriod targetSleepPeriod, final Map<SleepPeriod.Period, MainEventTimes> targetSleepEventsMap, final Map<SleepPeriod.Period, MainEventTimes> prevTargetDateSleepEventsMap) {
 
@@ -407,11 +416,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<MainEventTimes> generatedMainEventTimesList = Lists.newArrayList();
         generatedMainEventTimesList.addAll(mainEventTimesDAO.getEventTimes(accountId, targetDate.minusDays(1), targetDate.plusDays(1)));
 
-        final Map<SleepPeriod.Period, SleepPeriodResults> sleepPeriodResultsMap = getAllSleepPeriodResults(accountId, targetDate, numSleepPeriods, fullDaySensorData, generatedMainEventTimesList, timeZoneOffsetMap);
+        final Map<SleepPeriod.Period, SleepPeriodResults> sleepPeriodResultsMap = getSleepPeriodResultsForAllSleepPeriods(accountId, targetDate, numSleepPeriods, fullDaySensorData, generatedMainEventTimesList, timeZoneOffsetMap);
 
-        final TimelineResult allPeriodTimelineResult = generateAndUpdateTimelineResultsAllPeriods(accountId, targetDate, numSleepPeriods, sleepPeriodResultsMap);
+        final TimelineResult allSleepPeriodsTimelineResult = generateAndUpdateTimelineResultsForAllSleepPeriods(accountId, targetDate, numSleepPeriods, sleepPeriodResultsMap);
 
-        return allPeriodTimelineResult;
+        return allSleepPeriodsTimelineResult;
     }
 
     /*
@@ -422,10 +431,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     creates list of log messages
     gets the data completeness for targetDate.
      */
-    public TimelineResult generateAndUpdateTimelineResultsAllPeriods(final long accountId, final DateTime targetDate,  final int numSleepPeriods, final Map<SleepPeriod.Period, SleepPeriodResults> sleepPeriodResultsMap){
+    public TimelineResult generateAndUpdateTimelineResultsForAllSleepPeriods(final long accountId, final DateTime targetDate, final int numSleepPeriods, final Map<SleepPeriod.Period, SleepPeriodResults> sleepPeriodsResultsMap){
 
         //CURRENTLY sleep_score, sleep_stats, sleep_message, and sleep_insights are set to the sleep period with the highest sleep score
-        final List<SleepSegment> allPeriodEvents = new ArrayList<>();
+        final List<SleepSegment> allSleepPeriodsEvents = new ArrayList<>();
         int sleepScore = 0;
         SleepStats sleepStats = SleepStats.create(0,0,0,0,0);
         String timelineMessage = "";
@@ -438,17 +447,17 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //loops through sleepPeriodResults, extracts timeline events, highest sleepscore (w/ sleepStats), timeline logs and datacompleteness
         for (int i = 0; i < numSleepPeriods; i++) {
             final SleepPeriod.Period period = SleepPeriod.Period.fromInteger(i);
-            if (!sleepPeriodResultsMap.containsKey(period)){
+            if (!sleepPeriodsResultsMap.containsKey(period)){
                 continue;
             }
-            final SleepPeriodResults targetSleepPeriodResults = sleepPeriodResultsMap.get(period);
+            final SleepPeriodResults targetSleepPeriodResults = sleepPeriodsResultsMap.get(period);
 
-            if (!targetSleepPeriodResults.resultsOptional.get().populatedTimelines.isValidSleepScore || !targetSleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).statistics.isPresent()) {
+            if (!targetSleepPeriodResults.isValid || !targetSleepPeriodResults.resultsOptional.get().timeline.statistics.isPresent()) {
                 targetSleepPeriodResults.timelineLog.addMessage(TimelineError.INVALID_SLEEP_SCORE);
                 LOGGER.warn("invalid sleep score");
                 timelineLogs.add(targetSleepPeriodResults.timelineLog);
                 dataCompletenessList.add(DataCompleteness.NOT_ENOUGH_DATA);
-                if(targetSleepPeriodResults.newResults){
+                if(targetSleepPeriodResults.isNewResult){
                     final MainEventTimes mainEventTimesEmpty = MainEventTimes.createMainEventTimesEmpty(accountId, targetSleepPeriodResults.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0 );
                     mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
 
@@ -458,29 +467,29 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
             timelineLogs.add(targetSleepPeriodResults.timelineLog);
             dataCompletenessList.add(DataCompleteness.ENOUGH_DATA);
-            final MainEventTimes mainEventTimesFinal = MainEventTimes.createMainEventTimes(accountId, targetSleepPeriodResults.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, targetSleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).events);
+            final MainEventTimes mainEventTimesFinal = MainEventTimes.createMainEventTimes(accountId, targetSleepPeriodResults.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, targetSleepPeriodResults.resultsOptional.get().timeline.events);
             //if new results, save results.
-            if(targetSleepPeriodResults.newResults){
+            if(targetSleepPeriodResults.isNewResult){
                 mainEventTimesDAO.updateEventTimes(mainEventTimesFinal);
             }
 
-            final int targetScore = targetSleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).score;
+            final int targetScore = targetSleepPeriodResults.resultsOptional.get().timeline.score;
             if (targetScore >= sleepScore){
                 sleepScore = targetScore;
-                sleepStats = targetSleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).statistics.get();
-                timelineMessage = targetSleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).message;
-                timelineInsight = targetSleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).insights;
+                sleepStats = targetSleepPeriodResults.resultsOptional.get().timeline.statistics.get();
+                timelineMessage = targetSleepPeriodResults.resultsOptional.get().timeline.message;
+                timelineInsight = targetSleepPeriodResults.resultsOptional.get().timeline.insights;
             }
-            allPeriodEvents.addAll(targetSleepPeriodResults.resultsOptional.get().populatedTimelines.timelines.get(0).events);
+            allSleepPeriodsEvents.addAll(targetSleepPeriodResults.resultsOptional.get().timeline.events);
         }
 
         //if timeline events > 4, we have a valid timeline.
-        if (allPeriodEvents.size() > 4) {
-            final Timeline timeline = Timeline.create(sleepScore, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), allPeriodEvents, timelineInsight,sleepStats);
+        if (allSleepPeriodsEvents.size() > 4) {
+            final Timeline timeline = Timeline.create(sleepScore, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), allSleepPeriodsEvents, timelineInsight,sleepStats);
             return TimelineResult.create(Lists.newArrayList(timeline), new ArrayList(timelineLogs));
         }
 
-        final DataCompleteness overallDataCompleteness = DataCompleteness.getAllPeriodsDataCompleteness(dataCompletenessList, numSleepPeriods);
+        final DataCompleteness overallDataCompleteness = DataCompleteness.getDataCompletenessForAllSleepPeriods(dataCompletenessList, numSleepPeriods);
 
         final String message;
         if (overallDataCompleteness == DataCompleteness.NO_DATA){
@@ -492,28 +501,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return TimelineResult.createEmpty(log, message, overallDataCompleteness);
     }
 
-    public boolean isTimelineLockdownValid(final MainEventTimes mainEventTimes, final OneDaysSensorData oneDaysSensorData){
-        final int noMotionWindowMinutes = 60;
-        final int motionCountThreshold = 4;
-        final Long outOfBedTime = mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time;
-        final Boolean motionDuringWindow = motionDuringWindow(oneDaysSensorData.oneDaysTrackerMotion.originalTrackerMotions, outOfBedTime, noMotionWindowMinutes, motionCountThreshold);
-        return motionDuringWindow;
-    }
-
-    public static boolean motionDuringWindow(final List<TrackerMotion> trackerMotions, final Long windowStartTime, final int windowDurationMinutes, final int newMotionCountThreshold){
-        final int newMotionTimeWindow = windowDurationMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        int newMotionCount = 0;
-        for(final TrackerMotion trackermotion : trackerMotions){
-            if (trackermotion.timestamp > windowStartTime && trackermotion.timestamp <= windowStartTime + newMotionTimeWindow){
-                newMotionCount +=1;
-            }
-        }
-        if (newMotionCount > newMotionCountThreshold){
-            return true;
-        }
-
-        return false;
-    }
 
     public  Map<SleepPeriod.Period, MainEventTimes> getSleepEventsMapForDate(final List<MainEventTimes> mainEventTimesList, final DateTime date){
         final Map<SleepPeriod.Period, MainEventTimes> sleepEventsMap = new HashMap<>();
@@ -525,7 +512,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         return sleepEventsMap;
     }
 
-    public Map<SleepPeriod.Period, SleepPeriodResults> getAllSleepPeriodResults(final Long accountId, final DateTime targetDate, final int numSleepPeriods, final OneDaysSensorData fullDaySensorData, final List<MainEventTimes> generatedMainEventTimesList, final TimeZoneOffsetMap timeZoneOffsetMap ) {
+    public Map<SleepPeriod.Period, SleepPeriodResults> getSleepPeriodResultsForAllSleepPeriods(final Long accountId, final DateTime targetDate, final int numSleepPeriods, final OneDaysSensorData fullDaySensorData, final List<MainEventTimes> generatedMainEventTimesList, final TimeZoneOffsetMap timeZoneOffsetMap ) {
         // loops through possible sleep Periods. Days are structured Morning, Afternoon Night.
         //Maps sleepPeriod to SleepPeriodResults
 
@@ -553,17 +540,19 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 if (generatedMainEventTimes.hasValidEventTimes() && generatedMainEventTimes.createdAt.time >= targetSleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())).getMillis()) {
                     attemptTimeline = false;
                     final OneDaysSensorData targetSleepPeriodSensorData = fullDaySensorData.getForSleepPeriod(prevOutOfBedTimeOptional, targetSleepPeriod);
-                    final PopulatedTimelines targetPeriodPopulatedTimeline = populateSingleSleepPeriodTimeline(accountId, targetSleepPeriodSensorData, timeZoneOffsetMap, generatedMainEventTimes);
-                    final SleepPeriodResults targetSleepPeriodResult = SleepPeriodResults.create(generatedMainEventTimes, targetPeriodPopulatedTimeline, targetSleepPeriodSensorData, timeZoneOffsetMap, new TimelineLog(accountId, targetDate.withZone(DateTimeZone.UTC).getMillis()), DataCompleteness.ENOUGH_DATA, false);
-                    targetSleepPeriodResultsMap.put(targetSleepPeriod.period, targetSleepPeriodResult);
+                    final SleepPeriodResults targetSleepPeriodResults = populateSingleSleepPeriodTimeline(accountId, targetSleepPeriodSensorData, timeZoneOffsetMap, generatedMainEventTimes, new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), false);
+                    if (!targetSleepPeriodResults.resultsOptional.isPresent()) {
+                        targetSleepPeriodResultsMap.put(targetSleepPeriod.period, targetSleepPeriodResults);
+                    }
                 }
                 if (generatedMainEventTimes.hasValidEventTimes() && generatedMainEventTimes.createdAt.time < targetSleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis())).getMillis()) {
-                    if (isTimelineLockdownValid(generatedMainEventTimes, fullDaySensorData)) {
+                    if (TimelineLockdown.isLockedDown(Optional.of(generatedMainEventTimes), fullDaySensorData.oneDaysTrackerMotion.processedtrackerMotions, true)) {
                         attemptTimeline = false;
                         final OneDaysSensorData targetSleepPeriodSensorData = fullDaySensorData.getForSleepPeriod(prevOutOfBedTimeOptional, targetSleepPeriod);
-                        final PopulatedTimelines targetPeriodPopulatedTimeline = populateSingleSleepPeriodTimeline(accountId, targetSleepPeriodSensorData, timeZoneOffsetMap, generatedMainEventTimes);
-                        final SleepPeriodResults targetSleepPeriodResult = SleepPeriodResults.create(generatedMainEventTimes, targetPeriodPopulatedTimeline, targetSleepPeriodSensorData, timeZoneOffsetMap, new TimelineLog(accountId, targetDate.withZone(DateTimeZone.UTC).getMillis()), DataCompleteness.ENOUGH_DATA, false);
-                        targetSleepPeriodResultsMap.put(targetSleepPeriod.period, targetSleepPeriodResult);
+                        final SleepPeriodResults targetSleepPeriodResults = populateSingleSleepPeriodTimeline(accountId, targetSleepPeriodSensorData, timeZoneOffsetMap, generatedMainEventTimes, new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), false);
+                        if (!targetSleepPeriodResults.resultsOptional.isPresent()) {
+                            targetSleepPeriodResultsMap.put(targetSleepPeriod.period, targetSleepPeriodResults);
+                        }
                     }
                 }
             }
@@ -576,7 +565,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                     targetDateSleepEventsMap.put(targetSleepPeriod.period, targetMainEventTimes);
                     targetSleepPeriodResultsMap.put(targetSleepPeriod.period, targetSleepPeriodResults);
                 } else {
-                    targetSleepPeriodResultsMap.put(targetSleepPeriod.period, SleepPeriodResults.createEmpty(targetSleepPeriod, targetSleepPeriodResults.timelineLog, targetSleepPeriodResults.dataCompleteness, true));
+                    targetSleepPeriodResultsMap.put(targetSleepPeriod.period, SleepPeriodResults.createEmpty(targetSleepPeriod, targetSleepPeriodResults.timelineLog, targetSleepPeriodResults.dataCompleteness, false, false));
                 }
             }
 
@@ -610,8 +599,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
         }
 
-
-        LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(),accountId,startTimeLocalUTC,endTimeLocalUTC);
+        LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(), accountId, startTimeLocalUTC, endTimeLocalUTC);
 
         //get test group of user, will be default if no entries exist in database
         final Long testGroup = getTestGroup(accountId, startTimeLocalUTC, sensorDataSleepPeriod.timezoneOffsetMillis);
@@ -626,28 +614,28 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (isDaySleeper(accountId)) {
             motionCountThresholdDay = MIN_TRACKER_MOTION_COUNT_SELECTED_PERIOD;
             motionCountThresholdNight = MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD;
-        } else{
+        } else {
             motionCountThresholdDay = MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD;
             motionCountThresholdNight = MIN_TRACKER_MOTION_COUNT_SELECTED_PERIOD;
         }
 
         final int minMotionCountThreshold;
-        if(useTimelineSleepPeriods(accountId)){
-            if (sleepPeriod.period == SleepPeriod.Period.NIGHT){
+        if (useTimelineSleepPeriods(accountId)) {
+            if (sleepPeriod.period == SleepPeriod.Period.NIGHT) {
                 minMotionCountThreshold = motionCountThresholdNight;
             } else {
                 minMotionCountThreshold = motionCountThresholdDay;
             }
-        }else if(useNoMotionEnforcement(accountId)){
+        } else if (useNoMotionEnforcement(accountId)) {
             minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD;
-        }else{
+        } else {
             minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT;
         }
 
         final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorDataSleepPeriod.oneDaysTrackerMotion.processedtrackerMotions, sensorDataSleepPeriod.oneDaysPartnerMotion.filteredOriginalTrackerMotions, minMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
-            LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
+            LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason, accountId, targetDate.toDate());
         }
         final MainEventTimes mainEventTimesEmpty = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0);
 
@@ -657,97 +645,85 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return new SleepPeriodResults(sleepPeriod, Optional.absent(), log, DataCompleteness.NOT_ENOUGH_DATA, true);
+                return SleepPeriodResults.createEmpty(sleepPeriod, log, DataCompleteness.NOT_ENOUGH_DATA, true, false);
 
 
             case NOT_ENOUGH_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return new SleepPeriodResults(sleepPeriod, Optional.absent(), log, DataCompleteness.NOT_ENOUGH_DATA, true);
+                return SleepPeriodResults.createEmpty(sleepPeriod, log,  DataCompleteness.NOT_ENOUGH_DATA, true, false);
 
             case NO_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, DataCompleteness.NO_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return new SleepPeriodResults(sleepPeriod, Optional.absent(), log, DataCompleteness.NO_DATA, true);
+                return SleepPeriodResults.createEmpty(sleepPeriod, log, DataCompleteness.NO_DATA, true, false);
 
             case LOW_AMP_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return new SleepPeriodResults(sleepPeriod, Optional.absent(), log, DataCompleteness.NOT_ENOUGH_DATA, true);
+                return SleepPeriodResults.createEmpty(sleepPeriod, log, DataCompleteness.NOT_ENOUGH_DATA, true, false);
 
             case PARTNER_FILTER_REJECTED_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return new SleepPeriodResults(sleepPeriod, Optional.absent(), log, DataCompleteness.NOT_ENOUGH_DATA, true);
+                return SleepPeriodResults.createEmpty(sleepPeriod, log,  DataCompleteness.NOT_ENOUGH_DATA, true, false);
 
             default:
                 break;
         }
 
-        /*  GET THE TIMELINE! */
+        final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId, targetDate, SleepPeriod.Period.NIGHT);
+        /*check if previously generated timeline is valid for lockdown - if valid for lockdown, uses cached main event times instead of running timeline algorithm*/
+
+        final boolean timelineLockedDown = TimelineLockdown.isLockedDown(computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
-        final Set<String> featureFlips = getTimelineFeatureFlips(accountId);
 
-
-        for (final AlgorithmType alg : algorithmChain) {
-            LOGGER.info("action=try_algorithm algorithm_type={}",alg);
-            final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
-
-            if (!timelineAlgorithm.isPresent()) {
-                //assume error reporting is happening in alg, no need to report it here
-                continue;
-            }
-
-            resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorDataSleepPeriod, sleepPeriod, log, accountId, feedbackChanged,featureFlips);
-            //got a valid result? poof, we're out.
-            if (resultOptional.isPresent()) {
-                break;
-            }
+        /* DEFAULT VALUE IS CACHED TIMELINE MAIN EVENTS */
+        if (computedMainEventTimesOptional.isPresent()) {
+            resultOptional = Optional.of(new TimelineAlgorithmResult(AlgorithmType.NONE, computedMainEventTimesOptional.get().getMainEvents()));
         }
 
-        //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
+        if (!timelineLockedDown) {
+            /*  GET THE TIMELINE! */
+            final Set<String> featureFlips = getTimelineFeatureFlips(accountId);
+
+            for (final AlgorithmType alg : algorithmChain) {
+                LOGGER.info("action=try_algorithm algorithm_type={}", alg);
+                final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
+
+                if (!timelineAlgorithm.isPresent()) {
+                    //assume error reporting is happening in alg, no need to report it here
+                    continue;
+                }
+
+                resultOptional = timelineAlgorithm.get().getTimelinePrediction(sensorData, sleepPeriod, log, accountId, feedbackChanged, featureFlips);
+
+                //got a valid result? poof, we're out.
+                if (resultOptional.isPresent()) {
+                    break;
+                }
+            }
+        }
         if (!resultOptional.isPresent()) {
-            LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms",accountId, targetDate.toDate());
-            log.addMessage(AlgorithmType.NONE,TimelineError.UNEXEPECTED,"no successful algorithms");
-            //TimelineResult.createEmpty(log);
             mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-            return SleepPeriodResults.createEmpty(sleepPeriod, log, DataCompleteness.ENOUGH_DATA, true);
+            return SleepPeriodResults.createEmpty(sleepPeriod, log, DataCompleteness.ENOUGH_DATA, !timelineLockedDown, false);
         }
-
-
-        //get result, and refine (optional feature) in-bed time for online HMM
-        final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get(), timeZoneOffsetMap);
-
-        if (this.useTimelineSleepPeriods(accountId) && !isValidInBedTime(sleepPeriod, result)){
-            LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "in_bed_event_outside_of_sleep_period",accountId, targetDate.toDate());
-            log.addMessage(TimelineError.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD);
-            //TimelineResult.createEmpty(log);
+        final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, resultOptional.get());
+        final SleepPeriodResults sleepPeriodResults = populateSingleSleepPeriodTimeline(accountId, sensorData, timeZoneOffsetMap, mainEventTimes, log, !timelineLockedDown);
+        //regenerated maineventtimes after populating to incorporate user feedback.
+        if (!sleepPeriodResults.isValid) {
             mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-            return SleepPeriodResults.createEmpty(sleepPeriod, log, DataCompleteness.ENOUGH_DATA, true);
-
-        }
-        List<Event> extraEvents = result.extraEvents;
-
-            /* FEATURE FLIP EXTRA EVENTS */
-        if (!this.hasExtraEventsEnabled(accountId)) {
-            extraEvents = Collections.EMPTY_LIST;
+            return SleepPeriodResults.createEmpty(sleepPeriod, log, DataCompleteness.ENOUGH_DATA, !timelineLockedDown, false);
         }
 
-
-        final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, result);
-        //if we save maineventtimes here and then use this to affiliate periods, we may affiliate a motion to an invalid timeline and exclude following actually valid timeline.
-        //We have to track if maineventtimes are attempted the first time or not.
-        //mainEventTimesDAO.updateEventTimes(mainEventTimes);
-        final PopulatedTimelines populatedSleepPeriod = populateSingleSleepPeriodTimeline(accountId, sensorData, timeZoneOffsetMap, mainEventTimes);
-
-        return SleepPeriodResults.create(mainEventTimes, populatedSleepPeriod, sensorData, timeZoneOffsetMap, log, DataCompleteness.ENOUGH_DATA, true);
+        final MainEventTimes populatedMainEventTimes = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepPeriodResults.resultsOptional.get().timeline.events);
+        mainEventTimesDAO.updateEventTimes(populatedMainEventTimes);
+        return sleepPeriodResults;
     }
-
-
 
     private Set<String> getTimelineFeatureFlips(final long accountId) {
         final Set<String> featureFlips = Sets.newHashSet();
@@ -908,61 +884,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
     }
 
-    private static class Results {
-        public final MainEventTimes mainEventTimes;
-        public final OneDaysSensorData sensorData;
-        public final TimeZoneOffsetMap timeZoneOffsetMap;
-
-        private Results(final MainEventTimes mainEventTimes, final OneDaysSensorData oneDaysSensorData, final TimeZoneOffsetMap timeZoneOffsetMap){
-            this.mainEventTimes = mainEventTimes;
-            this.sensorData = oneDaysSensorData;
-            this.timeZoneOffsetMap = timeZoneOffsetMap;
-        }
-
-        public static Results create(final MainEventTimes mainEventTimes, final OneDaysSensorData oneDaysSensorData, final TimeZoneOffsetMap timeZoneOffsetMap){
-            return new Results(mainEventTimes, oneDaysSensorData, timeZoneOffsetMap);
-        }
-    }
-
-    private static class SleepPeriodResults {
-        private final SleepPeriod sleepPeriod;
-        private final Optional<Results> resultsOptional;
-        public final TimelineLog timelineLog;
-        public final DataCompleteness dataCompleteness;
-        public final boolean newResults;
-        SleepPeriodResults(final SleepPeriod sleepPeriod, final Optional<Results> resultsOptional, final TimelineLog timelineLog, final DataCompleteness dataCompleteness, final boolean newResults){
-            this.sleepPeriod = sleepPeriod;
-            this.resultsOptional = resultsOptional;
-            this.timelineLog = timelineLog;
-            this.dataCompleteness = dataCompleteness;
-            this.newResults = newResults;
-        }
-        public static class Results {
-            public final MainEventTimes mainEventTimes;
-            public final OneDaysSensorData sensorData;
-            public final TimeZoneOffsetMap timeZoneOffsetMap;
-            public final PopulatedTimelines populatedTimelines;
-
-            private Results(final MainEventTimes mainEventTimes, PopulatedTimelines populatedTimelines, final OneDaysSensorData oneDaysSensorData, final TimeZoneOffsetMap timeZoneOffsetMap) {
-                this.mainEventTimes = mainEventTimes;
-                this.populatedTimelines = populatedTimelines;
-                this.sensorData = oneDaysSensorData;
-                this.timeZoneOffsetMap = timeZoneOffsetMap;
-            }
-        }
-        public static SleepPeriodResults create(final MainEventTimes mainEventTimes,final PopulatedTimelines populatedTimelines, final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineLog timelineLog, final DataCompleteness dataCompleteness, final boolean newResults) {
-            final Results results = new Results(mainEventTimes, populatedTimelines, sensorData, timeZoneOffsetMap);
-            return new SleepPeriodResults(mainEventTimes.sleepPeriod, Optional.of(results), timelineLog, dataCompleteness, newResults);
-        }
-        public static SleepPeriodResults create(final SleepPeriod sleepPeriod, final Optional<Results> resultsOptional, final TimelineLog timelineLog, final DataCompleteness dataCompleteness, final boolean newResults) {
-            return new SleepPeriodResults(sleepPeriod, resultsOptional, timelineLog, dataCompleteness, newResults);
-        }
-        public static SleepPeriodResults createEmpty(final SleepPeriod sleepPeriod, final TimelineLog timelineLog, final DataCompleteness dataCompleteness, final boolean newResults) {
-            return new SleepPeriodResults(sleepPeriod, Optional.absent(), timelineLog, dataCompleteness, newResults);
-        }
-    }
-
-    public PopulatedTimelines populateSingleSleepPeriodTimeline(final long accountId,final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final MainEventTimes mainEventTimes) {
+    public SleepPeriodResults populateSingleSleepPeriodTimeline(final long accountId,final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final MainEventTimes mainEventTimes, final TimelineLog timelineLog, final boolean isNewResult) {
 
         final DateTime targetDate = mainEventTimes.sleepPeriod.targetDate;
         final DateTime endDate = mainEventTimes.sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).offset);
@@ -1110,13 +1032,14 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId), useUninterruptedDuration);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
-        Integer sleepScore = computeAndMaybeSaveScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        final SleepScore sleepScore = computeScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
+        int sleepScoreValue = sleepScore.value;
 
         //if there is no feedback, we have a "natural" timeline
         //check if this natural timeline makes sense.  If not, set sleep score to zero.
         if (feedbackList.isEmpty() && sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
             LOGGER.warn("action=zeroing-score account_id={} reason=sleep-duration-too-short sleep_duration={}", accountId, sleepStats.sleepDurationInMinutes);
-            sleepScore = 0;
+            sleepScoreValue = 0;
         }
 
         //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
@@ -1138,11 +1061,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime, minMotionCountDuringSleep);
             if (!motionDuringSleep) {
                 LOGGER.warn("action=zeroing-score  account_id={} reason=insufficient-motion-during-sleeptime night_of={}", accountId, targetDate);
-                sleepScore =  0;
+                sleepScoreValue =  0;
             }
         }
 
-        boolean isValidSleepScore = sleepScore > 0;
+        boolean isValidSleepScore = sleepScoreValue > 0;
 
         //if there's feedback, sleep score can never be invalid
         if (!feedbackList.isEmpty()) {
@@ -1165,15 +1088,15 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
 
-        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
-        return new PopulatedTimelines(Lists.newArrayList(timeline),isValidSleepScore);
+        return SleepPeriodResults.create(mainEventTimes, timeline, sleepScore, sensorData, timeZoneOffsetMap, timelineLog, DataCompleteness.ENOUGH_DATA, isNewResult, isValidSleepScore);
     }
 
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData, final int minMotionCountThreshold){
+    static public TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData, final int minMotionCountThreshold){
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
@@ -1357,8 +1280,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 lightOutTimeOptional, optionalSleepTime, optionalAwakeTime, usePeakEnergyThreshold);
     }
 
-
-
     /**
      * Sleep score - always compute and update dynamo
      * @param trackerMotions
@@ -1367,7 +1288,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
      * @param sleepStats
      * @return
      */
-    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions,
+    private SleepScore computeScore(final List<TrackerMotion> trackerMotions,
                                              final List<TrackerMotion> originalTrackerMotions,
                                              final int numberSoundEvents,
                                              final AllSensorSampleList sensors,
@@ -1450,11 +1371,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         // Always update stats and scores to Dynamo
         final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
-        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
-                targetDate.withTimeAtStartOfDay(), sleepScore.value, sleepScore, sleepStats, userOffsetMillis);
-
-        LOGGER.debug("action=updated-stats-score updated={} account_id={} score={}, stats={}", updatedStats, accountId, sleepScore, sleepStats);
-        return sleepScore.value;
+//        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,targetDate.withTimeAtStartOfDay(), sleepScore.value, sleepScore, sleepStats, userOffsetMillis);
+//        LOGGER.debug("action=updated-stats-score updated={} account_id={} score={}, stats={}", updatedStats, accountId, sleepScore, sleepStats);
+        return sleepScore;
     }
 
     private static SleepScore computeSleepScoreV2(final int userAge, final SleepStats sleepStats, final Integer environmentScore, final MotionScore motionScore){
@@ -1472,7 +1391,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 .build();
         return sleepScore;
     }
-
 
     private static SleepScore computeSleepScoreV5(final Long accountId, final int userAge, final SleepScoreParameters sleepScoreParameters, final SleepStats sleepStats, final List<TrackerMotion> originalTrackerMotions, final Integer environmentScore, final MotionScore motionScore){
         //timesAwakePenalty accounted for in durv5 score

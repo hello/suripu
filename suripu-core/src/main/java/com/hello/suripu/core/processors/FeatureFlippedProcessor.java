@@ -196,7 +196,11 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_SLEEP_PERIOD, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean isDaySleeper(final Long accountId){
+    protected Boolean isDaySleeper(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.DAY_SLEEPER, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean useTimelineLockdown(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_LOCKDOWN, accountId, Collections.EMPTY_LIST);
     }
 }

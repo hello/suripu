@@ -36,6 +36,7 @@ import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepStats;
@@ -310,7 +311,7 @@ public class InstrumentedTimelineProcessorHelpers {
     };
 
     final public MainEventTimesDAO mainEventTimesDAO = new MainEventTimesDAO() {
-        @Override
+       @Override
         public boolean updateEventTimes(MainEventTimes mainEventTimes) {
             return true;
         }
@@ -323,6 +324,11 @@ public class InstrumentedTimelineProcessorHelpers {
         @Override
         public List<MainEventTimes> getEventTimes(Long accountId, DateTime startDate, DateTime endDate) {
             return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period) {
+            return Optional.absent();
         }
 
     };
@@ -602,7 +608,6 @@ public class InstrumentedTimelineProcessorHelpers {
             return null;
         }
     };
-
 
     public void clear() {
     }

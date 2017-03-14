@@ -18,7 +18,7 @@ public enum DataCompleteness {
         return this.value;
     }
 
-    public static DataCompleteness getAllPeriodsDataCompleteness(final List<DataCompleteness> dataCompletenessList, final int numSleepPeriods){
+    public static DataCompleteness getDataCompletenessForAllSleepPeriods(final List<DataCompleteness> dataCompletenessList, final int numSleepPeriods){
         DataCompleteness overallDataCompleteness = NO_DATA;
         for (final DataCompleteness dataCompleteness : dataCompletenessList){
             if(dataCompleteness.getValue() > overallDataCompleteness.getValue()){

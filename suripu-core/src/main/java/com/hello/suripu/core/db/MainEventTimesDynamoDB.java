@@ -370,4 +370,14 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
         return query(accountId, startDate, endDate.plusDays(1)).data;
     }
 
+    public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period){
+        final List<MainEventTimes> mainEventTimesList = query(accountId, date, date.plusDays(1)).data;
+        for(MainEventTimes mainEventTimes : mainEventTimesList){
+            if(mainEventTimes.sleepPeriod.period == period){
+                return Optional.of(mainEventTimes);
+            }
+        }
+        return Optional.absent();
+    }
+
 }
