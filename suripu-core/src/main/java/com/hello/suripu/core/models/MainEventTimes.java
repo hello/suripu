@@ -185,4 +185,24 @@ public class MainEventTimes {
         return mainEvents;
     }
 
+    public static Map<SleepPeriod.Period, MainEventTimes> getSleepPeriodsMainEventTimesMapForDate(final List<MainEventTimes> mainEventTimesList, final DateTime date){
+        final Map<SleepPeriod.Period, MainEventTimes> sleepEventsMap = new HashMap<>();
+        for ( final MainEventTimes mainEventTimes : mainEventTimesList) {
+            if (mainEventTimes.sleepPeriod.targetDate.withTimeAtStartOfDay().getMillis() == date.withTimeAtStartOfDay().getMillis()){
+                sleepEventsMap.put(mainEventTimes.sleepPeriod.period, mainEventTimes);
+            }
+        }
+        return sleepEventsMap;
+    }
+
+    public static MainEventTimes getPrevNightMainEventTimes(final long accountId, final List<MainEventTimes> mainEventTimesList, final DateTime date){
+        final SleepPeriod prevNightSleepPeriod = SleepPeriod.night(date.minusDays(1));
+        for(final MainEventTimes mainEventTimes: mainEventTimesList){
+            if (mainEventTimes.sleepPeriod == prevNightSleepPeriod){
+                return mainEventTimes;
+            }
+        }
+        return MainEventTimes.createMainEventTimesEmpty(accountId, prevNightSleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0);
+    }
+
 }
