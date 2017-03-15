@@ -86,14 +86,13 @@ public class SleepSegment implements Comparable {
         return this.event.getDescription();
     }
 
+    @JsonProperty("sleep_period")
+    public SleepPeriod.Period getSleepPeriod(){return this.event.getSleepPeriod();}
+
     @JsonIgnore
     public Event getEvent(){
         return this.event;
     }
-
-    //@JsonProperty("sleep_period")
-    @JsonIgnore
-    public SleepPeriod.Period getSleepPeriod(){return this.event.getSleepPeriod();}
 
 
     @JsonCreator
@@ -105,8 +104,7 @@ public class SleepSegment implements Comparable {
                         @JsonProperty("duration") final long durationInSeconds,
                         @JsonProperty("offset_millis") final int offsetMillis,
                         @JsonProperty("event_type") final Event.Type type,
-                        SleepPeriod.Period sleepPeriod,
-                        //@JsonProperty("sleep_period") final SleepPeriod.Period sleepPeriod,
+                        @JsonProperty("sleep_period") final SleepPeriod.Period sleepPeriod,
                         @JsonProperty("message") final String message){
         this.id = id;
         this.sensors = sensors;

@@ -85,9 +85,13 @@ public class FeedbackUtils {
         switch (eventType) {
             case IN_BED:
             case SLEEP:
-                if (hour >= 0 && hour < inbedSleepUpperBound && inbedSleepWindowSpansDay) {
-                    nextDay = true;
-                } else if (hour >= inbedSleepUpperBound && hour < inbedSleepLowerBound) {
+                if (inbedSleepWindowSpansDay) {
+                   if (hour >= 0 && hour < inbedSleepUpperBound) {
+                        nextDay = true;
+                    } else if( hour >= inbedSleepUpperBound && hour < inbedSleepLowerBound){
+                       return Optional.absent();
+                   }
+                }else if (hour >= inbedSleepUpperBound || hour < inbedSleepLowerBound) {
                     return Optional.absent();
                 }
 
@@ -95,9 +99,13 @@ public class FeedbackUtils {
 
             case WAKE_UP:
             case OUT_OF_BED:
-                if(hour >= 0 && hour < wakeOutOfBedUpperBound && wakeOutOfBedWindowSpansDay) {
-                    nextDay =  true;
-                } else if (hour >= wakeOutOfBedUpperBound && hour < wakeOutOfBedLowerBound){
+                if(wakeOutOfBedWindowSpansDay){
+                    if(hour >= 0 && hour < wakeOutOfBedUpperBound) {
+                        nextDay =  true;
+                    } else if ( hour >= wakeOutOfBedUpperBound && hour < wakeOutOfBedLowerBound){
+                        return Optional.absent();
+                    }
+                } else if(hour >= wakeOutOfBedUpperBound || hour < wakeOutOfBedLowerBound){
                     return Optional.absent();
                 }
                 break;
@@ -124,28 +132,28 @@ public class FeedbackUtils {
         Event event;
         switch (feedback.eventType) {
             case WAKE_UP:
-                event = WakeupEvent.createForNight(
+                event = new WakeupEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case SLEEP:
-                event = FallingAsleepEvent.createForNight(
+                event = new FallingAsleepEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case IN_BED:
-                event = InBedEvent.createForNight(
+                event = new InBedEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case OUT_OF_BED:
-                event = OutOfBedEvent.createForNight(
+                event = new OutOfBedEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis

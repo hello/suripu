@@ -1,7 +1,6 @@
 package com.hello.suripu.core.models.timeline.v2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -37,8 +36,7 @@ public class TimelineEvent {
     @JsonProperty("event_type")
     public final EventType eventType;
 
-    //@JsonProperty("sleep_period")
-    @JsonIgnore
+    @JsonProperty("sleep_period")
     public final SleepPeriod.Period sleepPeriod;
 
     @JsonProperty("valid_actions")

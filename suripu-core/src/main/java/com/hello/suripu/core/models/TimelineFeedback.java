@@ -68,6 +68,21 @@ public class TimelineFeedback {
         return new TimelineFeedback(realDate, defaultPeriod, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent(),Optional.<Long>absent(), null, Boolean.TRUE);
     }
 
+    @JsonCreator
+    public static TimelineFeedback create(
+            @JsonProperty("date_of_night") final String dateOfNight,
+            @JsonProperty("sleep_period") final int sleepPeriodInt,
+            @JsonProperty("old_time_of_event") final String oldTimeOfEvent,
+            @JsonProperty("new_time_of_event") final String newTimeOfEvent,
+            @JsonProperty("event_type") final String eventTypeString) {
+
+        final SleepPeriod.Period period = SleepPeriod.Period.fromInteger(sleepPeriodInt);
+        final DateTime date = DateTime.parse(dateOfNight);
+        final DateTime realDate = new DateTime(date.getMillis(), DateTimeZone.UTC).withTimeAtStartOfDay();
+        final Event.Type eventType = Event.Type.fromString(eventTypeString);
+        return new TimelineFeedback(realDate, period, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent(),Optional.<Long>absent(), null, Boolean.TRUE);
+    }
+
     private static TimelineFeedback create(final String dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId, final Boolean isNewTimeCorrect) {
         final DateTime realDate = new DateTime(DateTime.parse(dateOfNight), DateTimeZone.UTC).withTimeAtStartOfDay();
         final SleepPeriod.Period defaultPeriod = SleepPeriod.Period.NIGHT;
