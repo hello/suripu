@@ -11,6 +11,7 @@ import com.hello.suripu.core.algorithmintegration.AlgorithmConfiguration;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.NeuralNetEndpoint;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
@@ -53,7 +54,6 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserBioInfo;
-import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.processors.PartnerMotion;
@@ -611,13 +611,17 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         Optional<Event> outOfBed= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
 
         //CREATE SLEEP MOTION EVENTS
-        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions, hasSleepDisturbanceEvent(accountId));
 
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
         Optional<Long> sleepTime = Optional.absent();
+        Optional<Long> wakeTime = Optional.absent();
         if (sleep.isPresent()){
             sleepTime = Optional.of(sleep.get().getEndTimestamp());
+        }
+        if (wake.isPresent()) {
+            wakeTime = Optional.of(wake.get().getStartTimestamp());
         }
 
         // LIGHT
@@ -689,6 +693,22 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
+        if (hasSleepDisturbanceEvent(accountId)){
+            if (sleepTime.isPresent() && wakeTime.isPresent()) {
+                final List<Event> sleepDisturbanceEvents = timelineUtils.getSleepDisturbanceEvents(sensorData.oneDaysTrackerMotion, sleepTime.get(), wakeTime.get(), timeZoneOffsetMap);
+                for(final Event sleepDisturbanceEvent : sleepDisturbanceEvents){
+                    LOGGER.info("action=get-sleep-disturbance account_id={} night={} start-time={} end-time={} offset={}", accountId, targetDate, sleepDisturbanceEvent.getStartTimestamp(), sleepDisturbanceEvent.getEndTimestamp(), sleepDisturbanceEvent.getTimezoneOffset());
+                    if (timelineEvents.containsKey(sleepDisturbanceEvent.getStartTimestamp())){
+                        final Event.Type otherEventType = timelineEvents.get(sleepDisturbanceEvent.getStartTimestamp()).getType();
+                        if (otherEventType != Event.Type.NONE && otherEventType != Event.Type.MOTION) {
+                            LOGGER.info("action=multiple-events-during-same-window account-id={} date-of-night={} event1={} event2=SLEEP_DISTURBANCE event-time={}", accountId,targetDate, otherEventType.name(), sleepDisturbanceEvent.getStartTimestamp());
+                        }
+                    }
+                    timelineEvents.put(sleepDisturbanceEvent.getStartTimestamp(), sleepDisturbanceEvent);
+                }
+            }
+        }
+
         /* add main events  */
         for (final Event event : reprocessedEvents.mainEvents.values()) {
             timelineEvents.put(event.getStartTimestamp(), event);
@@ -723,14 +743,17 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
 
 
+        //removes sleep motion events during a sleep disturbance
+        final List<Event> filteredEvents = timelineUtils.cleanEventWindow(nonSignificantFilteredEvents);
+
         /* convert valid events to segment, compute sleep stats and score */
 
-        final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
+        final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(filteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
         final boolean useUninterruptedDuration = useUninterruptedDuration(accountId);
 
-        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, hasSleepStatMediumSleep(accountId), useUninterruptedDuration);
+        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, trackerMotions, lightSleepThreshold, useUninterruptedDuration, hasSleepDisturbanceEvent(accountId));
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         Integer sleepScore = computeAndMaybeSaveScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
@@ -890,7 +913,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
             //tz offset should be correct
-            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
+            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds, false);
 
             return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
         }

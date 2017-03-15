@@ -19,6 +19,7 @@ import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.algorithmintegration.OneDaysTrackerMotion;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -32,6 +33,7 @@ import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NoiseEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
+import com.hello.suripu.core.models.Events.SleepDisturbanceEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
@@ -161,7 +163,14 @@ public class TimelineUtils {
         return positiveMotions;
     }
 
-    public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
+    public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions, final boolean hasSleepDisturbance) {
+        int minSleepDepth = 0;
+        //sleepDepth < 5 = "awake" for sleep motion, but is not reflected in sleep stats times awake.
+        //Users can thumb over sleep motion that is < 5 and see a message of 'awake'
+        //setting minSleepDepth to 5 removes this inconsistency.
+        if (hasSleepDisturbance){
+            minSleepDepth = 5;
+        }
         final List<MotionEvent> motionEvents = new ArrayList<>();
 
         final List<TrackerMotion> positiveMotions = removeNegativeAmplitudes(trackerMotions);
@@ -181,7 +190,7 @@ public class TimelineUtils {
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
-                    getSleepDepth(trackerMotion.value, positionMap, maxSVM));
+                    Math.max(getSleepDepth(trackerMotion.value, positionMap, maxSVM), minSleepDepth));
             motionEvents.add(motionEvent);
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
@@ -476,6 +485,38 @@ public class TimelineUtils {
         return result;
     }
 
+    //removes sleep motion events during a sleep disturbance
+    public List<Event> cleanEventWindow(final List<Event> eventList){
+        final long disturbanceBlackOut = DateTimeConstants.MILLIS_PER_MINUTE * 20;
+        if(eventList.size() == 0){
+            return eventList;
+        }
+
+        final ArrayList<Event> result = new ArrayList<>();
+        long disturbanceStartTime = -1L;
+        long disturbanceEndTime = -1L;
+
+        for(Event event:eventList) {
+            if (event.getType() == Event.Type.SLEEP_DISTURBANCE) {
+                disturbanceStartTime = event.getStartTimestamp();
+                disturbanceEndTime = event.getEndTimestamp();
+                result.add(new SleepDisturbanceEvent(event.getStartTimestamp(), event.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE, event.getTimezoneOffset(), event.getSleepDepth()));
+                result.add(new SleepingEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), 0));
+                continue;
+            }
+            if ((event.getStartTimestamp() >= disturbanceStartTime && event.getStartTimestamp() <= disturbanceEndTime + disturbanceBlackOut) && (event.getType() == Event.Type.MOTION || event.getType() == Event.Type.SLEEP_MOTION)){
+                continue;
+            } else if ((event.getStartTimestamp() >= disturbanceStartTime && event.getEndTimestamp() <= disturbanceEndTime) && (event.getType() == Event.Type.SLEEPING )) {
+                continue;
+            }else if ((event.getStartTimestamp() >= disturbanceStartTime && event.getStartTimestamp() < disturbanceEndTime && event.getEndTimestamp() > disturbanceEndTime) && (event.getType() == Event.Type.SLEEPING )) {
+                event = new SleepingEvent(disturbanceEndTime, event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth());
+            }
+            result.add(event);
+
+        }
+        return result;
+    }
+
     public List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
                                                            int slotDurationMS, int mergeSlotCount,
                                                            boolean collapseNullSegments){
@@ -658,7 +699,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public static SleepStats computeStats(final List<SleepSegment> segments, final List<TrackerMotion> trackerMotions, final int lightSleepThreshold, final boolean hasMediumSleep, final boolean useUninterruptedDuration) {
+    public static SleepStats computeStats(final List<SleepSegment> segments, final List<TrackerMotion> trackerMotions, final int lightSleepThreshold, final boolean useUninterruptedDuration, final boolean useSleepDisturbance) {
         Integer soundSleepDurationInSecs = 0;
         Integer mediumSleepDurationInSecs = 0;
         Integer lightSleepDurationInSecs = 0;
@@ -716,24 +757,22 @@ public class TimelineUtils {
             final int sleepDepth = segment.getSleepDepth();
             final int duration = segment.getDurationInSeconds();
 
-            if (hasMediumSleep) {
-                if (sleepDepth >= SleepStats.MEDIUM_SLEEP_DEPTH_THRESHOLD) {
-                    soundSleepDurationInSecs += duration;
-                } else if (sleepDepth >= SleepStats.LIGHT_SLEEP_DEPTH_THRESHOLD) {
-                    mediumSleepDurationInSecs += duration;
-                } else if (sleepDepth >= SleepStats.AWAKE_SLEEP_DEPTH_THRESHOLD) {
-                    lightSleepDurationInSecs += duration;
-                }
-            } else {
-                if (sleepDepth >= lightSleepThreshold) {
-                    soundSleepDurationInSecs += duration;
-                } else if (sleepDepth >= 0 && sleepDepth < lightSleepThreshold) {
-                    lightSleepDurationInSecs += duration;
-                }
+            if (sleepDepth >= SleepStats.MEDIUM_SLEEP_DEPTH_THRESHOLD) {
+                soundSleepDurationInSecs += duration;
+            } else if (sleepDepth >= SleepStats.LIGHT_SLEEP_DEPTH_THRESHOLD) {
+                mediumSleepDurationInSecs += duration;
+            } else if (sleepDepth >= SleepStats.AWAKE_SLEEP_DEPTH_THRESHOLD) {
+                lightSleepDurationInSecs += duration;
             }
 
-            if(segment.getType() == Event.Type.MOTION){
-                numberOfMotionEvents++;
+            if(useSleepDisturbance){
+                if(segment.getType()== Event.Type.SLEEP_DISTURBANCE){
+                    numberOfMotionEvents++;
+                }
+            }else {
+                if (segment.getType() == Event.Type.MOTION) {
+                    numberOfMotionEvents++;
+                }
             }
             //LOGGER.trace("duration in seconds = {}", segment.getDurationInSeconds());
         }
@@ -1456,6 +1495,110 @@ public class TimelineUtils {
         LOGGER.debug("Adding {} alarms to the timeline", events.size());
         return events;
     }
+
+    //Searches for instances where a user moves for more than 15 seconds within a 4 minute period
+    public List<Event> getSleepDisturbanceEvents(final OneDaysTrackerMotion oneDaysTrackerMotion, final Long sleepTime, final Long wakeTime, final TimeZoneOffsetMap timeZoneOffsetMap){
+        final long sleepBuffer = 30 * DateTimeConstants.MILLIS_PER_MINUTE; // ignores first 30 minutes of sleep motions
+        final long wakeBuffer= 60 * DateTimeConstants.MILLIS_PER_MINUTE; //ignores last 60 minutes of sleep motion
+        List<TrackerMotion> trackerMotions = new ArrayList<>();
+        for(final TrackerMotion trackerMotion : oneDaysTrackerMotion.originalTrackerMotions){
+            if (trackerMotion.timestamp > sleepTime + sleepBuffer && trackerMotion.timestamp < wakeTime - wakeBuffer){
+                trackerMotions.add(trackerMotion);
+            }
+        }
+        final Map<Long, Long> sleepDisturbanceTimeStamps= getSleepDisturbances(trackerMotions);
+        final List<Event> sleepDisturbanceEvents = new ArrayList<>();
+        for (final long sleepDisturbanceStartTS : sleepDisturbanceTimeStamps.keySet()){
+            final SleepDisturbanceEvent sleepDisturbanceEvent = new SleepDisturbanceEvent(sleepDisturbanceStartTS, sleepDisturbanceTimeStamps.get(sleepDisturbanceStartTS), timeZoneOffsetMap.getOffsetWithDefaultAsZero(sleepDisturbanceStartTS), 0);
+            sleepDisturbanceEvents.add(sleepDisturbanceEvent);
+        }
+
+        return sleepDisturbanceEvents;
+    }
+
+    // computes periods of disturbed sleep using on duration. Over 15 seconds of movement within a 4 minute window initiates a state of disturbed sleep that persists until there is no motion for 7 minutes
+    public Map<Long, Long> getSleepDisturbances(final List<TrackerMotion> trackerMotions){
+
+        final int onDurationSumThreshold = 15; //secs
+        final long noMotionThreshold = DateTimeConstants.MILLIS_PER_MINUTE * 7;
+        final long minInterDisturbanceInterval = DateTimeConstants.MILLIS_PER_MINUTE * 30;
+        final long timeWindow = DateTimeConstants.MILLIS_PER_MINUTE * 4; //4 minutes - finds consecutive minutes with some flexibility
+        final int maxDisturbanceCount = 5; //max number of sleep disturbances to report during night
+        final int minDisturbanceLength = DateTimeConstants.MILLIS_PER_MINUTE * 4;
+
+        long currentMotionTS = 0L;
+        long previousMotionTS;
+        long currentDisturbanceStartTS;
+        long currentDisturbanceEndTS;
+        long previousDisturbanceStartTS = 0L;
+        long previousDisturbanceEndTS = 0L;
+
+        final Map<Long, Long> sleepDisturbances = new HashMap<>();
+        List<TrackerMotion> trackerMotionWindowCurrent = new ArrayList<>();
+        boolean currentlyDisturbed = false;
+
+        for (final TrackerMotion trackerMotionCurrent : trackerMotions) {
+            final List<TrackerMotion> trackerMotionWindowPrevious = trackerMotionWindowCurrent;
+            trackerMotionWindowCurrent = new ArrayList<>(); //list of tracker motions within time window of current motion event.
+            trackerMotionWindowCurrent.add(trackerMotionCurrent);
+            previousMotionTS = currentMotionTS;
+            currentMotionTS = trackerMotionCurrent.timestamp;
+            currentDisturbanceStartTS = currentMotionTS;
+            currentDisturbanceEndTS = currentMotionTS;
+
+            //find all motion events in window of interest.
+            int onDurationSum = trackerMotionCurrent.onDurationInSeconds.intValue();
+            if (!trackerMotionWindowPrevious.isEmpty()) {
+                //look at trackerMotions in previous window, if previous motions within current time window, add them to current motion window
+                for (final TrackerMotion trackerMotionPrevious : trackerMotionWindowPrevious) {
+                    if (currentMotionTS - trackerMotionPrevious.timestamp <= timeWindow) {
+                        trackerMotionWindowCurrent.add(trackerMotionPrevious);
+                        onDurationSum += trackerMotionPrevious.onDurationInSeconds.intValue();
+                        //find start and end time of possible disturbance
+                        currentDisturbanceEndTS = Math.max(currentDisturbanceEndTS, trackerMotionPrevious.timestamp);
+                        currentDisturbanceStartTS = Math.min(currentDisturbanceStartTS, trackerMotionPrevious.timestamp);
+                    }
+                }
+            }
+
+            //check if previous sleep disturbance is expired
+            if (currentMotionTS - previousMotionTS > noMotionThreshold && currentlyDisturbed) {
+                sleepDisturbances.put(previousDisturbanceStartTS, Math.max(previousMotionTS, previousDisturbanceStartTS + minDisturbanceLength));
+                currentlyDisturbed = false;
+            }
+
+            //check if current window has a sleep disturbance
+            if (onDurationSum > onDurationSumThreshold){ //is it a disturbance
+                if (!currentlyDisturbed && currentDisturbanceStartTS - previousDisturbanceEndTS> minInterDisturbanceInterval) { //is it a new disturbance at least 30 minutes after the previous disturbance
+                    currentlyDisturbed = true; //change disturbance state
+                    previousDisturbanceStartTS = currentDisturbanceStartTS;
+                }
+                previousDisturbanceEndTS = currentDisturbanceEndTS;
+                sleepDisturbances.put(previousDisturbanceStartTS, previousDisturbanceEndTS);
+            }
+
+        }
+
+        // Limits the number of sleep disturbance based on length of disturbance.
+        if (sleepDisturbances.size() > maxDisturbanceCount){
+            final int discardCount = sleepDisturbances.size() - maxDisturbanceCount;
+            final List<Long> tsKeys = new ArrayList<>(sleepDisturbances.keySet());
+            final List<Integer> disturbanceSpan = new ArrayList<>();
+            for (final long sleepDisturbanceStart : sleepDisturbances.keySet()){
+                disturbanceSpan.add((int) (sleepDisturbances.get(sleepDisturbanceStart) - sleepDisturbanceStart)/ DateTimeConstants.MILLIS_PER_MINUTE);
+            }
+            Collections.sort(disturbanceSpan);
+            final int minDisturbanceSpan = disturbanceSpan.get(discardCount);
+            for (final long tsKey : tsKeys){
+                if ((sleepDisturbances.get(tsKey) - tsKey)/DateTimeConstants.MILLIS_PER_MINUTE <= minDisturbanceSpan){
+                    sleepDisturbances.remove(tsKey);
+                }
+            }
+        }
+        //possible for two sleep disturbances to have the same onDurationSum, in this case it is possible to have > 5 sleepDisturbances;
+        return sleepDisturbances;
+    }
+
 
     public List<Event> eventsFromOptionalEvents(final List<Optional<Event>> optionalEvents) {
         final List<Event> events = Lists.newArrayList();

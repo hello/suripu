@@ -124,6 +124,7 @@ public class FeatureFlipper {
 
     public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
+    public final static String TIMELINE_SLEEP_DISTURBANCE_EVENT = "timeline_sleep_disturbance_event";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
 
     public final static String VIEW_SENSORS_UNAVAILABLE = "view_sensors_unavailable";

@@ -18,7 +18,9 @@ public enum EventType {
     GOT_OUT_OF_BED(13),
     WOKE_UP(14),
     ALARM_RANG(15),
-    UNKNOWN(16);
+    UNKNOWN(16),
+    SLEEP_DISTURBANCE(17),
+    ;
 
 
     private static EventType[] cachedValues = null;
