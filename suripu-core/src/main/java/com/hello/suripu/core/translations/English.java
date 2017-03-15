@@ -29,6 +29,9 @@ public class English {
     public final static String ALARM_SMART_MESSAGE = "Your Smart Alarm rang at **%s**.\nYou set it to wake you up by **%s**.";
     public final static String NOISE_MESSAGE = "There was a noise disturbance.";
     public final static String NULL_MESSAGE = "";
+    public final static String MORNING_WAKE_UP_MESSAGE = "Good morning.";
+    public final static String AFTERNOON_WAKE_UP_MESSAGE = "Good afternoon.";
+    public final static String NIGHT_WAKE_UP_MESSAGE = "Good evening.";
 
 
     /* END Events Declaration */

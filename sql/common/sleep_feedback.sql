@@ -11,3 +11,7 @@ CREATE TABLE timeline_feedback(id SERIAL PRIMARY KEY, account_id BIGINT, date_of
 
 -- 2015-12-14 Jake adds a column to determine if feedback was "correct" time or not.
 ALTER TABLE timeline_feedback ADD COLUMN is_correct boolean DEFAULT TRUE;
+
+--2017-03-15 Jarred adds sleep_period
+--Added
+ALTER TABLE timeline_feedback ADD COLUMN sleep_period INTEGER NOT NULL DEFAULT 2;

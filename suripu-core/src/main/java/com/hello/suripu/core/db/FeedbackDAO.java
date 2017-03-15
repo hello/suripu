@@ -30,7 +30,7 @@ public abstract class FeedbackDAO extends FeedbackReadDAO {
             "WHERE account_id=:account_id AND date_of_night=:date_of_night AND event_type=:event_type")
     public abstract int updateDuplicate(@Bind("account_id") final Long accountId,@BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
-    @SqlUpdate("INSERT INTO timeline_feedback (account_id, date_of_night, old_time, new_time, event_type, created, is_correct) VALUES(:account_id, :date_of_night, :old_time, :new_time, :event_type, now(), :is_correct)")
+    @SqlUpdate("INSERT INTO timeline_feedback (account_id, date_of_night, sleep_period, old_time, new_time, event_type, created, is_correct) VALUES(:account_id, :date_of_night, :sleep_period, :old_time, :new_time, :event_type, now(), :is_correct)")
     public abstract void insertNewTimelineFeedback(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
     /* Update new_time=old_time by Row ID   */

@@ -44,6 +44,7 @@ import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepSegment;
@@ -602,7 +603,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
         //removed FF  TIMELINE_EVENT_ORDER_ENFORCEMENT - at 100 percent
-        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, timeZoneOffsetMap);
+        //TODO update place holder period with actual period
+        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(SleepPeriod.Period.NIGHT, feedbackList, result.mainEvents.values(), result.extraEvents, timeZoneOffsetMap);
 
         //GET SPECIFIC EVENTS
         Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));

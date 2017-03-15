@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepPeriod;
@@ -524,14 +525,10 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
-        events.add(Event.createFromType(Event.Type.WAKE_UP,
-                sleepPeriod.period,
+        events.add(new WakeupEvent(sleepPeriod.period,
                 wakeTime,
                 wakeTime+DateTimeConstants.MILLIS_PER_MINUTE,
-                getOffset(wakeTime,offsetMap),
-                Optional.of(English.WAKE_UP_MESSAGE),
-                Optional.<SleepSegment.SoundInfo>absent(),
-                Optional.<Integer>absent()));
+                getOffset(wakeTime,offsetMap)));
 
         events.add(Event.createFromType(Event.Type.OUT_OF_BED,
                 sleepPeriod.period,

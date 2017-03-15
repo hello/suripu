@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -134,7 +135,7 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback);
 
         final FeedbackUtils utils = new FeedbackUtils();
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(SleepPeriod.Period.NIGHT, ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
 
         TestCase.assertTrue(newEvents.mainEvents.size() == 2);
@@ -183,7 +184,7 @@ public class FeedbackUtilsTest {
 
         final FeedbackUtils utils = new FeedbackUtils();
 
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(SleepPeriod.Period.NIGHT, ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
 
         final long mysleeptime = newEvents.mainEvents.values().asList().get(0).getStartTimestamp();
@@ -235,7 +236,7 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback2);
         timelineFeedbacks.add(feedback3);
 
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(extraEvents), timeZoneOffsetMap);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(SleepPeriod.Period.NIGHT, ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(extraEvents), timeZoneOffsetMap);
 
         final long ref = 1429134000000L; //Wed, 15 Apr 2015 21:40:00 GMT
 
@@ -284,7 +285,7 @@ public class FeedbackUtilsTest {
 
     @Test
     public void testConvertFeedbackToDateTimeInvalidWakeUp() {
-        final TimelineFeedback feedback = TimelineFeedback.create("2015-02-03", "07:00", "23:15", Event.Type.WAKE_UP.name());
+        final TimelineFeedback feedback = TimelineFeedback.create("2015-02-03", "07:00", "19:45", Event.Type.WAKE_UP.name());
         final Optional<DateTime> optional = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback, 0);
         assertThat(optional.isPresent(), is(false));
     }
@@ -373,7 +374,7 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback);
 
         final FeedbackUtils utils = new FeedbackUtils();
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(SleepPeriod.Period.NIGHT, ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
 
         TestCase.assertTrue(newEvents.mainEvents.size() == 4);
@@ -414,7 +415,7 @@ public class FeedbackUtilsTest {
         final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
         timelineFeedbacks.add(feedback1); timelineFeedbacks.add(feedback2); timelineFeedbacks.add(feedback3);
 
-        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(SleepPeriod.Period.NIGHT, ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
         TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.IN_BED).getStartTimestamp() == inBed.getStartTimestamp());
         TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.IN_BED).getTimezoneOffset() == inBed.getTimezoneOffset());
