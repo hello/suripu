@@ -378,7 +378,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         /*check if previously generated timeline is valid for lockdown - if valid for lockdown, uses cached main event times instead of running timeline algorithm*/
 
         final boolean timelineLockedDown = TimelineLockdown.isLockedDown(computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
-        final MainEventTimes mainEventTimes;
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
 
         /* DEFAULT VALUE IS CACHED TIMELINE MAIN EVENTS */
@@ -417,7 +416,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
             //save to main event times
-            mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), resultOptional.get());
+            final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), resultOptional.get());
             mainEventTimesDAO.updateEventTimes(mainEventTimes);
         }
 
