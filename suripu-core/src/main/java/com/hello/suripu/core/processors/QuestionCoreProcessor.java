@@ -235,20 +235,20 @@ public class QuestionCoreProcessor {
     private List<Question> handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions, final ImmutableList<AccountQuestionResponses> todayQuestionResponseList) {
 
         final List<Question> savedQuestions  = Lists.newArrayList();
-        for (Question question : questions) {
+        for (final Question question : questions) {
 
             //TODO: make batch
             final Optional<Long> savedAccountQuestionId = savedAccountQuestion(question, todayQuestionResponseList);
-            final Boolean alreadySaved = savedAccountQuestionId.isPresent();
 
-            if (alreadySaved) {
-                final Question savedQuestion = Question.withAccountQId(question, savedAccountQuestionId.get());
-                savedQuestions.add(savedQuestion);
-            } else if (!alreadySaved) {
-                final Long accountQuestionId = saveQuestion(accountId, question, todayLocal, expireDate);
-                final Question savedQuestion = Question.withAccountQId(question, accountQuestionId);
-                savedQuestions.add(savedQuestion);
+            final Long accountQuestionId;
+            if (savedAccountQuestionId.isPresent()) {
+                accountQuestionId = savedAccountQuestionId.get();
+            } else {
+                accountQuestionId = saveQuestion(accountId, question, todayLocal, expireDate);
             }
+
+            final Question savedQuestion = Question.withAccountQId(question, accountQuestionId);
+            savedQuestions.add(savedQuestion);
         }
 
         return savedQuestions;
@@ -274,7 +274,7 @@ public class QuestionCoreProcessor {
         for (AccountQuestionResponses accountQuestionResponses : todayQuestionResponseList) {
             if (accountQuestionResponses.questionId.equals(question.id)) {
                 final Long accountQuestionId = accountQuestionResponses.id;
-                return Optional.of(accountQuestionId);
+                return Optional.of(accountQuestionResponses.id);
             }
         }
 
