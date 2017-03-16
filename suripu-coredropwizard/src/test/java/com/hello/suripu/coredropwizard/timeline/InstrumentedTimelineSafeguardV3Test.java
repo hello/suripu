@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Created by benjo on 5/7/15.
  */
-public class InstrumentedTimelineSafeguardTest {
+public class InstrumentedTimelineSafeguardV3Test {
     final long t0 = 1431044132000L;
     final long hourInMillis = 3600000L;
     final int hourInMinutes = 60;
@@ -204,7 +204,6 @@ public class InstrumentedTimelineSafeguardTest {
 
     }
 
-
     @Test
     public void testInvalidNight() {
 
@@ -215,7 +214,7 @@ public class InstrumentedTimelineSafeguardTest {
         final List<TrackerMotion> originalMotionDataLowerThreshold = Lists.newArrayList();
 
 
-        TestCase.assertTrue(InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData, originalPartnerMotionData, false) == TimelineError.NO_DATA);
+        TestCase.assertTrue(InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, filteredMotionData, originalPartnerMotionData, 20) == TimelineError.NO_DATA);
         /*@JsonProperty("id") final long id,
                          @JsonProperty("account_id") final long accountId,
                          @JsonProperty("tracker_id") final Long trackerId,
@@ -231,56 +230,57 @@ public class InstrumentedTimelineSafeguardTest {
         final int highval = 10000;
 
         //add a bunch of low values, not separated in time
-        for (int i = 0; i < InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT - 1; i++) {
+        for (int i = 0; i < InstrumentedTimelineProcessorV3.MIN_TRACKER_MOTION_COUNT - 1; i++) {
             originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * i,lowval,0,0L,0L,0L));
         }
-        for (int i = 0; i < InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD - 1; i++) {
+        for (int i = 0; i < InstrumentedTimelineProcessorV3.MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD - 1; i++) {
             originalMotionDataLowerThreshold.add(new TrackerMotion(0L,0L,0L,t1 + 5400000L * i,highval,0,0L,0L,0L));
         }
 
 
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, 20));
 
-        originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT,lowval,0,0L,0L,0L));
+        originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessorV3.MIN_TRACKER_MOTION_COUNT,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.LOW_AMP_DATA, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.LOW_AMP_DATA, InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, 20));
 
-        originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * (InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT + 1),highval,0,0L,0L,0L));
+        originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * (InstrumentedTimelineProcessorV3.MIN_TRACKER_MOTION_COUNT + 1),highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.TIMESPAN_TOO_SHORT, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.TIMESPAN_TOO_SHORT, InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, 20));
 
         originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, 20));
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, 20));
 
-        for (int i = 0; i < InstrumentedTimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT - 1; i++) {
+        for (int i = 0; i < InstrumentedTimelineProcessorV3.MIN_PARTNER_FILTERED_MOTION_COUNT - 1; i++) {
             filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * i,lowval,0,0L,0L,0L));
         }
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, 20));
 
-        filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT,lowval,0,0L,0L,0L));
+        filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessorV3.MIN_PARTNER_FILTERED_MOTION_COUNT,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, 20));
 
         filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, 20));
 
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, 9));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, 9));
 
         originalMotionDataLowerThreshold.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, 9));
 
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalMotionDataLowerThreshold, true));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessorV3.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalMotionDataLowerThreshold, 20));
 
 
 
     }
+
     @Test
     public void testTimelineTimezoneOffsetMapping() {
         final List<Sample> samples = Lists.newArrayList();
