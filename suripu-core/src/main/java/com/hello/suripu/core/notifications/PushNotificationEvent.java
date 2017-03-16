@@ -14,21 +14,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class PushNotificationEvent {
     public final Long accountId;
-    public final String type;
+    public final PushNotificationEventType type;
     public final DateTime timestamp;
     public final HelloPushMessage helloPushMessage;
     public final Optional<String> senseId;
+    public final DateTimeZone timeZone;
+    public final Periodicity periodicity;
 
-    protected PushNotificationEvent(final Long accountId, final String type, final DateTime timestamp,
-                                    final HelloPushMessage helloPushMessage, final Optional<String> senseId)
+    protected PushNotificationEvent(final Long accountId, final PushNotificationEventType type, final DateTime timestamp,
+                                    final HelloPushMessage helloPushMessage, final Optional<String> senseId,
+                                    final DateTimeZone timeZone, final Periodicity periodicity)
     {
         this.accountId = accountId;
         this.type = type;
         this.timestamp = timestamp;
         this.helloPushMessage = helloPushMessage;
         this.senseId = senseId;
+        this.timeZone = timeZone;
+        this.periodicity = periodicity;
     }
-
 
     //region Object overrides
 
@@ -53,12 +57,11 @@ public class PushNotificationEvent {
                 .add("type", type)
                 .add("timestamp", timestamp)
                 .add("helloPushMessage", helloPushMessage)
-                .add("senseId", senseId)
+                .add("senseId", senseId.or("missing"))
                 .toString();
     }
 
     //endregion Object overrides
-
 
     //region Builder
 
@@ -68,18 +71,35 @@ public class PushNotificationEvent {
 
     public static class Builder {
         private Long accountId;
-        private String type;
+        private PushNotificationEventType type;
         private DateTime timestamp;
         private HelloPushMessage helloPushMessage;
         private Optional<String> senseId = Optional.absent();
+        private DateTimeZone timeZone = DateTimeZone.UTC;
+        private Periodicity periodicity = Periodicity.MINUTELY;
+
+        public Builder() {
+
+        }
+
+        public Builder(final PushNotificationEvent pushNotificationEvent) {
+            this.accountId = pushNotificationEvent.accountId;
+            this.type = pushNotificationEvent.type;
+            this.timestamp = pushNotificationEvent.timestamp;
+            this.helloPushMessage = pushNotificationEvent.helloPushMessage;
+            this.senseId = pushNotificationEvent.senseId;
+            this.timeZone = pushNotificationEvent.timeZone;
+            this.periodicity = pushNotificationEvent.periodicity;
+        }
 
         public PushNotificationEvent build() {
-            checkNotNull(accountId);
-            checkNotNull(type);
-            checkNotNull(helloPushMessage);
+            checkNotNull(accountId,"accountId cannot be null");
+            checkNotNull(type, "type cannot be null");
+            checkNotNull(helloPushMessage, "message cannot be null");
+            checkNotNull(timeZone, "timezone cannot be null");
 
             final DateTime eventTimestamp = timestamp == null ? DateTime.now(DateTimeZone.UTC) : timestamp;
-            return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId);
+            return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId, timeZone, periodicity);
         }
 
         public Builder withAccountId(final Long accountId) {
@@ -87,7 +107,7 @@ public class PushNotificationEvent {
             return this;
         }
 
-        public Builder withType(final String type) {
+        public Builder withType(final PushNotificationEventType type) {
             this.type = type;
             return this;
         }
@@ -106,7 +126,22 @@ public class PushNotificationEvent {
         }
 
         public Builder withSenseId(final String senseId) {
-            this.senseId = Optional.fromNullable(senseId);
+            if(senseId != null && senseId.isEmpty()) {
+                this.senseId = Optional.absent();
+            } else {
+                this.senseId = Optional.fromNullable(senseId);
+            }
+
+            return this;
+        }
+
+        public Builder withTimeZone(final DateTimeZone timeZone) {
+            this.timeZone = timeZone;
+            return this;
+        }
+
+        public Builder withPeriodicity(final Periodicity periodicity) {
+            this.periodicity = periodicity;
             return this;
         }
     }

@@ -1,5 +1,12 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -17,16 +24,11 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.responses.Response;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -354,24 +356,36 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                                                               final Expression keyConditionExpression,
                                                               final Collection<? extends Attribute> attributes)
     {
+        final List<Map<String, AttributeValue>> latestRecords = getNumLatest(tableName, keyConditionExpression, attributes, 1);
+        if(latestRecords.isEmpty()) {
+            return Optional.absent();
+        }
+        return Optional.of(latestRecords.get(0));
+    }
+
+    protected List<Map<String, AttributeValue>> getNumLatest(final String tableName,
+                                                                 final Expression keyConditionExpression,
+                                                                 final Collection<? extends Attribute> attributes,
+                                                                 final Integer limit)
+    {
         final Map<String, String> expressionAttributeNames = Expressions.expressionAttributeNames(attributes);
         final String projectionExpression = Expressions.projectionExpression(attributes);
 
         final QueryRequest queryRequest = new QueryRequest()
-                .withTableName(tableName)
-                .withProjectionExpression(projectionExpression)
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withKeyConditionExpression(keyConditionExpression.expressionString())
-                .withExpressionAttributeValues(keyConditionExpression.expressionAttributeValues())
-                .withScanIndexForward(false)
-                .withLimit(1);
+            .withTableName(tableName)
+            .withProjectionExpression(projectionExpression)
+            .withExpressionAttributeNames(expressionAttributeNames)
+            .withKeyConditionExpression(keyConditionExpression.expressionString())
+            .withExpressionAttributeValues(keyConditionExpression.expressionAttributeValues())
+            .withScanIndexForward(false)
+            .withLimit(limit);
 
         final Response<List<Map<String, AttributeValue>>> response = query(queryRequest);
         if (response.status == Response.Status.FAILURE || response.data.isEmpty()) {
-            return Optional.absent();
+            return Lists.newArrayList();
         }
 
-        return Optional.of(response.data.get(0));
+        return Lists.reverse(response.data);
     }
 
     protected Response<List<Map<String, AttributeValue>>> queryTables(final Iterable<String> tableNames,

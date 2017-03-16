@@ -27,7 +27,7 @@ public class RegistrationTest {
     }
     private Registration newRegistrationWithName(final String name, final String firstname, final String lastname) {
         return new Registration(name,  firstname, lastname, "email@email.com", "password", 123,
-                Gender.OTHER, 123, 321, DateTime.now(), 10, 0.0, 0.0);
+                Gender.OTHER, "", 123, 321, DateTime.now(), 10, 0.0, 0.0);
     }
 
     @Test

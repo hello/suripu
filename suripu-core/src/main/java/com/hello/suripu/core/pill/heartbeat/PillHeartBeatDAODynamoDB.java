@@ -226,9 +226,8 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         final Map<String, Condition> queryConditions = defaultQueryConditions(pillId);
 
         final Condition rangeQuery = new Condition()
-                .withComparisonOperator(ComparisonOperator.BETWEEN)
+                .withComparisonOperator(ComparisonOperator.LT)
                 .withAttributeValueList(
-                        new AttributeValue().withS(latest.minusDays(7).toString(DATETIME_FORMAT)),
                         new AttributeValue().withS(latest.toString(DATETIME_FORMAT))
                 );
         queryConditions.put(UTC_DATETIME_ATTRIBUTE_NAME, rangeQuery);
@@ -236,7 +235,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         final QueryRequest queryRequest = new QueryRequest(this.tableName)
                 .withKeyConditions(queryConditions)
                 .withAttributesToGet(TARGET_ATTRIBUTES)
-                .withLimit(500)
+                .withLimit(200)
                 .withScanIndexForward(false);
 
         final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);

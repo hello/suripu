@@ -124,7 +124,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     }
 
 
-    @SqlUpdate("UPDATE accounts SET name=:name, firstname=:firstname, lastname=:lastname, gender=:gender, dob=:dob, height=:height, weight=:weight, " +
+    @SqlUpdate("UPDATE accounts SET name=:name, firstname=:firstname, lastname=:lastname, gender=:gender, gender_name=:gender_name, dob=:dob, height=:height, weight=:weight, " +
             "tz_offset=:tz_offset, last_modified= :new_last_modified WHERE id=:account_id AND last_modified=:last_modified;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId, @Bind("new_last_modified") final Long lastModified);
 

@@ -33,6 +33,7 @@ import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.CaffeineAlarm;
+import com.hello.suripu.core.processors.insights.CorrelationTemperature;
 import com.hello.suripu.core.processors.insights.GoalsInsights;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
@@ -464,7 +465,6 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    @VisibleForTesting
     public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceAccountPair deviceAccountPair, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category, final RolloutClient featureFlipper) {
 
         final DateTimeFormatter timeFormat;
@@ -521,9 +521,6 @@ public class InsightProcessor {
             case LOVE:
                 insightCardOptional = MarketingInsights.getLoveInsight(accountId);
                 break;
-            case PARTNER_MOTION:
-                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
-                break;
             case PLAY:
                 insightCardOptional = MarketingInsights.getPlayInsight(accountId);
                 break;
@@ -569,7 +566,7 @@ public class InsightProcessor {
             }
 
             // save to dynamo
-            LOGGER.info("action=generated_insight_card category={} accountId={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
+            LOGGER.info("action=generated_insight_card category={} account_id={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
             final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, DateTime.now(DateTimeZone.UTC));
             this.insightsLastSeenDAO.markLastSeen(newInsight);
@@ -578,6 +575,45 @@ public class InsightProcessor {
 
         return Optional.absent();
     }
+
+    public Optional<InsightCard.Category> generateFutureInsightsByCategory(final Long accountId, final InsightCard.Category category, final DateTime publicationDateLocal) {
+
+        //Get dateVisibleUTC
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        if (!timeZoneOffsetOptional.isPresent()) {
+            LOGGER.info("action=insight-absent insight=correlation_temperature reason=timezoneoffset-absent account_id={}", accountId);
+            return Optional.absent(); //cannot compute insight without timezone info
+        }
+
+        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
+        final DateTime publicationDateUTC = publicationDateLocal.minusMillis(timeZoneOffset);
+
+
+        Optional<InsightCard> insightCardOptional = Optional.absent();
+        switch (category) {
+            case PARTNER_MOTION:
+                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB, publicationDateUTC);
+                break;
+            case CORRELATION_TEMP:
+                insightCardOptional = CorrelationTemperature.getInsights(accountId, publicationDateUTC);
+                break;
+        }
+
+        if (insightCardOptional.isPresent()) {
+            if (marketingInsightPool.contains(category)) {
+                marketingInsightsSeenDAODynamoDB.updateSeenCategories(accountId, category);
+            }
+
+            // save to dynamo
+            LOGGER.info("action=generated_insight_card category={} account_id={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
+            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+            final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, publicationDateUTC);
+            this.insightsLastSeenDAO.markLastSeen(newInsight);
+            return Optional.of(category);
+        }
+
+        return Optional.absent();
+        }
 
     public static Optional<String> getInsightPreviewForCategory(final InsightCard.Category category,
                                                                 final TrendsInsightsDAO trendsInsightsDAO)

@@ -87,6 +87,7 @@ public class FeatureFlipper {
     public final static String QUESTION_ANOMALY_LIGHT_VISIBLE = "question_anomaly_light_enabled";
     public final static String QUESTION_ASK_TIME_ENABLED = "question_ask_time_enabled";
     public final static String QUESTION_SURVEY_PROCESSOR_ENABLED = "question_survey_processor_enabled";
+    public final static String QUESTION_CORE_PROCESSOR_ENABLED = "question_core_processor_enabled";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";
@@ -125,6 +126,7 @@ public class FeatureFlipper {
     public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
+    public final static String TIMELINE_LOCKDOWN = "timeline_lockdown";
 
     public final static String VIEW_SENSORS_UNAVAILABLE = "view_sensors_unavailable";
     public final static String VIEW_TIMELINE_UNAVAILABLE = "view_timeline_unavailable";
@@ -134,4 +136,6 @@ public class FeatureFlipper {
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_KINESIS_TIMEZONES = "worker_kinesis_timezones";
+
+    public final static String APP_LAST_SEEN_PUSH_ENABLED = "app_last_seen_push_enabled";
 }
