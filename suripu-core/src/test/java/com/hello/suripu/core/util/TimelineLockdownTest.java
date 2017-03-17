@@ -50,6 +50,7 @@ public class TimelineLockdownTest {
         final Optional<MainEventTimes> computedMainEventTimesOptionalFailMotion = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
         isLockedDown= TimelineLockdown.isLockedDown(computedMainEventTimesOptionalFailMotion,ImmutableList.copyOf(originalTrackerMotions), true);
         assert(!isLockedDown);
+
     }
 
     @Test

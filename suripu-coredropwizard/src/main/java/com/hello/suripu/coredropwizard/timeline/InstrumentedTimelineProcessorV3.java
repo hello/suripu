@@ -97,7 +97,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
-    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessor.class);
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessorV3.class);
     private final PillDataReadDAO pillDataDAODynamoDB;
     private final DeviceReadDAO deviceDAO;
     private final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB;
@@ -305,10 +305,10 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
     public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
 
-        if (useTimelineSleepPeriods(accountId)) {
+        //if (useTimelineSleepPeriods(accountId)) {
             return retrieveTimelineForAllSleepPeriods(accountId, targetDate, newFeedback);
-        }
-        return retrieveTimelineForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate), Optional.absent(), newFeedback);
+        //}
+       // return retrieveTimelineForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate), Optional.absent(), newFeedback);
 
     }
 

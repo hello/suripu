@@ -15,5 +15,4 @@ public interface MainEventTimesDAO {
     public List<MainEventTimes> getEventTimesForDate(Long accountId, DateTime targetDate);
     public List<MainEventTimes> getEventTimes(Long accountId, DateTime startDate, DateTime endDate);
     public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period);
-
 }
