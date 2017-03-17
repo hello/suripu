@@ -433,6 +433,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         final List<DataCompleteness> dataCompletenessList = Lists.newArrayList();
         final List<TimelineLog> timelineLogs = Lists.newArrayList();
+        final List<String> sleepPeriods = Lists.newArrayList();
 
         //loops through sleepPeriodResults, extracts timeline events, highest sleepscore (w/ sleepStats), timeline logs and datacompleteness
         for (int i = 0; i < numSleepPeriods; i++) {
@@ -456,6 +457,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
             timelineLogs.add(targetSleepPeriodResults.timelineLog);
             dataCompletenessList.add(DataCompleteness.ENOUGH_DATA);
+            sleepPeriods.add(targetSleepPeriodResults.mainEventTimes.sleepPeriod.period.shortName());
 
             final int targetScore = targetSleepPeriodResults.resultsOptional.get().timeline.score;
             if (targetScore >= sleepScore.value){
@@ -469,7 +471,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         //if timeline events > 4, we have a valid timeline.
         if (allSleepPeriodsEvents.size() > 4) {
-            final Timeline timeline = Timeline.create(sleepScore.value, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), allSleepPeriodsEvents, timelineInsight,sleepStats);
+            final Timeline timeline = Timeline.create(sleepScore.value, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), sleepPeriods, allSleepPeriodsEvents, timelineInsight,sleepStats);
             final TimelineResult timelineResult = TimelineResult.create(Lists.newArrayList(timeline), new ArrayList(timelineLogs));
             final AllPeriodTimelineResults allPeriodTimelineResults = AllPeriodTimelineResults.create(timelineResult, sleepScore, sleepStats, true);
             return allPeriodTimelineResults;
@@ -1068,7 +1070,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
         final MainEventTimes populatedMainEventTimes = MainEventTimes.createMainEventTimes(accountId, mainEventTimes.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepSegments);
-        final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), Lists.newArrayList(mainEventTimes.sleepPeriod.period.shortName()),reversedSegments, insights, sleepStats);
 
         return SleepPeriodResults.create(populatedMainEventTimes, timeline, sleepScore,sleepStats, sensorData, timeZoneOffsetMap, timelineLog, DataCompleteness.ENOUGH_DATA, isValidSleepScore);
     }
