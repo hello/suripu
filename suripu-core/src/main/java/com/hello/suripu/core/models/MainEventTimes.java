@@ -130,6 +130,12 @@ public class MainEventTimes {
 
     public static MainEventTimes createMainEventTimesEmpty (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset){
         final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
+        final ImmutableMap<Event.Type, EventTime> eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
+                .put(Event.Type.IN_BED, new EventTime(0L, 0))
+                .put(Event.Type.SLEEP, new EventTime(0L, 0))
+                .put(Event.Type.WAKE_UP, new EventTime(0L, 0))
+                .put(Event.Type.OUT_OF_BED, new EventTime(0L, 0))
+                .build();
         return new MainEventTimes(accountId, sleepPeriod, createdAt,  new HashMap<>());
     }
 
@@ -138,6 +144,9 @@ public class MainEventTimes {
 
         for (final Event.Type eventType : MAIN_EVENT_TYPES){
             if (!this.eventTimeMap.containsKey(eventType)){
+                return false;
+            }
+            if (this.eventTimeMap.get(eventType).time == 0){
                 return false;
             }
         }
