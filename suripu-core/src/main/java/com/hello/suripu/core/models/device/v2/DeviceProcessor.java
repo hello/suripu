@@ -65,6 +65,7 @@ public class DeviceProcessor {
 
     private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 28; // days
     private final static Integer BATTERY_LEVEL_LOW_BATTERY_WARNING = 15;
+    public static final Integer RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD = 80; // allow 80 mins for first heartbeat to be uploaded
 
     private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
@@ -242,7 +243,7 @@ public class DeviceProcessor {
             return new Devices(senses, pills);
         }
 
-        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional, DateTime.now(DateTimeZone.UTC));
         return new Devices(senses, pills);
     }
 
@@ -279,14 +280,24 @@ public class DeviceProcessor {
 
         return Pill.BatteryType.UNKNOWN;
     }
-    
-    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional) {
+
+    @VisibleForTesting
+    public List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final DateTime now) {
         final List<Pill> pills = Lists.newArrayList();
+        final DateTime lastHeartBeatThreshold = now.minusMinutes(RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD);
+
         for (final DeviceAccountPair pillAccountPair : pillAccountPairs) {
-            final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair);
+            final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair, now);
             final Optional<DeviceKeyStoreRecord> recordOptional = pillKeyStore.getKeyStoreRecord(pillAccountPair.externalDeviceId);
             final Pill.BatteryType batteryType = (recordOptional.isPresent()) ? fromSN(recordOptional.get().metadata) : Pill.BatteryType.UNKNOWN;
-            final Pill pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional, batteryType);
+
+            // newly-paired pills may not have a heartbeat, return last-paired time as last-seen
+            final Pill pill;
+            if (!pillStatusOptional.isPresent() && pillAccountPair.created.isAfter(lastHeartBeatThreshold)) {
+                pill = Pill.createRecentlyPaired(pillAccountPair, pillColorOptional, batteryType);
+            } else {
+                pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional, batteryType);
+            }
             pills.add(pill);
         }
 
@@ -294,7 +305,7 @@ public class DeviceProcessor {
     }
 
     private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final Account account, final DateTime referenceTime) {
-        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional, referenceTime);
         final Days days = Days.daysBetween(referenceTime,account.created);
         final int accountCreatedInDays = Math.abs(days.getDays());
         if(accountCreatedInDays > MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING ) {
