@@ -284,16 +284,15 @@ public class DeviceProcessor {
     @VisibleForTesting
     public List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final DateTime now) {
         final List<Pill> pills = Lists.newArrayList();
-        final DateTime lastHeartBeatThreshold = now.minusMinutes(RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD);
 
         for (final DeviceAccountPair pillAccountPair : pillAccountPairs) {
             final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair, now);
             final Optional<DeviceKeyStoreRecord> recordOptional = pillKeyStore.getKeyStoreRecord(pillAccountPair.externalDeviceId);
             final Pill.BatteryType batteryType = (recordOptional.isPresent()) ? fromSN(recordOptional.get().metadata) : Pill.BatteryType.UNKNOWN;
 
-            // newly-paired pills may not have a heartbeat, return last-paired time as last-seen
+            // choose between heartbeat created or pairing created time for pill's last seen
             final Pill pill;
-            if (!pillStatusOptional.isPresent() && pillAccountPair.created.isAfter(lastHeartBeatThreshold)) {
+            if (usePillPairedTimeAsLastSeen(pillStatusOptional, pillAccountPair.created, now)) {
                 pill = Pill.createRecentlyPaired(pillAccountPair, pillColorOptional, batteryType);
             } else {
                 pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional, batteryType);
@@ -302,6 +301,23 @@ public class DeviceProcessor {
         }
 
         return pills;
+    }
+
+    @VisibleForTesting
+    public Boolean usePillPairedTimeAsLastSeen(final Optional<PillHeartBeat> pillStatusOptional, final DateTime pairedDateTime, final DateTime now) {
+        final DateTime lastHeartBeatThreshold = now.minusMinutes(RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD);
+
+        if (pillStatusOptional.isPresent()) {
+            if (pillStatusOptional.get().createdAtUTC.isBefore(pairedDateTime)) {
+                // if paired time is too long ago, and an old heart beat exist, return heartbeat time
+                // else if paired time is after threshold and heartbeat, return paired time
+                return pairedDateTime.isAfter(lastHeartBeatThreshold);
+            }
+        } else if (pairedDateTime.isAfter(lastHeartBeatThreshold)) {
+            // newly-paired pill, no previous heartbeat
+            return true;
+        }
+        return false;
     }
 
     private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final Account account, final DateTime referenceTime) {

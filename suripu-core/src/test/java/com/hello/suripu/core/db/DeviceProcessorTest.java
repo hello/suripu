@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -74,12 +73,6 @@ public class DeviceProcessorTest {
 
     private final WifiInfo expectedWifiInfo = WifiInfo.create(senseAccountPairWifi.externalDeviceId, "hello", -98, new DateTime(timestamp));
 
-    // recently-paired pill
-    final DateTime lastPillPairedTime = now.minusMinutes(10);
-    final DateTime noHeartBeatTIme = now.minusMinutes(DeviceProcessor.RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD + 5);
-    final DeviceAccountPair recentlyPairedPill = new DeviceAccountPair(789L, 789L, "bad-dude-pill", lastPillPairedTime);
-    final DeviceAccountPair recentlyPairedPillNoHeartbeat = new DeviceAccountPair(987L, 987L, "bad-dude-pill-sad", noHeartBeatTIme);
-
     @Before
     public void setUp(){
         final DeviceDAO deviceDAO = mock(DeviceDAO.class);
@@ -89,19 +82,12 @@ public class DeviceProcessorTest {
         when(pillHeartBeatDAO.get(pillAccountPairHeartbeat.externalDeviceId)).thenReturn(Optional.of(pillHeartBeat));
         when(pillHeartBeatDAO.get(pillAccountPairTrackerMotion.externalDeviceId)).thenReturn(Optional.<PillHeartBeat>absent());
         when(pillHeartBeatDAO.get(pillHeartBeatNoStatus.pillId)).thenReturn(Optional.<PillHeartBeat>absent());
-        when(pillHeartBeatDAO.get(recentlyPairedPill.externalDeviceId)).thenReturn(Optional.absent());
-        when(pillHeartBeatDAO.get(recentlyPairedPillNoHeartbeat.externalDeviceId)).thenReturn(Optional.absent());
 
         final PillDataDAODynamoDB pillDataDAODynamoDB = mock(PillDataDAODynamoDB.class);
         when(pillDataDAODynamoDB.getMostRecent(pillAccountPairTrackerMotion.externalDeviceId, pillAccountPairTrackerMotion.accountId, now))
                 .thenReturn(Optional.of(trackerMotion));
         when(pillDataDAODynamoDB.getMostRecent(pillAccountPairNoStatus.externalDeviceId, pillAccountPairNoStatus.accountId, now))
                 .thenReturn(Optional.<TrackerMotion>absent());
-
-        when(pillDataDAODynamoDB.getMostRecent(recentlyPairedPill.externalDeviceId, recentlyPairedPill.accountId, now))
-                .thenReturn(Optional.absent());
-        when(pillDataDAODynamoDB.getMostRecent(recentlyPairedPillNoHeartbeat.externalDeviceId, recentlyPairedPillNoHeartbeat.accountId, now))
-                .thenReturn(Optional.absent());
 
         final SenseColorDAO senseColorDAO = mock(SenseColorDAO.class);
         when(senseColorDAO.get(senseAccountPairSenseColor.externalDeviceId)).thenReturn(Optional.of(Sense.Color.BLACK));
@@ -130,10 +116,6 @@ public class DeviceProcessorTest {
 
         final SenseMetadataDAO senseMetadataDAO = mock(SenseMetadataDAO.class);
 
-        final KeyStore pillKeyStore = mock(KeyStore.class);
-        when(pillKeyStore.getKeyStoreRecord(recentlyPairedPill.externalDeviceId)).thenReturn(Optional.absent());
-        when(pillKeyStore.getKeyStoreRecord(recentlyPairedPillNoHeartbeat.externalDeviceId)).thenReturn(Optional.absent());
-
         deviceProcessor = new DeviceProcessor.Builder()
                 .withDeviceDAO(deviceDAO)
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
@@ -143,7 +125,6 @@ public class DeviceProcessorTest {
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
                 .withPillDataDAODynamoDB(pillDataDAODynamoDB)
                 .withAnalyticsTracker(analyticsTracker)
-                .withKeyStore(pillKeyStore)
                 .build();
     }
 
@@ -186,22 +167,36 @@ public class DeviceProcessorTest {
 
     @Test
     public void testRecentlyPairedPill() {
+        final DateTime lastPillPairedTime = now.minusMinutes(10);
+        final DateTime pairedLongAgo = now.minusMinutes(DeviceProcessor.RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD + 10);
 
-        // paired 10 minutes ago, used last-time time as last-seen
-        final List<Pill> pills = deviceProcessor.getPills(Collections.singletonList(recentlyPairedPill), Optional.absent(), now);
+        final Optional<PillHeartBeat> noHeartBeat = Optional.absent();
+        final Optional<PillHeartBeat> newHeartBeat = Optional.of(PillHeartBeat.create("greatest-pill", 101, 70, 60000, lastPillPairedTime.plusMinutes(5)));
+        final Optional<PillHeartBeat> oldHeartBeat = Optional.of(PillHeartBeat.create("sad-pill", 1, 70, 60000, lastPillPairedTime.minusMinutes(50)));
+        final Optional<PillHeartBeat> superOldHeartBeat = Optional.of(PillHeartBeat.create("saddest-pill", 1, 70, 60000, pairedLongAgo.minusMinutes(10)));
 
-        assertThat(pills.size(), is(1));
-        final Pill pill = pills.get(0);
-        assertThat(pill.batteryType.equals(Pill.BatteryType.UNKNOWN), is(true));
-        assertThat(pill.lastUpdatedOptional.isPresent(), is(true));
-        assertThat(pill.lastUpdatedOptional.get().equals(lastPillPairedTime), is(true));
+        // new pill paired recently, no heartbeat yet, show paired time
+        Boolean usePairedTime = deviceProcessor.usePillPairedTimeAsLastSeen(noHeartBeat, lastPillPairedTime, now);
+        assertThat(usePairedTime, is(true));
 
-        // paired more than 80 minutes ago, and still no heartbeat. no last-seen time
-        final List<Pill> badPills = deviceProcessor.getPills(Collections.singletonList(recentlyPairedPillNoHeartbeat), Optional.absent(), now);
+        // newly-paired (old/new), got new heartbeat, show heartbeat time
+        usePairedTime = deviceProcessor.usePillPairedTimeAsLastSeen(newHeartBeat, lastPillPairedTime, now);
+        assertThat(usePairedTime, is(false));
 
-        assertThat(badPills.size(), is(1));
-        final Pill badPill = badPills.get(0);
-        assertThat(badPill.batteryType == null, is(true));
-        assertThat(badPill.lastUpdatedOptional.isPresent(), is(false));
+        // new pill paired more than 80 mins ago, no heartbeat -- use heartbeat time, which will be null
+        usePairedTime = deviceProcessor.usePillPairedTimeAsLastSeen(noHeartBeat, pairedLongAgo, now);
+        assertThat(usePairedTime, is(false));
+
+        // paired > 80 mins ago, and we have a heartbeat after that, use heartbeat
+        usePairedTime = deviceProcessor.usePillPairedTimeAsLastSeen(oldHeartBeat, pairedLongAgo, now);
+        assertThat(usePairedTime, is(false));
+
+        // old pill, re-paired, old heartbeat, show paired time
+        usePairedTime = deviceProcessor.usePillPairedTimeAsLastSeen(oldHeartBeat, lastPillPairedTime, now);
+        assertThat(usePairedTime, is(true));
+
+        // old pill, paired a while ago, no new heartbeat, show old heartbeat time
+        usePairedTime = deviceProcessor.usePillPairedTimeAsLastSeen(superOldHeartBeat, pairedLongAgo, now);
+        assertThat(usePairedTime, is(false));
     }
 }
