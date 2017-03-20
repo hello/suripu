@@ -89,21 +89,4 @@ public class TimelineUtilsTest {
         assertThat(sleepStats.uninterruptedSleepDurationInMinutes, is(uninterruptedDuration));
     }
 
-    @Test
-    public void testMotionDuringSleepCheck(){
-        //false positive night - motion at start and end of night
-        List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/false_night_2016_08_01.csv");
-        long fallAsleepTime = 1470114360000L;
-        long wakeUpTime = 1470139440000L;
-        boolean testMotionDuringSleep = timelineUtils.motionDuringSleepCheck(trackerMotions, fallAsleepTime, wakeUpTime);
-        assertThat(testMotionDuringSleep, is(false));
-        //okay night
-        trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/millionaires_challenge_2015_02_20_raw.csv");
-        fallAsleepTime = 1424496240000L;
-        wakeUpTime = 1424528700000L;
-        testMotionDuringSleep = timelineUtils.motionDuringSleepCheck(trackerMotions, fallAsleepTime, wakeUpTime);
-        assertThat(testMotionDuringSleep, is(true));
-
-    }
-
 }

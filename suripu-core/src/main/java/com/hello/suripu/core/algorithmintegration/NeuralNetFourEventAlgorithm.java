@@ -9,6 +9,7 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
@@ -119,11 +120,12 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
     private static Optional<Integer> getIndex(final long t0, final long t, final int maxIdx) {
         int idx =  (int) ((t - t0) / (DateTimeConstants.MILLIS_PER_MINUTE));
 
-        if (idx < - ZERO_PADDING) {
+
+        if (idx < 0) {
             return Optional.absent();
         }
 
-        if (idx > maxIdx + ZERO_PADDING) {
+        if (idx > maxIdx) {
             return Optional.absent();
         }
 
@@ -154,7 +156,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return false;
     }
 
-    protected double [][] getSensorData(final OneDaysSensorData oneDaysSensorData) throws  Exception {
+    protected double [][] getSensorData(final OneDaysSensorData oneDaysSensorData, final SleepPeriod sleepPeriod) throws  Exception {
 
         final List<Sample> light = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT);
         final List<Sample> soundcount = oneDaysSensorData.allSensorSampleList.get(Sensor.SOUND_NUM_DISTURBANCES);
@@ -165,10 +167,12 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             throw new Exception("no data!");
         }
 
-        final long durationMillis =  oneDaysSensorData.endTimeLocalUTC.getMillis() - oneDaysSensorData.startTimeLocalUTC.getMillis();
+        final long durationMillis =  sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, oneDaysSensorData.timezoneOffsetMillis).getMillis() - sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).getMillis();
         final int T = (int)durationMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1 ;
 
-        final long t0 = oneDaysSensorData.startTimeLocalUTC.getMillis() - light.get(0).offsetMillis; //LOCAL ---> UTC
+
+        final long t0 = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).getMillis(); //LOCAL ---> UTC
+
         final int N = SensorIndices.MAX_NUM_INDICES;
 
         final double [][] x = new double[N][T + 2 * ZERO_PADDING];
@@ -375,10 +379,10 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData, final SleepPeriod sleepPeriod, final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
 
         try {
-            final double [][] x = getSensorData(oneDaysSensorData);
+            final double [][] x = getSensorData(oneDaysSensorData, sleepPeriod);
 
             final Optional<NeuralNetAlgorithmOutput> outputOptional = endpoint.getNetOutput(DEFAULT_SLEEP_NET_ID,x); //???
 
@@ -410,9 +414,9 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             }
 
             //all times in UTC
-            final long t0 = oneDaysSensorData.startTimeLocalUTC.minusMillis(light.get(0).offsetMillis).getMillis();
-            final long duration = oneDaysSensorData.endTimeLocalUTC.getMillis() - oneDaysSensorData.startTimeLocalUTC.getMillis();
-            final long tEnd = t0 + duration;
+            final long t0 = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).getMillis() ;
+            final long duration = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, oneDaysSensorData.timezoneOffsetMillis).getMillis() - sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).getMillis();
+            final long tEnd = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, oneDaysSensorData.timezoneOffsetMillis).getMillis();
 
             //get the earlier of the current time or the end of day time
             final long tf = tEnd < oneDaysSensorData.currentTimeUTC.getMillis() ? tEnd : oneDaysSensorData.currentTimeUTC.getMillis();
@@ -447,18 +451,22 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Event> outOfBedOptional = Optional.fromNullable(eventMap.get(Event.Type.OUT_OF_BED));
 
             final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inbedOptional,sleepOptional,wakeOptional,outOfBedOptional);
+            final boolean isPrimarySleepPeriod = oneDaysSensorData.userBioInfo.primarySleepPeriod == sleepPeriod.period;
 
             //verify that algorithm produced something useable
-            final TimelineError error = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.NEURAL_NET_FOUR_EVENT,
+            final TimelineError error = timelineSafeguards.checkIfValidTimeline(accountId,
+                    isPrimarySleepPeriod,
+                    AlgorithmType.NEURAL_NET_FOUR_EVENT,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.processedtrackerMotions));
+
 
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {
-
+                
                 log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT,events);
-
                 return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET_FOUR_EVENT,events));
 
             }

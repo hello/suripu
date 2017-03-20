@@ -6,6 +6,8 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,15 @@ public class TimelineSafeguards {
 
     public static final int MINIMUM_SLEEP_DURATION_MINUTES = 180; //three hours
     private static final int MAXIMUM_ALLOWABLE_DATAGAP = 60; //one hour
+
+    //sleep period specific thresholds
+    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_PRIMARY_PERIOD = 240; // need motion 1 at least every 4 hours; 97% qualify
+    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 116; // need motion at least every 116 mins; 90% qualify
+    public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 2; //99.5% qualify
+    public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 18 ;//90% qualify
+    //combined: primary period - 97% of nights valid; alternative period - 81% of nights valid (for 5000 timelines generated jan 2017)
+
+
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineSafeguards.class);
 
@@ -44,7 +55,7 @@ public class TimelineSafeguards {
     }
 
     public boolean checkEventOrdering(final long accountId, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents) {
-       //check main events ordering
+        //check main events ordering
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
             if (sleepEvents.wakeUp.get().getStartTimestamp() < sleepEvents.fallAsleep.get().getStartTimestamp()) {
                 LOGGER.warn("error=event-order ordering=wake-before-sleep account_id={} algorithm={} sleep_time={} wake_time={}", accountId, algorithmType.name(), sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
@@ -206,11 +217,77 @@ public class TimelineSafeguards {
         return maxGapInMinutes;
     }
 
+
+    public static int getMaximumMotionGapInMinutes(final ImmutableList<TrackerMotion> trackerMotions, final long sleeptime, final long wakeTime) {
+        Iterator<TrackerMotion> it = trackerMotions.iterator();
+        boolean first = true;
+        Long lastTime = sleeptime;
+        int maxGapInMinutes = 0;
+        while (it.hasNext()) {
+            final TrackerMotion trackerMotion = it.next();
+            if (trackerMotion.timestamp < sleeptime) {
+                continue;
+            }
+            if (trackerMotion.timestamp > wakeTime) {
+                break;
+            }
+
+            final int gapInMinutes = (int) ((trackerMotion.timestamp - lastTime - NUM_MILLIS_IN_A_MINUTE) / NUM_MILLIS_IN_A_MINUTE);
+
+            if (gapInMinutes > maxGapInMinutes) {
+                maxGapInMinutes = gapInMinutes;
+            }
+
+
+            lastTime = trackerMotion.timestamp;
+
+        }
+        final int gapInMinutes = (int) ((wakeTime - lastTime - NUM_MILLIS_IN_A_MINUTE) / NUM_MILLIS_IN_A_MINUTE);
+        if (gapInMinutes > maxGapInMinutes) {
+            maxGapInMinutes = gapInMinutes;
+        }
+
+        return maxGapInMinutes;
+    }
+
+    //checks if there is any motion observed during during sleep - We should expect some motion during sleep.
+    public static boolean motionDuringSleepCheck(final int minMotionCount, final ImmutableList<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+
+        final float sleepDuration = (int) ((double) (wakeUpTimestamp - fallAsleepTimestamp) / 60000.0);
+        final int requiredSleepDuration = 120; // taking into account sleep window padding - this requires a minimal of 3 hours of sleep with no motion
+        final int sleepWindowPadding = 30; //excludes first 30 and last 30 minutes of sleeps
+        int motionCount = 0;
+
+        // Compute first to last motion time delta
+        for (final TrackerMotion motion : trackerMotions) {
+            if (motion.timestamp > wakeUpTimestamp - sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
+                break;
+            }
+            if (motion.timestamp > fallAsleepTimestamp + sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
+                motionCount += 1;
+            }
+        }
+        if (motionCount < minMotionCount && sleepDuration > requiredSleepDuration) {
+            return false;
+        }
+        return true;
+    }
+
+
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public TimelineError checkIfValidTimeline (final long accountId, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
+    public TimelineError checkIfValidTimeline (final long accountId, final boolean primaryPeriod, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> processedTrackerMotions) {
+
+        final int maxAllowableMotionGap, minMotionCountThreshold;
+        if (primaryPeriod){
+            maxAllowableMotionGap= MAXIMUM_ALLOWABLE_MOTION_GAP_PRIMARY_PERIOD;
+            minMotionCountThreshold = MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD;
+        } else{
+            maxAllowableMotionGap= MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD;
+            minMotionCountThreshold = MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD;
+        }
 
         //make sure events occur in proper order
-        if (!checkEventOrdering(accountId, algorithmType, sleepEvents,extraEvents)) {
+        if (!checkEventOrdering(accountId, algorithmType, sleepEvents, extraEvents)) {
             return TimelineError.EVENTS_OUT_OF_ORDER;
         }
 
@@ -222,10 +299,10 @@ public class TimelineSafeguards {
         }
 
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
-            final int sleepDurationInMinutes = getTotalSleepDurationInMinutes(sleepEvents.fallAsleep.get(),sleepEvents.wakeUp.get(),extraEvents);
+            final int sleepDurationInMinutes = getTotalSleepDurationInMinutes(sleepEvents.fallAsleep.get(), sleepEvents.wakeUp.get(), extraEvents);
 
             if (sleepDurationInMinutes <= MINIMUM_SLEEP_DURATION_MINUTES) {
-                LOGGER.warn("sleep duration of {} minutes is less than limit {} minutes -- invalidating timeline",sleepDurationInMinutes,MINIMUM_SLEEP_DURATION_MINUTES);
+                LOGGER.warn("action=invalidating-timeline reason=insufficient-sleep-duration account_id={} sleep_duration={} ", accountId, sleepDurationInMinutes);
                 return TimelineError.NOT_ENOUGH_HOURS_OF_SLEEP;
             }
         }
@@ -233,11 +310,28 @@ public class TimelineSafeguards {
         final int maxDataGapInMinutes = getMaximumDataGapInMinutes(lightData);
 
         if (maxDataGapInMinutes > MAXIMUM_ALLOWABLE_DATAGAP) {
-            LOGGER.warn("max data gap {} minutes is greaten than limit {} minutes -- invalidating timeline",maxDataGapInMinutes,MAXIMUM_ALLOWABLE_DATAGAP);
+            LOGGER.warn("action=invalidating-timeline reason=max-data-gap-greater-than-limit account_id={} data-gap-minutes={} limit={} ", accountId, maxDataGapInMinutes, MAXIMUM_ALLOWABLE_DATAGAP);
             return TimelineError.DATA_GAP_TOO_LARGE;
         }
 
+        if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
+            //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
+            final boolean motionDuringSleep = motionDuringSleepCheck(minMotionCountThreshold, processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
+            if (!motionDuringSleep) {
+                LOGGER.warn("action=invalidating-timeline reason=insufficient-motion-during-sleeptime account_id={}", accountId);
+                return TimelineError.NO_MOTION_DURING_SLEEP;
+            }
+
+            final int maxMotionGapInMinutes = getMaximumMotionGapInMinutes(processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
+            if (maxMotionGapInMinutes > maxAllowableMotionGap) {
+                LOGGER.warn("max motion gap {} minutes is greaten than limit {} minutes -- invalidating timeline", maxMotionGapInMinutes, maxAllowableMotionGap);
+                return TimelineError.MOTION_GAP_TOO_LARGE;
+
+            }
+        }
+
         return TimelineError.NO_ERROR;
+
     }
 
 }

@@ -1498,32 +1498,4 @@ public class TimelineUtils {
 
         return ImmutableList.copyOf(filteredMotions);
     }
-
-    //checks if there is any motion observed during during sleep - We should expect some motion during sleep.
-    public boolean motionDuringSleepCheck(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
-
-        final float sleepDuration = (int) ((double) (wakeUpTimestamp - fallAsleepTimestamp) / 60000.0);
-        final int requiredSleepDuration = 120; // taking into account sleep window padding - this requires a minimal of 3 hours of sleep with no motion
-        final int sleepWindowPadding = 30; //excludes first 30 and last 30 minutes of sleeps
-        final int minMotionCount = 1;
-        int motionCount = 0;
-
-        // Compute first to last motion time delta
-        for (final TrackerMotion motion : trackerMotions) {
-            if (motion.timestamp > wakeUpTimestamp - sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
-                break;
-            }
-            if (motion.timestamp > fallAsleepTimestamp + sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
-                motionCount += 1;
-            }
-        }
-        if (motionCount < minMotionCount && sleepDuration > requiredSleepDuration) {
-            return false;
-        }
-        return true;
-    }
-
-
-
-
 }
