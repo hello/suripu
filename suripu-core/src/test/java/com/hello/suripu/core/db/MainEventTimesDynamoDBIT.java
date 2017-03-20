@@ -100,14 +100,25 @@ public class MainEventTimesDynamoDBIT {
         inBedDateTime = inBedDateTime.plusHours(15);
         sleepDateTime = sleepDateTime.plusHours(15);
         wakeUpDateTime = wakeUpDateTime.plusHours(15);
-        outOfBedDateTime = outOfBedDateTime.plusHours(15);
-        createdAtDateTime = createdAtDateTime.plusHours(15);
+        outOfBedDateTime = outOfBedDateTime.plusHours(14);
+        createdAtDateTime = createdAtDateTime.plusHours(14);
 
         final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
                 sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
 
         updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
         assert(updateSuccessful);
+
+        
+        outOfBedDateTime = outOfBedDateTime.plusHours(15);
+        createdAtDateTime = createdAtDateTime.plusHours(15);
+
+        final MainEventTimes mainEventTimesNight2 = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+
+        updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight2);
+        assert(updateSuccessful);
+
 
     }
 

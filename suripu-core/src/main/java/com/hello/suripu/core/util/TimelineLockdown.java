@@ -25,7 +25,7 @@ public class TimelineLockdown {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineLockdown.class);
 
     private static final int NO_MOTION_WINDOW_MINUTES = 60;
-    private static final int MOTION_COUNT_THRESHOLD = 4;
+    private static final int MOTION_COUNT_THRESHOLD = 3;
     private static final int MIN_SLEEP_DURATION = 6 * DateTimeConstants.MINUTES_PER_HOUR;
 
     public static boolean isLockedDown(final Optional<MainEventTimes> computedMainEventTimesOptional, final ImmutableList<TrackerMotion> processedTrackerMotions, final Boolean hasTimelineLockdown) {
@@ -43,6 +43,7 @@ public class TimelineLockdown {
         //main event times are saved (as 0) for invalid timelines
         //if the main event times are invalid, the timeline is not locked down
         if(!computedMainEventTimes.hasValidEventTimes()){
+            LOGGER.debug("action=not-locking-down-timeline reason=invalid-main-event-times account_id={} date={} sleep-period={}", computedMainEventTimes.accountId, computedMainEventTimes.sleepPeriod.targetDate, computedMainEventTimes.sleepPeriod.period);
             return false;
         }
 
@@ -53,11 +54,13 @@ public class TimelineLockdown {
 
         //if there is too much motion in following window, timeline is not locked down
         if (hasMotionDuringWindow ){
+            LOGGER.debug("action=not-locking-down-timeline reason=motion-following-timeline-creation account_id={} date={} sleep-period={}", computedMainEventTimes.accountId, computedMainEventTimes.sleepPeriod.targetDate, computedMainEventTimes.sleepPeriod.period);
             return false;
         }
 
         //if the sleep duration is less than 6 hours, the timeline is not locked down
         if(!hasSufficientSleepDuration) {
+            LOGGER.debug("action=not-locking-down-timeline reason=insufficient-sleep-duration account_id={} date={} sleep-period={}", computedMainEventTimes.accountId, computedMainEventTimes.sleepPeriod.targetDate, computedMainEventTimes.sleepPeriod.period);
             return false;
         }
 

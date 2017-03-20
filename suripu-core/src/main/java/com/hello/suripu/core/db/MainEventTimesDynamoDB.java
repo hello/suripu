@@ -3,8 +3,6 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
-import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
@@ -228,9 +226,8 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
         int numTries = 0;
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(getTableName(mainEventTimes.sleepPeriod.targetDate))
-                .withItem(toAttributeMap(mainEventTimes))
-                // Ensure that the item does not exist. If it exists, this throws a ConditionalCheckFailedException.
-                .withExpected(ImmutableMap.of(Attribute.DATE_SLEEP_PERIOD.shortName(), new ExpectedAttributeValue(false)));
+                .withItem(toAttributeMap(mainEventTimes));
+
         do {
             try {
                 dynamoDBClient.putItem(putItemRequest);
@@ -239,11 +236,6 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 LOGGER.error("error=ProvisionedThroughputExceededException account_id={}", mainEventTimes.accountId);
             } catch (InternalServerErrorException isee) {
                 LOGGER.error("error=InternalServerErrorException account_id={}", mainEventTimes.accountId);
-            } catch (ConditionalCheckFailedException ccfe) {
-                // The item already exists or we already have an item with this timestamp / account ID!
-                LOGGER.warn("warn=item-already-exists account_id={} timestamp={}",
-                        mainEventTimes.accountId, mainEventTimes.sleepPeriod.targetDate);
-                return false;
             }
             backoff(numTries);
             numTries++;
