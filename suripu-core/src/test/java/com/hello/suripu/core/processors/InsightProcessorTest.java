@@ -460,36 +460,6 @@ public class InsightProcessorTest {
         assertThat(insightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper).get(), isIn(marketingInsightPool));
     }
 
-    @Test
-    public void test_generateGeneralInsights_9() {
-
-        final RolloutClient mockFeatureFlipper = featureFlipOn();
-        final InsightProcessor insightProcessor = setUp();
-        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
-
-        //actually simulating recent categories
-        final Map<InsightCard.Category, DateTime> recentCategories = new HashMap<>();
-        recentCategories.put(InsightCard.Category.TEMPERATURE, DateTime.now(DateTimeZone.UTC));
-
-        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper);
-
-        //TEST - Look for weekly Insight, do not try to generate b/c wrong date
-        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(recentCategories, FAKE_DATE_13.plusMillis(OFFSET_MILLIS));
-        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.WAKE_VARIANCE, mockFeatureFlipper);
-
-        //look for high priority Insight - get nothing
-
-        //look for random old Insight, try to generate humidity
-        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_13.plusMillis(OFFSET_MILLIS), mockFeatureFlipper);
-        Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.LIGHT, mockFeatureFlipper);
-        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.TEMPERATURE, mockFeatureFlipper);
-        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.SLEEP_QUALITY, mockFeatureFlipper);
-        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, InsightCard.Category.BED_LIGHT_DURATION, mockFeatureFlipper);
-
-        //Marketing Insight is not generated b/c already made humidity - can't spy on private random, so do assert
-        assertThat(marketingInsightPool.contains(insightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ACCOUNT_PAIR, deviceDataDAODynamoDB, recentCategories, FAKE_DATE_13, mockFeatureFlipper).get()), is(Boolean.FALSE));
-    }
-
 
     @Test
     public void test_selectMarketingInsightToGenerate_0() {
