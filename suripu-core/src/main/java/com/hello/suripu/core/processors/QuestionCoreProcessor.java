@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.QuestionResponseDAO;
@@ -13,6 +14,7 @@ import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
 import com.hello.suripu.core.util.QuestionUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,9 +139,9 @@ public class QuestionCoreProcessor {
 
         //Batch save
         final DateTime expireDate = todayLocal.plusDays(1);
-        handleSaveQuestions(accountId, todayLocal, expireDate, sortedQuestions);
+        List<Question> sortedSavedQuestions = handleSaveQuestions(accountId, todayLocal, expireDate, sortedQuestions, todayQuestionResponseList);
 
-        return sortedQuestions;
+        return sortedSavedQuestions;
     }
 
     /*
@@ -230,37 +232,52 @@ public class QuestionCoreProcessor {
     /*
     Insert questions if it has not already been inserted
     */
-    private Integer handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions) {
+    private List<Question> handleSaveQuestions(final Long accountId, final DateTime todayLocal, final DateTime expireDate, final List<Question> questions, final ImmutableList<AccountQuestionResponses> todayQuestionResponseList) {
 
-        int saves = 0;
-
-        for (Question question : questions) {
+        final List<Question> savedQuestions  = Lists.newArrayList();
+        for (final Question question : questions) {
 
             //TODO: make batch
-            final Boolean savedQuestion = savedAccountQuestion(accountId, question, todayLocal);
-            if (!savedQuestion) {
-                saveQuestion(accountId, question, todayLocal, expireDate);
-                saves += 1;
+            final Optional<Long> savedAccountQuestionId = savedAccountQuestion(question, todayQuestionResponseList);
+
+            final Long accountQuestionId;
+            if (savedAccountQuestionId.isPresent()) {
+                accountQuestionId = savedAccountQuestionId.get();
+            } else {
+                accountQuestionId = saveQuestion(accountId, question, todayLocal, expireDate);
             }
+
+            final Question savedQuestion = Question.withAccountQId(question, accountQuestionId);
+            savedQuestions.add(savedQuestion);
         }
 
-        return saves;
+        return savedQuestions;
     }
 
-    private void saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
+    private Long saveQuestion(final Long accountId, final Question question, final DateTime todayLocal, final DateTime expireDate) {
         try {
             LOGGER.debug("action=saved_question processor=question_survey account_id={} question_id={} today_local={} expire_date={}", accountId, question.id, todayLocal, expireDate);
-            this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
+            return this.questionResponseDAO.insertAccountQuestion(accountId, question.id, todayLocal, expireDate);
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
             if (!matcher.find()) {
                 LOGGER.debug("exception={} account_id={}", exception.toString(), accountId);
             }
         }
+
+        return 0L;
     }
 
-    private Boolean savedAccountQuestion(final Long accountId, final Question question, final DateTime created) {
-        final List<AccountQuestion> questions = questionResponseReadDAO.getAskedQuestionByQuestionIdCreatedDate(accountId, question.id, created);
-        return !questions.isEmpty();
+    @VisibleForTesting
+    public static Optional<Long> savedAccountQuestion(final Question question, final ImmutableList<AccountQuestionResponses> todayQuestionResponseList) {
+
+        for (AccountQuestionResponses accountQuestionResponses : todayQuestionResponseList) {
+            if (accountQuestionResponses.questionId.equals(question.id)) {
+                final Long accountQuestionId = accountQuestionResponses.id;
+                return Optional.of(accountQuestionResponses.id);
+            }
+        }
+
+        return Optional.absent();
     }
 }
