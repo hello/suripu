@@ -292,6 +292,7 @@ public class DeviceProcessor {
             // choose between heartbeat created or pairing created time for pill's last seen
             final Pill pill;
             if (usePillPairedTimeAsLastSeen(pillStatusOptional, pillAccountPair.created, now)) {
+                LOGGER.debug("action=pill-last-seen-from-paired-time pill_id={} account_id={}", pillAccountPair.externalDeviceId, pillAccountPair.accountId);
                 pill = Pill.createRecentlyPaired(pillAccountPair, pillColorOptional, batteryType);
             } else {
                 pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional, batteryType);
