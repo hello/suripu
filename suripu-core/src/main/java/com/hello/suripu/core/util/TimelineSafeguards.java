@@ -2,16 +2,23 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,7 +38,17 @@ public class TimelineSafeguards {
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 18 ;//90% qualify
     //combined: primary period - 97% of nights valid; alternative period - 81% of nights valid (for 5000 timelines generated jan 2017)
 
+    private static final float[] LOG_REG_COEFS=  {-1.40138772f, 8.52017770e-03f,   2.43730660e-02f,   1.80519285e-0f,
+            1.43648912e-05f,   5.16756968e-03f,   6.97053751e-03f,
+            4.39478008e-05f,  -1.97305700e-05f,   2.22712823e-03f,
+            -4.97101517e-03f,  -2.58683105e-04f,  -1.23644939e-05f,
+            1.95535646e-03f,  -2.65325523e-02f,  -6.32742215e-04f,
+            -9.15804013e-06f};
 
+    private static final Integer [][][][] FEATURE_WINDOW_TIME_OFFSETS_ALL_PERIODS = {
+            {{{ 4,0},{ 5,45},{ 6,0}},{{ 6,0},{ 7,45},{ 8,0}},{{ 8,0},{ 9,45},{10,0}},{{10,0},{11,45},{12,0}}},
+            {{{12,0},{13,45},{14,0}},{{14,0},{15,45},{16,0}},{{16,0},{17,45},{18,0}},{{18,0},{19,45},{20,0}}},
+            {{{20,0},{21,45},{22,0}},{{22,0},{23,45},{24,0}},{{24,0},{25,45},{26,0}},{{26,0},{27,45},{28,0}}}};
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineSafeguards.class);
 
@@ -218,14 +235,14 @@ public class TimelineSafeguards {
     }
 
 
-    public static int getMaximumMotionGapInMinutes(final ImmutableList<TrackerMotion> trackerMotions, final long sleeptime, final long wakeTime) {
+    public static int getMaximumMotionGapInMinutes(final ImmutableList<TrackerMotion> trackerMotions, final long sleepTime, final long wakeTime) {
         Iterator<TrackerMotion> it = trackerMotions.iterator();
         boolean first = true;
-        Long lastTime = sleeptime;
+        Long lastTime = sleepTime;
         int maxGapInMinutes = 0;
         while (it.hasNext()) {
             final TrackerMotion trackerMotion = it.next();
-            if (trackerMotion.timestamp < sleeptime) {
+            if (trackerMotion.timestamp < sleepTime) {
                 continue;
             }
             if (trackerMotion.timestamp > wakeTime) {
@@ -255,22 +272,57 @@ public class TimelineSafeguards {
 
         final float sleepDuration = (int) ((double) (wakeUpTimestamp - fallAsleepTimestamp) / 60000.0);
         final int requiredSleepDuration = 120; // taking into account sleep window padding - this requires a minimal of 3 hours of sleep with no motion
-        final int sleepWindowPadding = 30; //excludes first 30 and last 30 minutes of sleeps
-        int motionCount = 0;
-
-        // Compute first to last motion time delta
-        for (final TrackerMotion motion : trackerMotions) {
-            if (motion.timestamp > wakeUpTimestamp - sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
-                break;
-            }
-            if (motion.timestamp > fallAsleepTimestamp + sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
-                motionCount += 1;
-            }
-        }
+        final int sleepWindowPadding = 30 * DateTimeConstants.MILLIS_PER_MINUTE; //excludes first 30 and last 30 minutes of sleeps
+        final int motionCount = getMotionCount(trackerMotions, fallAsleepTimestamp + sleepWindowPadding, wakeUpTimestamp - sleepWindowPadding);
         if (motionCount < minMotionCount && sleepDuration > requiredSleepDuration) {
             return false;
         }
         return true;
+    }
+
+    public static int getMotionCount(final ImmutableList<TrackerMotion> trackerMotions, final Long startTime, final Long endTime){
+
+        int motionCount = 0;
+
+        // Compute first to last motion time delta
+        for (final TrackerMotion motion : trackerMotions) {
+            if (motion.timestamp > endTime) {
+                break;
+            }
+            if (motion.timestamp >= startTime) {
+                motionCount += 1;
+            }
+        }
+        return motionCount;
+    }
+
+    public static double getSensorAvg(final Sensor sensor, final List<Sample> samples, final Long startTime, final Long endTime){
+        int sensorCount = 0;
+        float sensorSum = 0;
+
+        // Compute first to last motion time delta
+        for (final Sample sample: samples) {
+            if (sample.dateTime > endTime) {
+                break;
+            }
+            if (sample.dateTime >= startTime) {
+                double val = sample.value;
+                if (sensor == Sensor.LIGHT){
+                    val = Math.log((val * 65536)/256  + 1.0) / Math.log(2);
+                }
+                if (sensor == Sensor.SOUND_PEAK_DISTURBANCE){
+                    val = val / 10 - 4.0;
+
+                }
+                sensorCount += 1;
+                sensorSum += val;
+            }
+        }
+        if (sensorCount == 0){
+            return 0;
+        }
+        final double meanSensorCount = sensorSum / sensorCount;
+        return meanSensorCount;
     }
 
 
@@ -333,5 +385,65 @@ public class TimelineSafeguards {
         return TimelineError.NO_ERROR;
 
     }
+
+    public static boolean isProbableSleepPeriod(final Long accountId, final SleepPeriod sleepPeriod, final OneDaysSensorData oneDaysSensorData){
+        //if inbed period not over - default to alternate period thresholds
+        //high prob => primary period thresholds
+        //low prob => alternative period thresholds
+
+        if(!oneDaysSensorData.allSensorSampleList.getAvailableSensors().contains(Sensor.LIGHT) || !oneDaysSensorData.allSensorSampleList.getAvailableSensors().contains(Sensor.SOUND_PEAK_ENERGY)){
+            return false;
+        }
+
+        final List<Sample> lightDataPeriod = oneDaysSensorData.allSensorSampleList.getSensorDataForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_IN_BED) - 15*DateTimeConstants.MILLIS_PER_MINUTE,sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_IN_BED)).get(Sensor.LIGHT) ;
+        final List<Sample> soundDataPeriod = oneDaysSensorData.allSensorSampleList.getSensorDataForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_IN_BED) - 15*DateTimeConstants.MILLIS_PER_MINUTE,sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_IN_BED)).get(Sensor.SOUND_PEAK_DISTURBANCE) ;
+
+        if(new DateTime(lightDataPeriod.get(-1).dateTime + lightDataPeriod.get(-1).offsetMillis, DateTimeZone.UTC).isBefore(sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, 0))){
+            return false;
+        }
+
+        final ImmutableList<TrackerMotion> originalTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA)).originalTrackerMotions);
+
+
+        final List<Integer> maxGaps = Lists.newArrayListWithExpectedSize(4);
+        final List<Integer> motionCounts = Lists.newArrayListWithExpectedSize(4);
+        final List<Double> avgEndLight= Lists.newArrayListWithExpectedSize(4);
+        final List<Double> avgEndSound= Lists.newArrayListWithExpectedSize(4);
+
+        final Integer[][][] feature_window_time_offsets = FEATURE_WINDOW_TIME_OFFSETS_ALL_PERIODS[sleepPeriod.period.getValue()];
+        for (int i = 0; i < 4; i ++){
+            final DateTime startTimeMotionWindow = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).plusHours(feature_window_time_offsets[i][0][0]).plusMinutes(feature_window_time_offsets[i][0][1]);
+            final DateTime startTimeSensorWindow = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).plusHours(feature_window_time_offsets[i][1][0]).plusMinutes(feature_window_time_offsets[i][1][1]);
+            final DateTime endTimeWindow= sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).plusHours(feature_window_time_offsets[i][2][0]).plusMinutes(feature_window_time_offsets[i][2][0]);
+
+            final int maxMotionGapForWindow = getMaximumMotionGapInMinutes(originalTrackerMotionsPeriod, startTimeMotionWindow.getMillis(), endTimeWindow.getMillis());
+            final int motionCountForWindow = getMotionCount(originalTrackerMotionsPeriod, startTimeMotionWindow.getMillis(), endTimeWindow.getMillis());
+            final double avgLightEndOfWindow = getSensorAvg(Sensor.LIGHT, lightDataPeriod, startTimeSensorWindow.getMillis(), endTimeWindow.getMillis());
+            final double avgSoundEndOfWindow = getSensorAvg(Sensor.SOUND_PEAK_DISTURBANCE, soundDataPeriod, startTimeSensorWindow.getMillis(), endTimeWindow.getMillis());
+            maxGaps.add(maxMotionGapForWindow);
+            motionCounts.add(motionCountForWindow);
+            avgEndLight.add(avgLightEndOfWindow);
+            avgEndSound.add(avgSoundEndOfWindow);
+
+        }
+
+        final double sleepPeriodProbability = getProbability(maxGaps, motionCounts, avgEndLight, avgEndSound);
+
+        if(sleepPeriodProbability < 0.75){
+            return false;
+        }
+
+        return true;
+    }
+    private static double getProbability(final List<Integer> maxGaps, final List<Integer> motionCounts, final List<Double> avgEndSound, final List<Double> avgEndLight){
+
+        final double exp = Math.exp((double)(LOG_REG_COEFS[0] +  LOG_REG_COEFS[1]*motionCounts.get(0)  + LOG_REG_COEFS[2]*maxGaps.get(0) + LOG_REG_COEFS[3]*avgEndLight.get(0)+ LOG_REG_COEFS[4]*avgEndSound.get(0) +
+                LOG_REG_COEFS[5]*motionCounts.get(1)  + LOG_REG_COEFS[6]*maxGaps.get(1) + LOG_REG_COEFS[7]*avgEndLight.get(1)+ LOG_REG_COEFS[8]*avgEndSound.get(1) +
+                LOG_REG_COEFS[9]*motionCounts.get(2)  + LOG_REG_COEFS[10]*maxGaps.get(2) + LOG_REG_COEFS[11]*avgEndLight.get(2)+ LOG_REG_COEFS[12]*avgEndSound.get(2) +
+                LOG_REG_COEFS[13]*motionCounts.get(3)  + LOG_REG_COEFS[14]*maxGaps.get(3) + LOG_REG_COEFS[15]*avgEndLight.get(3)+ LOG_REG_COEFS[16]*avgEndSound.get(3)));
+        return exp;
+    }
+
+
 
 }

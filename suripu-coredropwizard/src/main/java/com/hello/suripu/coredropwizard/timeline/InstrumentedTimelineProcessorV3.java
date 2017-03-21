@@ -125,10 +125,8 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
     public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 9;
-    public final static int MIN_TRACKER_MOTION_COUNT_SELECTED_PERIOD = 9;
+    public final static int MIN_TRACKER_MOTION_COUNT_PRIMARY_PERIOD = 9;
     public final static int MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD = 30;
-    public final static int MIN_MOTION_DURING_SLEEP_SELECTED_PERIOD = 1;
-    public final static int MIN_MOTION_DURING_SLEEP_ALTERNATIVE_PERIOD = 4;
 
     public final static float MIN_FRACTION_UNIQUE_MOTION = 0.5f;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
@@ -570,11 +568,11 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         final int motionCountThresholdDay;
         final int motionCountThresholdNight;
         if (isDaySleeper(accountId)) {
-            motionCountThresholdDay = MIN_TRACKER_MOTION_COUNT_SELECTED_PERIOD;
+            motionCountThresholdDay = MIN_TRACKER_MOTION_COUNT_PRIMARY_PERIOD;
             motionCountThresholdNight = MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD;
         } else {
             motionCountThresholdDay = MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD;
-            motionCountThresholdNight = MIN_TRACKER_MOTION_COUNT_SELECTED_PERIOD;
+            motionCountThresholdNight = MIN_TRACKER_MOTION_COUNT_PRIMARY_PERIOD;
         }
 
         final int minMotionCountThreshold;

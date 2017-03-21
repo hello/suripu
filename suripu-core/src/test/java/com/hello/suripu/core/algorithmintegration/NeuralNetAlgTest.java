@@ -115,7 +115,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
 
     }
 
-    @Test
+    //@Test
     public void testGetPredictionWithShortenedTime() throws Exception {
         DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
         DateTime startTime = date.withHourOfDay(18);
@@ -140,7 +140,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
     }
 
 
-    @Test
+    //@Test
     public void testDurationSafeguard() throws Exception {
         DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
         DateTime startTime = date.withHourOfDay(18);

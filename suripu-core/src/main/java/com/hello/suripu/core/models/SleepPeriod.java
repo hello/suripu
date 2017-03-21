@@ -220,6 +220,17 @@ public class SleepPeriod {
         }
     }
 
+    public Long getSleepPeriodMillis(final Boundary boundary){
+        switch(period) {
+            case MORNING:
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).getMillis();
+            case AFTERNOON:
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).getMillis();
+            default:
+                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).getMillis();
+        }
+    }
+
     public DateTime getTargetSleepPeriodTime(final Boundary boundary, final int offsetMillis){
         final int  queueProcessorOffset = 2;//hours;
         switch(period) {
