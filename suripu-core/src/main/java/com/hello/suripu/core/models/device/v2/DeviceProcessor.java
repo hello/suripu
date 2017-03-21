@@ -281,8 +281,7 @@ public class DeviceProcessor {
         return Pill.BatteryType.UNKNOWN;
     }
 
-    @VisibleForTesting
-    public List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final DateTime now) {
+    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final DateTime now) {
         final List<Pill> pills = Lists.newArrayList();
 
         for (final DeviceAccountPair pillAccountPair : pillAccountPairs) {
@@ -303,8 +302,7 @@ public class DeviceProcessor {
         return pills;
     }
 
-    @VisibleForTesting
-    public Boolean usePillPairedTimeAsLastSeen(final Optional<PillHeartBeat> pillStatusOptional, final DateTime pairedDateTime, final DateTime now) {
+    public static Boolean usePillPairedTimeAsLastSeen(final Optional<PillHeartBeat> pillStatusOptional, final DateTime pairedDateTime, final DateTime now) {
         final DateTime lastHeartBeatThreshold = now.minusMinutes(RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD);
 
         if (pillStatusOptional.isPresent()) {
