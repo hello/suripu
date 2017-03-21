@@ -65,6 +65,7 @@ public class DeviceProcessor {
 
     private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 28; // days
     private final static Integer BATTERY_LEVEL_LOW_BATTERY_WARNING = 15;
+    public static final Integer RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD = 80; // allow 80 mins for first heartbeat to be uploaded
 
     private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
@@ -242,7 +243,7 @@ public class DeviceProcessor {
             return new Devices(senses, pills);
         }
 
-        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional, DateTime.now(DateTimeZone.UTC));
         return new Devices(senses, pills);
     }
 
@@ -279,22 +280,47 @@ public class DeviceProcessor {
 
         return Pill.BatteryType.UNKNOWN;
     }
-    
-    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional) {
+
+    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final DateTime now) {
         final List<Pill> pills = Lists.newArrayList();
+
         for (final DeviceAccountPair pillAccountPair : pillAccountPairs) {
-            final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair);
+            final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair, now);
             final Optional<DeviceKeyStoreRecord> recordOptional = pillKeyStore.getKeyStoreRecord(pillAccountPair.externalDeviceId);
             final Pill.BatteryType batteryType = (recordOptional.isPresent()) ? fromSN(recordOptional.get().metadata) : Pill.BatteryType.UNKNOWN;
-            final Pill pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional, batteryType);
+
+            // choose between heartbeat created or pairing created time for pill's last seen
+            final Pill pill;
+            if (usePillPairedTimeAsLastSeen(pillStatusOptional, pillAccountPair.created, now)) {
+                LOGGER.debug("action=pill-last-seen-from-paired-time pill_id={} account_id={}", pillAccountPair.externalDeviceId, pillAccountPair.accountId);
+                pill = Pill.createRecentlyPaired(pillAccountPair, pillColorOptional, batteryType);
+            } else {
+                pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional, batteryType);
+            }
             pills.add(pill);
         }
 
         return pills;
     }
 
+    public static Boolean usePillPairedTimeAsLastSeen(final Optional<PillHeartBeat> pillStatusOptional, final DateTime pairedDateTime, final DateTime now) {
+        final DateTime lastHeartBeatThreshold = now.minusMinutes(RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD);
+
+        if (pillStatusOptional.isPresent()) {
+            if (pillStatusOptional.get().createdAtUTC.isBefore(pairedDateTime)) {
+                // if paired time is too long ago, and an old heart beat exist, return heartbeat time
+                // else if paired time is after threshold and heartbeat, return paired time
+                return pairedDateTime.isAfter(lastHeartBeatThreshold);
+            }
+        } else if (pairedDateTime.isAfter(lastHeartBeatThreshold)) {
+            // newly-paired pill, no previous heartbeat
+            return true;
+        }
+        return false;
+    }
+
     private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final Account account, final DateTime referenceTime) {
-        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional, referenceTime);
         final Days days = Days.daysBetween(referenceTime,account.created);
         final int accountCreatedInDays = Math.abs(days.getDays());
         if(accountCreatedInDays > MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING ) {
