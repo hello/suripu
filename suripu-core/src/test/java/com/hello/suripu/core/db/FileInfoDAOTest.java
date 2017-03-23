@@ -10,11 +10,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by jakepiccolo on 3/9/16.
  */
-public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
+public class FileInfoDAOTest extends SqlDAOTest<FileInfoOneDAO> {
 
     @Override
-    protected Class<FileInfoDAO> tClass() {
-        return FileInfoDAO.class;
+    protected Class<FileInfoOneDAO> tClass() {
+        return FileInfoOneDAO.class;
     }
 
     @Override
@@ -99,7 +99,7 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
         assertThat(after5.get(2).id, is(8L));
         assertThat(after5.get(3).id, is(2L));
 
-        assertThat(dao.getAll(FileInfoDAO.OLD_FW_VERSION_CUTOFF, "nosense").size(), is(0));
+        assertThat(dao.getAll(FileInfoOneDAO.OLD_FW_VERSION_CUTOFF, "nosense").size(), is(0));
 
         // test specific sense ids
         final List<FileInfo> forSense1 = dao.getAll(3, "sense1");

@@ -604,5 +604,30 @@ ALTER TABLE accounts ADD COLUMN external_id uuid DEFAULT uuid_generate_v4();
 -- Added Feb 23rd
 ALTER TABLE accounts ADD COLUMN gender_name VARCHAR(100);
 
+-- 2017-03-22 file_info for Sense 1.5
+CREATE TABLE file_info_one_five (
+    id SERIAL PRIMARY KEY,
+    sort_key INTEGER NOT NULL,          -- How to sort the values for displaying
+    firmware_version INTEGER NOT NULL,  -- Minimum firmware version
+    type VARCHAR(255),
+    path VARCHAR(255),
+    sha VARCHAR(255),
+    uri VARCHAR(255),
+    preview_uri VARCHAR(255),
+    name VARCHAR(255),
+    size_bytes INTEGER,
+    is_public BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE sense_file_info_one_five (
+    id SERIAL PRIMARY KEY,
+    sense_id VARCHAR(255) NOT NULL,
+    file_info_id INTEGER NOT NULL REFERENCES file_info_one_five (id)
+);
+
+CREATE INDEX sense_id_one_five_idx on sense_file_info_onve_five(sense_id);
+
+GRANT ALL PRIVILEGES ON file_info_one_five TO ingress_user;
+GRANT ALL PRIVILEGES ON sense_file_info_one_five TO ingress_user;
 
 

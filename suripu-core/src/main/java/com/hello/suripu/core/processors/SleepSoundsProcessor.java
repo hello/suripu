@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.input.FileSync;
-import com.hello.suripu.core.db.FileInfoDAO;
+import com.hello.suripu.core.db.FileInfoOneDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.FileInfo;
@@ -25,16 +25,16 @@ import java.util.List;
 public class SleepSoundsProcessor implements SoundMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsProcessor.class);
     
-    private final FileInfoDAO fileInfoDAO;
+    private final FileInfoOneDAO fileInfoOneDAO;
     private final FileManifestDAO fileManifestDAO;
 
-    private SleepSoundsProcessor(final FileInfoDAO fileInfoDAO, final FileManifestDAO fileManifestDAO) {
-        this.fileInfoDAO = fileInfoDAO;
+    private SleepSoundsProcessor(final FileInfoOneDAO fileInfoOneDAO, final FileManifestDAO fileManifestDAO) {
+        this.fileInfoOneDAO = fileInfoOneDAO;
         this.fileManifestDAO = fileManifestDAO;
     }
 
-    public static SleepSoundsProcessor create(final FileInfoDAO fileInfoDAO, final FileManifestDAO fileManifestDAO) {
-        return new SleepSoundsProcessor(fileInfoDAO, fileManifestDAO);
+    public static SleepSoundsProcessor create(final FileInfoOneDAO fileInfoOneDAO, final FileManifestDAO fileManifestDAO) {
+        return new SleepSoundsProcessor(fileInfoOneDAO, fileManifestDAO);
     }
 
 
@@ -90,7 +90,7 @@ public class SleepSoundsProcessor implements SoundMap {
                 ? manifestOptional.get().getFirmwareVersion()
                 : 0;
 
-        final List<FileInfo> fileInfoList = fileInfoDAO.getAll(firmwareVersion, senseId);
+        final List<FileInfo> fileInfoList = fileInfoOneDAO.getAll(firmwareVersion, senseId);
 
         final List<FileInfo> sleepSoundFileInfoList = Lists.newArrayList();
         for (final FileInfo fileInfo: fileInfoList) {
@@ -123,7 +123,7 @@ public class SleepSoundsProcessor implements SoundMap {
      * @return Sound if the filePath maps to one, else absent.
      */
     public Optional<Sound> getSoundByFilePath(final String filePath) {
-        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(filePath);
+        final Optional<FileInfo> fileInfoOptional = fileInfoOneDAO.getByFilePath(filePath);
         if (!fileInfoOptional.isPresent() || !fileInfoOptional.get().fileType.equals(FileInfo.FileType.SLEEP_SOUND)) {
             LOGGER.warn("dao=fileInfoDAO error=path-not-found file_path={}", filePath);
             return Optional.absent();
@@ -134,7 +134,7 @@ public class SleepSoundsProcessor implements SoundMap {
     }
 
     public Optional<Sound> getSoundByFileName(final String fileName) {
-        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFileName(fileName);
+        final Optional<FileInfo> fileInfoOptional = fileInfoOneDAO.getByFileName(fileName);
         if (!fileInfoOptional.isPresent() || !fileInfoOptional.get().fileType.equals(FileInfo.FileType.SLEEP_SOUND)) {
             LOGGER.warn("dao=fileInfoDAO error=path-not-found file_name={}", fileName);
             return Optional.absent();
@@ -148,7 +148,7 @@ public class SleepSoundsProcessor implements SoundMap {
      * @return a sleep sound for this Sense to play, but only if this Sense can play the sound and if the sound ID is valid.
      */
     public Optional<Sound> getSound(final String senseId, final Long soundId, final HardwareVersion hardwareVersion) {
-        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getById(soundId);
+        final Optional<FileInfo> fileInfoOptional = fileInfoOneDAO.getById(soundId);
         if (!fileInfoOptional.isPresent()) {
             LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-found", soundId);
             return Optional.absent();
