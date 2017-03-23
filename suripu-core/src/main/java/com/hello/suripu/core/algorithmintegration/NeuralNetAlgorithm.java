@@ -382,7 +382,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
                     accountId,
-                    isPrimarySleepPeriod,
+                    sleepPeriod,
                     AlgorithmType.NEURAL_NET,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),

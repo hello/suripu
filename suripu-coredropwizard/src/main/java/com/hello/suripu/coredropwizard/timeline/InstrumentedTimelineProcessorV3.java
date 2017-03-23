@@ -125,8 +125,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
     public final static int MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD = 9;
-    public final static int MIN_TRACKER_MOTION_COUNT_PRIMARY_PERIOD = 9;
-    public final static int MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD = 30;
 
     public final static float MIN_FRACTION_UNIQUE_MOTION = 0.5f;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
@@ -303,10 +301,10 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
     public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
 
-        //if (useTimelineSleepPeriods(accountId)) {
+        if (useTimelineSleepPeriods(accountId)) {
             return retrieveTimelineForAllSleepPeriods(accountId, targetDate, newFeedback);
-        //}
-       // return retrieveTimelineForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate), Optional.absent(), newFeedback);
+        }
+        return retrieveTimelineForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate), Optional.absent(), newFeedback);
 
     }
 
@@ -542,18 +540,8 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         //chain of fail-overs of algorithm (i.e)
         final LinkedList<AlgorithmType> algorithmChain = Lists.newLinkedList();
 
-        if (!useTimelineSleepPeriods(accountId)) {
-            algorithmChain.add(AlgorithmType.HMM);
-            algorithmChain.add(AlgorithmType.VOTING);
-        }
-        if (this.hasOnlineHmmAlgorithmEnabled(accountId) && !useTimelineSleepPeriods(accountId)) {
-            algorithmChain.addFirst(AlgorithmType.ONLINE_HMM);
-        }
+        algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
 
-        //only use the newest NN
-        if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
-            algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
-        }
 
         LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(), accountId, startTimeLocalUTC, endTimeLocalUTC);
 
@@ -567,28 +555,16 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         //check to see if there's an issue with the data
         final int motionCountThresholdDay;
         final int motionCountThresholdNight;
-        if (isDaySleeper(accountId)) {
-            motionCountThresholdDay = MIN_TRACKER_MOTION_COUNT_PRIMARY_PERIOD;
-            motionCountThresholdNight = MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD;
-        } else {
-            motionCountThresholdDay = MIN_TRACKER_MOTION_COUNT_ALTERNATIVE_PERIOD;
-            motionCountThresholdNight = MIN_TRACKER_MOTION_COUNT_PRIMARY_PERIOD;
-        }
+
 
         final int minMotionCountThreshold;
-        if (useTimelineSleepPeriods(accountId)) {
-            if (sleepPeriod.period == SleepPeriod.Period.NIGHT) {
-                minMotionCountThreshold = motionCountThresholdNight;
-            } else {
-                minMotionCountThreshold = motionCountThresholdDay;
-            }
-        } else if (useNoMotionEnforcement(accountId)) {
+        if (useNoMotionEnforcement(accountId)) {
             minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD;
         } else {
             minMotionCountThreshold = MIN_TRACKER_MOTION_COUNT;
         }
 
-        final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorDataSleepPeriod.oneDaysTrackerMotion.processedtrackerMotions, sensorDataSleepPeriod.oneDaysPartnerMotion.filteredOriginalTrackerMotions, minMotionCountThreshold);
+        final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod, sleepPeriod, minMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason, accountId, targetDate.toDate());
@@ -632,7 +608,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
                 break;
         }
 
-        final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId, targetDate, SleepPeriod.Period.NIGHT);
+        final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId, targetDate, sleepPeriod.period);
         /*check if previously generated timeline is valid for lockdown - if valid for lockdown, uses cached main event times instead of running timeline algorithm*/
 
         final boolean timelineLockedDown = TimelineLockdown.isLockedDown(computedMainEventTimesOptional, sensorData.oneDaysTrackerMotion.processedtrackerMotions, useTimelineLockdown(accountId));
@@ -1066,9 +1042,9 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData, final int minMotionCountThreshold){
+    static public TimelineError isValidNight(final Long accountId, final OneDaysSensorData sensorData, final SleepPeriod sleepPeriod, final int minMotionCountThreshold){
 
-        if(originalMotionData.size() == 0){
+        if(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions.size() == 0){
             return TimelineError.NO_DATA;
         }
 
@@ -1076,22 +1052,22 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         //If greater than MinTracker Motion Count - continue
         // if FF for lower motion count threshold, if between lower motion threshold and high motion threshold, check percent unique motions for parter data.
         // if lower than lower motion count threshold, reject
-        if(originalMotionData.size() < minMotionCountThreshold){
+        if(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions.size() < minMotionCountThreshold){
             return TimelineError.NOT_ENOUGH_DATA;
-        } else if (originalMotionData.size() >= MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD && originalMotionData.size() < MIN_TRACKER_MOTION_COUNT) {
-            final float percentUniqueMotions = PartnerDataUtils.getPercentUniqueMovements(originalMotionData, originalPartnerTrackerMotionData);
+        } else if (sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions.size() >= MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD && sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions.size() < MIN_TRACKER_MOTION_COUNT) {
+            final float percentUniqueMotions = PartnerDataUtils.getPercentUniqueMovements(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions);
 
             if (percentUniqueMotions < MIN_FRACTION_UNIQUE_MOTION){
                 return TimelineError.NOT_ENOUGH_DATA;
             }
-        } else if (originalMotionData.size() < MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD){
+        } else if (sensorData.oneDaysTrackerMotion.originalTrackerMotions.size() < MIN_TRACKER_MOTION_COUNT_LOWER_THRESHOLD){
             return TimelineError.NOT_ENOUGH_DATA;
         }
 
         //CHECK TO SEE IF MOTION AMPLITUDE IS EVER ABOVE MINIMUM THRESHOLD
         boolean isMotionAmplitudeAboveMinimumThreshold = false;
 
-        for(final TrackerMotion trackerMotion : originalMotionData){
+        for(final TrackerMotion trackerMotion : sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions){
             if(trackerMotion.value > MIN_MOTION_AMPLITUDE){
                 isMotionAmplitudeAboveMinimumThreshold = true;
                 break;
@@ -1104,31 +1080,37 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT IS ABOVE 5 HOURS
-        if(originalMotionData.get(originalMotionData.size() - 1).timestamp - originalMotionData.get(0).timestamp < MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
+        if(sensorData.oneDaysTrackerMotion.originalTrackerMotions.get(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions.size() - 1).timestamp - sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions.get(0).timestamp < MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
             return TimelineError.TIMESPAN_TOO_SHORT;
         }
 
-        //IF THE FILTERING WAS NOT USED (OR HAD NO EFFECT) WE ARE DONE
-        if (originalMotionData.size() == filteredMotionData.size()) {
-            return TimelineError.NO_ERROR;
+        //CHECK IF PROBABLE SLEEP BASED ON SENSOR DATA
+        final boolean daySleeper = sensorData.userBioInfo.primarySleepPeriod != SleepPeriod.Period.NIGHT;
+        if (!TimelineSafeguards.isProbableNight(accountId, daySleeper, sleepPeriod, sensorData)){
+            return TimelineError.LOW_AMP_DATA;
+
         }
 
+        //IF THE FILTERING WAS NOT USED (OR HAD NO EFFECT) WE ARE DONE
+        if (sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions.size() == sensorData.oneDaysTrackerMotion.processedtrackerMotions.size()) {
+            return TimelineError.NO_ERROR;
+        }
         ///////////////////////////
         //PARTNER FILTERED DATA CHECKS ////
         //////////////////////////
 
         //"not enough", not "no data", because there must have been some original data to get to this point
-        if (filteredMotionData.isEmpty()) {
+        if (sensorData.oneDaysTrackerMotion.processedtrackerMotions.isEmpty()) {
             return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
         //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS, post partner-filtering.  trying to avoid case where partner filter lets a couple through even though the user is not there.
-        if (filteredMotionData.size() < MIN_PARTNER_FILTERED_MOTION_COUNT) {
+        if (sensorData.oneDaysTrackerMotion.processedtrackerMotions.size() < MIN_PARTNER_FILTERED_MOTION_COUNT) {
             return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
         //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT OF PARTNER-FILTERED DATA IS ABOVE 3 HOURS
-        if(filteredMotionData.get(filteredMotionData.size() - 1).timestamp - filteredMotionData.get(0).timestamp < MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
+        if(sensorData.oneDaysTrackerMotion.processedtrackerMotions.get(sensorData.oneDaysTrackerMotion.processedtrackerMotions.size() - 1).timestamp - sensorData.oneDaysTrackerMotion.processedtrackerMotions.get(0).timestamp < MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
             return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 

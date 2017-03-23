@@ -62,8 +62,9 @@ public class VotingAlgorithm implements TimelineAlgorithm {
             }
 
             final boolean isPrimarySleepPeriod = true;
-            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(accountId,
-                    isPrimarySleepPeriod,
+            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(
+                    accountId,
+                    sleepPeriod,
                     AlgorithmType.VOTING,
                     votingSleepEventsOptional.get().sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),

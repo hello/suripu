@@ -449,13 +449,12 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Event> sleepOptional = Optional.fromNullable(eventMap.get(Event.Type.SLEEP));
             final Optional<Event> wakeOptional = Optional.fromNullable(eventMap.get(Event.Type.WAKE_UP));
             final Optional<Event> outOfBedOptional = Optional.fromNullable(eventMap.get(Event.Type.OUT_OF_BED));
-
             final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inbedOptional,sleepOptional,wakeOptional,outOfBedOptional);
-            final boolean isProbableSleepPeriod = TimelineSafeguards.isProbableSleepPeriod(accountId, sleepPeriod, oneDaysSensorData);
+            final boolean daySleeper =  oneDaysSensorData.userBioInfo.primarySleepPeriod != SleepPeriod.Period.NIGHT;
 
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(accountId,
-                    isProbableSleepPeriod,
+                    sleepPeriod,
                     AlgorithmType.NEURAL_NET_FOUR_EVENT,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
@@ -465,7 +464,6 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {
-                
                 log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT,events);
                 return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET_FOUR_EVENT,events));
 

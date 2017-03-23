@@ -7,6 +7,7 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SensorReading;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -17,6 +18,8 @@ import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import junit.framework.TestCase;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,6 +39,7 @@ public class InstrumentedTimelineSafeguardTest {
     final private ImmutableList<Event> emptyEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
     final long accountId = 0L;
     final AlgorithmType algType = AlgorithmType.NONE;
+    final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(new DateTime(t0, DateTimeZone.UTC));
     final ImmutableList<TrackerMotion> trackerMotions = ImmutableList.copyOf(CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv"));
 
     private Event getEvent(Event.Type type, final long time) {
@@ -89,11 +93,11 @@ public class InstrumentedTimelineSafeguardTest {
 
         ImmutableList<Sample> light = ImmutableList.copyOf(getContiguousLightSensorData(t0, 8 * hourInMillis));
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, true,algType, mainEventsSucceed, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true, algType, mainEventsDurationFail, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, sleepPeriod, algType, mainEventsSucceed, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, sleepPeriod, algType, mainEventsDurationFail, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
 
         //no motion case
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true, algType, mainEventsDurationFail, emptyEvents, light, ImmutableList.copyOf(Collections.EMPTY_LIST)).equals(TimelineError.NO_MOTION_DURING_SLEEP));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, sleepPeriod, algType, mainEventsDurationFail, emptyEvents, light, ImmutableList.copyOf(Collections.EMPTY_LIST)).equals(TimelineError.NO_MOTION_DURING_SLEEP));
 
     }
 
@@ -205,8 +209,8 @@ public class InstrumentedTimelineSafeguardTest {
         final int res2 = safeguards.getMaximumDataGapInMinutes(lightWithOverOneHourGap);
         TestCase.assertEquals(res1, 30);
         TestCase.assertEquals(res2, 120);
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId,true, algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true,algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, sleepPeriod,algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId,sleepPeriod,algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
 
     }
 
@@ -388,22 +392,15 @@ public class InstrumentedTimelineSafeguardTest {
     public void testMaxMotionGap(){
         final long sleep1 = 1477764420000L;
         final long wake1 = 1477805040000L;
-        final long sleep2 = 1477757160000L;
+        final long sleep2 = 1477757060000L;
         final long wake2 = 1477805040000L;
-        final long sleep3 = 1477748960000L;
-        final long wake3 = 1477805040000L;
 
         final int motionGap1 = TimelineSafeguards.getMaximumMotionGapInMinutes(trackerMotions, sleep1,wake1);
-        assert (motionGap1 < TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_PRIMARY_PERIOD);
         assert (motionGap1 < TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
 
         final int motionGap2 = TimelineSafeguards.getMaximumMotionGapInMinutes(trackerMotions, sleep2,wake2);
-        assert (motionGap2 < TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_PRIMARY_PERIOD);
         assert (motionGap2 > TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
 
-        final int motionGap3 = TimelineSafeguards.getMaximumMotionGapInMinutes(trackerMotions, sleep3,wake3);
-        assert (motionGap3 > TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_PRIMARY_PERIOD);
-        assert (motionGap3 > TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
     }
 
 
