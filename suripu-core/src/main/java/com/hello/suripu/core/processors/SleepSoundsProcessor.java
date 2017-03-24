@@ -5,7 +5,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.core.db.FileInfoDAO;
-import com.hello.suripu.core.db.FileInfoSenseOneDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.FileInfo;
@@ -34,8 +33,8 @@ public class SleepSoundsProcessor implements SoundMap {
         this.fileManifestDAO = fileManifestDAO;
     }
 
-    public static SleepSoundsProcessor create(final FileInfoSenseOneDAO fileInfoSenseOneDAO, final FileManifestDAO fileManifestDAO) {
-        return new SleepSoundsProcessor(fileInfoSenseOneDAO, fileManifestDAO);
+    public static SleepSoundsProcessor create(final FileInfoDAO fileInfoDAO, final FileManifestDAO fileManifestDAO) {
+        return new SleepSoundsProcessor(fileInfoDAO, fileManifestDAO);
     }
 
 
