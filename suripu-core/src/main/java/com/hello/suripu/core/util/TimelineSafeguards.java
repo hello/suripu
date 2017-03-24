@@ -35,7 +35,7 @@ public class TimelineSafeguards {
     public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 120; //90%
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 2;
 
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={.85, .95, .03};  //.
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={.7, .7, .03};  //.
     private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={.2, .45, .05};
 
     private static final float[] LOG_REG_COEFS = {6.33084651f, -2.94445174e-03f,   3.95446643e-04f,  -3.94746094e-02f,
