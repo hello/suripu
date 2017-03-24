@@ -1,17 +1,10 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
-import com.hello.suripu.core.models.DeviceAccountPair;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.Transaction;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 public interface DeviceDAO extends Transactional<DeviceDAO>, DeviceReadDAO {
@@ -42,5 +35,7 @@ public interface DeviceDAO extends Transactional<DeviceDAO>, DeviceReadDAO {
 
     @SqlUpdate("DELETE FROM account_device_map WHERE device_id = :device_id and account_id = :account_id;")
     Integer deleteSensePairing(@Bind("device_id") final String senseId, @Bind("account_id") Long accountId);
-
+    
+    @SqlUpdate("UPDATE account_tracker_map set account_id=:account_id WHERE device_id= :device_id")
+    Integer updateAccountPairedForPill(@Bind("account_id") Long accountId, @Bind("device_id") String pillId);
 }
