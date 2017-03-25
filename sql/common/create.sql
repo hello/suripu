@@ -625,7 +625,7 @@ CREATE TABLE sense_file_info_one_five (
     file_info_id INTEGER NOT NULL REFERENCES file_info_one_five (id)
 );
 
-CREATE INDEX sense_id_one_five_idx on sense_file_info_onve_five(sense_id);
+CREATE INDEX sense_id_one_five_idx on sense_file_info_one_five(sense_id);
 
 GRANT ALL PRIVILEGES ON file_info_one_five TO ingress_user;
 GRANT ALL PRIVILEGES ON sense_file_info_one_five TO ingress_user;
