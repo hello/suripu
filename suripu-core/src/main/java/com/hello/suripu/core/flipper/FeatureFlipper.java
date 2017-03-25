@@ -21,6 +21,7 @@ public class FeatureFlipper {
     public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
     public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
 
+    public final static String DAY_SLEEPER = "day_sleeper";
     public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
     public final static String DECAYING_SMART_ALARM_THRESHOLD = "decaying-smart-alarm_threshold";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
@@ -124,6 +125,7 @@ public class FeatureFlipper {
 
     public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
+    public final static String TIMELINE_SLEEP_PERIOD = "timeline_sleep_period";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String TIMELINE_LOCKDOWN = "timeline_lockdown";
 

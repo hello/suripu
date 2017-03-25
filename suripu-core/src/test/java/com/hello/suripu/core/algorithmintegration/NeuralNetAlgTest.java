@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
@@ -79,7 +80,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, pillData, emptyFeedback, date, startTime, endTime, currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData, new TimelineLog(0L, 0L), 0L, false,Sets.<String>newHashSet());
+        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData, SleepPeriod.night(date), new TimelineLog(0L, 0L), 0L, false,Sets.<String>newHashSet());
 
         TestCase.assertTrue(resultOptional.isPresent());
 
@@ -103,7 +104,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false,Sets.<String>newHashSet());
+        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,SleepPeriod.night(date),new TimelineLog(0L,0L),0L,false,Sets.<String>newHashSet());
 
         TestCase.assertTrue(resultOptional.isPresent());
 
@@ -127,7 +128,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         final ImmutableList<TimelineFeedback> emptyFeedback = ImmutableList.copyOf(Lists.<TimelineFeedback>newArrayList());
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,new TimelineLog(0L,0L),0L,false, Sets.<String>newHashSet());
+        final Optional<TimelineAlgorithmResult> resultOptional =  getTimelinePrediction(oneDaysSensorData,SleepPeriod.night(date),new TimelineLog(0L,0L),0L,false, Sets.<String>newHashSet());
 
         TestCase.assertTrue(resultOptional.isPresent());
 
@@ -153,7 +154,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,pillData,emptyFeedback,date,startTime,endTime,currentTime, DateTimeConstants.MILLIS_PER_HOUR);
 
         final TimelineLog log = new TimelineLog(0L,0L);
-        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,log,0L,false, Sets.<String>newHashSet());
+        final Optional<TimelineAlgorithmResult> resultOptional = getTimelinePrediction(oneDaysSensorData,SleepPeriod.night(date),log,0L,false, Sets.<String>newHashSet());
 
         TestCase.assertFalse(resultOptional.isPresent());
 

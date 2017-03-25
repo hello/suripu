@@ -24,6 +24,9 @@ public class Timeline {
     @JsonProperty("date")
     public final String dateNight;
 
+    @JsonProperty("sleep_periods")
+    public final List<String> sleepPeriods;
+
     @JsonProperty("events")
     public final List<TimelineEvent> events;
 
@@ -35,25 +38,27 @@ public class Timeline {
                     final ScoreCondition scoreCondition,
                     final String message,
                     final String dateNight,
+                    final List<String> sleepPeriods,
                     final List<TimelineEvent> events,
                     final List<SleepMetrics> metrics) {
         this.score = score;
         this.scoreCondition = scoreCondition;
         this.message = message;
         this.dateNight = dateNight;
+        this.sleepPeriods = sleepPeriods;
         this.events = events;
         this.metrics = metrics;
     }
 
     public static Timeline create() {
         return new Timeline(Optional.<Integer>absent(), ScoreCondition.UNAVAILABLE,
-                null, null,
+                null, null, Collections.EMPTY_LIST,
                 Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
 
     public static Timeline createEmpty(final DateTime date, final String message) {
         return new Timeline(Optional.<Integer>absent(), ScoreCondition.UNAVAILABLE,
-                message, DateTimeUtil.dateToYmdString(date),
+                message, DateTimeUtil.dateToYmdString(date), Collections.EMPTY_LIST,
                 Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
 
@@ -69,6 +74,7 @@ public class Timeline {
                 ScoreCondition.fromScore(timelineV1.score, dataCompleteness),
                 timelineV1.message,
                 timelineV1.date,
+                timelineV1.sleepPeriods,
                 TimelineEvent.fromV1(timelineV1.events),
                 SleepMetrics.fromV1(timelineV1)
         );

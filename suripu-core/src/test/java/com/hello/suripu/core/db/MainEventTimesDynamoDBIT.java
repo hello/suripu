@@ -134,7 +134,7 @@ public class MainEventTimesDynamoDBIT {
         DateTime targetDate = inBedDateTime.withTimeAtStartOfDay();
         final int offset = -28800000;
 
-        final List<MainEventTimes> sleepPeriodMainEventsEmptyList = mainEventTimesDynamoDB.getEventTimes(accountId,targetDate);
+        final List<MainEventTimes> sleepPeriodMainEventsEmptyList = mainEventTimesDynamoDB.getEventTimesForDate(accountId,targetDate);
         assert(sleepPeriodMainEventsEmptyList.isEmpty());
 
         final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
@@ -166,7 +166,7 @@ public class MainEventTimesDynamoDBIT {
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNextMorning);
 
 
-        final List<MainEventTimes> sleepPeriodMainEventsList = mainEventTimesDynamoDB.getEventTimes(accountId,targetDate);
+        final List<MainEventTimes> sleepPeriodMainEventsList = mainEventTimesDynamoDB.getEventTimesForDate(accountId,targetDate);
         assert(sleepPeriodMainEventsList.size() == 2);
 
         final MainEventTimes updatedNightEvents = sleepPeriodMainEventsList.get(1);
