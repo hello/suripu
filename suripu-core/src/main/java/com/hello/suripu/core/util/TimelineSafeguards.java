@@ -406,7 +406,7 @@ public class TimelineSafeguards {
             validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
         }
 
-        final ImmutableList<TrackerMotion> processedTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA)).processedtrackerMotions);
+        final ImmutableList<TrackerMotion> processedTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA),false).processedtrackerMotions);
 
 
         //features: inbed period broken in to 4 2-hour windows. max inter motion gap, motion count, avg light for last 15 minutes and avg sound of last 15 minutes calculated

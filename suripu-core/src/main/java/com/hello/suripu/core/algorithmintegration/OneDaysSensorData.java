@@ -82,7 +82,7 @@ public class OneDaysSensorData {
 
 
     //remove motion data affiliated with previous period +
-    public OneDaysSensorData getForSleepPeriod(final Optional<Long> prevOutOfBedTimeOptional, final SleepPeriod sleepPeriod){
+    public OneDaysSensorData getForSleepPeriod(final Optional<Long> prevOutOfBedTimeOptional, final SleepPeriod sleepPeriod, final boolean useOutlierFilter){
         final int uncertaintyWindow = DateTimeConstants.MILLIS_PER_HOUR * 2; //ignore motion for 2 hour after OOB;
         final DateTime newEndTimeLocalUTC;
         //check if sleep period end time is after the current time
@@ -100,8 +100,8 @@ public class OneDaysSensorData {
         }
 
         final AllSensorSampleList allSensorSampleListCurrentPeriod = this.allSensorSampleList.getSensorDataForTimeWindow(prevOutOfBedTime, newEndTimeLocalUTC.getMillis());
-        final OneDaysTrackerMotion oneDaysTrackerMotionCurrentPeriod = this.oneDaysTrackerMotion.getMotionsForTimeWindow(prevOutOfBedTime, newEndTimeLocalUTC.getMillis());
-        final OneDaysTrackerMotion oneDaysPartnerMotionCurrentPeriod = this.oneDaysPartnerMotion.getMotionsForTimeWindow(prevOutOfBedTime, newEndTimeLocalUTC.getMillis());
+        final OneDaysTrackerMotion oneDaysTrackerMotionCurrentPeriod = this.oneDaysTrackerMotion.getMotionsForTimeWindow(prevOutOfBedTime, newEndTimeLocalUTC.getMillis(), useOutlierFilter);
+        final OneDaysTrackerMotion oneDaysPartnerMotionCurrentPeriod = this.oneDaysPartnerMotion.getMotionsForTimeWindow(prevOutOfBedTime, newEndTimeLocalUTC.getMillis(),useOutlierFilter);
 
         return new OneDaysSensorData(allSensorSampleListCurrentPeriod, oneDaysTrackerMotionCurrentPeriod, oneDaysPartnerMotionCurrentPeriod, this.feedbackList,
                 this.date, sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, this.timezoneOffsetMillis), newEndTimeLocalUTC, this.currentTimeUTC, this.timezoneOffsetMillis, this.userBioInfo);

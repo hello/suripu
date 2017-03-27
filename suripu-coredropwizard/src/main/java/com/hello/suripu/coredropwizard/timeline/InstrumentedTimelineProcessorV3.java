@@ -134,7 +134,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
     public final static int TIMEZONE_HISTORY_LIMIT = 5;
     final static long OUTLIER_GUARD_DURATION = (long) (DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
     final static long DOMINANT_GROUP_DURATION = (long) (DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
-
+    final static long DOMINANT_GROUP_DURATION_ALL_PERIODS = (long) (DateTimeConstants.MILLIS_PER_HOUR * 36.0); //num hours in a motion group to be considered the dominant one
 
     static public InstrumentedTimelineProcessorV3 createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
                                                                         final DeviceReadDAO deviceDAO,
@@ -518,7 +518,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             } else {
                 //targetDateSleepPeriodsMainEventsMap will contain the target SleepPeriod at this point
                 final MainEventTimes generatedTargetPeriodMainEventTimes = targetSleepDay.getSleepPeriod(targetSleepPeriod.period).mainEventTimes;
-                final OneDaysSensorData targetSleepPeriodSensorData = fullDaySensorData.getForSleepPeriod(prevOutOfBedTimeOptional, targetSleepPeriod);
+                final OneDaysSensorData targetSleepPeriodSensorData = fullDaySensorData.getForSleepPeriod(prevOutOfBedTimeOptional, targetSleepPeriod, hasOutlierFilterEnabled(accountId));
                 targetSleepPeriodResults = populateSingleSleepPeriodTimeline(accountId, targetSleepPeriodSensorData, timeZoneOffsetMap, generatedTargetPeriodMainEventTimes, new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), false);
             }
 
@@ -535,7 +535,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         final DateTime endTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, timeZoneOffsetMap.getOffsetWithDefaultAsZero(targetDate.getMillis()));
         final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
 
-        final OneDaysSensorData sensorDataSleepPeriod = sensorData.getForSleepPeriod(prevOutOfBedTimeOptional, sleepPeriod);
+        final OneDaysSensorData sensorDataSleepPeriod = sensorData.getForSleepPeriod(prevOutOfBedTimeOptional, sleepPeriod, hasOutlierFilterEnabled(accountId));
 
         //chain of fail-overs of algorithm (i.e)
         final LinkedList<AlgorithmType> algorithmChain = Lists.newLinkedList();
@@ -565,6 +565,11 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod, sleepPeriod, minMotionCountThreshold);
+        System.out.print(sleepPeriod.period.shortName());
+        System.out.print(" ");
+        System.out.print(discardReason);
+        System.out.print(" ");
+
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason, accountId, targetDate.toDate());
@@ -758,9 +763,10 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
 
         //removes motion events less than 2 seconds and < 300 val. groups the remaining motions into groups separated by 2 hours. If largest motion groups is greater than 6 hours hours, drop all motions afterward this motion group.
+        //unless we are evaluating a full day. Then we dont want to omit tracker motion data. will refilter when partioning by sleepPeriod. define dominant group as 36 hours.
         if (this.hasOutlierFilterEnabled(accountId)) {
-            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
-            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION_ALL_PERIODS);
+            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION_ALL_PERIODS);
         }
 
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
