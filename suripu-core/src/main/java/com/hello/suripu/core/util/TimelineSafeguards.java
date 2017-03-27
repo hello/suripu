@@ -32,10 +32,11 @@ public class TimelineSafeguards {
     private static final int MAXIMUM_ALLOWABLE_DATAGAP = 60; //one hour
 
     //sleep period specific thresholds
-    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 120; //90%
+    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 120;
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 2;
+    public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 10;
 
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={.7, .7, .03};  //.
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={.7, .7, .03};
     private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={.2, .45, .05};
 
     private static final float[] LOG_REG_COEFS = {6.33084651f, -2.94445174e-03f,   3.95446643e-04f,  -3.94746094e-02f,
@@ -325,12 +326,15 @@ public class TimelineSafeguards {
 
 
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public TimelineError checkIfValidTimeline (final long accountId,final SleepPeriod sleepPeriod, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> processedTrackerMotions) {
+    public TimelineError checkIfValidTimeline (final long accountId,final boolean isPrimaryPeriod, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> processedTrackerMotions) {
 
-        final int maxAllowableMotionGap, minMotionCountThreshold;
-        maxAllowableMotionGap= MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD ;
-        minMotionCountThreshold = MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD;
+        final int minMotionCountThreshold;
 
+        if (isPrimaryPeriod) {
+            minMotionCountThreshold = MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD;
+        } else {
+            minMotionCountThreshold = MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD;
+        }
 
         //make sure events occur in proper order
         if (!checkEventOrdering(accountId, algorithmType, sleepEvents, extraEvents)) {
@@ -367,12 +371,14 @@ public class TimelineSafeguards {
                 LOGGER.warn("action=invalidating-timeline reason=insufficient-motion-during-sleeptime account_id={}", accountId);
                 return TimelineError.NO_MOTION_DURING_SLEEP;
             }
-            if (sleepPeriod.period != SleepPeriod.Period.NIGHT){
-            final int maxMotionGapInMinutes = getMaximumMotionGapInMinutes(processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
-            if (maxMotionGapInMinutes > maxAllowableMotionGap) {
-                LOGGER.warn("max motion gap {} minutes is greaten than limit {} minutes -- invalidating timeline", maxMotionGapInMinutes, maxAllowableMotionGap);
-                return TimelineError.MOTION_GAP_TOO_LARGE;
-                }
+
+            //if not primary period, require motion gap check: no motion in two hours during predicted sleep is not valid
+            if (!isPrimaryPeriod){
+                final int maxMotionGapInMinutes = getMaximumMotionGapInMinutes(processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
+                if (maxMotionGapInMinutes > MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD) {
+                    LOGGER.warn("max motion gap {} minutes is greaten than limit {} minutes -- invalidating timeline", maxMotionGapInMinutes, MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
+                    return TimelineError.MOTION_GAP_TOO_LARGE;
+                    }
             }
         }
 
@@ -381,17 +387,8 @@ public class TimelineSafeguards {
     }
 
     public static boolean isProbableNight(final Long accountId, final boolean daySleeper, final SleepPeriod sleepPeriod, final OneDaysSensorData oneDaysSensorData){
-        //if inbed period not over - default to alternate period thresholds
-        //high prob => primary period thresholds
-        //low prob => alternative period thresholds
-        final double[] validNightProbabilityThreshold;
-
-        if (daySleeper){
-            validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER;
-
-        } else{
-            validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
-        }
+        // thresholds based on estimated prevalence of day sleepers
+        double[] validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER;
 
         if(!oneDaysSensorData.allSensorSampleList.getAvailableSensors().contains(Sensor.LIGHT) || !oneDaysSensorData.allSensorSampleList.getAvailableSensors().contains(Sensor.SOUND_PEAK_ENERGY)){
             return false;
@@ -400,18 +397,23 @@ public class TimelineSafeguards {
         final List<Sample> lightDataPeriod = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT) ;
         final List<Sample> soundDataPeriod = oneDaysSensorData.allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE) ;
 
+        //if inbed period not over or user is not a night sleeper, default to day sleeper
         if(new DateTime(lightDataPeriod.get(lightDataPeriod.size() -1).dateTime + lightDataPeriod.get(lightDataPeriod.size() -1).offsetMillis, DateTimeZone.UTC).isBefore(sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, 0))){
-            return false;
+            validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
+        }
+
+        if (!daySleeper){
+            validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
         }
 
         final ImmutableList<TrackerMotion> processedTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA)).processedtrackerMotions);
 
 
-        final List<Integer> maxGaps = Lists.newArrayListWithExpectedSize(4);
-        final List<Integer> motionCounts = Lists.newArrayListWithExpectedSize(4);
-        final List<Double> avgEndLight= Lists.newArrayListWithExpectedSize(4);
-        final List<Double> avgEndSound= Lists.newArrayListWithExpectedSize(4);
-
+        //features: inbed period broken in to 4 2-hour windows. max inter motion gap, motion count, avg light for last 15 minutes and avg sound of last 15 minutes calculated
+        final List<Integer> maxGaps = Lists.newArrayListWithExpectedSize(5);
+        final List<Integer> motionCounts = Lists.newArrayListWithExpectedSize(5);
+        final List<Double> avgEndLight= Lists.newArrayListWithExpectedSize(5);
+        final List<Double> avgEndSound= Lists.newArrayListWithExpectedSize(5);
 
         final DateTime sleepPeriodStartTime = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis);
         for (int i = 0; i < 5; i ++){
@@ -419,7 +421,6 @@ public class TimelineSafeguards {
             int j = FEATURE_WINDOW_TIME_OFFSETS[i][0][1];
             final DateTime startTimeSensorWindow =sleepPeriodStartTime.plusHours(FEATURE_WINDOW_TIME_OFFSETS[i][1][0]).plusMinutes(FEATURE_WINDOW_TIME_OFFSETS[i][1][1]);
             final DateTime endTimeWindow =         sleepPeriodStartTime.plusHours(FEATURE_WINDOW_TIME_OFFSETS[i][2][0]).plusMinutes(FEATURE_WINDOW_TIME_OFFSETS[i][2][1]);
-
             final int maxMotionGapForWindow = getMaximumMotionGapInMinutes(processedTrackerMotionsPeriod, startTimeMotionWindow.getMillis(), endTimeWindow.getMillis());
             final int motionCountForWindow = getMotionCount(processedTrackerMotionsPeriod, startTimeMotionWindow.getMillis(), endTimeWindow.getMillis());
             final double avgLightEndOfWindow = getSensorAvg(Sensor.LIGHT, lightDataPeriod, startTimeSensorWindow.getMillis(), endTimeWindow.getMillis());
@@ -428,8 +429,8 @@ public class TimelineSafeguards {
             motionCounts.add(motionCountForWindow);
             avgEndLight.add(avgLightEndOfWindow);
             avgEndSound.add(avgSoundEndOfWindow);
-
         }
+
         final double prob = getProbability(sleepPeriod.period, maxGaps, motionCounts, avgEndLight, avgEndSound);
         if (prob > validNightProbabilityThreshold[sleepPeriod.period.getValue()]) {
             return true;

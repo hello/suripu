@@ -76,7 +76,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
                     accountId,
-                    sleepPeriod,
+                    true,
                     AlgorithmType.HMM,
                     results.get().mainEvents,
                     ImmutableList.copyOf(results.get().allTheOtherWakesAndSleeps.asList()),
