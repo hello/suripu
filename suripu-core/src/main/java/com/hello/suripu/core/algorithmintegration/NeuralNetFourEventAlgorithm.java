@@ -470,7 +470,6 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             }
 
             //THERE WAS AN ERROR
-            System.out.print(error);
             log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT,error);
 
 

@@ -343,7 +343,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         final TimelineError discardReason = isValidNight(accountId, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
-            System.out.print(discardReason);
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
         }
 

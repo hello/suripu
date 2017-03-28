@@ -66,7 +66,6 @@ import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.InBedSearcher;
 import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepScoreUtils;
@@ -234,71 +233,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         return TimelineLog.DEFAULT_TEST_GROUP;
-    }
-
-    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId, final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult, final TimeZoneOffsetMap timeZoneOffsetMap) {
-
-        //return original if not enabled
-        if (!this.hasInBedSearchEnabled(accountId)) {
-            return origResult;
-        }
-
-        //doesn't play nicely with extra events
-        if (this.hasExtraEventsEnabled(accountId)) {
-            return origResult;
-        }
-
-        //only works on ONLINE_HMM
-        if (!origResult.algorithmType.equals(AlgorithmType.ONLINE_HMM)) {
-            return origResult;
-        }
-
-        //make sure events I care about are actually present
-        if (!origResult.mainEvents.containsKey(Event.Type.SLEEP)) {
-            return origResult;
-        }
-
-        if (!origResult.mainEvents.containsKey(Event.Type.IN_BED)) {
-            return origResult;
-        }
-
-        final DateTime startTimeUTC = startTimeLocalUTC.minusMillis(sensorData.timezoneOffsetMillis);
-        final DateTime endTimeUTC = endTimeLocalUtc.minusMillis(sensorData.timezoneOffsetMillis);
-
-        final Event sleepEvent = origResult.mainEvents.get(Event.Type.SLEEP);
-
-        final Event inBedEvent = InBedSearcher.getInBedPlausiblyBeforeSleep(
-                startTimeUTC, endTimeUTC,
-                sleepEvent,
-                origResult.mainEvents.get(Event.Type.IN_BED),
-                15, //15 minutes to fall asleep minimum
-                sensorData.oneDaysTrackerMotion.processedtrackerMotions);
-
-        //replace original in-bed event with new event
-        final List<Event> origEvents = origResult.mainEvents.values().asList();
-
-        final List<Event> newEvents = Lists.newArrayList();
-        newEvents.add(timeZoneOffsetMap.getEventWithCorrectOffset(inBedEvent));
-
-        for (final Event event : origEvents) {
-            if (event.getType().equals(Event.Type.IN_BED)) {
-                continue;
-            }
-
-            newEvents.add(timeZoneOffsetMap.getEventWithCorrectOffset(event));
-        }
-
-        //sanity check
-        if (sleepEvent.getStartTimestamp() < inBedEvent.getStartTimestamp()) {
-            return origResult;
-        }
-
-        if (startTimeUTC.getMillis() > inBedEvent.getStartTimestamp()) {
-            return origResult;
-        }
-
-        return new TimelineAlgorithmResult(origResult.algorithmType, newEvents, origResult.extraEvents.asList());
-
     }
 
     public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
@@ -567,11 +501,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod, sleepPeriod, minMotionCountThreshold);
-        System.out.print(sleepPeriod.period.shortName());
-        System.out.print(" ");
-        System.out.print(discardReason);
-        System.out.print(" ");
-
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason, accountId, targetDate.toDate());
