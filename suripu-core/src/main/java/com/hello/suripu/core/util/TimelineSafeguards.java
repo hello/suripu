@@ -36,6 +36,7 @@ public class TimelineSafeguards {
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 2;
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 10;
 
+    private static final int NUM_WINDOWS = 5;
     private static final double[] VALID_NIGHT_PROB_THRESHOLD ={.7, .7, .03};
     private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={.2, .45, .05};
 
@@ -409,14 +410,14 @@ public class TimelineSafeguards {
         final ImmutableList<TrackerMotion> processedTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA),false).processedtrackerMotions);
 
 
-        //features: inbed period broken in to 4 2-hour windows. max inter motion gap, motion count, avg light for last 15 minutes and avg sound of last 15 minutes calculated
-        final List<Integer> maxGaps = Lists.newArrayListWithExpectedSize(5);
-        final List<Integer> motionCounts = Lists.newArrayListWithExpectedSize(5);
-        final List<Double> avgEndLight= Lists.newArrayListWithExpectedSize(5);
-        final List<Double> avgEndSound= Lists.newArrayListWithExpectedSize(5);
+        //features: inbed period broken in to 4 2-hour windows (plus following window). max inter motion gap, motion count, avg light for last 15 minutes and avg sound of last 15 minutes calculated
+        final List<Integer> maxGaps = Lists.newArrayListWithExpectedSize(NUM_WINDOWS);
+        final List<Integer> motionCounts = Lists.newArrayListWithExpectedSize(NUM_WINDOWS);
+        final List<Double> avgEndLight= Lists.newArrayListWithExpectedSize(NUM_WINDOWS);
+        final List<Double> avgEndSound= Lists.newArrayListWithExpectedSize(NUM_WINDOWS);
 
         final DateTime sleepPeriodStartTime = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis);
-        for (int i = 0; i < 5; i ++){
+        for (int i = 0; i < NUM_WINDOWS; i ++){
             final DateTime startTimeMotionWindow = sleepPeriodStartTime.plusHours(FEATURE_WINDOW_TIME_OFFSETS[i][0][0]).plusMinutes(FEATURE_WINDOW_TIME_OFFSETS[i][0][1]);
             int j = FEATURE_WINDOW_TIME_OFFSETS[i][0][1];
             final DateTime startTimeSensorWindow =sleepPeriodStartTime.plusHours(FEATURE_WINDOW_TIME_OFFSETS[i][1][0]).plusMinutes(FEATURE_WINDOW_TIME_OFFSETS[i][1][1]);

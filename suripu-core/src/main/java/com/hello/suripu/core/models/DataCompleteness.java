@@ -1,7 +1,5 @@
 package com.hello.suripu.core.models;
 
-import java.util.List;
-
 /**
  * Created by jakepiccolo on 12/14/15.
  */
@@ -17,18 +15,4 @@ public enum DataCompleteness {
     public int getValue() {
         return this.value;
     }
-
-    public static DataCompleteness getDataCompletenessForAllSleepPeriods(final List<DataCompleteness> dataCompletenessList, final int numSleepPeriods){
-        DataCompleteness overallDataCompleteness = NO_DATA;
-        for (final DataCompleteness dataCompleteness : dataCompletenessList){
-            if(dataCompleteness.getValue() > overallDataCompleteness.getValue()){
-                overallDataCompleteness = dataCompleteness;
-            }
-        }
-        if (numSleepPeriods < 3 && overallDataCompleteness == ENOUGH_DATA){
-            overallDataCompleteness = NOT_ENOUGH_DATA;
-        }
-        return overallDataCompleteness;
-    }
-
 }

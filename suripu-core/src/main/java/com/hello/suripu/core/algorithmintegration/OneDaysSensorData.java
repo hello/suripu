@@ -14,6 +14,9 @@ import org.joda.time.DateTimeConstants;
  * Created by benjo on 8/20/15.
  */
 public class OneDaysSensorData {
+    private static final int OOB_UNCERTAINTY_WINDOW= DateTimeConstants.MILLIS_PER_HOUR * 2; //ignore motion for 2 hour after OOB;
+
+
     public final AllSensorSampleList allSensorSampleList;
     public final OneDaysTrackerMotion oneDaysTrackerMotion;
     public final OneDaysTrackerMotion oneDaysPartnerMotion;
@@ -83,7 +86,6 @@ public class OneDaysSensorData {
 
     //remove motion data affiliated with previous period +
     public OneDaysSensorData getForSleepPeriod(final Optional<Long> prevOutOfBedTimeOptional, final SleepPeriod sleepPeriod, final boolean useOutlierFilter){
-        final int uncertaintyWindow = DateTimeConstants.MILLIS_PER_HOUR * 2; //ignore motion for 2 hour after OOB;
         final DateTime newEndTimeLocalUTC;
         //check if sleep period end time is after the current time
         if (this.currentTimeUTC.isAfter(sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, this.timezoneOffsetMillis))){
@@ -94,7 +96,7 @@ public class OneDaysSensorData {
 
         final Long prevOutOfBedTime;
         if(prevOutOfBedTimeOptional.isPresent()){
-            prevOutOfBedTime = prevOutOfBedTimeOptional.get() + uncertaintyWindow;
+            prevOutOfBedTime = prevOutOfBedTimeOptional.get() + OOB_UNCERTAINTY_WINDOW;
         } else {
             prevOutOfBedTime = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, this.timezoneOffsetMillis).getMillis();
         }

@@ -22,6 +22,7 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.DataCompleteness;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -83,6 +84,8 @@ public class TimelineUtils {
     private static final int DEFAULT_QUIET_END_HOUR = 7; // 7am
     private static final int SOUND_WINDOW_SIZE_MINS = 30; // smoothing windows, binning
     private static final int MAX_SOUND_EVENT_SIZE = 5; // max sound event allowed in timeline
+
+    private static final int NUM_PERIODS_IN_DAY= 3;
 
     private static final Sensor[] SLEEP_TIME_AVERAGE_SENSORS = {
             Sensor.TEMPERATURE,
@@ -1498,4 +1501,19 @@ public class TimelineUtils {
 
         return ImmutableList.copyOf(filteredMotions);
     }
+
+    public static DataCompleteness getDataCompletenessForAllSleepPeriods(final List<DataCompleteness> dataCompletenessList, final int numSleepPeriods){
+        DataCompleteness overallDataCompleteness = DataCompleteness.NO_DATA;
+        for (final DataCompleteness dataCompleteness : dataCompletenessList){
+            if(dataCompleteness.getValue() > overallDataCompleteness.getValue()){
+                overallDataCompleteness = dataCompleteness;
+            }
+        }
+        if (numSleepPeriods < NUM_PERIODS_IN_DAY && overallDataCompleteness == DataCompleteness.ENOUGH_DATA){
+            overallDataCompleteness = DataCompleteness.NOT_ENOUGH_DATA;
+        }
+        return overallDataCompleteness;
+    }
+
+
 }

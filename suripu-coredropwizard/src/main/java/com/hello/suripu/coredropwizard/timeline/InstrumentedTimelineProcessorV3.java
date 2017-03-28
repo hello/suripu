@@ -136,6 +136,8 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
     final static long DOMINANT_GROUP_DURATION = (long) (DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
     final static long DOMINANT_GROUP_DURATION_ALL_PERIODS = (long) (DateTimeConstants.MILLIS_PER_HOUR * 36.0); //num hours in a motion group to be considered the dominant one
 
+    private final static int MIN_NUM_EVENTS = 4;
+
     static public InstrumentedTimelineProcessorV3 createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
                                                                         final DeviceReadDAO deviceDAO,
                                                                         final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
@@ -466,14 +468,14 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         //if timeline events > 4, we have a valid timeline.
-        if (allSleepPeriodsEvents.size() > 4) {
+        if (allSleepPeriodsEvents.size() > MIN_NUM_EVENTS) {
             final Timeline timeline = Timeline.create(sleepScore.value, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), sleepPeriods, allSleepPeriodsEvents, timelineInsight,sleepStats);
             final TimelineResult timelineResult = TimelineResult.create(Lists.newArrayList(timeline), new ArrayList(timelineLogs));
             final AllPeriodTimelineResults allPeriodTimelineResults = AllPeriodTimelineResults.create(timelineResult, sleepScore, sleepStats, true);
             return allPeriodTimelineResults;
         }
 
-        final DataCompleteness overallDataCompleteness = DataCompleteness.getDataCompletenessForAllSleepPeriods(dataCompletenessList, numSleepPeriods);
+        final DataCompleteness overallDataCompleteness = timelineUtils.getDataCompletenessForAllSleepPeriods(dataCompletenessList, numSleepPeriods);
 
         final String message;
         if (overallDataCompleteness == DataCompleteness.NO_DATA){
