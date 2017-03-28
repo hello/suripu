@@ -605,6 +605,12 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
                 return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.NOT_ENOUGH_DATA, true);
 
+            case IMPROBABLE_SLEEP_PERIOD:
+                log.addMessage(discardReason);
+                //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
+                mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
+                return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.ENOUGH_DATA, true);
+
             case PARTNER_FILTER_REJECTED_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
@@ -1095,7 +1101,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         //CHECK IF PROBABLE SLEEP BASED ON SENSOR DATA
         final boolean daySleeper = sensorData.userBioInfo.primarySleepPeriod != SleepPeriod.Period.NIGHT;
         if (!TimelineSafeguards.isProbableNight(accountId, daySleeper, sleepPeriod, sensorData)){
-            return TimelineError.LOW_AMP_DATA;
+            return TimelineError.IMPROBABLE_SLEEP_PERIOD;
 
         }
 

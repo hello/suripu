@@ -66,6 +66,7 @@ public class TimelineLog {
         invalidNightErrorMap.put(TimelineError.NO_MOTION_DURING_SLEEP, ErrorType.NO_MOTION_DURING_SLEEP);
         invalidNightErrorMap.put(TimelineError.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD, ErrorType.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD);
         invalidNightErrorMap.put(TimelineError.MOTION_GAP_TOO_LARGE, ErrorType.MOTION_GAP_TOO_LARGE);
+        invalidNightErrorMap.put(TimelineError.IMPROBABLE_SLEEP_PERIOD, ErrorType.IMPROBABLE_SLEEP_PERIOD);
 
 
 
