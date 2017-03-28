@@ -37,27 +37,34 @@ public class SleepDay {
         boolean afternoonValid = false;
         boolean nightValid = false;
 
+        DataCompleteness morningDataCompleteness = DataCompleteness.NO_DATA;
+        DataCompleteness afternoonDataCompleteness = DataCompleteness.NO_DATA;
+        DataCompleteness nightDataCompleteness = DataCompleteness.NO_DATA;
+
         for(final MainEventTimes mainEventTimes : generatedMainEventTimes){
-            if(mainEventTimes.sleepPeriod.targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis() == targetDate.withTimeAtStartOfDay().withTimeAtStartOfDay().getMillis() ){
+            if(mainEventTimes.sleepPeriod.targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis() != targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().withTimeAtStartOfDay().getMillis() ){
                 continue;
             }
             if(mainEventTimes.sleepPeriod.period == SleepPeriod.Period.MORNING){
                 morningEvents = mainEventTimes;
                 morningValid = true;
+                morningDataCompleteness = DataCompleteness.ENOUGH_DATA;
             }
             if(mainEventTimes.sleepPeriod.period == SleepPeriod.Period.AFTERNOON){
                 afternoonEvents = mainEventTimes;
                 afternoonValid = true;
+                afternoonDataCompleteness = DataCompleteness.ENOUGH_DATA;
             }
             if(mainEventTimes.sleepPeriod.period == SleepPeriod.Period.NIGHT){
                 nightEvents = mainEventTimes;
                 nightValid = true;
+                nightDataCompleteness = DataCompleteness.ENOUGH_DATA;
             }
         }
-        // assumes data is complete for all periods and maineventTimes for generated timelines are valid;
-        final SleepPeriodResults morningResults = SleepPeriodResults.create(morningEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),DataCompleteness.ENOUGH_DATA, morningValid);
-        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(afternoonEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),DataCompleteness.ENOUGH_DATA, afternoonValid);
-        final SleepPeriodResults nightResults = SleepPeriodResults.create(nightEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),DataCompleteness.ENOUGH_DATA, nightValid);
+        // assumes data is complete and timelines are valid for periods with a prev. generated mainEventTImes;
+        final SleepPeriodResults morningResults = SleepPeriodResults.create(morningEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),morningDataCompleteness, morningValid);
+        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(afternoonEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), afternoonDataCompleteness, afternoonValid);
+        final SleepPeriodResults nightResults = SleepPeriodResults.create(nightEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), nightDataCompleteness, nightValid);
 
         return new SleepDay(targetDate, morningResults, afternoonResults, nightResults);
 

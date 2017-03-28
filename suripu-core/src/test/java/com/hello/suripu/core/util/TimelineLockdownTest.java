@@ -57,7 +57,7 @@ public class TimelineLockdownTest {
     public void testAttemptTime() {
         final long accountId = 0L;
         final DateTime start = new DateTime(2016, 05, 20, 20, 29, DateTimeZone.forID("America/Los_Angeles"));
-        final DateTime targetDate = start.withTimeAtStartOfDay();
+        final DateTime targetDate = start.withTimeAtStartOfDay().withZone(DateTimeZone.UTC);
         long inbed = start.getMillis();
         long sleep = start.plusMinutes(15).getMillis();
         long wake = start.plusHours(8).getMillis();
