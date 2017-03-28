@@ -18,7 +18,10 @@ import java.util.Map;
  * Created by jarredheinrich on 2/7/17.
  */
 public class MainEventTimes {
-    //private final List<Event.Type> REQUIRED_EVENT_TYPES =  Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP);
+    /*
+    Invalid / not present main event times are represented by a timestamp of 0L
+     */
+
     public Long accountId;
     public final SleepPeriod sleepPeriod;
     public final ImmutableMap<Event.Type, EventTime> eventTimeMap;
@@ -59,7 +62,10 @@ public class MainEventTimes {
                 .put(Event.Type.WAKE_UP, wakeUpEventTime)
                 .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
                 .build();
-        return new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap);
+        if (new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap).hasValidEventTimes()) {
+            return new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap);
+        }
+        return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset);
     }
 
     public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset,
@@ -78,14 +84,19 @@ public class MainEventTimes {
                     .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
                     .build();
 
-            return new MainEventTimes(accountId, sleepPeriod, createdAt,eventTimeMap);
+            if (new MainEventTimes(accountId, sleepPeriod, createdAt,eventTimeMap).hasValidEventTimes()) {
+                return new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap);
+            }
         }
-        return new MainEventTimes(accountId, sleepPeriod, createdAt, new HashMap<>());
+        return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset);
     }
 
     public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset, final Map<Event.Type, EventTime> mainEventTimeMap){
         final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
-        return new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap);
+        if (new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap).hasValidEventTimes()) {
+            return new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap);
+        }
+        else return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset);
     }
 
     public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final Long createdAtTime, final int createdAtOffset, final List<SleepSegment> timelineEvents){
@@ -125,7 +136,10 @@ public class MainEventTimes {
                 .put(Event.Type.WAKE_UP, wakeUpEventTime)
                 .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
                 .build();
-        return new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap);
+        if (new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap).hasValidEventTimes()) {
+            return new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap);
+        }
+        return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset);
     }
 
     public static MainEventTimes createMainEventTimesEmpty (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset){
