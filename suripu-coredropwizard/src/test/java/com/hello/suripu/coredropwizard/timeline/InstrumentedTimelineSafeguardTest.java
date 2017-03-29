@@ -392,7 +392,7 @@ public class InstrumentedTimelineSafeguardTest {
     public void testMaxMotionGap(){
         final long sleep1 = 1477764420000L;
         final long wake1 = 1477805040000L;
-        final long sleep2 = 1477757060000L;
+        final long sleep2 = 1477746060000L;
         final long wake2 = 1477805040000L;
 
         final int motionGap1 = TimelineSafeguards.getMaximumMotionGapInMinutes(trackerMotions, sleep1,wake1);

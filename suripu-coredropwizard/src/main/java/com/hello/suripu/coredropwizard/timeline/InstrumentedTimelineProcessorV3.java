@@ -364,7 +364,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         final List<DataCompleteness> dataCompletenessList = Lists.newArrayList();
         final List<TimelineLog> timelineLogs = Lists.newArrayList();
-        final List<String> sleepPeriods = Lists.newArrayList();
+        final List<SleepPeriod.Period> sleepPeriods = Lists.newArrayList();
 
         //loops through sleepPeriodResults, extracts timeline events, highest sleepscore (w/ sleepStats), timeline logs and datacompleteness
         for (int i = 0; i < numSleepPeriods; i++) {
@@ -388,7 +388,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
             timelineLogs.add(targetSleepPeriodResults.timelineLog);
             dataCompletenessList.add(DataCompleteness.ENOUGH_DATA);
-            sleepPeriods.add(targetSleepPeriodResults.mainEventTimes.sleepPeriod.period.shortName());
+            sleepPeriods.add(targetSleepPeriodResults.mainEventTimes.sleepPeriod.period);
 
             final int targetScore = targetSleepPeriodResults.resultsOptional.get().timeline.score;
             if (targetScore >= sleepScore.value){
@@ -956,7 +956,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
         final MainEventTimes populatedMainEventTimes = MainEventTimes.createMainEventTimes(accountId, mainEventTimes.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepSegments);
-        final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), Lists.newArrayList(mainEventTimes.sleepPeriod.period.shortName()),reversedSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), Lists.newArrayList(mainEventTimes.sleepPeriod.period),reversedSegments, insights, sleepStats);
 
         return SleepPeriodResults.create(populatedMainEventTimes, timeline, sleepScore,sleepStats, sensorData, timeZoneOffsetMap, timelineLog, DataCompleteness.ENOUGH_DATA, true);
     }

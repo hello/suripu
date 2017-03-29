@@ -25,7 +25,7 @@ public class Timeline {
     public final String dateNight;
 
     @JsonProperty("sleep_periods")
-    public final List<String> sleepPeriods;
+    public final List<com.hello.suripu.core.models.Timeline.Period> sleepPeriods;
 
     @JsonProperty("events")
     public final List<TimelineEvent> events;
@@ -38,7 +38,7 @@ public class Timeline {
                     final ScoreCondition scoreCondition,
                     final String message,
                     final String dateNight,
-                    final List<String> sleepPeriods,
+                    final List<com.hello.suripu.core.models.Timeline.Period> sleepPeriods,
                     final List<TimelineEvent> events,
                     final List<SleepMetrics> metrics) {
         this.score = score;

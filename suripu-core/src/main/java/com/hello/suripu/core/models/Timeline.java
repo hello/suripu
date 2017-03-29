@@ -11,6 +11,36 @@ import java.util.List;
 
 public class Timeline {
 
+    public enum Period {
+        MORNING("morning"),
+        AFTERNOON("afternoon"),
+        NIGHT("night");
+
+        private String value;
+
+        private Period(String value) {
+            this.value = value;
+        }
+
+
+        @Override
+        public String toString() {
+            return value;
+        }
+
+
+        public static Period fromString(final String sleepPeriodName) {
+            if (sleepPeriodName != null) {
+                for (final Period period : Period.values()) {
+                    if (sleepPeriodName.equalsIgnoreCase(period.toString())) {
+                        return period;
+                    }
+                }
+            }
+            throw new IllegalArgumentException();
+        }
+    }
+
     @JsonProperty("statistics")
     public final Optional<SleepStats> statistics;
 
@@ -24,7 +54,7 @@ public class Timeline {
     public final String date;
 
     @JsonProperty("sleep_periods")
-    public final List<String> sleepPeriods;
+    public final List<Period> sleepPeriods;
 
     @JsonProperty("segments")
     public final List<SleepSegment> events;
@@ -33,7 +63,7 @@ public class Timeline {
     public final List<Insight> insights;
 
     private Timeline(final Integer score,  final String message, final String date,
-                     final List<String> sleepPeriods, final List<SleepSegment> events,
+                     final List<Period> sleepPeriods, final List<SleepSegment> events,
                      final List<Insight> insights, final SleepStats sleepStats) {
         this.score = score;
         this.message = message;
@@ -48,11 +78,15 @@ public class Timeline {
     public static Timeline create(@JsonProperty("score") final Integer score,
                                   @JsonProperty("message") final String message,
                                   @JsonProperty("date") final String date,
-                                  @JsonProperty("sleep_period") final List<String> sleepPeriods,
+                                  @JsonProperty("sleep_period") final List<SleepPeriod.Period> sleepPeriods,
                                   @JsonProperty("segments") final List<SleepSegment> events,
                                   @JsonProperty("insights")  final List<Insight> insights,
                                   @JsonProperty("statistics") final SleepStats sleepStats) {
-        return new Timeline(score, message, date, sleepPeriods, events, insights,
+        final List<Period> periodList = Lists.newArrayList();
+        for (final SleepPeriod.Period sleepPeriod : sleepPeriods){
+            periodList.add(Period.fromString(sleepPeriod.shortName()));
+        }
+        return new Timeline(score, message, date, periodList, events, insights,
                 (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats);
     }
 
@@ -63,7 +97,7 @@ public class Timeline {
                                   @JsonProperty("segments") final List<SleepSegment> events,
                                   @JsonProperty("insights")  final List<Insight> insights,
                                   @JsonProperty("statistics") final SleepStats sleepStats) {
-        return new Timeline(score, message, date, Lists.newArrayList(SleepPeriod.Period.NIGHT.shortName()), events, insights,
+        return new Timeline(score, message, date, Lists.newArrayList(Period.NIGHT), events, insights,
                 (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats);
     }
 
@@ -72,13 +106,13 @@ public class Timeline {
                                   final String date,
                                   final List<SleepSegment> events,
                                   final List<Insight> insights) {
-        return new Timeline(score, message, date, Lists.newArrayList(SleepPeriod.Period.NIGHT.shortName()), events, insights, null);
+        return new Timeline(score, message, date, Lists.newArrayList(Period.NIGHT), events, insights, null);
     }
 
     public static Timeline create(final Integer score,
                                   final String message,
                                   final String date,
-                                  final List<String> sleepPeriods,
+                                  final List<Period> sleepPeriods,
                                   final List<SleepSegment> events,
                                   final List<Insight> insights) {
         return new Timeline(score, message, date, sleepPeriods, events, insights, null);
