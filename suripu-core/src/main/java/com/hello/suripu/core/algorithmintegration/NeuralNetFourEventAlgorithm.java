@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -451,16 +452,21 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Event> outOfBedOptional = Optional.fromNullable(eventMap.get(Event.Type.OUT_OF_BED));
             final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inbedOptional,sleepOptional,wakeOptional,outOfBedOptional);
             final boolean isPrimaryPeriod =  oneDaysSensorData.userBioInfo.primarySleepPeriod == sleepPeriod.period;
+            final boolean checkInBedTime = features.contains(FeatureFlipper.TIMELINE_SLEEP_PERIOD);
+            Optional<SleepPeriod> checkSleepPeriod = Optional.absent();
+            if (checkInBedTime){
+                checkSleepPeriod = Optional.of(sleepPeriod);
+            }
 
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(accountId,
                     isPrimaryPeriod,
+                    checkSleepPeriod,
                     AlgorithmType.NEURAL_NET_FOUR_EVENT,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
                     ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)),
                     ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.processedtrackerMotions));
-
 
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {

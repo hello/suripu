@@ -16,13 +16,13 @@ public class SleepPeriodResults {
     public final Optional<Results> resultsOptional;
     public final TimelineLog timelineLog;
     public final DataCompleteness dataCompleteness;
-    public final boolean isValid;
+    public final boolean processed;
     SleepPeriodResults(final MainEventTimes mainEventTimes, final Optional<Results> resultsOptional, final TimelineLog timelineLog, final DataCompleteness dataCompleteness, final boolean isValid){
         this.mainEventTimes= mainEventTimes;
         this.resultsOptional = resultsOptional;
         this.timelineLog = timelineLog;
         this.dataCompleteness = dataCompleteness;
-        this.isValid = isValid;
+        this.processed = isValid;
 
     }
     public static class Results {
@@ -40,14 +40,14 @@ public class SleepPeriodResults {
             this.timeZoneOffsetMap = timeZoneOffsetMap;
         }
     }
-    public static SleepPeriodResults create(final MainEventTimes mainEventTimes, final Timeline timeline, final SleepScore sleepScore,final SleepStats sleepStats, final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineLog timelineLog, final DataCompleteness dataCompleteness, final boolean isValid) {
+    public static SleepPeriodResults create(final MainEventTimes mainEventTimes, final Timeline timeline, final SleepScore sleepScore,final SleepStats sleepStats, final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final TimelineLog timelineLog, final DataCompleteness dataCompleteness, final boolean processed) {
         final Results results = new Results(timeline, sleepScore,sleepStats, sensorData, timeZoneOffsetMap);
-        return new SleepPeriodResults(mainEventTimes, Optional.of(results), timelineLog, dataCompleteness, isValid);
+        return new SleepPeriodResults(mainEventTimes, Optional.of(results), timelineLog, dataCompleteness, processed);
     }
-    public static SleepPeriodResults create(final MainEventTimes mainEventTimes, final Optional<Results> resultsOptional, final TimelineLog timelineLog, final DataCompleteness dataCompleteness,  final boolean isValid) {
-        return new SleepPeriodResults(mainEventTimes, resultsOptional, timelineLog, dataCompleteness, isValid);
+    public static SleepPeriodResults create(final MainEventTimes mainEventTimes, final Optional<Results> resultsOptional, final TimelineLog timelineLog, final DataCompleteness dataCompleteness,  final boolean processed) {
+        return new SleepPeriodResults(mainEventTimes, resultsOptional, timelineLog, dataCompleteness, processed);
     }
-    public static SleepPeriodResults createEmpty(final long accountId, final SleepPeriod sleepPeriod, final TimelineLog timelineLog, final DataCompleteness dataCompleteness,  final boolean isValid) {
-        return new SleepPeriodResults(MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0), Optional.absent(), timelineLog, dataCompleteness,  isValid);
+    public static SleepPeriodResults createEmpty(final long accountId, final SleepPeriod sleepPeriod, final TimelineLog timelineLog, final DataCompleteness dataCompleteness,  final boolean processed) {
+        return new SleepPeriodResults(MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0), Optional.absent(), timelineLog, dataCompleteness,  processed);
     }
 }

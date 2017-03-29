@@ -93,7 +93,7 @@ public class TimelineLockdown {
     */
     public static boolean isAttemptNeededForSleepPeriod(final SleepDay targetSleepDay, final SleepPeriod targetSleepPeriod, final ImmutableList<TrackerMotion> processedTrackerMotions, final boolean newFeedback) {
         //were main event times generated for target period?
-        if (!targetSleepDay.getSleepPeriod(targetSleepPeriod.period).isValid) {
+        if (!targetSleepDay.getSleepPeriod(targetSleepPeriod.period).processed) {
             return true;
         }
 

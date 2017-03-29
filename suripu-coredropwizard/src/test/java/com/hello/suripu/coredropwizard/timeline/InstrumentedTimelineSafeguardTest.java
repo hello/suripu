@@ -93,11 +93,11 @@ public class InstrumentedTimelineSafeguardTest {
 
         ImmutableList<Sample> light = ImmutableList.copyOf(getContiguousLightSensorData(t0, 8 * hourInMillis));
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, true, algType, mainEventsSucceed, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true, algType, mainEventsDurationFail, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, true,Optional.absent(), algType, mainEventsSucceed, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true, Optional.absent(),algType, mainEventsDurationFail, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
 
         //no motion case
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true, algType, mainEventsDurationFail, emptyEvents, light, ImmutableList.copyOf(Collections.EMPTY_LIST)).equals(TimelineError.NO_MOTION_DURING_SLEEP));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true,Optional.absent(), algType, mainEventsDurationFail, emptyEvents, light, ImmutableList.copyOf(Collections.EMPTY_LIST)).equals(TimelineError.NO_MOTION_DURING_SLEEP));
 
     }
 
@@ -209,8 +209,8 @@ public class InstrumentedTimelineSafeguardTest {
         final int res2 = safeguards.getMaximumDataGapInMinutes(lightWithOverOneHourGap);
         TestCase.assertEquals(res1, 30);
         TestCase.assertEquals(res2, 120);
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, true,algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId,true,algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, true,Optional.absent(),algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId,true,Optional.absent(),algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
 
     }
 
@@ -402,7 +402,6 @@ public class InstrumentedTimelineSafeguardTest {
         assert (motionGap2 > TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
 
     }
-
 
     @Test
     public void testMotionDuringSleepCheck(){

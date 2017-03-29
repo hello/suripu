@@ -267,8 +267,8 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         //retrieve / populate timeline and save MainEventTimes
         final SleepPeriodResults sleepPeriodResults = retrievePopulateAndSaveSleepPeriodResult(accountId, targetDate, sleepPeriod, sensorData, timeZoneOffsetMap, previousOutOfBedTimeOptional, newFeedback);
 
-        if (!sleepPeriodResults.resultsOptional.isPresent() || !sleepPeriodResults.isValid) {
-            LOGGER.warn("msg=invalid-timeline account_id={}  date={} sleep_period={} results_present={} valid={}", accountId, targetDate, sleepPeriod.period.shortName(), sleepPeriodResults.resultsOptional.isPresent(), sleepPeriodResults.isValid);
+        if (!sleepPeriodResults.resultsOptional.isPresent() || !sleepPeriodResults.processed) {
+            LOGGER.warn("msg=invalid-timeline account_id={}  date={} sleep_period={} results_present={} processed={}", accountId, targetDate, sleepPeriod.period.shortName(), sleepPeriodResults.resultsOptional.isPresent(), sleepPeriodResults.processed);
             return TimelineResult.createEmpty(sleepPeriodResults.timelineLog, English.TIMELINE_NO_SLEEP_DATA, sleepPeriodResults.dataCompleteness);
         }
 
@@ -372,7 +372,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             final SleepPeriod.Period period = SleepPeriod.Period.fromInteger(i);
             final SleepPeriodResults targetSleepPeriodResults = targetSleepDay.getSleepPeriod(period);
 
-            if (!targetSleepPeriodResults.isValid){
+            if (!targetSleepPeriodResults.processed){
                 continue;
             }
 
@@ -381,7 +381,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
                 continue;
             }
 
-            if (!targetSleepPeriodResults.isValid || !targetSleepPeriodResults.resultsOptional.get().timeline.statistics.isPresent()) {
+            if (!targetSleepPeriodResults.processed || !targetSleepPeriodResults.resultsOptional.get().timeline.statistics.isPresent()) {
                 timelineLogs.add(targetSleepPeriodResults.timelineLog);
                 dataCompletenessList.add(DataCompleteness.NOT_ENOUGH_DATA);
                 continue;
@@ -608,7 +608,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         //we should never hit this points either
-        if (!sleepPeriodResults.isValid) {
+        if (!sleepPeriodResults.processed) {
             LOGGER.info("msg=invalid-timeline-generated account_id={} date={} sleep_period={}", accountId, targetDate, sleepPeriod.period.shortName());
             if(!timelineLockedDown) {
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
@@ -628,6 +628,9 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         final Set<String> featureFlips = Sets.newHashSet();
         if (hasOffBedFilterEnabled(accountId)) {
             featureFlips.add(FeatureFlipper.OFF_BED_HMM_MOTION_FILTER);
+        }
+        if (useTimelineSleepPeriods(accountId)) {
+            featureFlips.add(FeatureFlipper.TIMELINE_SLEEP_PERIOD);
         }
         return featureFlips;
     }
@@ -774,15 +777,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
                 tzOffsetMillis,userBioInfo));
     }
 
-    private static class PopulatedTimelines {
-        public final List<Timeline> timelines;
-        public final boolean isValidSleepScore;
-
-        public PopulatedTimelines(List<Timeline> timelines, boolean isValidSleepScore) {
-            this.timelines = timelines;
-            this.isValidSleepScore = isValidSleepScore;
-        }
-    }
 
     public SleepPeriodResults populateSingleSleepPeriodTimeline(final long accountId,final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final MainEventTimes mainEventTimes, final TimelineLog timelineLog, final boolean isNewResult) {
 
@@ -946,20 +940,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         final SleepScore sleepScore = computeScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
         int sleepScoreValue = sleepScore.value;
 
-        //if there is no feedback, we have a "natural" timeline
-        //check if this natural timeline makes sense.  If not, set sleep score to zero.
-        if (feedbackList.isEmpty() && sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
-            LOGGER.warn("action=zeroing-score account_id={} reason=sleep-duration-too-short sleep_duration={}", accountId, sleepStats.sleepDurationInMinutes);
-            sleepScoreValue = 0;
-            timelineLog.addMessage(TimelineError.INVALID_SLEEP_SCORE);
-        }
-
-        boolean isValidSleepScore = sleepScoreValue > 0;
-
-        //if there's feedback, sleep score can never be invalid
-        if (!feedbackList.isEmpty()) {
-            isValidSleepScore = true;
-        }
 
         final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
 
@@ -979,7 +959,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         final MainEventTimes populatedMainEventTimes = MainEventTimes.createMainEventTimes(accountId, mainEventTimes.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepSegments);
         final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), Lists.newArrayList(mainEventTimes.sleepPeriod.period.shortName()),reversedSegments, insights, sleepStats);
 
-        return SleepPeriodResults.create(populatedMainEventTimes, timeline, sleepScore,sleepStats, sensorData, timeZoneOffsetMap, timelineLog, DataCompleteness.ENOUGH_DATA, isValidSleepScore);
+        return SleepPeriodResults.create(populatedMainEventTimes, timeline, sleepScore,sleepStats, sensorData, timeZoneOffsetMap, timelineLog, DataCompleteness.ENOUGH_DATA, true);
     }
 
     /*
@@ -1059,20 +1039,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         return TimelineError.NO_ERROR;
     }
-
-    private boolean isValidInBedTime(final SleepPeriod sleepPeriod, final TimelineAlgorithmResult result){
-        if (!result.mainEvents.containsKey(Event.Type.IN_BED)){
-            return false;
-        }
-        if(result.mainEvents.get(Event.Type.IN_BED).getStartTimestamp() >=  sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, result.mainEvents.get(Event.Type.IN_BED).getTimezoneOffset()).getMillis()){
-            return false;
-        }
-        if(result.mainEvents.get(Event.Type.IN_BED).getStartTimestamp() <  sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, result.mainEvents.get(Event.Type.IN_BED).getTimezoneOffset()).getMillis()){
-            return false;
-        }
-        return true;
-    }
-
 
     private ImmutableList<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);

@@ -33,9 +33,9 @@ public class SleepDay {
         MainEventTimes afternoonEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.afternoon(targetDate), 0,0);
         MainEventTimes nightEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(targetDate), 0,0);
 
-        boolean morningValid = false;
-        boolean afternoonValid = false;
-        boolean nightValid = false;
+        boolean morningProcessed = false;
+        boolean afternoonProcessed = false;
+        boolean nightProcessed = false;
 
         DataCompleteness morningDataCompleteness = DataCompleteness.NO_DATA;
         DataCompleteness afternoonDataCompleteness = DataCompleteness.NO_DATA;
@@ -47,24 +47,24 @@ public class SleepDay {
             }
             if(mainEventTimes.sleepPeriod.period == SleepPeriod.Period.MORNING){
                 morningEvents = mainEventTimes;
-                morningValid = true;
+                morningProcessed = true;
                 morningDataCompleteness = DataCompleteness.ENOUGH_DATA;
             }
             if(mainEventTimes.sleepPeriod.period == SleepPeriod.Period.AFTERNOON){
                 afternoonEvents = mainEventTimes;
-                afternoonValid = true;
+                afternoonProcessed = true;
                 afternoonDataCompleteness = DataCompleteness.ENOUGH_DATA;
             }
             if(mainEventTimes.sleepPeriod.period == SleepPeriod.Period.NIGHT){
                 nightEvents = mainEventTimes;
-                nightValid = true;
+                nightProcessed = true;
                 nightDataCompleteness = DataCompleteness.ENOUGH_DATA;
             }
         }
         // assumes data is complete and timelines are valid for periods with a prev. generated mainEventTImes;
-        final SleepPeriodResults morningResults = SleepPeriodResults.create(morningEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),morningDataCompleteness, morningValid);
-        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(afternoonEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), afternoonDataCompleteness, afternoonValid);
-        final SleepPeriodResults nightResults = SleepPeriodResults.create(nightEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), nightDataCompleteness, nightValid);
+        final SleepPeriodResults morningResults = SleepPeriodResults.create(morningEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),morningDataCompleteness, morningProcessed);
+        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(afternoonEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), afternoonDataCompleteness, afternoonProcessed);
+        final SleepPeriodResults nightResults = SleepPeriodResults.create(nightEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), nightDataCompleteness, nightProcessed);
 
         return new SleepDay(targetDate, morningResults, afternoonResults, nightResults);
 
@@ -105,14 +105,14 @@ public class SleepDay {
             }
         }
         if (period == SleepPeriod.Period.AFTERNOON) {
-            if (this.morningResults.isValid && this.morningResults.mainEventTimes.hasValidEventTimes()) {
+            if (this.morningResults.processed && this.morningResults.mainEventTimes.hasValidEventTimes()) {
                 return Optional.of(this.morningResults.mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
             } else {
                 return Optional.absent();
             }
         }
         if (period == SleepPeriod.Period.NIGHT) {
-            if (this.afternoonResults.isValid && this.afternoonResults.mainEventTimes.hasValidEventTimes()) {
+            if (this.afternoonResults.processed && this.afternoonResults.mainEventTimes.hasValidEventTimes()) {
                 return Optional.of(this.afternoonResults.mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
             } else {
                 return Optional.absent();

@@ -32,7 +32,7 @@ public class TimelineSafeguards {
     private static final int MAXIMUM_ALLOWABLE_DATAGAP = 60; //one hour
 
     //sleep period specific thresholds
-    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 120;
+    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 150;
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 2;
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 10;
 
@@ -327,7 +327,7 @@ public class TimelineSafeguards {
 
 
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public TimelineError checkIfValidTimeline (final long accountId,final boolean isPrimaryPeriod, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> processedTrackerMotions) {
+    public TimelineError checkIfValidTimeline (final long accountId,final boolean isPrimaryPeriod, final Optional<SleepPeriod> checkSleepPeriod, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> processedTrackerMotions) {
 
         final int minMotionCountThreshold;
 
@@ -383,8 +383,26 @@ public class TimelineSafeguards {
             }
         }
 
+        //check if we need to check inBedTime is valid for three sleep period support
+        if (sleepEvents.goToBed.isPresent() && checkSleepPeriod.isPresent()){
+            if (!isValidInBedTime(checkSleepPeriod.get(), sleepEvents.goToBed.get())){
+                return TimelineError.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD;
+            }
+        }
+
         return TimelineError.NO_ERROR;
 
+    }
+
+    private boolean isValidInBedTime(final SleepPeriod sleepPeriod, final Event inBedEvent){
+
+        if(inBedEvent.getStartTimestamp() >=  sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, inBedEvent.getTimezoneOffset()).getMillis()){
+            return false;
+        }
+        if(inBedEvent.getStartTimestamp() <  sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, inBedEvent.getTimezoneOffset()).getMillis()){
+            return false;
+        }
+        return true;
     }
 
     public static boolean isProbableNight(final Long accountId, final boolean daySleeper, final SleepPeriod sleepPeriod, final OneDaysSensorData oneDaysSensorData){

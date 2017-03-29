@@ -75,6 +75,7 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
                     accountId,
                     true,
+                    Optional.absent(),
                     AlgorithmType.ONLINE_HMM,
                     events,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
