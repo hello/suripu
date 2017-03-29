@@ -16,7 +16,9 @@ import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.SleepPeriod;
+import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.TimelineError;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -51,6 +53,8 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
         WAKE_UP_OFFSET("wake_up_offset", "S"),
         OUT_OF_BED_TIME("out_of_bed_time", "S"),
         OUT_OF_BED_OFFSET("out_of_bed_offset", "S"),
+        ALGORITHM_TYPE("algorithm_type", "N"),
+        TIMELINE_ERROR("timeline_error", "N")
         ;
 
         private final String name;
@@ -103,6 +107,14 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 return null;
             }
             return Integer.valueOf(av.getN());
+        }
+
+        Optional<Integer> getOptionalInteger(final Map<String, AttributeValue> item) {
+            final AttributeValue av = get(item);
+            if (av == null) {
+                return Optional.absent();
+            }
+            return Optional.of(Integer.valueOf(av.getN()));
         }
 
         DateTime getDateTime(final Map<String, AttributeValue> item) {
@@ -193,7 +205,9 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 .put(Attribute.WAKE_UP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).offset))
 
                 .put(Attribute.OUT_OF_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).time))
-                .put(Attribute.OUT_OF_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).offset));
+                .put(Attribute.OUT_OF_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).offset))
+                .put(Attribute.ALGORITHM_TYPE.shortName(), toAttributeValue(model.algorithmType.getValue()))
+                .put(Attribute.TIMELINE_ERROR.shortName(), toAttributeValue(model.timelineError.getValue()));
 
         return builder.build();
     }
@@ -311,6 +325,9 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
     }
 
     private static MainEventTimes toMainEventTimes(final Map<String, AttributeValue> item) {
+        final long accountId = Attribute.ACCOUNT_ID.getLong(item);
+
+
         final ImmutableMap<Event.Type, MainEventTimes.EventTime > eventTimeMap = ImmutableMap.<Event.Type, MainEventTimes.EventTime>builder()
                 .put(Event.Type.IN_BED, new MainEventTimes.EventTime(Attribute.IN_BED_TIME.getLong(item), Attribute.IN_BED_OFFSET.getInteger(item)))
                 .put(Event.Type.SLEEP, new MainEventTimes.EventTime(Attribute.SLEEP_TIME.getLong(item), Attribute.SLEEP_OFFSET.getInteger(item)))
@@ -318,12 +335,36 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 .put(Event.Type.OUT_OF_BED, new MainEventTimes.EventTime(Attribute.OUT_OF_BED_TIME.getLong(item), Attribute.OUT_OF_BED_OFFSET.getInteger(item)))
                 .build();
         final SleepPeriod.Period period = SleepPeriod.Period.fromString(Attribute.SLEEP_PERIOD.getString(item));
+        final DateTime targetDate = Attribute.DATE.getDateTime(item);
+
+        final Optional<Integer> algTypeValueOptional = Attribute.ALGORITHM_TYPE.getOptionalInteger(item);
+        final Optional<Integer> timelineErrorValueOptional = Attribute.TIMELINE_ERROR.getOptionalInteger(item);
+
+        final AlgorithmType algorithmType;
+        if(algTypeValueOptional.isPresent()) {
+            algorithmType = AlgorithmType.fromInteger(algTypeValueOptional.get());
+        } else{
+            LOGGER.warn("msg=main-event-times-missing-alg-type account_id={} sleep_period={} date={}", accountId, period, targetDate);
+            algorithmType = AlgorithmType.NONE;
+        }
+
+        final TimelineError timelineError;
+        if (timelineErrorValueOptional.isPresent()){
+            timelineError = TimelineError.fromInteger(timelineErrorValueOptional.get());
+        } else {
+            LOGGER.warn("msg=main-event-times-missing-timeline-error account_id={} sleep_period={} date={}", accountId, period, targetDate);
+
+            timelineError = TimelineError.NO_ERROR;
+        }
+
         final MainEventTimes mainEventTimes= MainEventTimes.createMainEventTimes(
-                Attribute.ACCOUNT_ID.getLong(item),
-                SleepPeriod.createSleepPeriod(period, Attribute.DATE.getDateTime(item)),
+                accountId,
+                SleepPeriod.createSleepPeriod(period, targetDate),
                 Attribute.CREATED_AT_TIME.getLong(item),
                 Attribute.CREATED_AT_OFFSET.getInteger(item),
-                eventTimeMap
+                eventTimeMap,
+                algorithmType,
+                timelineError
         );
         return mainEventTimes;
 

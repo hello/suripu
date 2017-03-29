@@ -383,6 +383,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         /* DEFAULT VALUE IS CACHED TIMELINE MAIN EVENTS */
         if (computedMainEventTimesOptional.isPresent()) {
             resultOptional = Optional.of(new TimelineAlgorithmResult(AlgorithmType.NONE, computedMainEventTimesOptional.get().getMainEvents()));
+            log.addMessage(computedMainEventTimesOptional.get().algorithmType, computedMainEventTimesOptional.get().timelineError);
         }
 
         if(!timelineLockedDown) {
@@ -416,7 +417,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
             //save to main event times
-            final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), resultOptional.get());
+            final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), resultOptional.get(), TimelineError.NO_ERROR);
             mainEventTimesDAO.updateEventTimes(mainEventTimes);
         }
 

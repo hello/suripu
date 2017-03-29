@@ -11,6 +11,8 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MainEventTimes;
+import com.hello.suripu.core.util.AlgorithmType;
+import com.hello.suripu.core.util.TimelineError;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -92,7 +94,7 @@ public class MainEventTimesDynamoDBIT {
         final int offset = -28800000;
 
         final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset, AlgorithmType.NONE, TimelineError.NO_ERROR);
 
         boolean updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesMorning);
         assert(updateSuccessful);
@@ -104,7 +106,7 @@ public class MainEventTimesDynamoDBIT {
         createdAtDateTime = createdAtDateTime.plusHours(14);
 
         final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset, AlgorithmType.NONE, TimelineError.NO_ERROR);
 
         updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
         assert(updateSuccessful);
@@ -114,7 +116,7 @@ public class MainEventTimesDynamoDBIT {
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
         final MainEventTimes mainEventTimesNight2 = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset, AlgorithmType.NONE, TimelineError.NO_ERROR);
 
         updateSuccessful = mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight2);
         assert(updateSuccessful);
@@ -138,7 +140,7 @@ public class MainEventTimesDynamoDBIT {
         assert(sleepPeriodMainEventsEmptyList.isEmpty());
 
         final MainEventTimes mainEventTimesMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset, AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
 
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesMorning);
 
@@ -149,7 +151,7 @@ public class MainEventTimesDynamoDBIT {
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
         final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
 
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNight);
 
@@ -161,7 +163,7 @@ public class MainEventTimesDynamoDBIT {
         createdAtDateTime = createdAtDateTime.plusHours(15);
 
         final MainEventTimes mainEventTimesNextMorning = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset, AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
 
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesNextMorning);
 
@@ -192,7 +194,7 @@ public class MainEventTimesDynamoDBIT {
         targetDate = inBedDateTime.withTimeAtStartOfDay();
 
         final MainEventTimes mainEventTimesMorning2 = MainEventTimes.createMainEventTimes(accountId, inBedDateTime.getMillis(), offset,
-                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset);
+                sleepDateTime.getMillis(), offset, wakeUpDateTime.getMillis(), offset, outOfBedDateTime.getMillis(), offset, createdAtDateTime.getMillis(), offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
 
         mainEventTimesDynamoDB.updateEventTimes(mainEventTimesMorning2);
 
