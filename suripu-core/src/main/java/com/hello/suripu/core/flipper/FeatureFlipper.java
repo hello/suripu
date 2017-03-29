@@ -128,6 +128,7 @@ public class FeatureFlipper {
     public final static String TIMELINE_SLEEP_PERIOD = "timeline_sleep_period";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String TIMELINE_LOCKDOWN = "timeline_lockdown";
+    public final static String TIMELINE_PROCESSOR_V3_ENABLED = "timeline_processor_v3_enabled";
 
     public final static String VIEW_SENSORS_UNAVAILABLE = "view_sensors_unavailable";
     public final static String VIEW_TIMELINE_UNAVAILABLE = "view_timeline_unavailable";

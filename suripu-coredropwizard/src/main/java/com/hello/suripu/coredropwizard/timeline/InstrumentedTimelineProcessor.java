@@ -309,9 +309,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         //only use the newest NN
-        if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
+        //if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
-        }
+        //}
 
         final DateTime startTimeLocalUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endTimeLocalUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
