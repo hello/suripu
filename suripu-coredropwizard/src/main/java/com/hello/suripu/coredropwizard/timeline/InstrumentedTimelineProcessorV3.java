@@ -441,7 +441,8 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             //Placeholder for feedback - current defaults to no new feedback
             final Optional<TimelineFeedback> newFeedback = Optional.absent();
             //check if new timeline needs to be attempted
-            final boolean attemptTimeline = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod, fullDaySensorData.oneDaysTrackerMotion.processedtrackerMotions, newFeedback.isPresent());
+            final boolean attemptLockDown = !newFeedback.isPresent() && useTimelineLockdown(accountId);
+            final boolean attemptTimeline = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod, fullDaySensorData.oneDaysTrackerMotion.processedtrackerMotions, attemptLockDown);
             final Optional<Long> prevOutOfBedTimeOptional = targetSleepDay.getPreviousOutOfBedTime(targetSleepPeriod.period, prevNightMainEventTimes);
 
             final SleepPeriodResults targetSleepPeriodResults;
@@ -691,6 +692,12 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             if (!originalPartnerMotions.isEmpty()) {
                 final long partnerAccountId = originalPartnerMotions.get(0).accountId;
                 originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions, partnerAccountId);
+            }
+
+            //lets check this again
+            if (originalTrackerMotions.isEmpty()) {
+                LOGGER.warn("msg=no-original-tracker-motion-data-after-pairing-filter account_id={} datetime={}", accountId, startTimeLocalUTC);
+                return Optional.absent();
             }
         }
 
