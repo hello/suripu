@@ -510,6 +510,12 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
                 final long partnerAccountId = originalPartnerMotions.get(0).accountId;
                 originalPartnerMotions = filterPillPairingMotions(originalPartnerMotions, partnerAccountId);
             }
+
+            //lets check this again
+            if (originalTrackerMotions.isEmpty()) {
+                LOGGER.warn("msg=no-original-tracker-motion-data-after-pairing-filter account_id={} datetime={}", accountId, starteTimeLocalUTC);
+                return Optional.absent();
+            }
         }
 
         final Optional<Account> accountOptional = accountDAO.getById(accountId);

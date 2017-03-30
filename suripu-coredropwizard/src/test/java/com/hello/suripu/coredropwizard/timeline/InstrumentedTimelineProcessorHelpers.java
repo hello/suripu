@@ -68,6 +68,8 @@ public class InstrumentedTimelineProcessorHelpers {
     private static final Logger LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessorHelpers.class);
     private static long ACCOUNT_ID_DST = 62801L;
     private static long ACCOUNT_ID_DST_2 = 66376L;
+    private static long ACCOUNT_ID_PAIRING_ERROR = 80935L;
+    private static long ACCOUNT_ID_PAIRING_ERROR_PARTNER= 80910L;
 
 
     final public PillDataReadDAO pillDataReadDAO = new PillDataReadDAO() {
@@ -77,6 +79,16 @@ public class InstrumentedTimelineProcessorHelpers {
             if (accountId == ACCOUNT_ID_DST_2){
                 //get from dst germany
                 final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_11_05_dst.csv");
+                return ImmutableList.copyOf(trackerMotions);
+            }
+
+            if (accountId == ACCOUNT_ID_PAIRING_ERROR ){
+                final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/pairing_filter_error.csv");
+                return ImmutableList.copyOf(trackerMotions);
+            }
+
+            if (accountId == ACCOUNT_ID_PAIRING_ERROR_PARTNER ){
+                final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/pairing_filter_error_partner.csv");
                 return ImmutableList.copyOf(trackerMotions);
             }
 
@@ -560,11 +572,22 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public com.google.common.base.Optional<Long> getPartnerAccountId(@Bind("account_id") Long accountId) {
+            if (accountId == ACCOUNT_ID_PAIRING_ERROR){
+                return Optional.of(ACCOUNT_ID_PAIRING_ERROR_PARTNER);
+            }
             return com.google.common.base.Optional.absent();
         }
 
         @Override
         public ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId) {
+            DeviceAccountPair deviceAccountPair = new DeviceAccountPair(accountId, 0L,"foobar", new DateTime(2017, 03,29,12,05,02, DateTimeZone.UTC));
+            DeviceAccountPair deviceAccountPairPartner = new DeviceAccountPair(accountId, 0L,"foobar", new DateTime(2017, 03,28,10,05,02, DateTimeZone.UTC));
+            if(accountId == ACCOUNT_ID_PAIRING_ERROR){
+                return (ImmutableList.copyOf(Lists.newArrayList(deviceAccountPair)));
+            }
+            if(accountId == ACCOUNT_ID_PAIRING_ERROR_PARTNER){
+                return (ImmutableList.copyOf(Lists.newArrayList(deviceAccountPairPartner)));
+            }
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 

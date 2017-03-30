@@ -11,6 +11,7 @@ import com.hello.suripu.core.db.HistoricalPairingDAO;
 import com.hello.suripu.core.db.PairingDAO;
 import com.hello.suripu.core.db.SenseDataDAODynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.models.DataCompleteness;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepScore;
@@ -268,6 +269,21 @@ public class InstrumentedTimelineProcessorTest {
         TestCase.assertTrue(outOfBedEvent);
         TestCase.assertTrue(asleepEvent);
         TestCase.assertTrue(wakeEvent);TestCase.assertTrue(alarmEvent);
+    }
+
+    @Test
+    public void testPairingFilterErrorFix() {
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime("2017-03-28");
+        final long accountId = 80935;
+
+        features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
+        features.put(FeatureFlipper.OUTLIER_FILTER,true);
+        features.put(FeatureFlipper.HMM_PARTNER_FILTER, true);
+
+
+        final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,Optional.absent());
+        assert(timelineResult.logV2.isPresent());
+        assert(timelineResult.dataCompleteness == DataCompleteness.NO_DATA);
     }
 
     //@Test
