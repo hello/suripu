@@ -93,6 +93,17 @@ public class Pill {
         return create(pillAccountPair,pillHeartBeatOptional, pillColorOptional, BatteryType.UNKNOWN);
     }
 
+    public static Pill createRecentlyPaired(final DeviceAccountPair pillAccountPair, final Optional<Color> pillColorOptional, final BatteryType batteryType) {
+        final Color color = pillColorOptional.or(DEFAULT_COLOR);
+        return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId,
+                Optional.absent(),
+                Optional.absent(),
+                Optional.of(pillAccountPair.created),
+                State.UNKNOWN,
+                color,
+                batteryType
+        );
+    }
 
     public static Pill withState(final Pill pill, final State state) {
         return new Pill(pill.internalId, pill.externalId, pill.firmwareVersionOptional, pill.batteryLevelOptional, pill.lastUpdatedOptional, state, pill.color, pill.batteryType);

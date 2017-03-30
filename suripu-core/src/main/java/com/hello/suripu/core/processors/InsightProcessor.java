@@ -428,10 +428,7 @@ public class InsightProcessor {
                 return Optional.of(InsightCard.Category.TEMPERATURE);
 
             case 13:
-                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.LIGHT, LAST_TWO_WEEKS)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.LIGHT);
+                return Optional.absent(); //Previously scheduled for light
             case 18:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_CAFFEINE, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
