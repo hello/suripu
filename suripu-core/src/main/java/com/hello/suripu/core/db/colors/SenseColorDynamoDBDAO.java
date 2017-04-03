@@ -28,7 +28,7 @@ public class SenseColorDynamoDBDAO implements SenseColorDAO {
                 return Optional.of(Device.Color.BLACK);
         }
 
-        return Optional.of(Device.Color.BLACK); //Why is this the default?
+        return Optional.of(Device.DEFAULT_COLOR);
     }
 
     @Override
