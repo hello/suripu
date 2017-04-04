@@ -188,13 +188,13 @@ public class Account {
     /**
      * Transform registration to account
      * @param registration
-     * @param id
+     * @param externalId
      * @return
      */
-    public static Account fromRegistration(final Registration registration, final Long id) {
+    public static Account fromRegistration(final Registration registration, final Long id, final UUID externalId) {
         final String firstname = (registration.firstname == null) ? registration.name : registration.firstname;
 
-        return new Account(Optional.fromNullable(id), Optional.absent(), registration.email, registration.password, registration.tzOffsetMillis,
+        return new Account(Optional.fromNullable(id), Optional.of(externalId), registration.email, registration.password, registration.tzOffsetMillis,
                 registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender,
                 registration.genderName, registration.height, registration.weight,registration.created, registration.created.getMillis(),
                 registration.DOB, Boolean.FALSE, registration.latitude, registration.longitude, Optional.absent());
