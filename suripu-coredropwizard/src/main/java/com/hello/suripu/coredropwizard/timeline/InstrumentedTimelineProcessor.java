@@ -757,19 +757,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         Integer sleepScore = computeAndMaybeSaveScore(sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         //if there is no feedback, we have a "natural" timeline
-        //check if this natural timeline makes sense.  If not, set sleep score to zero.
+        //there should be no case where the sleep duration is less than the min sleep duration at this point - already checked during timeline algorithm stage.
         if (feedbackList.isEmpty() && sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
             LOGGER.warn("action=zeroing-score account_id={} reason=sleep-duration-too-short sleep_duration={}", accountId, sleepStats.sleepDurationInMinutes);
             sleepScore = 0;
-        }
-
-        //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
-        if (feedbackList.isEmpty() && this.useNoMotionEnforcement(accountId)) {
-            final boolean motionDuringSleep = timelineUtils.motionDuringSleepCheck(sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
-            if (!motionDuringSleep) {
-                LOGGER.warn("action=zeroing-score  account_id={} reason=insufficient-motion-during-sleeptime night_of={}", accountId, targetDate);
-                sleepScore =  0;
-            }
         }
 
         boolean isValidSleepScore = sleepScore > 0;
@@ -777,6 +768,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //if there's feedback, sleep score can never be invalid
         if (!feedbackList.isEmpty()) {
             isValidSleepScore = true;
+        }
+
+        if (!isValidSleepScore){
+            //there should not be any invalid sleep scores at this point
+            LOGGER.error("msg=invalid-sleep-score account_id={} date={}", accountId, targetDate);
         }
 
         final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);

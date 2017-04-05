@@ -62,20 +62,18 @@ public class VotingAlgorithm implements TimelineAlgorithm {
 
             final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.VOTING, votingSleepEventsOptional.get().sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(sensorData.oneDaysTrackerMotion.originalTrackerMotions));
 
             LOGGER.info("alg_status={} account_id={} date={}",timelineError,accountId,sensorData.date.toDate());
 
-            //data gap errors are ignored, these are the only two I care about
-            if (timelineError.equals(TimelineError.EVENTS_OUT_OF_ORDER) ) {
+            //we now care about all errors
+            if (!timelineError.equals(TimelineError.NO_ERROR) ) {
                 log.addMessage(AlgorithmType.VOTING,timelineError);
                 return Optional.absent();
             }
 
-            if (timelineError.equals(TimelineError.MISSING_KEY_EVENTS)) {
-                log.addMessage(AlgorithmType.VOTING,timelineError);
-                return Optional.absent();
-            }
+
 
             final List<Event> events = timelineUtils.eventsFromOptionalEvents(votingSleepEventsOptional.get().sleepEvents.toList());
 

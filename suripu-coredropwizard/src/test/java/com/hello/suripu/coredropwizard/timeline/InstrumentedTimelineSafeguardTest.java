@@ -11,6 +11,7 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.AlgorithmType;
+import com.hello.suripu.core.util.CSVLoader;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
@@ -26,12 +27,13 @@ import java.util.List;
  * Created by benjo on 5/7/15.
  */
 public class InstrumentedTimelineSafeguardTest {
-    final long t0 = 1431044132000L;
+    final long t0 = 1477764420000L;
     final long hourInMillis = 3600000L;
     final int hourInMinutes = 60;
     final private ImmutableList<Event> emptyEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
     final long accountId = 0L;
     final AlgorithmType algType = AlgorithmType.NONE;
+    final ImmutableList<TrackerMotion> trackerMotions = ImmutableList.copyOf(CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv"));
 
     private Event getEvent(Event.Type type, final long time) {
         return Event.createFromType(type, time, time + 60000L, 0, Optional.of("BLAH BLAH"), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
@@ -84,9 +86,11 @@ public class InstrumentedTimelineSafeguardTest {
 
         ImmutableList<Sample> light = ImmutableList.copyOf(getContiguousLightSensorData(t0, 8 * hourInMillis));
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, light).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
 
+        //no motion case
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light, ImmutableList.copyOf(Collections.EMPTY_LIST)).equals(TimelineError.NO_MOTION_DURING_SLEEP));
 
     }
 
@@ -199,8 +203,8 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(res1, 30);
         TestCase.assertEquals(res2, 120);
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
 
     }
 

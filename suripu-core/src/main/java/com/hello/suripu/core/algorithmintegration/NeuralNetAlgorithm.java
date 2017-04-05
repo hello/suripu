@@ -382,7 +382,8 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
                     accountId, AlgorithmType.NEURAL_NET,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.originalTrackerMotions));
 
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {

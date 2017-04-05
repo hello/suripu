@@ -59,6 +59,7 @@ public class TimelineLog {
         invalidNightErrorMap.put(TimelineError.EVENTS_OUT_OF_ORDER, ErrorType.EVENTS_OUT_OF_ORDER);
         invalidNightErrorMap.put(TimelineError.PARTNER_FILTER_REJECTED_DATA,ErrorType.PARTNER_FILTER_REJECTED_MY_DATA);
         invalidNightErrorMap.put(TimelineError.UNEXEPECTED, ErrorType.UNEXEPECTED);
+        invalidNightErrorMap.put(TimelineError.NO_MOTION_DURING_SLEEP, ErrorType.NO_MOTION_DURING_SLEEP);
 
 
 
