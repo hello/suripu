@@ -14,7 +14,7 @@ import org.joda.time.DateTimeConstants;
  * Created by benjo on 8/20/15.
  */
 public class OneDaysSensorData {
-    public static final int OOB_UNCERTAINTY_WINDOW= DateTimeConstants.MILLIS_PER_HOUR * 6; //ignore motion for 8 hour after OOB;
+    public static final int OOB_UNCERTAINTY_WINDOW= DateTimeConstants.MILLIS_PER_HOUR * 4; //ignore motion for 2 hour after OOB;
     //UNCERTAINTY TO OUTLIER FILTER//
 
     public final AllSensorSampleList allSensorSampleList;

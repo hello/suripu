@@ -37,10 +37,13 @@ public class TimelineSafeguards {
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 10;
 
     private static final int NUM_WINDOWS = 5;
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={0.4, 0.5, 0.03};
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={0.05, .4, 0.1};
-    private static final double[] VALID_NIGHT_PROB_PARTNERED_THRESHOLD ={0.0, 0.0, 0.0};
-    private static final double[] VALID_NIGHT_PROB_PARTNERED_THRESHOLD_DAYSLEEPER ={0.1, 0.4, 0.5};
+
+    //daysleeper thresholds experimental - meant to squash night sleep
+    //non-daysleep considers all sleep periods for people with a more flexible schedule.
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={0.2, 0.6, 0.0};
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={0.0, 0.6, 0.7};
+    private static final double[] VALID_NIGHT_PROB_PARTNERED_THRESHOLD ={0.3, 0.7, 0.0};
+    private static final double[] VALID_NIGHT_PROB_PARTNERED_THRESHOLD_DAYSLEEPER ={0.0, 0.6, 0.8};
 
     private static final float[] LOG_REG_COEFS = {6.33084651f, -2.94445174e-03f,   3.95446643e-04f,  -3.94746094e-02f,
             6.81937941e-02f,   9.57748145e-04f,  -1.05556490e-02f,

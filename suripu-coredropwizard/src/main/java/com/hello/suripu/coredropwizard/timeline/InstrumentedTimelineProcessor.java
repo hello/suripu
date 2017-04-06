@@ -530,6 +530,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
             filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
         }
+        if (filteredOriginalMotions.isEmpty()){
+            LOGGER.warn("action=outlier-filter-removed-all-motion account_id={}", accountId);
+            return Optional.absent();
+        }
 
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
 

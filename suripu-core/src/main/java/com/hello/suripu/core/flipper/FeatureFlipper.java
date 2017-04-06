@@ -60,6 +60,7 @@ public class FeatureFlipper {
 
     public final static String MEASURE_CLOCK_DRIFT = "measure_clock_drift";
     public final static String MISSING_DATA_DEFAULT_VALUE = "missing_data_default_value";
+    public final static String MOTION_MASK_PARTNER_FILTER = "motion_mask_partner_filter";
 
 
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";

@@ -66,6 +66,7 @@ import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.MotionMaskPartnerFilter;
 import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepScoreUtils;
@@ -722,7 +723,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION_ALL_PERIODS);
         }
 
-        final List<TrackerMotion> trackerMotions = Lists.newArrayList();
+        List<TrackerMotion> trackerMotions = Lists.newArrayList();
 
         if (!filteredOriginalPartnerMotions.isEmpty()) {
 
@@ -760,6 +761,15 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         else {
             trackerMotions.addAll(filteredOriginalMotions);
         }
+
+
+        //motion mask filtering additive with other filters
+        if (this.hasMotionMaskPartnerFilter(accountId) && filteredOriginalMotions.get(0).motionMask.isPresent() &&  filteredOriginalPartnerMotions.get(0).motionMask.isPresent()){
+            trackerMotions = MotionMaskPartnerFilter.partnerFiltering(trackerMotions, filteredOriginalPartnerMotions);
+            LOGGER.info("action=using-motion-mask-partner-filter account_id={} removed-motions={}", accountId, filteredOriginalMotions.size() - trackerMotions.size());
+        }
+
+
 
         if (trackerMotions.isEmpty()) {
             LOGGER.debug("No tracker motion data ID for account_id = {} and day = {}", accountId, startTimeLocalUTC);

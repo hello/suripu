@@ -200,6 +200,10 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.DAY_SLEEPER, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasMotionMaskPartnerFilter(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.MOTION_MASK_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean useTimelineLockdown(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_LOCKDOWN, accountId, Collections.EMPTY_LIST);
     }
