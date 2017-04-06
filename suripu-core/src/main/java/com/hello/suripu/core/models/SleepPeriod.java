@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -212,34 +213,22 @@ public class SleepPeriod {
     public DateTime getSleepPeriodTime(final Boundary boundary, final int offsetMillis){
         switch(period) {
             case MORNING:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
+                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
             case AFTERNOON:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
+                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
             default:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
+                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
         }
     }
 
-    public Long getSleepPeriodMillis(final Boundary boundary){
+    public Long getSleepPeriodMillis(final Boundary boundary, final int offsetMillis){
         switch(period) {
             case MORNING:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).getMillis();
+                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis).getMillis();
             case AFTERNOON:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).getMillis();
+                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis).getMillis();
             default:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).getMillis();
-        }
-    }
-
-    public DateTime getTargetSleepPeriodTime(final Boundary boundary, final int offsetMillis){
-        final int  queueProcessorOffset = 2;//hours;
-        switch(period) {
-            case MORNING:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
-            case AFTERNOON:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
-            default:
-                return targetDate.withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis);
+                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis).getMillis();
         }
     }
 

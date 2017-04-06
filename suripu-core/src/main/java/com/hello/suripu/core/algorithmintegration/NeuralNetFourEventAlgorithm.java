@@ -169,7 +169,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         }
 
         final long durationMillis =  sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, oneDaysSensorData.timezoneOffsetMillis).getMillis() - sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).getMillis();
-        final int T = (int)durationMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1 ;
+        final int T = (int)16 * DateTimeConstants.MINUTES_PER_HOUR + 1 ;
 
 
         final long t0 = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, oneDaysSensorData.timezoneOffsetMillis).getMillis(); //LOCAL ---> UTC
@@ -190,7 +190,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
             if (!idx.isPresent()) {
-                LOGGER.warn("action=skipping_sensor_value sensor=LIGHT t0={} t={}",t0,s.dateTime);
+                LOGGER.warn("action=skipping_sensor_value sensor=LIGHT t0={} t={} sleep_period={} target_date={}",t0,s.dateTime, sleepPeriod.period.shortName(), sleepPeriod.targetDate);
                 continue;
             }
 
@@ -251,7 +251,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
             if (!idx.isPresent()) {
-                LOGGER.warn("action=skipping_sensor_value sensor=WAVES t0={} t={}",t0,s.dateTime);
+                LOGGER.warn("action=skipping_sensor_value sensor=WAVES t0={} t={} sleep_period={} target_date={}",t0,s.dateTime, sleepPeriod.period.shortName(), sleepPeriod.targetDate);
                 continue;
             }
 
@@ -269,7 +269,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
             if (!idx.isPresent()) {
-                LOGGER.warn("action=skipping_sensor_value sensor=SOUND_DISTURBANCE t0={} t={}",t0,s.dateTime);
+                LOGGER.warn("action=skipping_sensor_value sensor=SOUND_DISTURBANCE t0={} t={} sleep_period={} target_date={}",t0,s.dateTime, sleepPeriod.period.shortName(), sleepPeriod.targetDate);
                 continue;
             }
 
@@ -286,7 +286,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Integer> idx = getIndex(t0,s.dateTime,T);
 
             if (!idx.isPresent()) {
-                LOGGER.warn("action=skipping_sensor_value sensor=SOUND_VOLUME t0={} t={}",t0,s.dateTime);
+                LOGGER.warn("action=skipping_sensor_value sensor=SOUND_VOLUME t0={} t={} sleep_period={} target_date={}",t0,s.dateTime, sleepPeriod.period.shortName(), sleepPeriod.targetDate);
                 continue;
             }
 
@@ -302,7 +302,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
 
             if (!idx.isPresent()) {
-                LOGGER.warn("action=skipping_sensor_value sensor=MY_MOTION t0={} t={}",t0,m.timestamp);
+                LOGGER.warn("action=skipping_sensor_value sensor=MY_MOTION t0={} t={} sleep_period={} target_date={}",t0,m.timestamp, sleepPeriod.period.shortName(), sleepPeriod.targetDate);
                 continue;
             }
 
@@ -327,7 +327,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Optional<Integer> idx = getIndex(t0, m.timestamp, T);
 
             if (!idx.isPresent()) {
-                LOGGER.warn("action=skipping_sensor_value sensor=PARTNER_MOTION t0={} t={}",t0,m.timestamp);
+                LOGGER.warn("action=skipping_sensor_value sensor=PARTNER_MOTION val={} t0={} t={} sleep_period={} target_date={}",m.value,t0,m.timestamp, sleepPeriod.period.shortName(),sleepPeriod.targetDate);
                 continue;
             }
 

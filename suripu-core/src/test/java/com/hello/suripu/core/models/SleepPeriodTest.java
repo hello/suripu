@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
@@ -55,6 +56,18 @@ public class SleepPeriodTest {
         assert(sleepPeriodList.get(0).period== SleepPeriod.Period.MORNING);
         assert(sleepPeriodList.get(1).period== SleepPeriod.Period.AFTERNOON);
         assert(sleepPeriodList.get(2).period== SleepPeriod.Period.NIGHT);
+    }
+    @Test
+    public void testGetSleepPeriodTime(){
+        final DateTime targetDate = new DateTime(2017,1,20,00,0,0,DateTimeZone.UTC);
+        final SleepPeriod sleepPeriodNight= SleepPeriod.night(targetDate);
+        final int offset = DateTimeConstants.MILLIS_PER_HOUR * (-8);
+        final DateTime endTime = sleepPeriodNight.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA,  offset);
+        final long endTimeUTC = endTime.getMillis();
+        assert(endTimeUTC == 1485028800000L);
+        final long endTimeMillis= sleepPeriodNight.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA,  offset);
+        assert(endTimeMillis == 1485028800000L);
+
     }
 
 

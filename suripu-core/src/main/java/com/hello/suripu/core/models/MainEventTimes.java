@@ -150,7 +150,7 @@ public class MainEventTimes {
                 .put(Event.Type.WAKE_UP, new EventTime(0L, 0))
                 .put(Event.Type.OUT_OF_BED, new EventTime(0L, 0))
                 .build();
-        return new MainEventTimes(accountId, sleepPeriod, createdAt,  new HashMap<>());
+        return new MainEventTimes(accountId, sleepPeriod, createdAt,  eventTimeMap);
     }
 
     public boolean hasValidEventTimes(){

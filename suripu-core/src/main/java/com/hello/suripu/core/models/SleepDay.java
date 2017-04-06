@@ -107,13 +107,19 @@ public class SleepDay {
         if (period == SleepPeriod.Period.AFTERNOON) {
             if (this.morningResults.processed && this.morningResults.mainEventTimes.hasValidEventTimes()) {
                 return Optional.of(this.morningResults.mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
-            } else {
+            }else if (prevNightMainEventTimes.hasValidEventTimes()) {
+                return Optional.of(prevNightMainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
+            }else {
                 return Optional.absent();
             }
         }
         if (period == SleepPeriod.Period.NIGHT) {
             if (this.afternoonResults.processed && this.afternoonResults.mainEventTimes.hasValidEventTimes()) {
                 return Optional.of(this.afternoonResults.mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
+            } else if (this.morningResults.processed && this.morningResults.mainEventTimes.hasValidEventTimes()) {
+                return Optional.of(this.morningResults.mainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
+            }else if (prevNightMainEventTimes.hasValidEventTimes()) {
+                return Optional.of(prevNightMainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
             } else {
                 return Optional.absent();
             }

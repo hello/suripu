@@ -33,12 +33,12 @@ public class TimelineSafeguards {
 
     //sleep period specific thresholds
     public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 150;
-    public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 2;
+    public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 3;
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 10;
 
     private static final int NUM_WINDOWS = 5;
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={.7, .7, .03};
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={.2, .45, .05};
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={0.7, 0.7, 0.03};
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={0.1, 0.35, 0.03};
 
     private static final float[] LOG_REG_COEFS = {6.33084651f, -2.94445174e-03f,   3.95446643e-04f,  -3.94746094e-02f,
             6.81937941e-02f,   9.57748145e-04f,  -1.05556490e-02f,
@@ -366,7 +366,6 @@ public class TimelineSafeguards {
         }
 
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
-            //check to see if motion interval during sleep is greater than 1 hour for "natural" timelines
             final boolean motionDuringSleep = motionDuringSleepCheck(minMotionCountThreshold, processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
             if (!motionDuringSleep) {
                 LOGGER.warn("action=invalidating-timeline reason=insufficient-motion-during-sleeptime account_id={}", accountId);
@@ -415,9 +414,10 @@ public class TimelineSafeguards {
 
         final List<Sample> lightDataPeriod = oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT) ;
         final List<Sample> soundDataPeriod = oneDaysSensorData.allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE) ;
+        final int offset = lightDataPeriod.get(lightDataPeriod.size() -1).offsetMillis;
 
         //if inbed period not over or user is not a night sleeper, default to day sleeper
-        if(new DateTime(lightDataPeriod.get(lightDataPeriod.size() -1).dateTime + lightDataPeriod.get(lightDataPeriod.size() -1).offsetMillis, DateTimeZone.UTC).isBefore(sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, 0))){
+        if(new DateTime(lightDataPeriod.get(lightDataPeriod.size() -1).dateTime + offset, DateTimeZone.UTC).isBefore(sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, 0))){
             validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
         }
 
@@ -425,7 +425,7 @@ public class TimelineSafeguards {
             validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
         }
 
-        final ImmutableList<TrackerMotion> processedTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA),false).processedtrackerMotions);
+        final ImmutableList<TrackerMotion> processedTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START, offset), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA, offset),false).processedtrackerMotions);
 
 
         //features: inbed period broken in to 4 2-hour windows (plus following window). max inter motion gap, motion count, avg light for last 15 minutes and avg sound of last 15 minutes calculated
