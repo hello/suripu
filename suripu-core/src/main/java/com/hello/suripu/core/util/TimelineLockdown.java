@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.SleepDay;
@@ -91,7 +92,7 @@ public class TimelineLockdown {
     check if sleepPeriod already attempted and a valid timeline generated, if not, generate timeline for that period?
 
     */
-    public static boolean isAttemptNeededForSleepPeriod(final SleepDay targetSleepDay, final SleepPeriod targetSleepPeriod, final ImmutableList<TrackerMotion> processedTrackerMotions, final boolean attemptLockdown) {
+    public static boolean isAttemptNeededForSleepPeriod(final SleepDay targetSleepDay, final SleepPeriod targetSleepPeriod, final Optional<Long> prevOutOfBedTimeOptional,  final ImmutableList<TrackerMotion> processedTrackerMotions, final boolean attemptLockdown) {
         //were main event times generated for target period?
         if (!attemptLockdown){
             return true;
@@ -101,6 +102,12 @@ public class TimelineLockdown {
         }
 
         final MainEventTimes generatedTargetMainEventTimes = targetSleepDay.getSleepPeriod(targetSleepPeriod.period).mainEventTimes;
+
+
+        //is there a conflict between generated inbed time and previous night oob time.
+        if (prevOutOfBedTimeOptional.isPresent() && generatedTargetMainEventTimes.hasValidEventTimes() && generatedTargetMainEventTimes.eventTimeMap.get(Event.Type.IN_BED).time < prevOutOfBedTimeOptional.get() + OneDaysSensorData.OOB_UNCERTAINTY_WINDOW){
+            return true;
+        }
 
         //is timeline locked down for target period
         final boolean isLockedDown = isLockedDown(Optional.of(generatedTargetMainEventTimes), processedTrackerMotions, true);

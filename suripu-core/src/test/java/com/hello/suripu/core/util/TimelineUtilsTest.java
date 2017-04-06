@@ -2,14 +2,19 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.MainEventTimes;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -88,5 +93,25 @@ public class TimelineUtilsTest {
         final Integer uninterruptedDuration = 380;
         assertThat(sleepStats.uninterruptedSleepDurationInMinutes, is(uninterruptedDuration));
     }
+
+    @Test
+    public void getPrevMightMainEventTimes(){
+        final long accountId = 0L;
+
+        final DateTime startTime = new DateTime(2017,2,1,0,0, DateTimeZone.UTC);
+
+        final DateTime createdAt = startTime.plusDays(3);
+        final List<MainEventTimes> testMainEventTimesList = Lists.newArrayList();
+        for(int i = 0; i < 2; i ++){
+            final MainEventTimes testMainEventTimes = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.createSleepPeriod(SleepPeriod.Period.fromInteger(i), startTime), createdAt.getMillis(), 0);
+            testMainEventTimesList.add(testMainEventTimes);
+        }
+        final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, startTime.withHourOfDay(20).getMillis(), 0, startTime.withHourOfDay(21).getMillis(), 0, startTime.withHourOfDay(22).getMillis(), 0, startTime.withHourOfDay(23).getMillis(), 0, createdAt.getMillis(), 0 );
+        testMainEventTimesList.add(mainEventTimesNight);
+
+        final MainEventTimes prevNight =  TimelineUtils.getPrevNightMainEventTimes(0L, testMainEventTimesList, startTime.plusDays(1));
+        assert(prevNight.eventTimeMap.get(Event.Type.OUT_OF_BED).time == mainEventTimesNight.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
+    }
+
 
 }

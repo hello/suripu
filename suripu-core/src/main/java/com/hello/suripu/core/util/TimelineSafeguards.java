@@ -13,7 +13,6 @@ import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,13 +31,16 @@ public class TimelineSafeguards {
     private static final int MAXIMUM_ALLOWABLE_DATAGAP = 60; //one hour
 
     //sleep period specific thresholds
-    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 150;
+    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_PRIMARY_PERIOD = 180;
+    public static final int MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD = 120;
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD = 3;
     public static final int MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD = 10;
 
     private static final int NUM_WINDOWS = 5;
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={0.7, 0.7, 0.03};
-    private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={0.1, 0.35, 0.03};
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD ={0.4, 0.5, 0.03};
+    private static final double[] VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER ={0.05, .4, 0.1};
+    private static final double[] VALID_NIGHT_PROB_PARTNERED_THRESHOLD ={0.0, 0.0, 0.0};
+    private static final double[] VALID_NIGHT_PROB_PARTNERED_THRESHOLD_DAYSLEEPER ={0.1, 0.4, 0.5};
 
     private static final float[] LOG_REG_COEFS = {6.33084651f, -2.94445174e-03f,   3.95446643e-04f,  -3.94746094e-02f,
             6.81937941e-02f,   9.57748145e-04f,  -1.05556490e-02f,
@@ -327,14 +329,22 @@ public class TimelineSafeguards {
 
 
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public TimelineError checkIfValidTimeline (final long accountId,final boolean isPrimaryPeriod, final Optional<SleepPeriod> checkSleepPeriod, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> processedTrackerMotions) {
+    public TimelineError checkIfValidTimeline (final long accountId, final boolean isPrimaryPeriod, final Optional<SleepPeriod> checkSleepPeriod, final AlgorithmType algorithmType, SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData, final ImmutableList<TrackerMotion> processedTrackerMotions) {
+        final SleepPeriod.Period period;
+        if (checkSleepPeriod.isPresent()){
+            period = checkSleepPeriod.get().period;
+        } else{
+            period = SleepPeriod.Period.NIGHT;
+        }
 
-        final int minMotionCountThreshold;
+        final int minMotionCountThreshold, maxMotionGapThreshold;
 
         if (isPrimaryPeriod) {
             minMotionCountThreshold = MINIMUM_MOTION_COUNT_DURING_SLEEP_PRIMARY_PERIOD;
+            maxMotionGapThreshold = MAXIMUM_ALLOWABLE_MOTION_GAP_PRIMARY_PERIOD;
         } else {
             minMotionCountThreshold = MINIMUM_MOTION_COUNT_DURING_SLEEP_ALTERNATIVE_PERIOD;
+            maxMotionGapThreshold = MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD;
         }
 
         //make sure events occur in proper order
@@ -353,7 +363,7 @@ public class TimelineSafeguards {
             final int sleepDurationInMinutes = getTotalSleepDurationInMinutes(sleepEvents.fallAsleep.get(), sleepEvents.wakeUp.get(), extraEvents);
 
             if (sleepDurationInMinutes <= MINIMUM_SLEEP_DURATION_MINUTES) {
-                LOGGER.warn("action=invalidating-timeline reason=insufficient-sleep-duration account_id={} sleep_duration={} ", accountId, sleepDurationInMinutes);
+                LOGGER.warn("action=invalidating-timeline reason=insufficient-sleep-duration account_id={} sleep_duration={} period_period={}", accountId, sleepDurationInMinutes, period);
                 return TimelineError.NOT_ENOUGH_HOURS_OF_SLEEP;
             }
         }
@@ -361,34 +371,31 @@ public class TimelineSafeguards {
         final int maxDataGapInMinutes = getMaximumDataGapInMinutes(lightData);
 
         if (maxDataGapInMinutes > MAXIMUM_ALLOWABLE_DATAGAP) {
-            LOGGER.warn("action=invalidating-timeline reason=max-data-gap-greater-than-limit account_id={} data-gap-minutes={} limit={} ", accountId, maxDataGapInMinutes, MAXIMUM_ALLOWABLE_DATAGAP);
+            LOGGER.warn("action=invalidating-timeline reason=max-data-gap-greater-than-limit account_id={} data-gap-minutes={} limit={} sleep_period={} ", accountId, maxDataGapInMinutes, MAXIMUM_ALLOWABLE_DATAGAP, period);
             return TimelineError.DATA_GAP_TOO_LARGE;
         }
 
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
             final boolean motionDuringSleep = motionDuringSleepCheck(minMotionCountThreshold, processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
             if (!motionDuringSleep) {
-                LOGGER.warn("action=invalidating-timeline reason=insufficient-motion-during-sleeptime account_id={}", accountId);
+                LOGGER.warn("action=invalidating-timeline reason=insufficient-motion-during-sleeptime account_id={} sleep_period={}", accountId, period);
                 return TimelineError.NO_MOTION_DURING_SLEEP;
-            }
-
-            //if not primary period, require motion gap check: no motion in two hours during predicted sleep is not valid
-            if (!isPrimaryPeriod){
-                final int maxMotionGapInMinutes = getMaximumMotionGapInMinutes(processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
-                if (maxMotionGapInMinutes > MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD) {
-                    LOGGER.warn("max motion gap {} minutes is greaten than limit {} minutes -- invalidating timeline", maxMotionGapInMinutes, MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
-                    return TimelineError.MOTION_GAP_TOO_LARGE;
-                    }
             }
         }
 
         //check if we need to check inBedTime is valid for three sleep period support
-        if (sleepEvents.goToBed.isPresent() && checkSleepPeriod.isPresent()){
-            if (!isValidInBedTime(checkSleepPeriod.get(), sleepEvents.goToBed.get())){
-                return TimelineError.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD;
+        if (checkSleepPeriod.isPresent()) {
+            //if checking all three sleep periods, require motion gap check:
+            final int maxMotionGapInMinutes = getMaximumMotionGapInMinutes(processedTrackerMotions, sleepEvents.fallAsleep.get().getStartTimestamp(), sleepEvents.wakeUp.get().getStartTimestamp());
+            if (maxMotionGapInMinutes > maxMotionGapThreshold) {
+                LOGGER.warn("action=invalidating-timeline reason=max=motion-gap-too-large motion_gap={} threshold={} sleep_period={}", maxMotionGapInMinutes, maxMotionGapThreshold, period);
+                return TimelineError.MOTION_GAP_TOO_LARGE;
             }
-        }
+            if (sleepEvents.goToBed.isPresent() && !isValidInBedTime(checkSleepPeriod.get(), sleepEvents.goToBed.get())) {
+                    return TimelineError.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD;
+            }
 
+        }
         return TimelineError.NO_ERROR;
 
     }
@@ -406,7 +413,7 @@ public class TimelineSafeguards {
 
     public static boolean isProbableNight(final Long accountId, final boolean daySleeper, final SleepPeriod sleepPeriod, final OneDaysSensorData oneDaysSensorData){
         // thresholds based on estimated prevalence of day sleepers
-        double[] validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER;
+        final boolean hasPartner = oneDaysSensorData.oneDaysPartnerMotion.originalTrackerMotions.size() > 0;
 
         if(!oneDaysSensorData.allSensorSampleList.getAvailableSensors().contains(Sensor.LIGHT) || !oneDaysSensorData.allSensorSampleList.getAvailableSensors().contains(Sensor.SOUND_PEAK_ENERGY)){
             return false;
@@ -417,12 +424,21 @@ public class TimelineSafeguards {
         final int offset = lightDataPeriod.get(lightDataPeriod.size() -1).offsetMillis;
 
         //if inbed period not over or user is not a night sleeper, default to day sleeper
-        if(new DateTime(lightDataPeriod.get(lightDataPeriod.size() -1).dateTime + offset, DateTimeZone.UTC).isBefore(sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, 0))){
-            validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
-        }
+        double[] validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER;
 
-        if (!daySleeper){
-            validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
+        if(hasPartner){
+            if(daySleeper){
+                validNightProbabilityThreshold = VALID_NIGHT_PROB_PARTNERED_THRESHOLD_DAYSLEEPER;
+            }else {
+                validNightProbabilityThreshold = VALID_NIGHT_PROB_PARTNERED_THRESHOLD;
+            }
+        }else {
+            if (daySleeper) {
+                validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD_DAYSLEEPER;
+            }
+            else{
+                validNightProbabilityThreshold = VALID_NIGHT_PROB_THRESHOLD;
+            }
         }
 
         final ImmutableList<TrackerMotion> processedTrackerMotionsPeriod = ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.getMotionsForTimeWindow(sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.START, offset), sleepPeriod.getSleepPeriodMillis(SleepPeriod.Boundary.END_DATA, offset),false).processedtrackerMotions);

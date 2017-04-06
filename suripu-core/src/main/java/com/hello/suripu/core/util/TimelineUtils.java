@@ -36,9 +36,11 @@ import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -1514,6 +1516,14 @@ public class TimelineUtils {
         }
         return overallDataCompleteness;
     }
-
+    public static MainEventTimes getPrevNightMainEventTimes(final long accountId, final List<MainEventTimes> mainEventTimesList, final DateTime date){
+        final DateTime prevNight = date.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
+        for(final MainEventTimes mainEventTimes: mainEventTimesList){
+            if (mainEventTimes.sleepPeriod.period == SleepPeriod.Period.NIGHT && mainEventTimes.sleepPeriod.targetDate.getMillis() == prevNight.getMillis()){
+                return mainEventTimes;
+            }
+        }
+        return MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(prevNight), DateTime.now(DateTimeZone.UTC).getMillis(), 0);
+    }
 
 }

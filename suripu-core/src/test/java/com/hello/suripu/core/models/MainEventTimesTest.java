@@ -43,5 +43,4 @@ public class MainEventTimesTest {
         assert(sleepPeriodsMainEventTimesMapD2.size()==1);
         assert(sleepPeriodsMainEventTimesMapD2.containsKey(SleepPeriod.Period.NIGHT));
     }
-
 }

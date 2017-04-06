@@ -218,14 +218,4 @@ public class MainEventTimes {
         return sleepEventsMap;
     }
 
-    public static MainEventTimes getPrevNightMainEventTimes(final long accountId, final List<MainEventTimes> mainEventTimesList, final DateTime date){
-        final SleepPeriod prevNightSleepPeriod = SleepPeriod.night(date.minusDays(1));
-        for(final MainEventTimes mainEventTimes: mainEventTimesList){
-            if (mainEventTimes.sleepPeriod == prevNightSleepPeriod){
-                return mainEventTimes;
-            }
-        }
-        return MainEventTimes.createMainEventTimesEmpty(accountId, prevNightSleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0);
-    }
-
 }
