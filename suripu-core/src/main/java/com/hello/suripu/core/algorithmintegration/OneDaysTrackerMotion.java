@@ -52,11 +52,13 @@ public class OneDaysTrackerMotion {
             }
         }
         if(useOutlierFilter) {
-            currentPeriodFilteredOriginalTrackerMotions = OutlierFilter.removeOutliers(currentPeriodFilteredOriginalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
-            currentPeriodProcessedtrackerMotions = OutlierFilter.removeOutliers(currentPeriodProcessedtrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+            if (currentPeriodFilteredOriginalTrackerMotions.size() > 0) {
+                currentPeriodFilteredOriginalTrackerMotions = OutlierFilter.removeOutliers(currentPeriodFilteredOriginalTrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+            }
+            if (currentPeriodProcessedtrackerMotions.size() > 0) {
+                currentPeriodProcessedtrackerMotions = OutlierFilter.removeOutliers(currentPeriodProcessedtrackerMotions, OUTLIER_GUARD_DURATION, DOMINANT_GROUP_DURATION);
+            }
         }
-
-
         return new OneDaysTrackerMotion(ImmutableList.copyOf(currentPeriodProcessedtrackerMotions), ImmutableList.copyOf(currentPeriodFilteredOriginalTrackerMotions), ImmutableList.copyOf(currentPeriodOriginalTrackerMotions));
     }
 }
