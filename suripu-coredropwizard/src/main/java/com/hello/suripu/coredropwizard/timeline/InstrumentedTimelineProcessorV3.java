@@ -434,7 +434,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         //construct SleepPeriod - MainEventTimes map of target day and previous day Main Event Times
         final MainEventTimes prevNightMainEventTimes = TimelineUtils.getPrevNightMainEventTimes(accountId, generatedMainEventTimesList, targetDate);
-        LOGGER.debug("prevNightMainEventTimes={}", prevNightMainEventTimes.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
         SleepDay targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList );
 
         //loops through potential sleep periods
@@ -444,9 +443,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             final Optional<TimelineFeedback> newFeedback = Optional.absent();
             //check if new timeline needs to be attempted
             final Optional<Long> prevOutOfBedTimeOptional = targetSleepDay.getPreviousOutOfBedTime(targetSleepPeriod.period, prevNightMainEventTimes);
-            if (prevOutOfBedTimeOptional.isPresent()) {
-                LOGGER.debug("msg=prev_out_of_bed_time {}", prevOutOfBedTimeOptional.get());
-            }
 
             final boolean attemptLockDown = !newFeedback.isPresent() && useTimelineLockdown(accountId);
             final boolean attemptTimeline = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod,  prevOutOfBedTimeOptional, fullDaySensorData.oneDaysTrackerMotion.processedtrackerMotions, attemptLockDown);
@@ -465,7 +461,6 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             }
 
             //put all results - valid and invalid timelines
-            LOGGER.debug("msg=adding-timeline-results date={} sleep_period={} success={}", targetDate, targetSleepPeriod, targetSleepPeriodResults.resultsOptional.isPresent());
             targetSleepDay.updateSleepPeriod(targetSleepPeriodResults);
         }
         LOGGER.debug("msg=retrieved-all-sleep-periods date={} morning_success={} afternoon_success={}, night_success={}", targetDate, targetSleepDay.getSleepPeriod(SleepPeriod.Period.MORNING).resultsOptional.isPresent(),targetSleepDay.getSleepPeriod(SleepPeriod.Period.AFTERNOON).resultsOptional.isPresent(), targetSleepDay.getSleepPeriod(SleepPeriod.Period.NIGHT).resultsOptional.isPresent() );
@@ -481,7 +476,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
 
         if(prevOutOfBedTimeOptional.isPresent()) {
-            LOGGER.debug("msg=previous_oob_present target_date={} sleep_period={} oob_time={}", sleepPeriod.targetDate, sleepPeriod.period.shortName(), prevOutOfBedTimeOptional.get());
+            LOGGER.debug("msg=previous-out-of-bed-time-present target_date={} sleep_period={} oob_time={}", sleepPeriod.targetDate, sleepPeriod.period.shortName(), prevOutOfBedTimeOptional.get());
         }
         final OneDaysSensorData sensorDataSleepPeriod = sensorData.getForSleepPeriod(prevOutOfBedTimeOptional, sleepPeriod, hasOutlierFilterEnabled(accountId));
 
@@ -491,7 +486,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
 
 
-        LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={} time_zone={}", targetDate.toDate(), accountId, startTimeLocalUTC, endTimeLocalUTC, timeZoneOffsetMap.getTimeZoneIdWithUTCDefault(targetDate.getMillis()));
+        LOGGER.info("action=get_timeline date={} sleep_period={} account_id={} start_time={} end_time={}", targetDate.toDate(),sleepPeriod.period.shortName(), accountId, startTimeLocalUTC, endTimeLocalUTC);
 
         //get test group of user, will be default if no entries exist in database
         final Long testGroup = getTestGroup(accountId, startTimeLocalUTC, sensorDataSleepPeriod.timezoneOffsetMillis);
@@ -764,7 +759,13 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
 
         //motion mask filtering additive with other filters
-        if (this.hasMotionMaskPartnerFilter(accountId) && filteredOriginalMotions.get(0).motionMask.isPresent() &&  filteredOriginalPartnerMotions.get(0).motionMask.isPresent()){
+        final boolean hasMotionMasks;
+        if (trackerMotions.size()> 0 && filteredOriginalPartnerMotions.size()>0){
+            hasMotionMasks = trackerMotions.get(0).motionMask.isPresent() &&  filteredOriginalPartnerMotions.get(0).motionMask.isPresent();
+        } else {
+            hasMotionMasks = false;
+        }
+        if (this.hasMotionMaskPartnerFilter(accountId) && hasMotionMasks){
             trackerMotions = MotionMaskPartnerFilter.partnerFiltering(trackerMotions, filteredOriginalPartnerMotions);
             LOGGER.info("action=using-motion-mask-partner-filter account_id={} removed-motions={}", accountId, filteredOriginalMotions.size() - trackerMotions.size());
         }
