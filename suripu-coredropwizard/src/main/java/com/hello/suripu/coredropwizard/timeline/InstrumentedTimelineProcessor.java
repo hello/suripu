@@ -127,6 +127,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
+    public final static int MIN_MOTION_AMPLITUDE_LOW = 500;
     public final static int MIN_MOTION_AMPLITUDE = 1000;
     public final static int TIMEZONE_HISTORY_LIMIT = 5;
     final static long OUTLIER_GUARD_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
@@ -339,8 +340,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         //check to see if there's an issue with the data
         final boolean userLowerMotionCountThreshold = useNoMotionEnforcement(accountId);
+        final boolean useHigherMotionAmplitudeThreshold = useHigherMotionAmplitudeThreshold(accountId);
 
-        final TimelineError discardReason = isValidNight(accountId, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold);
+        final TimelineError discardReason = isValidNight(accountId, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold, useHigherMotionAmplitudeThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
@@ -804,9 +806,13 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData,final boolean useLowerMotionCountThreshold){
-
-
+    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData,final boolean useLowerMotionCountThreshold, final boolean useHighMotionAmplitudeThreshold){
+        final int minMotionAmplitude;
+        if(useHighMotionAmplitudeThreshold){
+            minMotionAmplitude = MIN_MOTION_AMPLITUDE;
+        } else{
+            minMotionAmplitude = MIN_MOTION_AMPLITUDE_LOW;
+        }
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
@@ -832,7 +838,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         boolean isMotionAmplitudeAboveMinimumThreshold = false;
 
         for(final TrackerMotion trackerMotion : originalMotionData){
-            if(trackerMotion.value > MIN_MOTION_AMPLITUDE){
+            if(trackerMotion.value > minMotionAmplitude){
                 isMotionAmplitudeAboveMinimumThreshold = true;
                 break;
             }
