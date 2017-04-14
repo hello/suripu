@@ -95,7 +95,7 @@ public class TimelineUtilsTest {
     }
 
     @Test
-    public void getPrevMightMainEventTimes(){
+    public void testGetPrevNightMainEventTimes(){
         final long accountId = 0L;
 
         final DateTime startTime = new DateTime(2017,2,1,0,0, DateTimeZone.UTC);
@@ -110,7 +110,39 @@ public class TimelineUtilsTest {
         testMainEventTimesList.add(mainEventTimesNight);
 
         final MainEventTimes prevNight =  TimelineUtils.getPrevNightMainEventTimes(0L, testMainEventTimesList, startTime.plusDays(1));
-        assert(prevNight.eventTimeMap.get(Event.Type.OUT_OF_BED).time == mainEventTimesNight.eventTimeMap.get(Event.Type.OUT_OF_BED).time);
+        assert(prevNight.eventTimeMap.get(Event.Type.OUT_OF_BED).time.equals(mainEventTimesNight.eventTimeMap.get(Event.Type.OUT_OF_BED).time));
+    }
+
+    @Test
+    public void testGetTargetDate(){
+        final TimeZoneHistory timeZoneHistory1 = new TimeZoneHistory(1428408400000L, 3600000, "America/Los_Angeles");
+        final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
+        timeZoneHistoryList.add(timeZoneHistory1);
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryList);
+
+        //still query date and not daysleeper
+        boolean isDaySleeper = false;
+        DateTime queryDate = new DateTime(2017, 02, 13, 00,00,00, DateTimeZone.UTC);
+        final Optional<Integer> queryHourOptional = Optional.of(2);
+        DateTime currentTimeLocal = new DateTime(2017, 02, 13, 13,00,00, DateTimeZone.forID("America/Los_Angeles"));
+        DateTime targetDate = TimelineUtils.getTargetDate(isDaySleeper, queryDate, currentTimeLocal, queryHourOptional, timeZoneOffsetMap);
+        assert(targetDate.getMillis() == queryDate.minusDays(1).getMillis());
+
+        //still query date but daysleeper
+        isDaySleeper = true;
+        targetDate = TimelineUtils.getTargetDate(isDaySleeper, queryDate, currentTimeLocal, queryHourOptional, timeZoneOffsetMap);
+        assert(targetDate.getMillis() == queryDate.getMillis());
+
+        //after query date and not day sleeper
+        isDaySleeper = false;
+        currentTimeLocal = new DateTime(2017, 02, 14, 00,00,00, DateTimeZone.forID("America/Los_Angeles"));
+        targetDate = TimelineUtils.getTargetDate(isDaySleeper, queryDate, currentTimeLocal, queryHourOptional, timeZoneOffsetMap);
+        assert(targetDate.getMillis() == queryDate.getMillis());
+
+        isDaySleeper = false;
+        currentTimeLocal = new DateTime(2017, 02, 13, 00,00,00, DateTimeZone.forID("America/Los_Angeles"));
+        targetDate = TimelineUtils.getTargetDate(isDaySleeper, queryDate, currentTimeLocal, Optional.absent(), timeZoneOffsetMap);
+        assert(targetDate.getMillis() == queryDate.getMillis());
     }
 
 
