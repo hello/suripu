@@ -295,7 +295,11 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
     }
 
-    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
+    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime queryDate, final Optional<TimelineFeedback> newFeedback) {
+        return retrieveTimelinesFast(accountId, queryDate, Optional.absent(), newFeedback);
+    }
+
+    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime queryDate, final Optional<Integer> queryHourOptional, final Optional<TimelineFeedback> newFeedback) {
 
         final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
 
@@ -312,6 +316,10 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         //if (this.hasNeuralNetFourEventsAlgorithmEnabled(accountId)) {
             algorithmChain.addFirst(AlgorithmType.NEURAL_NET_FOUR_EVENT);
         //}
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, queryDate.plusHours(44), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
+        final DateTime currentTimeLocal = timeZoneOffsetMap.getCurrentLocalDateTimeWithUTCDefault();
+        final DateTime targetDate = timelineUtils.getTargetDate(false, queryDate, currentTimeLocal, queryHourOptional, timeZoneOffsetMap);
+
 
         final DateTime startTimeLocalUTC = targetDate.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endTimeLocalUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
@@ -372,7 +380,6 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
 
-        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, endTimeLocalUTC.plusHours(12), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
         final Optional<MainEventTimes> computedMainEventTimesOptional = mainEventTimesDAO.getEventTimesForSleepPeriod(accountId,targetDate, SleepPeriod.Period.NIGHT);
 
         /*check if previously generated timeline is valid for lockdown - if valid for lockdown, uses cached main event times instead of running timeline algorithm*/

@@ -235,21 +235,25 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         return TimelineLog.DEFAULT_TEST_GROUP;
     }
 
-    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate,final Optional<Integer> queryHourOptional, final Optional<TimelineFeedback> newFeedback) {
+    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime queryDate,final Optional<Integer> queryHourOptional, final Optional<TimelineFeedback> newFeedback) {
 
         if (useTimelineSleepPeriods(accountId)) {
-            return retrieveTimelineForAllSleepPeriods(accountId, targetDate, queryHourOptional, newFeedback);
+            return retrieveTimelineForAllSleepPeriods(accountId, queryDate, queryHourOptional, newFeedback);
         }
-        return retrieveTimelineForSingleSleepPeriod(accountId, targetDate, SleepPeriod.night(targetDate), Optional.absent(), newFeedback);
+        return retrieveTimelineForSingleSleepPeriod(accountId, queryDate, queryHourOptional, SleepPeriod.Period.NIGHT, Optional.absent(), newFeedback);
 
     }
 
-    public TimelineResult retrieveTimelineForSingleSleepPeriod(final Long accountId, final DateTime targetDate, final SleepPeriod sleepPeriod, final Optional<Long> previousOutOfBedTimeOptional, final Optional<TimelineFeedback> newFeedback) {
+    public TimelineResult retrieveTimelineForSingleSleepPeriod(final Long accountId, final DateTime queryDate,final Optional<Integer> queryHourOptional, final SleepPeriod.Period period, final Optional<Long> previousOutOfBedTimeOptional, final Optional<TimelineFeedback> newFeedback) {
 
-        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, targetDate.withTimeAtStartOfDay().plusHours(44), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
+        final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryDAO.getMostRecentTimeZoneHistory(accountId, queryDate.withTimeAtStartOfDay().plusHours(44), TIMEZONE_HISTORY_LIMIT)); //END time UTC - add 12 hours to ensure entire night is within query window
+        final DateTime currentTimeUTC = DateTime.now().withZone(DateTimeZone.UTC);
+        final DateTime currentTimeLocal = timeZoneOffsetMap.getCurrentLocalDateTimeWithUTCDefault();
+        final DateTime targetDate = timelineUtils.getTargetDate(false, queryDate, currentTimeLocal, queryHourOptional, timeZoneOffsetMap);
+        final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(period, targetDate);
         final DateTime startTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, 0);
         final DateTime endTimeLocalUTC = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, 0);
-        final DateTime currentTimeUTC = DateTime.now().withZone(DateTimeZone.UTC);
+
 
         LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={} time_zone={}", targetDate.toDate(), accountId, startTimeLocalUTC, endTimeLocalUTC, timeZoneOffsetMap.getTimeZoneIdWithUTCDefault(targetDate.getMillis()));
 
