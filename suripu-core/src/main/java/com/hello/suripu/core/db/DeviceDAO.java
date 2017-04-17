@@ -36,6 +36,6 @@ public interface DeviceDAO extends Transactional<DeviceDAO>, DeviceReadDAO {
     @SqlUpdate("DELETE FROM account_device_map WHERE device_id = :device_id and account_id = :account_id;")
     Integer deleteSensePairing(@Bind("device_id") final String senseId, @Bind("account_id") Long accountId);
     
-    @SqlUpdate("UPDATE account_tracker_map set account_id=:account_id WHERE device_id= :device_id")
+    @SqlUpdate("UPDATE account_tracker_map set account_id=:account_id, last_updated = current_timestamp WHERE device_id= :device_id;")
     Integer updateAccountPairedForPill(@Bind("account_id") Long accountId, @Bind("device_id") String pillId);
 }
