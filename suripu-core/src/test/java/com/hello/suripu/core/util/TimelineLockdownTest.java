@@ -27,7 +27,7 @@ public class TimelineLockdownTest {
         long outOfBed = start.plusHours(10).plusMinutes(30).getMillis();
         long createdAt = start.plusHours(15).getMillis();
         final int offset = 0;
-        final Optional<MainEventTimes> computedMainEventTimesOptionalSuccess = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
+        final Optional<MainEventTimes> computedMainEventTimesOptionalSuccess = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset, AlgorithmType.NONE, TimelineError.NO_ERROR));
 
         final List<TrackerMotion> originalTrackerMotions = CSVLoader.loadTrackerMotionFromCSV("fixtures/tracker_motion/nn_raw_tracker_motion.csv");
 
@@ -39,7 +39,8 @@ public class TimelineLockdownTest {
         wake = start.plusHours(6).getMillis();
         outOfBed = start.plusHours(9).plusMinutes(5).getMillis();
         createdAt = start.plusHours(16).getMillis();
-        final Optional<MainEventTimes> computedMainEventTimesOptionalFailDuration = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
+
+        final Optional<MainEventTimes> computedMainEventTimesOptionalFailDuration = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset, AlgorithmType.NONE, TimelineError.NO_ERROR));
         isLockedDown= TimelineLockdown.isLockedDown(computedMainEventTimesOptionalFailDuration,ImmutableList.copyOf(originalTrackerMotions), true);
         assert(!isLockedDown);
 
@@ -47,7 +48,7 @@ public class TimelineLockdownTest {
         wake = start.plusHours(8).getMillis();
         outOfBed = start.plusHours(8).plusMinutes(1).getMillis();
         createdAt = start.plusHours(8).plusMinutes(2).getMillis();
-        final Optional<MainEventTimes> computedMainEventTimesOptionalFailMotion = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
+        final Optional<MainEventTimes> computedMainEventTimesOptionalFailMotion = Optional.of(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset, AlgorithmType.NONE, TimelineError.NO_ERROR));
         isLockedDown= TimelineLockdown.isLockedDown(computedMainEventTimesOptionalFailMotion,ImmutableList.copyOf(originalTrackerMotions), true);
         assert(!isLockedDown);
 
@@ -65,7 +66,7 @@ public class TimelineLockdownTest {
         long createdAt = start.plusHours(15).getMillis();
         final int offset = 0;
 
-        List<MainEventTimes> generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
+        List<MainEventTimes> generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         SleepDay targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
 
         final ImmutableList<TrackerMotion> originalTrackerMotions = ImmutableList.copyOf(CSVLoader.loadTrackerMotionFromCSV("fixtures/tracker_motion/nn_raw_tracker_motion.csv"));
@@ -85,14 +86,14 @@ public class TimelineLockdownTest {
         outOfBed = start.plusHours(8).plusMinutes(1).getMillis();
         createdAt = start.plusHours(8).plusMinutes(2).getMillis();
 
-        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
+        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
 
         final boolean attemptTimeline3 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(), originalTrackerMotions,  true);
         assert(attemptTimeline3);
 
         //invalid timeline, created < end so should attempt
-        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimesEmpty(accountId,targetSleepPeriod2, createdAt, offset));
+        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimesEmpty(accountId,targetSleepPeriod2, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
 
 
@@ -103,13 +104,13 @@ public class TimelineLockdownTest {
         wake = start.plusHours(5).getMillis();
         outOfBed = start.plusHours(9).plusMinutes(5).getMillis();
         createdAt = start.plusHours(16).getMillis();
-        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset));
+        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
         final boolean attemptTimeline4 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2,Optional.absent(), originalTrackerMotions, true);
         assert(!attemptTimeline4);
 
         //not lockeddown, invalid timeline created > end
-        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimesEmpty(accountId,targetSleepPeriod2, createdAt, offset));
+        generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimesEmpty(accountId,targetSleepPeriod2, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
         final boolean attemptTimeline5 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(), originalTrackerMotions, true);
         assert(!attemptTimeline5);

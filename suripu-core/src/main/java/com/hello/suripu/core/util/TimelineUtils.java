@@ -1523,7 +1523,7 @@ public class TimelineUtils {
                 return mainEventTimes;
             }
         }
-        return MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(prevNight), DateTime.now(DateTimeZone.UTC).getMillis(), 0);
+        return MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(prevNight), DateTime.now(DateTimeZone.UTC).getMillis(), 0, AlgorithmType.NONE, TimelineError.NO_DATA);
     }
 
     public static DateTime getTargetDate(final boolean isDaySleeper, final DateTime queryDate, final DateTime currentTimeLocal, final Optional<Integer> queryHourOptional, final TimeZoneOffsetMap timeZoneOffsetMap){

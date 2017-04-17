@@ -3,6 +3,8 @@ package com.hello.suripu.core.models;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
+import com.hello.suripu.core.util.AlgorithmType;
+import com.hello.suripu.core.util.TimelineError;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
@@ -23,12 +25,12 @@ public class SleepDayTest {
 
         final List<MainEventTimes> mainEventTimesList= Lists.newArrayList();
         final SleepDay testSleepDay = SleepDay.createSleepDay(accountId, targetDate, mainEventTimesList);
-        MainEventTimes prevNightMainEventTimes = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(targetDate.minusDays(1)), targetDate.getMillis(), 0);
+        MainEventTimes prevNightMainEventTimes = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(targetDate.minusDays(1)), targetDate.getMillis(), 0, AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
         Optional<Long> prevOOBOptional = testSleepDay.getPreviousOutOfBedTime(SleepPeriod.Period.MORNING, prevNightMainEventTimes);
         assert(!prevOOBOptional.isPresent());
 
         final long eventTime = 100L;
-        prevNightMainEventTimes = MainEventTimes.createMainEventTimes(accountId, eventTime,0,eventTime,0,eventTime,0,eventTime,0, targetDate.getMillis(), 0);
+        prevNightMainEventTimes = MainEventTimes.createMainEventTimes(accountId, eventTime,0,eventTime,0,eventTime,0,eventTime,0, targetDate.getMillis(), 0, AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
         prevOOBOptional = testSleepDay.getPreviousOutOfBedTime(SleepPeriod.Period.MORNING, prevNightMainEventTimes);
         assert(prevOOBOptional.isPresent());
         assert(prevOOBOptional.get() == eventTime);
@@ -37,7 +39,7 @@ public class SleepDayTest {
         final long sleep = targetDate.plusHours(14).getMillis();
         final long wake = targetDate.plusHours(21).getMillis();
         final long oob = targetDate.plusHours(22).getMillis();
-        final MainEventTimes targetAfternoonMainEventTimes = MainEventTimes.createMainEventTimes(accountId, inbed, 0,sleep,0,wake,0,oob,0, targetDate.getMillis(), 0);
+        final MainEventTimes targetAfternoonMainEventTimes = MainEventTimes.createMainEventTimes(accountId, inbed, 0,sleep,0,wake,0,oob,0, targetDate.getMillis(), 0, AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
         final SleepPeriodResults afternoonResults = SleepPeriodResults.create(targetAfternoonMainEventTimes, Optional.absent(),new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),DataCompleteness.ENOUGH_DATA,true);
         testSleepDay.updateSleepPeriod(afternoonResults);
         final SleepPeriod targetNight = SleepPeriod.night(targetDate);

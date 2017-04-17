@@ -2,10 +2,8 @@ package com.hello.suripu.core.models;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
-import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import com.hello.suripu.core.util.TimeZoneOffsetMap;
 
 /**
  * Created by jarredheinrich on 3/13/17.
@@ -47,7 +45,7 @@ public class SleepPeriodResults {
     public static SleepPeriodResults create(final MainEventTimes mainEventTimes, final Optional<Results> resultsOptional, final TimelineLog timelineLog, final DataCompleteness dataCompleteness,  final boolean processed) {
         return new SleepPeriodResults(mainEventTimes, resultsOptional, timelineLog, dataCompleteness, processed);
     }
-    public static SleepPeriodResults createEmpty(final long accountId, final SleepPeriod sleepPeriod, final TimelineLog timelineLog, final DataCompleteness dataCompleteness,  final boolean processed) {
-        return new SleepPeriodResults(MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0), Optional.absent(), timelineLog, dataCompleteness,  processed);
+    public static SleepPeriodResults createEmpty(final long accountId, final MainEventTimes mainEventTimes, final TimelineLog timelineLog, final DataCompleteness dataCompleteness,  final boolean processed) {
+        return new SleepPeriodResults(mainEventTimes, Optional.absent(), timelineLog, dataCompleteness,  processed);
     }
 }

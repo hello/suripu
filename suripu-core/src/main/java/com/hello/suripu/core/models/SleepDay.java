@@ -2,6 +2,8 @@ package com.hello.suripu.core.models;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
+import com.hello.suripu.core.util.AlgorithmType;
+import com.hello.suripu.core.util.TimelineError;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -29,9 +31,9 @@ public class SleepDay {
     }
 
     public static SleepDay createSleepDay(final long accountId, final DateTime targetDate, List<MainEventTimes> generatedMainEventTimes){
-        MainEventTimes morningEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.morning(targetDate), 0,0);
-        MainEventTimes afternoonEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.afternoon(targetDate), 0,0);
-        MainEventTimes nightEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(targetDate), 0,0);
+        MainEventTimes morningEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.morning(targetDate), 0,0, AlgorithmType.NONE, TimelineError.UNEXEPECTED);
+        MainEventTimes afternoonEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.afternoon(targetDate), 0,0, AlgorithmType.NONE, TimelineError.UNEXEPECTED);
+        MainEventTimes nightEvents = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(targetDate), 0,0, AlgorithmType.NONE, TimelineError.UNEXEPECTED);
 
         boolean morningProcessed = false;
         boolean afternoonProcessed = false;

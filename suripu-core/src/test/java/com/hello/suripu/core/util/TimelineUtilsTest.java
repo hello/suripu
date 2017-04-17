@@ -103,10 +103,10 @@ public class TimelineUtilsTest {
         final DateTime createdAt = startTime.plusDays(3);
         final List<MainEventTimes> testMainEventTimesList = Lists.newArrayList();
         for(int i = 0; i < 2; i ++){
-            final MainEventTimes testMainEventTimes = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.createSleepPeriod(SleepPeriod.Period.fromInteger(i), startTime), createdAt.getMillis(), 0);
+            final MainEventTimes testMainEventTimes = MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.createSleepPeriod(SleepPeriod.Period.fromInteger(i), startTime), createdAt.getMillis(), 0, AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
             testMainEventTimesList.add(testMainEventTimes);
         }
-        final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, startTime.withHourOfDay(20).getMillis(), 0, startTime.withHourOfDay(21).getMillis(), 0, startTime.withHourOfDay(22).getMillis(), 0, startTime.withHourOfDay(23).getMillis(), 0, createdAt.getMillis(), 0 );
+        final MainEventTimes mainEventTimesNight = MainEventTimes.createMainEventTimes(accountId, startTime.withHourOfDay(20).getMillis(), 0, startTime.withHourOfDay(21).getMillis(), 0, startTime.withHourOfDay(22).getMillis(), 0, startTime.withHourOfDay(23).getMillis(), 0, createdAt.getMillis(), 0 , AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
         testMainEventTimesList.add(mainEventTimesNight);
 
         final MainEventTimes prevNight =  TimelineUtils.getPrevNightMainEventTimes(0L, testMainEventTimesList, startTime.plusDays(1));

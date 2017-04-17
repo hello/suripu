@@ -127,7 +127,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
-    public final static int MIN_MOTION_AMPLITUDE = 500;
+    public final static int MIN_MOTION_AMPLITUDE_LOW = 500;
+    public final static int MIN_MOTION_AMPLITUDE = 1000;
     public final static int TIMEZONE_HISTORY_LIMIT = 5;
     final static long OUTLIER_GUARD_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 2.0); //min spacing between motion groups
     final static long DOMINANT_GROUP_DURATION = (long)(DateTimeConstants.MILLIS_PER_HOUR * 6.0); //num hours in a motion group to be considered the dominant one
@@ -347,8 +348,9 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         //check to see if there's an issue with the data
         final boolean userLowerMotionCountThreshold = useNoMotionEnforcement(accountId);
+        final boolean useHigherMotionAmplitudeThreshold = useHigherMotionAmplitudeThreshold(accountId);
 
-        final TimelineError discardReason = isValidNight(accountId, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold);
+        final TimelineError discardReason = isValidNight(accountId, sensorData.oneDaysTrackerMotion.filteredOriginalTrackerMotions, sensorData.oneDaysTrackerMotion.processedtrackerMotions, sensorData.oneDaysPartnerMotion.filteredOriginalTrackerMotions, userLowerMotionCountThreshold, useHigherMotionAmplitudeThreshold);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
@@ -390,6 +392,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         /* DEFAULT VALUE IS CACHED TIMELINE MAIN EVENTS */
         if (computedMainEventTimesOptional.isPresent()) {
             resultOptional = Optional.of(new TimelineAlgorithmResult(AlgorithmType.NONE, computedMainEventTimesOptional.get().getMainEvents()));
+            log.addMessage(computedMainEventTimesOptional.get().algorithmType, computedMainEventTimesOptional.get().timelineError);
         }
 
         if(!timelineLockedDown) {
@@ -423,7 +426,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
 
             //save to main event times
-            final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), resultOptional.get());
+            final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, SleepPeriod.night(targetDate), DateTime.now(DateTimeZone.UTC).getMillis(), timeZoneOffsetMap.getOffsetWithDefaultAsZero(DateTime.now(DateTimeZone.UTC).getMillis()), resultOptional.get(), TimelineError.NO_ERROR);
             mainEventTimesDAO.updateEventTimes(mainEventTimes);
         }
 
@@ -810,9 +813,13 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData,final boolean useLowerMotionCountThreshold){
-
-
+    static public TimelineError  isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData, final List<TrackerMotion> originalPartnerTrackerMotionData,final boolean useLowerMotionCountThreshold, final boolean useHighMotionAmplitudeThreshold){
+        final int minMotionAmplitude;
+        if(useHighMotionAmplitudeThreshold){
+            minMotionAmplitude = MIN_MOTION_AMPLITUDE;
+        } else{
+            minMotionAmplitude = MIN_MOTION_AMPLITUDE_LOW;
+        }
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
@@ -838,7 +845,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         boolean isMotionAmplitudeAboveMinimumThreshold = false;
 
         for(final TrackerMotion trackerMotion : originalMotionData){
-            if(trackerMotion.value > MIN_MOTION_AMPLITUDE){
+            if(trackerMotion.value > minMotionAmplitude){
                 isMotionAmplitudeAboveMinimumThreshold = true;
                 break;
             }

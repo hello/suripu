@@ -207,4 +207,9 @@ public class FeatureFlippedProcessor {
     protected Boolean useTimelineLockdown(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_LOCKDOWN, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean useHigherMotionAmplitudeThreshold(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.MIN_MOTION_AMPLITUDE_HIGH_THRESHOLD, accountId, Collections.EMPTY_LIST);
+    }
+
 }

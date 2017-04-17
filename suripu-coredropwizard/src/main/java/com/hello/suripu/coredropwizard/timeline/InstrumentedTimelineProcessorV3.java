@@ -510,7 +510,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         final TimelineError discardReason = isValidNight(accountId, sensorDataSleepPeriod, sleepPeriod, minMotionCountThreshold);
-        final MainEventTimes mainEventTimesEmpty = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0);
+        final MainEventTimes mainEventTimesEmpty = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, AlgorithmType.NONE, discardReason);
 
         if (!discardReason.equals(TimelineError.NO_ERROR)) {
             LOGGER.info("action=discard_timeline reason={} account_id={} date={} sleep_period={}", discardReason, accountId, targetDate.toDate(), sleepPeriod.period.shortName());
@@ -522,39 +522,35 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.NOT_ENOUGH_DATA, true);
+                return SleepPeriodResults.createEmpty(accountId, mainEventTimesEmpty, log, DataCompleteness.NOT_ENOUGH_DATA, true);
 
 
             case NOT_ENOUGH_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log,  DataCompleteness.NOT_ENOUGH_DATA, true);
+                return SleepPeriodResults.createEmpty(accountId, mainEventTimesEmpty, log, DataCompleteness.NOT_ENOUGH_DATA, true);
 
             case NO_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, DataCompleteness.NO_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.NO_DATA, true);
-
+                return SleepPeriodResults.createEmpty(accountId, mainEventTimesEmpty, log, DataCompleteness.NO_DATA, true);
             case LOW_AMP_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.NOT_ENOUGH_DATA, true);
-
+                return SleepPeriodResults.createEmpty(accountId, mainEventTimesEmpty, log, DataCompleteness.NOT_ENOUGH_DATA, true);
             case IMPROBABLE_SLEEP_PERIOD:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.ENOUGH_DATA, true);
-
+                return SleepPeriodResults.createEmpty(accountId, mainEventTimesEmpty, log, DataCompleteness.ENOUGH_DATA, true);
             case PARTNER_FILTER_REJECTED_DATA:
                 log.addMessage(discardReason);
                 //TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
                 mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-                return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log,  DataCompleteness.NOT_ENOUGH_DATA, true);
-
+                return SleepPeriodResults.createEmpty(accountId, mainEventTimesEmpty, log, DataCompleteness.NOT_ENOUGH_DATA, true);
             default:
                 break;
         }
@@ -593,16 +589,12 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             }
         }
         if (!resultOptional.isPresent()) {
-            mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
+            final MainEventTimes mainEventTimesAlgFail = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, AlgorithmType.NONE, TimelineError.UNEXEPECTED);
+            mainEventTimesDAO.updateEventTimes(mainEventTimesAlgFail);
             LOGGER.info("msg=no-successful-algorithm account_id={} date={} sleep_period={}", accountId, targetDate, sleepPeriod.period.shortName());
-
-            if(!timelineLockedDown) {
-                mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-            }
-
-            return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.ENOUGH_DATA, true);
+            return SleepPeriodResults.createEmpty(accountId, mainEventTimesAlgFail, log, DataCompleteness.ENOUGH_DATA, true);
         }
-        final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, resultOptional.get());
+        final MainEventTimes mainEventTimes = MainEventTimes.createMainEventTimes(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, resultOptional.get(), TimelineError.NO_ERROR);
 
         //populate timelines now
         final SleepPeriodResults sleepPeriodResults = populateSingleSleepPeriodTimeline(accountId, sensorDataSleepPeriod, timeZoneOffsetMap, mainEventTimes, log, !timelineLockedDown);
@@ -610,19 +602,17 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         //we should never hit this points - already should have returned empty timeline
         if (!sleepPeriodResults.resultsOptional.isPresent()) {
             LOGGER.info("msg=missing-populated-timeline-results account_id={} date={} sleep_period={}", accountId, targetDate, sleepPeriod.period.shortName());
-            if(!timelineLockedDown) {
-                mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-            }
-            return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.ENOUGH_DATA, false);
+            final MainEventTimes mainEventTimesPopulatedTimelineFail = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, mainEventTimes.algorithmType, TimelineError.UNEXEPECTED);
+            mainEventTimesDAO.updateEventTimes(mainEventTimesPopulatedTimelineFail);
+            return SleepPeriodResults.createEmpty(accountId, mainEventTimes, log, DataCompleteness.ENOUGH_DATA, false);
         }
 
         //we should never hit this points either
         if (!sleepPeriodResults.processed) {
             LOGGER.info("msg=invalid-timeline-generated account_id={} date={} sleep_period={}", accountId, targetDate, sleepPeriod.period.shortName());
-            if(!timelineLockedDown) {
-                mainEventTimesDAO.updateEventTimes(mainEventTimesEmpty);
-            }
-            return SleepPeriodResults.createEmpty(accountId, sleepPeriod, log, DataCompleteness.ENOUGH_DATA, false);
+            final MainEventTimes mainEventTimesPopulatedTimelineFail = MainEventTimes.createMainEventTimesEmpty(accountId, sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, mainEventTimes.algorithmType, TimelineError.INVALID_SLEEP_SCORE);
+            mainEventTimesDAO.updateEventTimes(mainEventTimesPopulatedTimelineFail);
+            return SleepPeriodResults.createEmpty(accountId, mainEventTimesPopulatedTimelineFail, log, DataCompleteness.ENOUGH_DATA, false);
         }
 
         //regenerated maineventtimes after populating to incorporate user feedback.
@@ -818,7 +808,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             } else{
                 dataCompletenessInvalidMainEventTimes = DataCompleteness.NOT_ENOUGH_DATA;
             }
-            return SleepPeriodResults.createEmpty(accountId, mainEventTimes.sleepPeriod,timelineLog,dataCompletenessInvalidMainEventTimes, true);
+            return SleepPeriodResults.createEmpty(accountId, mainEventTimes,timelineLog,dataCompletenessInvalidMainEventTimes, true);
         }
 
         final DateTime targetDate = mainEventTimes.sleepPeriod.targetDate;
@@ -986,7 +976,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
-        final MainEventTimes populatedMainEventTimes = MainEventTimes.createMainEventTimes(accountId, mainEventTimes.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepSegments);
+        final MainEventTimes populatedMainEventTimes = MainEventTimes.createMainEventTimes(accountId, mainEventTimes.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepSegments, mainEventTimes.algorithmType, mainEventTimes.timelineError);
         final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), Lists.newArrayList(mainEventTimes.sleepPeriod.period),reversedSegments, insights, sleepStats);
 
         return SleepPeriodResults.create(populatedMainEventTimes, timeline, sleepScore,sleepStats, sensorData, timeZoneOffsetMap, timelineLog, DataCompleteness.ENOUGH_DATA, true);
