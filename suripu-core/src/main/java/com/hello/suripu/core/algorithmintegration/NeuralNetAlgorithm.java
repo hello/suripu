@@ -395,7 +395,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
                 log.addMessage(AlgorithmType.NEURAL_NET,events);
 
-                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events));
+                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events, false));
 
             }
 

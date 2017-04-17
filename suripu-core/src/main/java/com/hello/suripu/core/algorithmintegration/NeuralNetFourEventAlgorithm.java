@@ -471,7 +471,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {
                 log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT,events);
-                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET_FOUR_EVENT,events));
+                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET_FOUR_EVENT,events, false));
 
             }
 

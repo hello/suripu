@@ -86,7 +86,7 @@ public class VotingAlgorithm implements TimelineAlgorithm {
 
             log.addMessage(AlgorithmType.VOTING, events);
 
-            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.VOTING,events));
+            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.VOTING,events, false));
         }
         catch (Exception e) {
             LOGGER.error("alg_status={} account_id={} date={}","exception",accountId,sensorData.date.toDate());

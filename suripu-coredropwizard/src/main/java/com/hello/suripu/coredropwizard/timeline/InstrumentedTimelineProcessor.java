@@ -292,7 +292,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
             return origResult;
         }
 
-        return new TimelineAlgorithmResult(origResult.algorithmType,newEvents,origResult.extraEvents.asList());
+        return new TimelineAlgorithmResult(origResult.algorithmType,newEvents,origResult.extraEvents.asList(), origResult.timelineLockedDown);
 
     }
 
@@ -391,7 +391,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         /* DEFAULT VALUE IS CACHED TIMELINE MAIN EVENTS */
         if (computedMainEventTimesOptional.isPresent()) {
-            resultOptional = Optional.of(new TimelineAlgorithmResult(AlgorithmType.NONE, computedMainEventTimesOptional.get().getMainEvents()));
+            resultOptional = Optional.of(new TimelineAlgorithmResult(computedMainEventTimesOptional.get().algorithmType, computedMainEventTimesOptional.get().getMainEvents(), timelineLockedDown));
             log.addMessage(computedMainEventTimesOptional.get().algorithmType, computedMainEventTimesOptional.get().timelineError);
         }
 
@@ -805,7 +805,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
 
-        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats,result.timelineLockedDown);
 
         return new PopulatedTimelines(Lists.newArrayList(timeline),isValidSleepScore);
     }

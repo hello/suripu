@@ -372,8 +372,8 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         final List<DataCompleteness> dataCompletenessList = Lists.newArrayList();
         final List<TimelineLog> timelineLogs = Lists.newArrayList();
         final List<SleepPeriod.Period> sleepPeriods = Lists.newArrayList();
-
-        //loops through sleepPeriodResults, extracts timeline events, highest sleepscore (w/ sleepStats), timeline logs and datacompleteness
+        boolean timelineLockedDown = false;
+        //loops through sleepPeriodResults, extracts timeline events, highest sleepscore (w/ sleepStats and timeline_lockdown status), timeline logs and datacompleteness
         for (int i = 0; i < numSleepPeriods; i++) {
             final SleepPeriod.Period period = SleepPeriod.Period.fromInteger(i);
             final SleepPeriodResults targetSleepPeriodResults = targetSleepDay.getSleepPeriod(period);
@@ -403,13 +403,14 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
                 sleepStats = targetSleepPeriodResults.resultsOptional.get().sleepStats;
                 timelineMessage = targetSleepPeriodResults.resultsOptional.get().timeline.message;
                 timelineInsight = targetSleepPeriodResults.resultsOptional.get().timeline.insights;
+                timelineLockedDown = targetSleepPeriodResults.resultsOptional.get().timeline.lockedDown;
             }
             allSleepPeriodsEvents.addAll(targetSleepPeriodResults.resultsOptional.get().timeline.events);
         }
 
         //if timeline events > 4, we have a valid timeline.
         if (allSleepPeriodsEvents.size() > MIN_NUM_EVENTS) {
-            final Timeline timeline = Timeline.create(sleepScore.value, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), sleepPeriods, allSleepPeriodsEvents, timelineInsight,sleepStats);
+            final Timeline timeline = Timeline.create(sleepScore.value, timelineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), sleepPeriods, allSleepPeriodsEvents, timelineInsight,sleepStats, timelineLockedDown);
             final TimelineResult timelineResult = TimelineResult.create(Lists.newArrayList(timeline), new ArrayList(timelineLogs));
             final AllPeriodTimelineResults allPeriodTimelineResults = AllPeriodTimelineResults.create(timelineResult, sleepScore, sleepStats, true);
             return allPeriodTimelineResults;
@@ -463,7 +464,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
                 //targetDateSleepPeriodsMainEventsMap will contain the target SleepPeriod at this point
                 final MainEventTimes generatedTargetPeriodMainEventTimes = targetSleepDay.getSleepPeriod(targetSleepPeriod.period).mainEventTimes;
                 final OneDaysSensorData targetSleepPeriodSensorData = fullDaySensorData.getForSleepPeriod(prevOutOfBedTimeOptional, targetSleepPeriod, hasOutlierFilterEnabled(accountId));
-                targetSleepPeriodResults = populateSingleSleepPeriodTimeline(accountId, targetSleepPeriodSensorData, timeZoneOffsetMap, generatedTargetPeriodMainEventTimes, new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), false);
+                targetSleepPeriodResults = populateSingleSleepPeriodTimeline(accountId, targetSleepPeriodSensorData, timeZoneOffsetMap, generatedTargetPeriodMainEventTimes, new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), true);
             }
 
             //put all results - valid and invalid timelines
@@ -564,7 +565,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         /* DEFAULT VALUE IS CACHED TIMELINE MAIN EVENTS */
         if (computedMainEventTimesOptional.isPresent()) {
-            resultOptional = Optional.of(new TimelineAlgorithmResult(AlgorithmType.NONE, computedMainEventTimesOptional.get().getMainEvents()));
+            resultOptional = Optional.of(new TimelineAlgorithmResult(AlgorithmType.NONE, computedMainEventTimesOptional.get().getMainEvents(), timelineLockedDown));
         }
 
         if (!timelineLockedDown) {
@@ -798,7 +799,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
     }
 
 
-    public SleepPeriodResults populateSingleSleepPeriodTimeline(final long accountId,final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final MainEventTimes mainEventTimes, final TimelineLog timelineLog, final boolean isNewResult) {
+    public SleepPeriodResults populateSingleSleepPeriodTimeline(final long accountId,final OneDaysSensorData sensorData, final TimeZoneOffsetMap timeZoneOffsetMap, final MainEventTimes mainEventTimes, final TimelineLog timelineLog, final boolean timelineLockedDown) {
 
         if(!mainEventTimes.hasValidEventTimes()){
             //if no valid period in day, it will result in not enough data for all periods once all periods are locked down
@@ -977,7 +978,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         List<SleepSegment> reversedSegments = Lists.reverse(reversed);
         final MainEventTimes populatedMainEventTimes = MainEventTimes.createMainEventTimes(accountId, mainEventTimes.sleepPeriod, DateTime.now(DateTimeZone.UTC).getMillis(), 0, sleepSegments, mainEventTimes.algorithmType, mainEventTimes.timelineError);
-        final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), Lists.newArrayList(mainEventTimes.sleepPeriod.period),reversedSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScoreValue, timeLineMessage, targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), Lists.newArrayList(mainEventTimes.sleepPeriod.period),reversedSegments, insights, sleepStats, timelineLockedDown);
 
         return SleepPeriodResults.create(populatedMainEventTimes, timeline, sleepScore,sleepStats, sensorData, timeZoneOffsetMap, timelineLog, DataCompleteness.ENOUGH_DATA, true);
     }

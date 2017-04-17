@@ -62,16 +62,21 @@ public class Timeline {
     @JsonProperty("insights")
     public final List<Insight> insights;
 
+    @JsonProperty("locked_down")
+    public final boolean lockedDown;
+
+
     private Timeline(final Integer score,  final String message, final String date,
                      final List<Period> sleepPeriods, final List<SleepSegment> events,
-                     final List<Insight> insights, final SleepStats sleepStats) {
-        this.score = score;
+                     final List<Insight> insights, final SleepStats sleepStats, final boolean lockedDown){
+            this.score = score;
         this.message = message;
         this.date = date;
         this.sleepPeriods = sleepPeriods;
         this.events = events;
         this.insights = insights;
         this.statistics = Optional.fromNullable(sleepStats);
+        this.lockedDown = lockedDown;
     }
 
     @JsonCreator
@@ -81,13 +86,14 @@ public class Timeline {
                                   @JsonProperty("sleep_period") final List<SleepPeriod.Period> sleepPeriods,
                                   @JsonProperty("segments") final List<SleepSegment> events,
                                   @JsonProperty("insights")  final List<Insight> insights,
-                                  @JsonProperty("statistics") final SleepStats sleepStats) {
+                                  @JsonProperty("statistics") final SleepStats sleepStats,
+                                  @JsonProperty("locked_down") final boolean lockedDown) {
         final List<Period> periodList = Lists.newArrayList();
         for (final SleepPeriod.Period sleepPeriod : sleepPeriods){
             periodList.add(Period.fromString(sleepPeriod.shortName()));
         }
         return new Timeline(score, message, date, periodList, events, insights,
-                (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats);
+                (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats, lockedDown);
     }
 
     @JsonCreator
@@ -96,17 +102,19 @@ public class Timeline {
                                   @JsonProperty("date") final String date,
                                   @JsonProperty("segments") final List<SleepSegment> events,
                                   @JsonProperty("insights")  final List<Insight> insights,
-                                  @JsonProperty("statistics") final SleepStats sleepStats) {
+                                  @JsonProperty("statistics") final SleepStats sleepStats,
+                                  @JsonProperty("locked_down") final boolean lockedDown) {
         return new Timeline(score, message, date, Lists.newArrayList(Period.NIGHT), events, insights,
-                (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats);
+                (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats, lockedDown);
     }
 
     public static Timeline create(final Integer score,
                                   final String message,
                                   final String date,
                                   final List<SleepSegment> events,
-                                  final List<Insight> insights) {
-        return new Timeline(score, message, date, Lists.newArrayList(Period.NIGHT), events, insights, null);
+                                  final List<Insight> insights,
+                                  final boolean lockedDown) {
+        return new Timeline(score, message, date, Lists.newArrayList(Period.NIGHT), events, insights, null, lockedDown);
     }
 
     public static Timeline create(final Integer score,
@@ -114,19 +122,20 @@ public class Timeline {
                                   final String date,
                                   final List<Period> sleepPeriods,
                                   final List<SleepSegment> events,
-                                  final List<Insight> insights) {
-        return new Timeline(score, message, date, sleepPeriods, events, insights, null);
+                                  final List<Insight> insights,
+                                  final boolean lockedDown) {
+        return new Timeline(score, message, date, sleepPeriods, events, insights, null, lockedDown);
     }
 
 
 
     public static Timeline createEmpty() {
-        return new Timeline(0, English.TIMELINE_NO_SLEEP_DATA, "", Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, null);
+        return new Timeline(0, English.TIMELINE_NO_SLEEP_DATA, "", Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, null, false);
     }
 
 
     public static Timeline createEmpty(final String message) {
-        return new Timeline(0, message, "", Collections.EMPTY_LIST, Collections.EMPTY_LIST,Collections.EMPTY_LIST, null);
+        return new Timeline(0, message, "", Collections.EMPTY_LIST, Collections.EMPTY_LIST,Collections.EMPTY_LIST, null, false);
     }
 
 }
