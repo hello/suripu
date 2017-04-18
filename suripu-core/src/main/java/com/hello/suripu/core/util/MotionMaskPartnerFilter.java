@@ -30,67 +30,95 @@ public class MotionMaskPartnerFilter {
         final PartnerMotionTimeSeries originalMotionTimeSeries= PartnerMotionTimeSeries.create(trackerMotions,partnerMotions);
         final List<TrackerMotionWithPartnerMotion> originalTrackerMotionTimeSeriesWithPartner = originalMotionTimeSeries.groupByLeft();
         final List<TrackerMotion> filteredTrackerMotions = new ArrayList<>();
-        final List<TrackerMotionWithPartnerMotion> removedTrackerMotionsWithPartnerMotion = new ArrayList<>();
-
-
-        PartnerMotionAtSecond motionAtSecond;
-
         final ListIterator<TrackerMotionWithPartnerMotion> trackerMotionIterator = originalTrackerMotionTimeSeriesWithPartner.listIterator();
+
         TrackerMotionWithPartnerMotion previousTrackerMotionWithPartnerMotion = originalTrackerMotionTimeSeriesWithPartner.get(0);
-        for (final TrackerMotionWithPartnerMotion trackerMotionWithPartner : originalTrackerMotionTimeSeriesWithPartner){
-            boolean userMovement = false;
-            boolean partnerMovedAtSecond = false;
+        TrackerMotionWithPartnerMotion trackerMotionWithPartner = originalTrackerMotionTimeSeriesWithPartner.get(0);
+        TrackerMotionWithPartnerMotion nextTrackerMotionWithPartner = originalTrackerMotionTimeSeriesWithPartner.get(0);
+        boolean hasNext = true;
+
+
+        //Iterates through TrackerMotionWithPartnerMotions, checks for unique user motion for each TrackerMotion using a +/- 1 second window.
+        while(hasNext){
+            if (trackerMotionIterator.hasPrevious()) {
+                previousTrackerMotionWithPartnerMotion = trackerMotionWithPartner;
+                trackerMotionWithPartner = nextTrackerMotionWithPartner;
+            } else{
+                trackerMotionIterator.next();
+            }
+
+            //check for motion at previous second
+            boolean partnerMovedAtPreviousSecond = false;
             if (trackerMotionIterator.hasPrevious()){
                 final int interMotionTimeDiffSeconds =(int) (trackerMotionWithPartner.trackerMotion.timestamp - previousTrackerMotionWithPartnerMotion.trackerMotion.timestamp )/ DateTimeConstants.MILLIS_PER_SECOND;
-                if (interMotionTimeDiffSeconds <= 60 && interMotionTimeDiffSeconds > 1 && previousTrackerMotionWithPartnerMotion.partnerMotionAtSeconds.size() > interMotionTimeDiffSeconds - 1) {
-                    partnerMovedAtSecond= previousTrackerMotionWithPartnerMotion.partnerMotionAtSeconds.get(interMotionTimeDiffSeconds - 1).didPartnerMove;
+                if (interMotionTimeDiffSeconds <= DateTimeConstants.SECONDS_PER_MINUTE && interMotionTimeDiffSeconds > 1 && previousTrackerMotionWithPartnerMotion.partnerMotionAtSeconds.size() > interMotionTimeDiffSeconds - 1) {
+                    partnerMovedAtPreviousSecond= previousTrackerMotionWithPartnerMotion.partnerMotionAtSeconds.get(interMotionTimeDiffSeconds - 1).didPartnerMove;
                 }
             }
-            if(trackerMotionWithPartner.partnerMotionAtSeconds.size()==0){
+
+            //check for motion at next second
+            boolean partnerMovedNextSecond = false;
+            if(trackerMotionIterator.hasNext()){
+                nextTrackerMotionWithPartner = trackerMotionIterator.next();
+                final int interMotionTimeDiffSeconds = (int) (nextTrackerMotionWithPartner.trackerMotion.timestamp - trackerMotionWithPartner.trackerMotion.timestamp) / DateTimeConstants.MILLIS_PER_SECOND;
+                if (interMotionTimeDiffSeconds <= 60 && interMotionTimeDiffSeconds > 0 && !nextTrackerMotionWithPartner.partnerMotionAtSeconds.isEmpty()) {
+                    partnerMovedNextSecond= nextTrackerMotionWithPartner.partnerMotionAtSeconds.get(DateTimeConstants.SECONDS_PER_MINUTE - interMotionTimeDiffSeconds).didPartnerMove;
+                }
+            } else{
+                //
+                hasNext = false;
+            }
+
+            //no associated partner motion: add and continue.
+            if(trackerMotionWithPartner.partnerMotionAtSeconds.isEmpty()){
                 filteredTrackerMotions.add(trackerMotionWithPartner.trackerMotion);
                 continue;
             }
-            PartnerMotionAtSecond motionAtNextSecond = trackerMotionWithPartner.partnerMotionAtSeconds.get(0);
-            boolean partnerMovedAtNextSecond = motionAtNextSecond.didPartnerMove;
 
+            //otherwise check for a least 1 second of unique user motion
+            final boolean hasUniqueUserMotion = hasUniqueMotionAtSecond(trackerMotionWithPartner, partnerMovedNextSecond, partnerMovedAtPreviousSecond);
 
-            for (int second = 0; second < 60;  second ++){
-                motionAtSecond = motionAtNextSecond;
-                if (trackerMotionWithPartner.partnerMotionAtSeconds.size() > second + UNCERTAINTY_SECS){
-                    motionAtNextSecond = trackerMotionWithPartner.partnerMotionAtSeconds.get(second + UNCERTAINTY_SECS);
-                    partnerMovedAtNextSecond = motionAtNextSecond.didPartnerMove;
-                }else if(trackerMotionIterator.hasNext()){
-                    TrackerMotionWithPartnerMotion nextTrackerMotionWithPartner = trackerMotionIterator.next();
-                    final int interMotionTimeDiffSeconds =(int) (nextTrackerMotionWithPartner.trackerMotion.timestamp - trackerMotionWithPartner.trackerMotion.timestamp)/ DateTimeConstants.MILLIS_PER_SECOND;
-                    if (interMotionTimeDiffSeconds <= 60 && interMotionTimeDiffSeconds > 0 && !nextTrackerMotionWithPartner.partnerMotionAtSeconds.isEmpty()) {
-                        motionAtNextSecond = nextTrackerMotionWithPartner.partnerMotionAtSeconds.get(DateTimeConstants.SECONDS_PER_MINUTE - interMotionTimeDiffSeconds);
-                        partnerMovedAtNextSecond = motionAtNextSecond.didPartnerMove;
-                    }
-                }
-                Boolean partnerMovedAtPrevSecond = partnerMovedAtSecond;
-                partnerMovedAtSecond = motionAtSecond.didPartnerMove;
-
-                //did user move
-                if(!motionAtSecond.didMove){
-                    continue;
-                }
-                //did partnerMove
-                if (partnerMovedAtNextSecond || partnerMovedAtSecond || partnerMovedAtPrevSecond){
-                    continue;
-                }
-
-                userMovement = true;
-            }
-
-
-            if (userMovement){
+            if (hasUniqueUserMotion){
                 filteredTrackerMotions.add(trackerMotionWithPartner.trackerMotion);
-            }else{
-                removedTrackerMotionsWithPartnerMotion.add(trackerMotionWithPartner);
             }
-            previousTrackerMotionWithPartnerMotion = trackerMotionWithPartner;
-
         }
         return filteredTrackerMotions;
+    }
+
+
+    private static boolean hasUniqueMotionAtSecond(final TrackerMotionWithPartnerMotion trackerMotionWithPartner,boolean partnerMovedNextMinuteFirstSecond, boolean partnerMovedAtPrevSecond) {
+        PartnerMotionAtSecond motionAtCurrentSecond = trackerMotionWithPartner.partnerMotionAtSeconds.get(0);
+        PartnerMotionAtSecond motionAtNextSecond = trackerMotionWithPartner.partnerMotionAtSeconds.get(1);
+        boolean partnerMovedAtSecond = motionAtCurrentSecond.didPartnerMove;
+        boolean partnerMovedAtNextSecond;
+
+        for (int second = 0; second < DateTimeConstants.SECONDS_PER_MINUTE; second++) {
+            if (second > 0) {
+                partnerMovedAtPrevSecond = partnerMovedAtSecond;
+                motionAtCurrentSecond = motionAtNextSecond;
+            }
+            
+            if (second + UNCERTAINTY_SECS < DateTimeConstants.SECONDS_PER_MINUTE) {
+                motionAtNextSecond = trackerMotionWithPartner.partnerMotionAtSeconds.get(second + UNCERTAINTY_SECS);
+                partnerMovedAtNextSecond = motionAtNextSecond.didPartnerMove;
+            } else {
+                partnerMovedAtNextSecond = partnerMovedNextMinuteFirstSecond;
+            }
+            partnerMovedAtSecond = motionAtCurrentSecond.didPartnerMove;
+
+            //did user move
+            if (!motionAtCurrentSecond.didMove) {
+                continue;
+            }
+            //did partnerMove
+            if (partnerMovedAtNextSecond || partnerMovedAtSecond || partnerMovedAtPrevSecond) {
+                continue;
+            }
+
+            //user moved with not associated partner motion
+            return true;
+        }
+        //no unique partner motions at this point
+        return false;
     }
 }

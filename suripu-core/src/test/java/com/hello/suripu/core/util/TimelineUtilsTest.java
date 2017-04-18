@@ -160,7 +160,6 @@ public class TimelineUtilsTest {
         final boolean validDuringPeriod = TimelineSafeguards.isValidInBedTime(afternoon, inBedEvent);
         assert(!invalidBeforePeriod);
         assert(!invalidAfterPeriod);
-
         assert(validDuringPeriod);
     }
 
