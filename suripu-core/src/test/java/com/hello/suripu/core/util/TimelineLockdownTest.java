@@ -73,12 +73,12 @@ public class TimelineLockdownTest {
 
         //missing sleep period - attempt
         final SleepPeriod targetSleepPeriod1 = SleepPeriod.afternoon(targetDate);
-        final boolean attemptTimeline1 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod1, Optional.absent(), originalTrackerMotions, true);
+        final boolean attemptTimeline1 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod1, Optional.absent(), originalTrackerMotions);
         assert(attemptTimeline1);
 
         //lockedDowntimeline present - dont attempt
         final SleepPeriod targetSleepPeriod2 = SleepPeriod.night(targetDate);
-        final boolean attemptTimeline2 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(),  originalTrackerMotions, true);
+        final boolean attemptTimeline2 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(),  originalTrackerMotions);
         assert(!attemptTimeline2);
 
         //not locked down - lots of movment, created < end so should attempt
@@ -89,7 +89,7 @@ public class TimelineLockdownTest {
         generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
 
-        final boolean attemptTimeline3 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(), originalTrackerMotions,  true);
+        final boolean attemptTimeline3 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(), originalTrackerMotions);
         assert(attemptTimeline3);
 
         //invalid timeline, created < end so should attempt
@@ -97,7 +97,7 @@ public class TimelineLockdownTest {
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
 
 
-        final boolean attemptTimeline3b = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2,Optional.absent(),  originalTrackerMotions, true);
+        final boolean attemptTimeline3b = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2,Optional.absent(),  originalTrackerMotions);
         assert(attemptTimeline3b);
 
         //not lockedDown (insufficient dur) - created > end
@@ -106,13 +106,13 @@ public class TimelineLockdownTest {
         createdAt = start.plusHours(16).getMillis();
         generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimes(accountId, inbed, offset, sleep, offset, wake, offset, outOfBed, offset, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
-        final boolean attemptTimeline4 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2,Optional.absent(), originalTrackerMotions, true);
+        final boolean attemptTimeline4 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2,Optional.absent(), originalTrackerMotions);
         assert(!attemptTimeline4);
 
         //not lockeddown, invalid timeline created > end
         generatedMainEventTimesList = Lists.newArrayList(MainEventTimes.createMainEventTimesEmpty(accountId,targetSleepPeriod2, createdAt, offset,AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR));
         targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList);
-        final boolean attemptTimeline5 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(), originalTrackerMotions, true);
+        final boolean attemptTimeline5 = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod2, Optional.absent(), originalTrackerMotions);
         assert(!attemptTimeline5);
         //notLockedDown created>=end invalid
         //notLockedDown created>=end valid

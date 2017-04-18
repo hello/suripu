@@ -92,11 +92,8 @@ public class TimelineLockdown {
     check if sleepPeriod already attempted and a valid timeline generated, if not, generate timeline for that period?
 
     */
-    public static boolean isAttemptNeededForSleepPeriod(final SleepDay targetSleepDay, final SleepPeriod targetSleepPeriod, final Optional<Long> prevOutOfBedTimeOptional,  final ImmutableList<TrackerMotion> processedTrackerMotions, final boolean attemptLockdown) {
+    public static boolean isAttemptNeededForSleepPeriod(final SleepDay targetSleepDay, final SleepPeriod targetSleepPeriod, final Optional<Long> prevOutOfBedTimeOptional,  final ImmutableList<TrackerMotion> processedTrackerMotions) {
         //were main event times generated for target period?
-        if (!attemptLockdown){
-            return true;
-        }
         if (!targetSleepDay.getSleepPeriod(targetSleepPeriod.period).processed) {
             return true;
         }

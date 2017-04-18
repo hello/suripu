@@ -1527,10 +1527,10 @@ public class TimelineUtils {
     }
 
     public static DateTime getTargetDate(final boolean isDaySleeper, final DateTime queryDate, final DateTime currentTimeLocal, final Optional<Integer> queryHourOptional, final TimeZoneOffsetMap timeZoneOffsetMap){
-        final long queryDateLocal = queryDate.getMillis() - timeZoneOffsetMap.getOffsetWithDefaultAsZero(queryDate.getMillis());
+        final long endQueryDate = queryDate.getMillis() - timeZoneOffsetMap.getOffsetWithDefaultAsZero(queryDate.getMillis()) + DateTimeConstants.MILLIS_PER_DAY;
         final boolean isStillQueryDate;
         if (queryHourOptional.isPresent()) {
-            isStillQueryDate = (currentTimeLocal.withTimeAtStartOfDay().getMillis() - queryDateLocal) < DateTimeConstants.MILLIS_PER_DAY;
+            isStillQueryDate = currentTimeLocal.withTimeAtStartOfDay().isBefore(endQueryDate);
         } else {
             isStillQueryDate = false;
         }

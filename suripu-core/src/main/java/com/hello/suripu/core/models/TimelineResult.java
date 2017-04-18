@@ -63,7 +63,7 @@ public class TimelineResult {
 
         //hack: set log to last log in list.
         final Optional<TimelineLog> logOptional;
-        if(logs.size()>0){
+        if(!logs.isEmpty()){
             logOptional = Optional.of(logs.get(logs.size()-1));
         } else{
             logOptional = Optional.absent();

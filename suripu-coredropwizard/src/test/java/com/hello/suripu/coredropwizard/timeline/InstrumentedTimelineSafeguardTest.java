@@ -4,8 +4,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
@@ -41,6 +44,7 @@ public class InstrumentedTimelineSafeguardTest {
     final AlgorithmType algType = AlgorithmType.NONE;
     final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(new DateTime(t0, DateTimeZone.UTC));
     final ImmutableList<TrackerMotion> trackerMotions = ImmutableList.copyOf(CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv"));
+
 
     private Event getEvent(Event.Type type, final long time) {
         return Event.createFromType(type, time, time + 60000L, 0, Optional.of("BLAH BLAH"), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
@@ -418,5 +422,28 @@ public class InstrumentedTimelineSafeguardTest {
         assertThat(testMotionDuringSleep, is(true));
 
     }
+
+    @Test
+    public void testIsProbableSleepPeriod(){
+        final List<Sample> sensorDataLight= CSVLoader.loadSensorDataFromCSV("fixtures/light_2016_10_29_dst.csv");
+        final List<Sample> sensorDataSound= CSVLoader.loadSensorDataFromCSV("fixtures/sound_2016_10_29_dst.csv");
+        final DateTime targetDate = new DateTime(2016,10,29,00,00,00, DateTimeZone.forID("Europe/Berlin"));
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        final DateTime currentTime = DateTime.now(DateTimeZone.UTC);
+        allSensorSampleList.add(Sensor.LIGHT, sensorDataLight);
+        allSensorSampleList.add(Sensor.SOUND_PEAK_DISTURBANCE, sensorDataSound);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(allSensorSampleList, trackerMotions,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST), targetDate, targetDate.plusHours(4), targetDate.plusHours(36), currentTime, trackerMotions.get(0).offsetMillis);
+        final SleepPeriod periodNight = SleepPeriod.night(targetDate);
+        final SleepPeriod periodAfternoon = SleepPeriod.afternoon(targetDate);
+        final SleepPeriod periodMorning= SleepPeriod.morning(targetDate);
+
+        final boolean probablePeriod = TimelineSafeguards.isProbablePeriod(false, periodNight, oneDaysSensorData);
+        final boolean improbablePeriodMorning = TimelineSafeguards.isProbablePeriod(false, periodMorning, oneDaysSensorData);
+        final boolean improbablePeriodAfternoon = TimelineSafeguards.isProbablePeriod(false, periodAfternoon, oneDaysSensorData);
+        assert(probablePeriod);
+        assert(!improbablePeriodMorning);
+        assert(!improbablePeriodAfternoon);
+    }
+
 
 }

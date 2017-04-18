@@ -444,15 +444,21 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         SleepDay targetSleepDay = SleepDay.createSleepDay(accountId, targetDate, generatedMainEventTimesList );
 
         //loops through potential sleep periods
+        final Optional<TimelineFeedback> newFeedback = Optional.absent();
+        final boolean attemptLockDown = !newFeedback.isPresent() && useTimelineLockdown(accountId);
+
         for (int i = 0; i < numSleepPeriods; i++) {
             final SleepPeriod targetSleepPeriod = SleepPeriod.createSleepPeriod(SleepPeriod.Period.fromInteger(i), targetDate);
             //Placeholder for feedback - current defaults to no new feedback
-            final Optional<TimelineFeedback> newFeedback = Optional.absent();
             //check if new timeline needs to be attempted
             final Optional<Long> prevOutOfBedTimeOptional = targetSleepDay.getPreviousOutOfBedTime(targetSleepPeriod.period, prevNightMainEventTimes);
 
-            final boolean attemptLockDown = !newFeedback.isPresent() && useTimelineLockdown(accountId);
-            final boolean attemptTimeline = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod,  prevOutOfBedTimeOptional, fullDaySensorData.oneDaysTrackerMotion.processedtrackerMotions, attemptLockDown);
+            final boolean attemptTimeline;
+            if (attemptLockDown) {
+                attemptTimeline = TimelineLockdown.isAttemptNeededForSleepPeriod(targetSleepDay, targetSleepPeriod, prevOutOfBedTimeOptional, fullDaySensorData.oneDaysTrackerMotion.processedtrackerMotions);
+            } else{
+                attemptTimeline = true;
+            }
 
             final SleepPeriodResults targetSleepPeriodResults;
             if(attemptTimeline){
@@ -1030,9 +1036,8 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         //CHECK IF PROBABLE SLEEP BASED ON SENSOR DATA
         final boolean daySleeper = sensorData.userBioInfo.primarySleepPeriod != SleepPeriod.Period.NIGHT;
-        if (!TimelineSafeguards.isProbableNight(accountId, daySleeper, sleepPeriod, sensorData)){
+        if (!TimelineSafeguards.isProbablePeriod(daySleeper, sleepPeriod, sensorData)){
             return TimelineError.IMPROBABLE_SLEEP_PERIOD;
-
         }
 
         //IF THE FILTERING WAS NOT USED (OR HAD NO EFFECT) WE ARE DONE

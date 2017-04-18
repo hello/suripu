@@ -145,5 +145,23 @@ public class TimelineUtilsTest {
         assert(targetDate.getMillis() == queryDate.getMillis());
     }
 
+    @Test
+    public void testValidInBedTime(){
+
+        final DateTime targetDay = new DateTime(2017, 1,1,0,0,0, DateTimeZone.forID("America/Los_Angeles"));
+        final int offset = -28800000;
+        final DateTime inBedTime = targetDay.withHourOfDay(16);
+        final Event inBedEvent = Event.createFromType(Event.Type.IN_BED,inBedTime.getMillis(), inBedTime.plusMinutes(1).getMillis(), offset,Optional.of("message"), Optional.absent(), Optional.absent());
+        final SleepPeriod morning = SleepPeriod.morning(targetDay);
+        final SleepPeriod afternoon = SleepPeriod.afternoon(targetDay);
+        final SleepPeriod night = SleepPeriod.night(targetDay);
+        final boolean invalidBeforePeriod = TimelineSafeguards.isValidInBedTime(night, inBedEvent);
+        final boolean invalidAfterPeriod = TimelineSafeguards.isValidInBedTime(morning, inBedEvent );
+        final boolean validDuringPeriod = TimelineSafeguards.isValidInBedTime(afternoon, inBedEvent);
+        assert(!invalidBeforePeriod);
+        assert(!invalidAfterPeriod);
+
+        assert(validDuringPeriod);
+    }
 
 }

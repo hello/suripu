@@ -275,7 +275,7 @@ public class TimelineSafeguards {
     //checks if there is any motion observed during during sleep - We should expect some motion during sleep.
     public static boolean motionDuringSleepCheck(final int minMotionCount, final ImmutableList<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
 
-        final float sleepDuration = (int) ((double) (wakeUpTimestamp - fallAsleepTimestamp) / 60000.0);
+        final float sleepDuration = (wakeUpTimestamp - fallAsleepTimestamp) / DateTimeConstants.MILLIS_PER_MINUTE;
         final int requiredSleepDuration = 120; // taking into account sleep window padding - this requires a minimal of 3 hours of sleep with no motion
         final int sleepWindowPadding = 30 * DateTimeConstants.MILLIS_PER_MINUTE; //excludes first 30 and last 30 minutes of sleeps
         final int motionCount = getMotionCount(trackerMotions, fallAsleepTimestamp + sleepWindowPadding, wakeUpTimestamp - sleepWindowPadding);
@@ -403,7 +403,7 @@ public class TimelineSafeguards {
 
     }
 
-    private boolean isValidInBedTime(final SleepPeriod sleepPeriod, final Event inBedEvent){
+    public static boolean isValidInBedTime(final SleepPeriod sleepPeriod, final Event inBedEvent){
 
         if(inBedEvent.getStartTimestamp() >=  sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_IN_BED, inBedEvent.getTimezoneOffset()).getMillis()){
             return false;
@@ -414,7 +414,7 @@ public class TimelineSafeguards {
         return true;
     }
 
-    public static boolean isProbableNight(final Long accountId, final boolean daySleeper, final SleepPeriod sleepPeriod, final OneDaysSensorData oneDaysSensorData){
+    public static boolean isProbablePeriod(final boolean daySleeper, final SleepPeriod sleepPeriod, final OneDaysSensorData oneDaysSensorData){
         // thresholds based on estimated prevalence of day sleepers
         final boolean hasPartner = oneDaysSensorData.oneDaysPartnerMotion.originalTrackerMotions.size() > 0;
 

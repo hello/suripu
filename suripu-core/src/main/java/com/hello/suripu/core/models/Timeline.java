@@ -92,8 +92,14 @@ public class Timeline {
         for (final SleepPeriod.Period sleepPeriod : sleepPeriods){
             periodList.add(Period.fromString(sleepPeriod.shortName()));
         }
-        return new Timeline(score, message, date, periodList, events, insights,
-                (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats, lockedDown);
+        final SleepStats timelineSleepStats;
+        if (sleepStats.isFromNull()){
+            timelineSleepStats = null;
+        } else{
+            timelineSleepStats = sleepStats;
+        }
+        return new Timeline(score, message, date, Lists.newArrayList(Period.NIGHT), events, insights,
+                timelineSleepStats, lockedDown);
     }
 
     @JsonCreator
@@ -104,8 +110,14 @@ public class Timeline {
                                   @JsonProperty("insights")  final List<Insight> insights,
                                   @JsonProperty("statistics") final SleepStats sleepStats,
                                   @JsonProperty("locked_down") final boolean lockedDown) {
+        final SleepStats timelineSleepStats;
+        if (sleepStats.isFromNull()){
+            timelineSleepStats = null;
+        } else{
+            timelineSleepStats = sleepStats;
+        }
         return new Timeline(score, message, date, Lists.newArrayList(Period.NIGHT), events, insights,
-                (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats, lockedDown);
+                timelineSleepStats, lockedDown);
     }
 
     public static Timeline create(final Integer score,
