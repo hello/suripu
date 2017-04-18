@@ -33,6 +33,8 @@ public class Timeline {
     @JsonProperty("metrics")
     public final List<SleepMetrics> metrics;
 
+    @JsonProperty("locked_down")
+    public final boolean lockedDown;
 
     public Timeline(final Optional<Integer> score,
                     final ScoreCondition scoreCondition,
@@ -40,7 +42,8 @@ public class Timeline {
                     final String dateNight,
                     final List<com.hello.suripu.core.models.Timeline.Period> sleepPeriods,
                     final List<TimelineEvent> events,
-                    final List<SleepMetrics> metrics) {
+                    final List<SleepMetrics> metrics,
+                    final boolean lockedDown) {
         this.score = score;
         this.scoreCondition = scoreCondition;
         this.message = message;
@@ -48,18 +51,19 @@ public class Timeline {
         this.sleepPeriods = sleepPeriods;
         this.events = events;
         this.metrics = metrics;
+        this.lockedDown = lockedDown;
     }
 
     public static Timeline create() {
         return new Timeline(Optional.<Integer>absent(), ScoreCondition.UNAVAILABLE,
                 null, null, Collections.EMPTY_LIST,
-                Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+                Collections.EMPTY_LIST, Collections.EMPTY_LIST, false);
     }
 
     public static Timeline createEmpty(final DateTime date, final String message) {
         return new Timeline(Optional.<Integer>absent(), ScoreCondition.UNAVAILABLE,
                 message, DateTimeUtil.dateToYmdString(date), Collections.EMPTY_LIST,
-                Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+                Collections.EMPTY_LIST, Collections.EMPTY_LIST, false);
     }
 
     public static Timeline createEmpty(DateTime date) {
@@ -76,7 +80,8 @@ public class Timeline {
                 timelineV1.date,
                 timelineV1.sleepPeriods,
                 TimelineEvent.fromV1(timelineV1.events),
-                SleepMetrics.fromV1(timelineV1)
+                SleepMetrics.fromV1(timelineV1),
+                timelineV1.lockedDown
         );
     }
 
