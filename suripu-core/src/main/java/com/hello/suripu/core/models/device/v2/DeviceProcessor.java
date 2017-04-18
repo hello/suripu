@@ -105,7 +105,6 @@ public class DeviceProcessor {
         return Optional.of(PairingInfo.create(senseAccountPair.externalDeviceId, pairs.size()));
     }
 
-
     /**
      * Unpair a pill from an account
      *
