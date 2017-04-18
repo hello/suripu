@@ -24,6 +24,10 @@ public class SleepPeriod {
     private final static int NIGHT_IN_BED_END_HOUR = 28;
     private final static int NIGHT_DATA_END_HOUR = 36;
 
+    private static int MORNING_ROLLOVER = 7;
+    private static int AFTERNOON_ROLLOVER = 19;
+    private static int FULLDAY_ROLLOVER = 27;
+
 
     public final SleepPeriod.Period period;
     public final ImmutableMap<Boundary, Integer> hoursOffset;
@@ -222,32 +226,25 @@ public class SleepPeriod {
     }
 
     public Long getSleepPeriodMillis(final Boundary boundary, final int offsetMillis){
-        switch(period) {
-            case MORNING:
-                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis).getMillis();
-            case AFTERNOON:
-                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis).getMillis();
-            default:
-                return targetDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusHours(this.hoursOffset.get(boundary)).minusMillis(offsetMillis).getMillis();
-        }
+        return getSleepPeriodTime(boundary, offsetMillis).getMillis();
     }
 
     public static List<SleepPeriod> getSleepPeriodQueue(final DateTime targetDate, final DateTime currentTimeLocal){
         final List<SleepPeriod> sleepPeriods = new ArrayList<>();
 
         //for previous complete day -- roll over 3am
-        if (currentTimeLocal.isAfter(targetDate.plusDays(1).withTimeAtStartOfDay().plusHours(3).getMillis())){
+        if (currentTimeLocal.isAfter(targetDate.withTimeAtStartOfDay().plusHours(FULLDAY_ROLLOVER).getMillis())){
             return createAllSleepPeriods(targetDate);
         }
         //for current day upto night period -- roll over 11am - include afternoon after 7pm
-        if (currentTimeLocal.isAfter(targetDate.withTimeAtStartOfDay().plusHours(19).getMillis())){
+        if (currentTimeLocal.isAfter(targetDate.withTimeAtStartOfDay().plusHours(AFTERNOON_ROLLOVER).getMillis())){
             sleepPeriods.add(SleepPeriod.morning(targetDate));
             sleepPeriods.add(SleepPeriod.afternoon(targetDate));
 
             return sleepPeriods;
         }
         //for current day morning period only roll over 11 am
-        if (currentTimeLocal.isAfter(targetDate.withTimeAtStartOfDay().plusHours(7).getMillis())){
+        if (currentTimeLocal.isAfter(targetDate.withTimeAtStartOfDay().plusHours(MORNING_ROLLOVER).getMillis())){
             sleepPeriods.add(SleepPeriod.morning(targetDate));
             return sleepPeriods;
         }

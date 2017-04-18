@@ -278,7 +278,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         }
 
         //save sleep stats
-        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,targetDate.withTimeAtStartOfDay(), sleepPeriodResults.resultsOptional.get().sleepScore.value, sleepPeriodResults.resultsOptional.get().sleepScore, sleepPeriodResults.resultsOptional.get().sleepStats, sleepPeriodResults.resultsOptional.get().timeZoneOffsetMap.getOffsetWithDefaultAsZero(currentTimeUTC.getMillis()));
+        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,targetDate.withTimeAtStartOfDay(), sleepPeriodResults.resultsOptional.get().sleepScore.value, sleepPeriodResults.resultsOptional.get().sleepScore, sleepPeriodResults.resultsOptional.get().sleepStats, sleepPeriodResults.dataOptional.get().timeZoneOffsetMap.getOffsetWithDefaultAsZero(currentTimeUTC.getMillis()));
         LOGGER.debug("action=updated-stats-score updated={} account_id={} score={}, stats={}", updatedStats, accountId,  sleepPeriodResults.resultsOptional.get().sleepScore, sleepPeriodResults.resultsOptional.get().sleepStats);
 
         return TimelineResult.create(Lists.newArrayList(sleepPeriodResults.resultsOptional.get().timeline), sleepPeriodResults.timelineLog);

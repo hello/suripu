@@ -40,7 +40,7 @@ public class SleepDayTest {
         final long wake = targetDate.plusHours(21).getMillis();
         final long oob = targetDate.plusHours(22).getMillis();
         final MainEventTimes targetAfternoonMainEventTimes = MainEventTimes.createMainEventTimes(accountId, inbed, 0,sleep,0,wake,0,oob,0, targetDate.getMillis(), 0, AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.NO_ERROR);
-        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(targetAfternoonMainEventTimes, Optional.absent(),new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),DataCompleteness.ENOUGH_DATA,true);
+        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(targetAfternoonMainEventTimes, Optional.absent(), Optional.absent(),new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),DataCompleteness.ENOUGH_DATA,true);
         testSleepDay.updateSleepPeriod(afternoonResults);
         final SleepPeriod targetNight = SleepPeriod.night(targetDate);
         prevOOBOptional = testSleepDay.getPreviousOutOfBedTime(SleepPeriod.Period.NIGHT, prevNightMainEventTimes);

@@ -37,7 +37,7 @@ public class Timeline {
                     }
                 }
             }
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("invalid sleep period: " + sleepPeriodName);
         }
     }
 

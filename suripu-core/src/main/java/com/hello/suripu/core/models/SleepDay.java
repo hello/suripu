@@ -64,9 +64,9 @@ public class SleepDay {
             }
         }
         // assumes data is complete and timelines are valid for periods with a prev. generated mainEventTImes;
-        final SleepPeriodResults morningResults = SleepPeriodResults.create(morningEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),morningDataCompleteness, morningProcessed);
-        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(afternoonEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), afternoonDataCompleteness, afternoonProcessed);
-        final SleepPeriodResults nightResults = SleepPeriodResults.create(nightEvents, Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), nightDataCompleteness, nightProcessed);
+        final SleepPeriodResults morningResults = SleepPeriodResults.create(morningEvents, Optional.absent(),Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()),morningDataCompleteness, morningProcessed);
+        final SleepPeriodResults afternoonResults = SleepPeriodResults.create(afternoonEvents, Optional.absent(),Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), afternoonDataCompleteness, afternoonProcessed);
+        final SleepPeriodResults nightResults = SleepPeriodResults.create(nightEvents, Optional.absent(),Optional.absent(), new TimelineLog(accountId, targetDate.getMillis(), DateTime.now(DateTimeZone.UTC).getMillis()), nightDataCompleteness, nightProcessed);
 
         return new SleepDay(targetDate, morningResults, afternoonResults, nightResults);
 

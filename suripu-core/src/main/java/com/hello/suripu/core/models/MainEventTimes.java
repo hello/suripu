@@ -123,15 +123,19 @@ public class MainEventTimes {
                 case IN_BED:
                     inBedTime = sleepSegment.getTimestamp();
                     inBedOffset = sleepSegment.getOffsetMillis();
+                    break;
                 case SLEEP:
                     sleepTime = sleepSegment.getTimestamp();
                     sleepOffset = sleepSegment.getOffsetMillis();
+                    break;
                 case WAKE_UP:
                     wakeUpTime = sleepSegment.getTimestamp();
                     wakeUpOffset = sleepSegment.getOffsetMillis();
+                    break;
                 case OUT_OF_BED:
                     outOfBedTime = sleepSegment.getTimestamp();
                     outOfBedOffset = sleepSegment.getOffsetMillis();
+                    break;
                 default: continue;
             }
         }
