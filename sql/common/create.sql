@@ -599,6 +599,7 @@ INSERT INTO voice_commands(command, voice_command_subtopic_id) VALUES
 
 
 -- Added Feb 22nd
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";  -- need this for the uuid generation
 ALTER TABLE accounts ADD COLUMN external_id uuid DEFAULT uuid_generate_v4();
 
 -- Added Feb 23rd
