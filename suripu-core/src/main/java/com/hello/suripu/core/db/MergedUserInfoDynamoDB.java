@@ -530,25 +530,6 @@ public class MergedUserInfoDynamoDB implements MergedUserInfoDAO {
         return Optional.absent();
     }
 
-
-    @Override
-    public Optional<DateTimeZone> getTimezone(final String senseId, final Long accountId) {
-        final GetItemRequest getItemRequest = new GetItemRequest();
-        final Map<String, AttributeValue> keys = new HashMap<>();
-        keys.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
-        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
-
-        getItemRequest.withTableName(tableName)
-                .withKey(keys);
-
-        final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
-        if(result.getItem() == null) {
-            LOGGER.warn("Timezone item was null for sense {} and accountId {}", senseId, accountId);
-            return Optional.absent();
-        }
-        return getTimeZoneFromAttributes(senseId, accountId, result.getItem());
-    }
-
     static Optional<DateTimeZone> getTimeZoneFromAttributes(String deviceId, long accountId, Map<String, AttributeValue> item){
         final HashSet<String> timezoneAttributes = new HashSet<>();
         Collections.addAll(timezoneAttributes, TIMEZONE_ID_ATTRIBUTE_NAME);
@@ -587,6 +568,23 @@ public class MergedUserInfoDynamoDB implements MergedUserInfoDAO {
         return Optional.absent();
     }
 
+    @Override
+    public Optional<DateTimeZone> getTimezone(final String senseId, final Long accountId) {
+        final GetItemRequest getItemRequest = new GetItemRequest();
+        final Map<String, AttributeValue> keys = new HashMap<>();
+        keys.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
+        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+
+        getItemRequest.withTableName(tableName)
+                .withKey(keys);
+
+        final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
+        if(result.getItem() == null) {
+            LOGGER.warn("Timezone item was null for sense {} and accountId {}", senseId, accountId);
+            return Optional.absent();
+        }
+        return getTimeZoneFromAttributes(senseId, accountId, result.getItem());
+    }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
