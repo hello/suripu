@@ -107,28 +107,30 @@ public class PairedAccountsTest {
     @Test
     public void unpairUserNotPairedToSense() {
         when(deviceDAO.getMostRecentSensePairByAccountId(requester)).thenReturn(Optional.absent());
-        final PairedAccounts.UnpairingStatus status = this.pairedAccounts.remove(requester, Lists.newArrayList());
-        assertEquals("no sense paired", PairedAccounts.UnpairingStatus.NO_SENSE_PAIRED, status);
+        final UnpairingStatus status = this.pairedAccounts.remove(requester, Lists.newArrayList());
+        assertEquals("no sense paired", UnpairingStatus.NO_SENSE_PAIRED, status);
     }
 
     @Test
     public void unpairUserEmptyList() {
         when(deviceDAO.getMostRecentSensePairByAccountId(requester)).thenReturn(Optional.of(pairs.get(requester)));
         when(mergedUserInfoDAO.unlinkAccountToDevice(anyLong(), anyString())).thenReturn(Optional.absent());
-        final PairedAccounts.UnpairingStatus status = this.pairedAccounts.remove(requester, Lists.newArrayList());
-        assertEquals("all good no user to unpair", PairedAccounts.UnpairingStatus.OK, status);
+        when(accountDAO.getById(requester)).thenReturn(makeAccount(requester));
+        final UnpairingStatus status = this.pairedAccounts.remove(requester, Lists.newArrayList());
+        assertEquals("all good no user to unpair", UnpairingStatus.OK, status);
     }
 
     @Test
     public void unpairInvalidExternalId() {
         when(deviceDAO.getMostRecentSensePairByAccountId(requester)).thenReturn(Optional.of(pairs.get(requester)));
         when(accountDAO.getByExternalId(uuid)).thenReturn(Optional.absent());
+        when(accountDAO.getById(requester)).thenReturn(makeAccount(requester));
 
         final List<PairedAccount> accountsToUnpair = Lists.newArrayList(
                 PairedAccount.fromExtId("name", uuid.toString(), false)
         );
-        final PairedAccounts.UnpairingStatus status = this.pairedAccounts.remove(requester, accountsToUnpair);
-        assertEquals("unknown user", PairedAccounts.UnpairingStatus.UNKNOWN_EXTERNAL_ID, status);
+        final UnpairingStatus status = this.pairedAccounts.remove(requester, accountsToUnpair);
+        assertEquals("unknown user", UnpairingStatus.UNKNOWN_EXTERNAL_ID, status);
     }
 
     @Test
@@ -137,11 +139,11 @@ public class PairedAccountsTest {
         final Long accountIdNotPairedToSense = 999L;
         when(accountDAO.getByExternalId(uuid)).thenReturn(makeAccount(accountIdNotPairedToSense));
         when(deviceDAO.getAccountIdsForDeviceId(deviceId)).thenReturn(ImmutableList.copyOf(Lists.newArrayList(pairs.values())));
-
+        when(accountDAO.getById(requester)).thenReturn(makeAccount(requester));
         final List<PairedAccount> accountsToUnpair = Lists.newArrayList(
                 PairedAccount.fromExtId("name", uuid.toString(), false)
         );
-        final PairedAccounts.UnpairingStatus status = this.pairedAccounts.remove(requester, accountsToUnpair);
-        assertEquals("not paired to same sense", PairedAccounts.UnpairingStatus.NOT_PAIRED_TO_SAME_SENSE, status);
+        final UnpairingStatus status = this.pairedAccounts.remove(requester, accountsToUnpair);
+        assertEquals("not paired to same sense", UnpairingStatus.NOT_PAIRED_TO_SAME_SENSE, status);
     }
 }

@@ -37,7 +37,7 @@ public class PairedAccount {
     }
 
     static PairedAccount from(final Account account, final Long requesterAccountId) {
-        final boolean isSelf = account.id.isPresent() && account.id.get() == requesterAccountId;
+        final boolean isSelf = account.id.isPresent() && requesterAccountId.equals(account.id.get());
         return new PairedAccount(account.firstname, account.extId(), isSelf);
     }
 

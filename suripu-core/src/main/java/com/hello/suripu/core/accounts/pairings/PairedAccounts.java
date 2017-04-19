@@ -17,8 +17,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.hello.suripu.core.accounts.pairings.PairedAccounts.UnpairingStatus.DB_OUT_OF_SYNC;
-import static com.hello.suripu.core.accounts.pairings.PairedAccounts.UnpairingStatus.OK;
 
 public class PairedAccounts {
 
@@ -40,19 +38,31 @@ public class PairedAccounts {
             return new ArrayList<>();
         }
 
-        final List<UserInfo> userInfoList = mergedUserInfoDAO.getInfo(pairedTo.get().externalDeviceId);
-        final List<DeviceAccountPair> pairs = deviceDAO.getAccountIdsForDeviceId(pairedTo.get().externalDeviceId);
+        final String senseId = pairedTo.get().externalDeviceId;
+        final List<UserInfo> userInfoList = mergedUserInfoDAO.getInfo(senseId);
+        final List<DeviceAccountPair> pairs = deviceDAO.getAccountIdsForDeviceId(senseId);
         final Set<Long> accountIdsInDynamo = userInfoList.stream().map(u -> u.accountId).collect(Collectors.toSet());
         final Set<Long> accountsIdsInPostgres = pairs.stream().map(p -> p.accountId).collect(Collectors.toSet());
 
 
-        if(accountIdsInDynamo.size() != accountsIdsInPostgres.size()) {
-            //TODO: deal with inconsistent pairings
-            LOGGER.warn("action=fetch-paired-accounts requester={} sense_id={}", accountId, pairedTo.get().externalDeviceId);
+        for(final Long idInDynamo: accountIdsInDynamo) {
+            // it's in dynamo and not in postgres
+            if(!accountsIdsInPostgres.contains(idInDynamo)) {
+                LOGGER.warn("action=unlink-account-to-device msg=dynamo-postgres-out-of-sync account_id={} sense_id={}", idInDynamo, senseId);
+                final Optional<UserInfo> oldUserInfo = mergedUserInfoDAO.unlinkAccountToDevice(idInDynamo, senseId);
+                if(oldUserInfo.isPresent()) {
+                    accountIdsInDynamo.remove(idInDynamo);
+                }
+            }
         }
 
-        // Use dynamo view
-        final List<PairedAccount> pairedAccounts = accountIdsInDynamo.stream()
+        if(accountIdsInDynamo.size() != accountsIdsInPostgres.size()) {
+            //TODO: deal with inconsistent pairings
+            LOGGER.warn("action=fetch-paired-accounts requester={} sense_id={}", accountId, senseId);
+        }
+
+        // Use postgres view
+        final List<PairedAccount> pairedAccounts = accountsIdsInPostgres.stream()
                 .map(a -> accountDAO.getById(a)) // query from DB
                 .flatMap(o -> o.isPresent() ? Stream.of(o.get()) : Stream.empty()) // remove missing accounts but always return a stream
                 .map(a -> PairedAccount.from(a, accountId)) // map to a paired account
@@ -61,13 +71,7 @@ public class PairedAccounts {
         return pairedAccounts;
     }
 
-    public enum UnpairingStatus {
-        OK,
-        DB_OUT_OF_SYNC,
-        NO_SENSE_PAIRED,
-        UNKNOWN_EXTERNAL_ID,
-        NOT_PAIRED_TO_SAME_SENSE
-    }
+
 
     public UnpairingStatus remove(final Long requesterId, final List<PairedAccount> accountsToUnpair) {
         final Optional<DeviceAccountPair> pairedTo = deviceDAO.getMostRecentSensePairByAccountId(requesterId);
@@ -75,7 +79,18 @@ public class PairedAccounts {
             return UnpairingStatus.NO_SENSE_PAIRED;
         }
 
-        for(final PairedAccount accountToUnpair : accountsToUnpair) {
+
+        final Optional<Account> owner = accountDAO.getById(requesterId);
+        if(!owner.isPresent()) {
+            return UnpairingStatus.UNKNOWN_OWNER;
+        }
+
+        // Filter out owner from the list of accounts to unpair.
+        final List<PairedAccount> accountsExcludingRequester = accountsToUnpair.stream()
+                .filter(a -> !a.id().equals(owner.get().extId()))  // filter keeps items where condition is true
+                .collect(Collectors.toList());
+
+        for(final PairedAccount accountToUnpair : accountsExcludingRequester) {
 
             final Optional<Account> accountOptional = accountDAO.getByExternalId(UUID.fromString(accountToUnpair.id()));
             if(!accountOptional.isPresent()) {
@@ -97,15 +112,13 @@ public class PairedAccounts {
             final Optional<UserInfo> userInfo = mergedUserInfoDAO.unlinkAccountToDevice(accountIdToUnpair, senseId);
             if(!userInfo.isPresent()) {
                 LOGGER.error("error=failed-to-unlink action=unlink-account-to-device account_id={} sense_id={}", accountIdToUnpair, senseId);
-                return DB_OUT_OF_SYNC;
             }
             final int success = deviceDAO.deleteSensePairing(senseId, accountIdToUnpair);
             if(success == 0) {
                 LOGGER.error("action=delete-sense-pairing account_id={} sense_id={}", accountIdToUnpair, senseId);
-                return DB_OUT_OF_SYNC;
             }
         }
 
-        return OK;
+        return UnpairingStatus.OK;
     }
 }
