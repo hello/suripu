@@ -105,30 +105,6 @@ public class PillHeartBeatDAODynamoDBIT {
         assertThat(pillHeartBeats.isPresent(), is(false));
     }
 
-
-    @Test
-    public void testQueryTooOld() {
-        final String pillId = "ABC";
-        final DateTime now = DateTime.now().withTimeAtStartOfDay();
-        final DateTime then = now.minusDays(7).minusMinutes(1);
-
-        pillHeartBeatDAODynamoDB.put(PillHeartBeat.create(pillId, 0, 0, 0, then));
-
-        final List<PillHeartBeat> pillHeartBeats = pillHeartBeatDAODynamoDB.get(pillId, now);
-        assertThat(pillHeartBeats.isEmpty(), is(true));
-    }
-
-    @Test
-    public void testQueryBarelyTooOld() {
-        final String pillId = "ABC";
-        final DateTime now = DateTime.now().withTimeAtStartOfDay(); // Older than 7 days!
-        final DateTime then = now.minusDays(7).minusMinutes(1);
-        pillHeartBeatDAODynamoDB.put(PillHeartBeat.create(pillId, 0, 0, 0, then));
-
-        final List<PillHeartBeat> pillHeartBeats = pillHeartBeatDAODynamoDB.get(pillId, now);
-        assertThat(pillHeartBeats.isEmpty(), is(true));
-    }
-
     @Test
     public void testQueryAlmostTooOld() {
         final String pillId = "ABC";
