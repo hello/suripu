@@ -269,6 +269,11 @@ public class InstrumentedTimelineProcessorHelpers {
         }
 
         @Override
+        public Optional<Account> getByExternalId(UUID externalId) {
+            return Optional.absent();
+        }
+
+        @Override
         public com.google.common.base.Optional<Account> getByEmail(String email) {
             return null;
         }

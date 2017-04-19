@@ -32,6 +32,11 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     }
 
     @Override
+    public Optional<Account> getByExternalId(UUID externalId) {
+        return Optional.absent();
+    }
+
+    @Override
     public Optional<Account> getByEmail(String email) {
         return null;
     }

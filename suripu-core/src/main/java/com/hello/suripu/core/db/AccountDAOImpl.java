@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -34,6 +35,10 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SqlQuery("SELECT * FROM accounts WHERE id = :id LIMIT 1;")
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getById(@Bind("id") final Long id);
+
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM accounts WHERE external_id=:external_id")
+    public abstract Optional<Account> getByExternalId(@Bind("external_id") UUID uuid);
 
     @SqlQuery("SELECT * FROM accounts WHERE email = :email LIMIT 1;")
     @SingleValueResult(Account.class)

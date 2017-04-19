@@ -58,7 +58,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 9/25/14.
  */
-public class MergedUserInfoDynamoDB {
+public class MergedUserInfoDynamoDB implements MergedUserInfoDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MergedUserInfoDynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -94,6 +94,7 @@ public class MergedUserInfoDynamoDB {
         this.tableName = tableName;
     }
 
+    @Override
     public String tableName() {
         return tableName;
     }
@@ -223,6 +224,7 @@ public class MergedUserInfoDynamoDB {
     }
 
 
+    @Override
     public boolean setTimeZone(final String deviceId, final long accountId, final DateTimeZone timeZone){
         final Map<String, AttributeValueUpdate> items = generateTimeZoneUpdateItem(timeZone);
         if(items.isEmpty()){
@@ -234,6 +236,7 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+    @Override
     public boolean deletePillColor(final String senseId, final long accountId, final String pillId){
         final Map<String, AttributeValueUpdate> items = generatePillColorDeleteItem();
         final UpdateItemRequest request = generateUpdateRequest(senseId, accountId, items);
@@ -241,6 +244,7 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+    @Override
     public Optional<Color> setNextPillColor(final String senseId, final long accountId, final String pillId){
         final List<UserInfo> userInfoList = this.getInfo(senseId);
         final List<Color> availableColor = PillColorUtil.getPillColors();
@@ -272,6 +276,7 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
+    @Override
     public boolean setPillColor(final String deviceId, final long accountId, final String pillId, final Color pillColor){
         final byte[] argb = PillColorUtil.colorToARGB(pillColor);
         final int intARGB = PillColorUtil.argbToIntBasedOnSystemEndianess(argb);
@@ -289,6 +294,7 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+    @Override
     public boolean setAlarms(final String deviceId, final long accountId,
                              final long lastUpdatedAt,
                              final List<Alarm> oldAlarms,
@@ -319,6 +325,7 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+    @Override
     @Deprecated
     public boolean createUserInfoWithEmptyAlarmList(final String deviceId, final long accountId, final DateTimeZone userTimeZone){
         final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(Collections.EMPTY_LIST, Collections.EMPTY_LIST, userTimeZone);
@@ -332,6 +339,7 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+    @Override
     public boolean setRingTime(final String deviceId, final long accountId, final RingTime ringTime){
         final Map<String, AttributeValueUpdate> items = generateRingTimeUpdateItem(ringTime);
         if(items.isEmpty()){
@@ -344,6 +352,7 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+    @Override
     public Optional<UserInfo> getInfo(final String deviceId, final long accountId){
         final List<UserInfo> userInfos = getInfo(deviceId);
         for(final UserInfo userInfo : userInfos){
@@ -355,6 +364,7 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
+    @Override
     public Optional<UserInfo> unlinkAccountToDevice(final long accountId, final String deviceId){
         try {
             final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<String, ExpectedAttributeValue>();
@@ -386,6 +396,7 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
+    @Override
     public List<UserInfo> getInfo(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectByDeviceId  = new Condition()
@@ -519,9 +530,8 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
-
-    public static Optional<DateTimeZone> getTimeZoneFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
-        final HashSet<String> timezoneAttributes = new HashSet<String>();
+    static Optional<DateTimeZone> getTimeZoneFromAttributes(String deviceId, long accountId, Map<String, AttributeValue> item){
+        final HashSet<String> timezoneAttributes = new HashSet<>();
         Collections.addAll(timezoneAttributes, TIMEZONE_ID_ATTRIBUTE_NAME);
         if(!item.keySet().containsAll(timezoneAttributes)){
             return Optional.absent();
@@ -537,15 +547,13 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
-    public static Optional<OutputProtos.SyncResponse.PillSettings> getPillColorFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
+    static Optional<OutputProtos.SyncResponse.PillSettings> getPillColorFromAttributes(String deviceId, long accountId, Map<String, AttributeValue> item){
         final HashSet<String> pillColorAttributes = new HashSet<String>();
         Collections.addAll(pillColorAttributes, PILL_COLOR_ATTRIBUTE_NAME);
 
         if(!item.keySet().containsAll(pillColorAttributes)){
             return Optional.absent();
         }
-
-
 
         try {
             final byte[] bytes = item.get(PILL_COLOR_ATTRIBUTE_NAME).getB().array();
@@ -560,8 +568,7 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
-
-
+    @Override
     public Optional<DateTimeZone> getTimezone(final String senseId, final Long accountId) {
         final GetItemRequest getItemRequest = new GetItemRequest();
         final Map<String, AttributeValue> keys = new HashMap<>();
@@ -576,7 +583,7 @@ public class MergedUserInfoDynamoDB {
             LOGGER.warn("Timezone item was null for sense {} and accountId {}", senseId, accountId);
             return Optional.absent();
         }
-        return MergedUserInfoDynamoDB.getTimeZoneFromAttributes(senseId, accountId, result.getItem());
+        return getTimeZoneFromAttributes(senseId, accountId, result.getItem());
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
