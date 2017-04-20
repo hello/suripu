@@ -8,6 +8,7 @@ import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.util.AlgorithmType;
@@ -56,7 +57,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
     }
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final SleepPeriod sleepPeriod, final TimelineLog log, final long accountId, final boolean feedbackChanged, final Set<String> features) {
 
         LOGGER.info("algorithm=HMM account_id={}",accountId);
 
@@ -71,13 +72,17 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
                 return Optional.absent();
             }
 
+            final boolean isPrimarySleepPeriod = true;
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
                     accountId,
+                    true,
+                    Optional.absent(),
                     AlgorithmType.HMM,
                     results.get().mainEvents,
                     ImmutableList.copyOf(results.get().allTheOtherWakesAndSleeps.asList()),
-                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(sensorData.oneDaysTrackerMotion.processedtrackerMotions));
 
             LOGGER.info("alg_status={} account_id={} date={}",error,accountId,sensorData.date.toDate());
 
@@ -90,7 +95,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
 
             log.addMessage(AlgorithmType.HMM, eventList);
 
-            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.HMM,eventList));
+            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.HMM,eventList, false));
 
         }
         catch (Exception e) {

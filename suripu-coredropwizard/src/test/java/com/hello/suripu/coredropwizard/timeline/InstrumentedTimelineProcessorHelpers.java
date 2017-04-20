@@ -327,6 +327,29 @@ public class InstrumentedTimelineProcessorHelpers {
         }
     };
 
+    final public MainEventTimesDAO mainEventTimesDAO = new MainEventTimesDAO() {
+       @Override
+        public boolean updateEventTimes(MainEventTimes mainEventTimes) {
+            return true;
+        }
+
+        @Override
+        public List<MainEventTimes> getEventTimesForDate(Long accountId, DateTime targetDate) {
+            return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        public List<MainEventTimes> getEventTimes(Long accountId, DateTime startDate, DateTime endDate) {
+            return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period) {
+            return Optional.absent();
+        }
+
+    };
+
     final public TimeZoneHistoryDAO timeZoneHistoryDAO= new TimeZoneHistoryDAO(){
         @Override
         public Optional<TimeZoneHistory> updateTimeZone(final long accountId, final DateTime updatedTime, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
@@ -613,24 +636,6 @@ public class InstrumentedTimelineProcessorHelpers {
             return null;
         }
     };
-
-    final public MainEventTimesDAO mainEventTimesDAO = new MainEventTimesDAO() {
-        @Override
-        public boolean updateEventTimes(MainEventTimes mainEventTimes) {
-            return false;
-        }
-
-        @Override
-        public List<MainEventTimes> getEventTimes(Long accountId, DateTime date) {
-            return Collections.EMPTY_LIST;
-        }
-
-        @Override
-        public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period){
-            return Optional.absent();
-        }
-    };
-
 
     public void clear() {
     }

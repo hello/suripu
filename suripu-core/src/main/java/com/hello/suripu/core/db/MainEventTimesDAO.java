@@ -12,6 +12,7 @@ import java.util.List;
  */
 public interface MainEventTimesDAO {
     public boolean updateEventTimes(MainEventTimes mainEventTimes);
-    public List<MainEventTimes> getEventTimes(Long accountId, DateTime date);
+    public List<MainEventTimes> getEventTimesForDate(Long accountId, DateTime targetDate);
+    public List<MainEventTimes> getEventTimes(Long accountId, DateTime startDate, DateTime endDate);
     public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period);
 }

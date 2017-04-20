@@ -22,6 +22,7 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AgitatedSleep;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.DataCompleteness;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -35,9 +36,11 @@ import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -83,6 +86,8 @@ public class TimelineUtils {
     private static final int DEFAULT_QUIET_END_HOUR = 7; // 7am
     private static final int SOUND_WINDOW_SIZE_MINS = 30; // smoothing windows, binning
     private static final int MAX_SOUND_EVENT_SIZE = 5; // max sound event allowed in timeline
+
+    private static final int NUM_PERIODS_IN_DAY= 3;
 
     private static final Sensor[] SLEEP_TIME_AVERAGE_SENSORS = {
             Sensor.TEMPERATURE,
@@ -1499,31 +1504,47 @@ public class TimelineUtils {
         return ImmutableList.copyOf(filteredMotions);
     }
 
-    //checks if there is any motion observed during during sleep - We should expect some motion during sleep.
-    public boolean motionDuringSleepCheck(final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
-
-        final float sleepDuration = (int) ((double) (wakeUpTimestamp - fallAsleepTimestamp) / 60000.0);
-        final int requiredSleepDuration = 120; // taking into account sleep window padding - this requires a minimal of 3 hours of sleep with no motion
-        final int sleepWindowPadding = 30; //excludes first 30 and last 30 minutes of sleeps
-        final int minMotionCount = 1;
-        int motionCount = 0;
-
-        // Compute first to last motion time delta
-        for (final TrackerMotion motion : trackerMotions) {
-            if (motion.timestamp > wakeUpTimestamp - sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
-                break;
-            }
-            if (motion.timestamp > fallAsleepTimestamp + sleepWindowPadding * DateTimeConstants.MILLIS_PER_MINUTE) {
-                motionCount += 1;
+    public static DataCompleteness getDataCompletenessForAllSleepPeriods(final List<DataCompleteness> dataCompletenessList, final int numSleepPeriods){
+        DataCompleteness overallDataCompleteness = DataCompleteness.NO_DATA;
+        for (final DataCompleteness dataCompleteness : dataCompletenessList){
+            if(dataCompleteness.getValue() > overallDataCompleteness.getValue()){
+                overallDataCompleteness = dataCompleteness;
             }
         }
-        if (motionCount < minMotionCount && sleepDuration > requiredSleepDuration) {
-            return false;
+        if (numSleepPeriods < NUM_PERIODS_IN_DAY && overallDataCompleteness == DataCompleteness.ENOUGH_DATA){
+            overallDataCompleteness = DataCompleteness.NOT_ENOUGH_DATA;
         }
-        return true;
+        return overallDataCompleteness;
+    }
+    public static MainEventTimes getPrevNightMainEventTimes(final long accountId, final List<MainEventTimes> mainEventTimesList, final DateTime date){
+        final DateTime prevNight = date.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
+        for(final MainEventTimes mainEventTimes: mainEventTimesList){
+            if (mainEventTimes.sleepPeriod.period == SleepPeriod.Period.NIGHT && mainEventTimes.sleepPeriod.targetDate.getMillis() == prevNight.getMillis()){
+                return mainEventTimes;
+            }
+        }
+        return MainEventTimes.createMainEventTimesEmpty(accountId, SleepPeriod.night(prevNight), DateTime.now(DateTimeZone.UTC).getMillis(), 0, AlgorithmType.NONE, TimelineError.NO_DATA);
     }
 
-
+    public static DateTime getTargetDate(final boolean isDaySleeper, final DateTime queryDate, final DateTime currentTimeLocal, final Optional<Integer> queryHourOptional, final TimeZoneOffsetMap timeZoneOffsetMap){
+        final long endQueryDate = queryDate.getMillis() - timeZoneOffsetMap.getOffsetWithDefaultAsZero(queryDate.getMillis()) + DateTimeConstants.MILLIS_PER_DAY;
+        final boolean isStillQueryDate;
+        if (queryHourOptional.isPresent()) {
+            isStillQueryDate = currentTimeLocal.withTimeAtStartOfDay().isBefore(endQueryDate);
+        } else {
+            isStillQueryDate = false;
+        }
+        //target Date
+        //if daysleeper - always return most recent sleepperiod
+        //otherwise, check to see if actual query day is after midnight (despite query hour - travel)
+        final DateTime targetDate;
+        if(isStillQueryDate && !isDaySleeper){
+            targetDate = queryDate.minusDays(1);
+        } else {
+            targetDate = queryDate;
+        }
+        return targetDate;
+    }
 
 
 }

@@ -20,7 +20,10 @@ import java.util.Map;
  * Created by jarredheinrich on 2/7/17.
  */
 public class MainEventTimes {
-    //private final List<Event.Type> REQUIRED_EVENT_TYPES =  Arrays.asList(Event.Type.IN_BED, Event.Type.SLEEP,Event.Type.WAKE_UP);
+    /*
+    Invalid / not present main event times are represented by a timestamp of 0L
+     */
+
     public Long accountId;
     public final SleepPeriod sleepPeriod;
     public final ImmutableMap<Event.Type, EventTime> eventTimeMap;
@@ -65,7 +68,11 @@ public class MainEventTimes {
                 .put(Event.Type.WAKE_UP, wakeUpEventTime)
                 .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
                 .build();
-        return new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap, algorithmType, timelineError);
+
+        if (new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap, algorithmType, timelineError).hasValidEventTimes()) {
+            return new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap, algorithmType, TimelineError.MISSING_KEY_EVENTS);
+        }
+        return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset, algorithmType, timelineError);
     }
 
     public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset,
@@ -84,20 +91,80 @@ public class MainEventTimes {
                     .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
                     .build();
 
-            return new MainEventTimes(accountId, sleepPeriod, createdAt,eventTimeMap, timelineAlgorithmResult.algorithmType, timelineError);
+            if (new MainEventTimes(accountId, sleepPeriod, createdAt,eventTimeMap, timelineAlgorithmResult.algorithmType, timelineError).hasValidEventTimes()) {
+                return new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap, timelineAlgorithmResult.algorithmType, timelineError);
+            }
         }
-        return new MainEventTimes(accountId, sleepPeriod, createdAt, new HashMap<>(), timelineAlgorithmResult.algorithmType, timelineError);
+            return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset, timelineAlgorithmResult.algorithmType, TimelineError.MISSING_KEY_EVENTS);
+
     }
 
     public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset, final Map<Event.Type, EventTime> mainEventTimeMap, final AlgorithmType algorithmType, final TimelineError timelineError){
         final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
-        return new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap, algorithmType, timelineError);
+
+        if (new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap, algorithmType, timelineError).hasValidEventTimes()) {
+            return new MainEventTimes(accountId, sleepPeriod, createdAt, mainEventTimeMap, algorithmType, timelineError);
+        }
+
+        return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset, algorithmType, TimelineError.MISSING_KEY_EVENTS);
     }
 
+    public static MainEventTimes createMainEventTimes (final long accountId, final SleepPeriod sleepPeriod, final Long createdAtTime, final int createdAtOffset, final List<SleepSegment> timelineEvents, final AlgorithmType algorithmType, final TimelineError timelineError ){
+        long inBedTime = 0L;
+        int inBedOffset = 0;
+        long sleepTime= 0L;
+        int sleepOffset= 0;
+        long wakeUpTime = 0L;
+        int wakeUpOffset = 0;
+        long outOfBedTime = 0L;
+        int outOfBedOffset = 0;
+        for(final SleepSegment sleepSegment: timelineEvents){
+            switch(sleepSegment.getType()){
+                case IN_BED:
+                    inBedTime = sleepSegment.getTimestamp();
+                    inBedOffset = sleepSegment.getOffsetMillis();
+                    break;
+                case SLEEP:
+                    sleepTime = sleepSegment.getTimestamp();
+                    sleepOffset = sleepSegment.getOffsetMillis();
+                    break;
+                case WAKE_UP:
+                    wakeUpTime = sleepSegment.getTimestamp();
+                    wakeUpOffset = sleepSegment.getOffsetMillis();
+                    break;
+                case OUT_OF_BED:
+                    outOfBedTime = sleepSegment.getTimestamp();
+                    outOfBedOffset = sleepSegment.getOffsetMillis();
+                    break;
+                default: continue;
+            }
+        }
+        final EventTime inBedEventTime = new EventTime(inBedTime, inBedOffset);
+        final EventTime sleepEventTime = new EventTime(sleepTime, sleepOffset);
+        final EventTime wakeUpEventTime = new EventTime(wakeUpTime, wakeUpOffset);
+        final EventTime outOfBedEventTime = new EventTime(outOfBedTime, outOfBedOffset);
+        final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
+        final ImmutableMap<Event.Type, EventTime> eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
+                .put(Event.Type.IN_BED, inBedEventTime)
+                .put(Event.Type.SLEEP, sleepEventTime)
+                .put(Event.Type.WAKE_UP, wakeUpEventTime)
+                .put(Event.Type.OUT_OF_BED, outOfBedEventTime)
+                .build();
+        if (new MainEventTimes(accountId, sleepPeriod,createdAt, eventTimeMap, algorithmType, timelineError).hasValidEventTimes()) {
+            return new MainEventTimes(accountId, sleepPeriod, createdAt, eventTimeMap, algorithmType, timelineError);
+        }
+        return createMainEventTimesEmpty(accountId, sleepPeriod, createdAtTime, createdAtOffset, algorithmType, TimelineError.MISSING_KEY_EVENTS);
+    }
 
     public static MainEventTimes createMainEventTimesEmpty (final long accountId, final SleepPeriod sleepPeriod, final long createdAtTime, final int createdAtOffset, final AlgorithmType algorithmType, final TimelineError timelineError){
         final EventTime createdAt = new EventTime(createdAtTime, createdAtOffset);
-        return new MainEventTimes(accountId, sleepPeriod, createdAt,  new HashMap<>(),  algorithmType, timelineError);
+        final ImmutableMap<Event.Type, EventTime> eventTimeMap = ImmutableMap.<Event.Type, EventTime>builder()
+                .put(Event.Type.IN_BED, new EventTime(0L, 0))
+                .put(Event.Type.SLEEP, new EventTime(0L, 0))
+                .put(Event.Type.WAKE_UP, new EventTime(0L, 0))
+                .put(Event.Type.OUT_OF_BED, new EventTime(0L, 0))
+                .build();
+        return new MainEventTimes(accountId, sleepPeriod, createdAt,  eventTimeMap, algorithmType, timelineError);
     }
 
     public boolean hasValidEventTimes(){
@@ -105,6 +172,9 @@ public class MainEventTimes {
 
         for (final Event.Type eventType : MAIN_EVENT_TYPES){
             if (!this.eventTimeMap.containsKey(eventType)){
+                return false;
+            }
+            if (this.eventTimeMap.get(eventType).time == 0){
                 return false;
             }
         }
@@ -127,7 +197,7 @@ public class MainEventTimes {
 
         mainEvents.add(Event.createFromType(Event.Type.SLEEP,
                 eventTimeMap.get(Event.Type.SLEEP).time,
-                eventTimeMap.get(Event.Type.SLEEP).time+DateTimeConstants.MILLIS_PER_MINUTE,
+                eventTimeMap.get(Event.Type.SLEEP).time +DateTimeConstants.MILLIS_PER_MINUTE,
                 eventTimeMap.get(Event.Type.SLEEP).offset,
                 Optional.of(English.FALL_ASLEEP_MESSAGE),
                 Optional.<SleepSegment.SoundInfo>absent(),
@@ -150,6 +220,16 @@ public class MainEventTimes {
                 Optional.<Integer>absent()));
 
         return mainEvents;
+    }
+
+    public static Map<SleepPeriod.Period, MainEventTimes> getSleepPeriodsMainEventTimesMapForDate(final List<MainEventTimes> mainEventTimesList, final DateTime date){
+        final Map<SleepPeriod.Period, MainEventTimes> sleepEventsMap = new HashMap<>();
+        for ( final MainEventTimes mainEventTimes : mainEventTimesList) {
+            if (mainEventTimes.sleepPeriod.targetDate.withTimeAtStartOfDay().getMillis() == date.withTimeAtStartOfDay().getMillis()){
+                sleepEventsMap.put(mainEventTimes.sleepPeriod.period, mainEventTimes);
+            }
+        }
+        return sleepEventsMap;
     }
 
 }

@@ -126,7 +126,7 @@ public class InstrumentedTimelineProcessorTest {
 
     final public static List<LoggingProtos.TimelineLog> getLogsFromTimeline(InstrumentedTimelineProcessor timelineProcessor) {
 
-        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(DateTimeZone.UTC),Optional.<TimelineFeedback>absent());
 
         TestCase.assertTrue(timelineResult.timelines.size() > 0);
         TestCase.assertTrue(timelineResult.logV2.isPresent());

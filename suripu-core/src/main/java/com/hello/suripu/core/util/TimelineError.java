@@ -15,7 +15,11 @@ public enum TimelineError {
     DATA_GAP_TOO_LARGE(8),
     EVENTS_OUT_OF_ORDER(9),
     PARTNER_FILTER_REJECTED_DATA(10),
-    UNEXEPECTED(10);
+    UNEXEPECTED(11),
+    NO_MOTION_DURING_SLEEP(12),
+    IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD(13),
+    MOTION_GAP_TOO_LARGE(14),
+    IMPROBABLE_SLEEP_PERIOD(15);
 
 
     private final Integer value;
@@ -35,5 +39,6 @@ public enum TimelineError {
         }
         return NO_ERROR;
     }
+
 
 }

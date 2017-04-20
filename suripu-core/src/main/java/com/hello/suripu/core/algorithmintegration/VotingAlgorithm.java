@@ -6,6 +6,7 @@ import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.util.AlgorithmType;
@@ -43,7 +44,7 @@ public class VotingAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final TimelineLog log, final long accountId, final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final SleepPeriod sleepPeriod, final TimelineLog log, final long accountId, final boolean feedbackChanged, final Set<String> features) {
 
         LOGGER.info("algorithm=VOTING account_id={} date={}",accountId,sensorData.date.toDate());
 
@@ -60,28 +61,32 @@ public class VotingAlgorithm implements TimelineAlgorithm {
                 return Optional.absent();
             }
 
-            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(accountId, AlgorithmType.VOTING, votingSleepEventsOptional.get().sleepEvents,
+            final boolean isPrimarySleepPeriod = true;
+            final TimelineError timelineError = timelineSafeguards.checkIfValidTimeline(
+                    accountId,
+                    true,
+                    Optional.absent(),
+                    AlgorithmType.VOTING,
+                    votingSleepEventsOptional.get().sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(sensorData.oneDaysTrackerMotion.processedtrackerMotions));
 
             LOGGER.info("alg_status={} account_id={} date={}",timelineError,accountId,sensorData.date.toDate());
 
-            //data gap errors are ignored, these are the only two I care about
-            if (timelineError.equals(TimelineError.EVENTS_OUT_OF_ORDER) ) {
+            //we now care about all errors
+            if (!timelineError.equals(TimelineError.NO_ERROR) ) {
                 log.addMessage(AlgorithmType.VOTING,timelineError);
                 return Optional.absent();
             }
 
-            if (timelineError.equals(TimelineError.MISSING_KEY_EVENTS)) {
-                log.addMessage(AlgorithmType.VOTING,timelineError);
-                return Optional.absent();
-            }
+
 
             final List<Event> events = timelineUtils.eventsFromOptionalEvents(votingSleepEventsOptional.get().sleepEvents.toList());
 
             log.addMessage(AlgorithmType.VOTING, events);
 
-            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.VOTING,events));
+            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.VOTING,events, false));
         }
         catch (Exception e) {
             LOGGER.error("alg_status={} account_id={} date={}","exception",accountId,sensorData.date.toDate());

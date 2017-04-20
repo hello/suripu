@@ -2,8 +2,11 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MainEventTimes;
+import com.hello.suripu.core.models.SleepDay;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTimeConstants;
 import org.slf4j.Logger;
@@ -82,6 +85,38 @@ public class TimelineLockdown {
             return true;
         }
 
+        return false;
+    }
+
+    /*
+    check if sleepPeriod already attempted and a valid timeline generated, if not, generate timeline for that period?
+
+    */
+    public static boolean isAttemptNeededForSleepPeriod(final SleepDay targetSleepDay, final SleepPeriod targetSleepPeriod, final Optional<Long> prevOutOfBedTimeOptional,  final ImmutableList<TrackerMotion> processedTrackerMotions) {
+        //were main event times generated for target period?
+        if (!targetSleepDay.getSleepPeriod(targetSleepPeriod.period).processed) {
+            return true;
+        }
+
+        final MainEventTimes generatedTargetMainEventTimes = targetSleepDay.getSleepPeriod(targetSleepPeriod.period).mainEventTimes;
+
+
+        //is there a conflict between generated inbed time and previous night oob time.
+        if (prevOutOfBedTimeOptional.isPresent() && generatedTargetMainEventTimes.hasValidEventTimes() && generatedTargetMainEventTimes.eventTimeMap.get(Event.Type.IN_BED).time < prevOutOfBedTimeOptional.get() + OneDaysSensorData.OOB_UNCERTAINTY_WINDOW){
+            return true;
+        }
+
+        //is timeline locked down for target period
+        final boolean isLockedDown = isLockedDown(Optional.of(generatedTargetMainEventTimes), processedTrackerMotions, true);
+        //if timeline is NOT locked down we should process timeline (again), with 1 exceptions:
+        // 1.  timeline generated after end of period
+
+        if (!isLockedDown) {
+            //check if timeline generated before end of period
+            if (generatedTargetMainEventTimes.createdAt.time < targetSleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, 0).getMillis()) {
+                    return true;
+            }
+        }
         return false;
     }
 }

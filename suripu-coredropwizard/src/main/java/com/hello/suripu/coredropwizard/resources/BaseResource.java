@@ -153,4 +153,8 @@ public class BaseResource {
     protected Boolean hasQuestionCoreProcessorEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_CORE_PROCESSOR_ENABLED, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasTimelineProcessorV3(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_PROCESSOR_V3_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
 }

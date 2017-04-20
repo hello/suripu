@@ -166,4 +166,8 @@ public class TimeZoneOffsetMap {
         return eventWithCorrectoffset;
     }
 
+    public DateTime getCurrentLocalDateTimeWithUTCDefault(){
+        return DateTime.now(DateTimeZone.forID(getTimeZoneIdWithUTCDefault(DateTime.now(DateTimeZone.UTC).getMillis())));
+    }
+
 }
