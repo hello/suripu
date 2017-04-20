@@ -637,7 +637,8 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
         //removed FF  TIMELINE_EVENT_ORDER_ENFORCEMENT - at 100 percent
-        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, timeZoneOffsetMap);
+        //TODO update place holder period with actual period
+        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(SleepPeriod.Period.NIGHT, feedbackList, result.mainEvents.values(), result.extraEvents, timeZoneOffsetMap);
 
         //GET SPECIFIC EVENTS
         Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
@@ -646,7 +647,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         Optional<Event> outOfBed= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
 
         //CREATE SLEEP MOTION EVENTS
-        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions, SleepPeriod.Period.NIGHT);
 
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
@@ -663,7 +664,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         if (!allSensorSampleList.isEmpty()) {
             // Light
-            lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT)));
+            lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT), SleepPeriod.Period.NIGHT));
             if (!lightEvents.isEmpty()){
                 lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
             }
@@ -925,7 +926,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
             //tz offset should be correct
-            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
+            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds, SleepPeriod.Period.NIGHT);
 
             return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
         }
@@ -987,7 +988,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         return timelineUtils.getSoundEvents(soundSamples, sleepDepths,
-                lightOutTimeOptional, optionalSleepTime, optionalAwakeTime, usePeakEnergyThreshold);
+                lightOutTimeOptional, optionalSleepTime, optionalAwakeTime, SleepPeriod.Period.NIGHT, usePeakEnergyThreshold);
     }
 
 

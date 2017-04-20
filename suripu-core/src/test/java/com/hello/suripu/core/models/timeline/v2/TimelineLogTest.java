@@ -3,6 +3,7 @@ package com.hello.suripu.core.models.timeline.v2;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.TimelineError;
 import junit.framework.TestCase;
@@ -52,7 +53,7 @@ public class TimelineLogTest extends TestCase {
 
     public void testAddMessageWithAlgorithmTypeAndPredictions() throws Exception {
         final List<Event> predictions = new ArrayList<>();
-        final Event event = new OutOfBedEvent(0, 0, 0);
+        final Event event = new OutOfBedEvent(SleepPeriod.Period.NIGHT, 0, 0, 0);
         predictions.add(event);
         final TimelineLog log = new TimelineLog(testAccountId, dateOfNight, timestamp);
         log.addMessage(AlgorithmType.HMM, predictions);

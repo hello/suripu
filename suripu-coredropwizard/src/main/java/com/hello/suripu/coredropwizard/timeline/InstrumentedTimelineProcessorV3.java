@@ -833,7 +833,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
         //removed FF  TIMELINE_EVENT_ORDER_ENFORCEMENT - at 100 percent
-        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(mainEvents), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
+        reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(mainEventTimes.sleepPeriod.period, feedbackList, ImmutableList.copyOf(mainEvents), ImmutableList.copyOf(Collections.EMPTY_LIST), timeZoneOffsetMap);
 
         //GET SPECIFIC EVENTS
         Optional<Event> inBed = Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.IN_BED));
@@ -842,7 +842,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         Optional<Event> outOfBed= Optional.fromNullable(reprocessedEvents.mainEvents.get(Event.Type.OUT_OF_BED));
 
         //CREATE SLEEP MOTION EVENTS
-        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions, mainEventTimes.sleepPeriod.period);
 
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents, timeZoneOffsetMap);
 
@@ -859,7 +859,7 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
 
         if (!allSensorSampleList.isEmpty()) {
             // Light
-            lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT)));
+            lightEvents.addAll(timelineUtils.getLightEvents(sleepTime, allSensorSampleList.get(Sensor.LIGHT), mainEventTimes.sleepPeriod.period));
             if (!lightEvents.isEmpty()){
                 lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
             }
@@ -1089,6 +1089,12 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             return Collections.EMPTY_LIST;
         }
 
+        if (motionEvents.isEmpty()){
+            return Collections.EMPTY_LIST;
+        }
+
+        final SleepPeriod.Period period = motionEvents.get(0).getSleepPeriod();
+
         final long t1 = fallingAsleepEvent.get().getStartTimestamp();
         final long t2 = wakeupEvent.get().getStartTimestamp();
 
@@ -1099,10 +1105,11 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             }
         }
 
+
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
             //tz offset should be correct
-            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
+            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds, period);
 
             return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
         }
@@ -1127,6 +1134,10 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
         if (soundSamples.isEmpty()) {
             return Collections.EMPTY_LIST;
         }
+        if (motionEvents.isEmpty()){
+            return Collections.EMPTY_LIST;
+        }
+        final SleepPeriod.Period period = motionEvents.get(0).getSleepPeriod();
 
         // TODO: refactor - ¡don't doubt it!
         Optional<DateTime> optionalSleepTime = Optional.absent();
@@ -1163,8 +1174,9 @@ public class InstrumentedTimelineProcessorV3 extends FeatureFlippedProcessor {
             }
         }
 
+
         return timelineUtils.getSoundEvents(soundSamples, sleepDepths,
-                lightOutTimeOptional, optionalSleepTime, optionalAwakeTime, usePeakEnergyThreshold);
+                lightOutTimeOptional, optionalSleepTime, optionalAwakeTime, period, usePeakEnergyThreshold);
     }
 
     /**

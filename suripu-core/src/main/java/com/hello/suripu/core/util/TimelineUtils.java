@@ -166,7 +166,7 @@ public class TimelineUtils {
         return positiveMotions;
     }
 
-    public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
+    public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions, final SleepPeriod.Period period) {
         final List<MotionEvent> motionEvents = new ArrayList<>();
 
         final List<TrackerMotion> positiveMotions = removeNegativeAmplitudes(trackerMotions);
@@ -182,11 +182,11 @@ public class TimelineUtils {
         final Long trackerId = positiveMotions.get(0).trackerId;
         for(final TrackerMotion trackerMotion : positiveMotions) {
 
-            final MotionEvent motionEvent = new MotionEvent(
+            final MotionEvent motionEvent = MotionEvent.createForPeriod(
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
-                    getSleepDepth(trackerMotion.value, positionMap, maxSVM));
+                    getSleepDepth(trackerMotion.value, positionMap, maxSVM), period);
             motionEvents.add(motionEvent);
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
@@ -364,7 +364,7 @@ public class TimelineUtils {
             // Null event before out of bed but no in bed event presents, or
             // any Null events when there is no in/out of bed events present.
             // turn it to blue sleep event, let's don't be aggressive.
-            newEventList.add(new SleepingEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+            newEventList.add(SleepingEvent.createForPeriod(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth(), event.getSleepPeriod()));
 
         }
 
@@ -1049,7 +1049,7 @@ public class TimelineUtils {
 
         final List<DateTime> dateTimes = new ArrayList<>();
         final Map<Long, MotionEvent> map = new HashMap<>();
-
+        final SleepPeriod.Period period = sleepMotions.get(0).getSleepPeriod();
         // convert local_UTC to UTC
         DateTime sleepTimeThresholdUTC = new DateTime(sleepMotions.get(0).getStartTimestamp(), DateTimeZone.UTC).minusSeconds(1);
         if (sleepTimeThreshold.isPresent()) {
@@ -1078,7 +1078,7 @@ public class TimelineUtils {
             if (diffInMinutes > thresholdInMinutes) {
                 if(map.containsKey(current.getMillis())) {
                     final MotionEvent motion = map.get(current.getMillis());
-                    return Optional.of(new FallingAsleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
+                    return Optional.of(FallingAsleepEvent.createForPeriod(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset(), period));
 
                 }
                 break;  // Get the first event
@@ -1107,7 +1107,7 @@ public class TimelineUtils {
 
     }
 
-    public List<Event> getLightEvents(Optional<Long> sleepTime, List<Sample> lightData) {
+    public List<Event> getLightEvents(Optional<Long> sleepTime, List<Sample> lightData, final SleepPeriod.Period period) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1149,10 +1149,10 @@ public class TimelineUtils {
 //                events.add(event);
 
                 final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
-                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+                events.add(LightsOutEvent.createForPeriod(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis, period));
 
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
-                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
+                events.add(LightEvent.createForPeriod(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light", period));
             }
             // TODO: daylight spike event -- unsure what the value might be at this moment
         }
@@ -1160,7 +1160,7 @@ public class TimelineUtils {
     }
 
 
-    public List<Event> getLightEventsWithMultipleLightOut(final List<Sample> lightData) {
+    public List<Event> getLightEventsWithMultipleLightOut(final List<Sample> lightData, final SleepPeriod.Period period) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1193,11 +1193,11 @@ public class TimelineUtils {
             final int offsetMillis = segment.offsetMillis;
 
             if (segmentType == LightSegment.Type.LIGHTS_OUT) {
-                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+                events.add(LightsOutEvent.createForPeriod(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis,period));
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
-                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
+                events.add(LightEvent.createForPeriod(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light", period));
             } else if(segmentType == LightSegment.Type.NONE){
-                events.add(new LightEvent(startTimestamp, endTimestamp, offsetMillis, "Light"));
+                events.add(LightEvent.createForPeriod(startTimestamp, endTimestamp, offsetMillis, "Light", period));
             }
             // TODO: daylight spike event -- unsure what the value might be at this moment
         }
@@ -1231,6 +1231,7 @@ public class TimelineUtils {
                                       final Optional<DateTime> optionalLightsOut,
                                       final Optional<DateTime> optionalSleepTime,
                                       final Optional<DateTime> optionalAwakeTime,
+                                      final SleepPeriod.Period period,
                                       final Boolean usePeakEnergyThreshold) {
         if (soundData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1287,7 +1288,7 @@ public class TimelineUtils {
             final long timestamp = segment.getStartTimestamp();
             final int sleepDepth = (sleepDepths.containsKey(timestamp)) ? sleepDepths.get(timestamp) : 0;
 
-            events.add(new NoiseEvent(timestamp, segment.getEndTimestamp(), segment.getOffsetMillis(), sleepDepth));
+            events.add(NoiseEvent.createForPeriod(timestamp, segment.getEndTimestamp(), segment.getOffsetMillis(), sleepDepth, period));
 
             if (events.size() >= MAX_SOUND_EVENT_SIZE) {
                 break;
@@ -1297,6 +1298,7 @@ public class TimelineUtils {
     }
 
     public SleepEvents<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
+                                                       final SleepPeriod.Period period,
                                                        final List<TrackerMotion> trackerMotions,
                                                        final List<DateTime> lightOutTimes,
                                                        final Optional<DateTime> firstWaveTimeOptional,
@@ -1365,21 +1367,21 @@ public class TimelineUtils {
         final Segment outOfBedSegment = segments.outOfBed;
 
         //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        final Event inBedEvent = new InBedEvent(goToBedSegment.getStartTimestamp(),
+        final Event inBedEvent = InBedEvent.createForPeriod(goToBedSegment.getStartTimestamp(),
                 goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                goToBedSegment.getOffsetMillis());
+                goToBedSegment.getOffsetMillis(), period);
 
-        final Event fallAsleepEvent = new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
+        final Event fallAsleepEvent = FallingAsleepEvent.createForPeriod(fallAsleepSegment.getStartTimestamp(),
                 fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                fallAsleepSegment.getOffsetMillis());
+                fallAsleepSegment.getOffsetMillis(), period);
 
-        final Event wakeUpEvent = new WakeupEvent(wakeUpSegment.getStartTimestamp(),
+        final Event wakeUpEvent = WakeupEvent.createForPeriod(wakeUpSegment.getStartTimestamp(),
                 wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                wakeUpSegment.getOffsetMillis());
+                wakeUpSegment.getOffsetMillis(), period);
 
-        final Event outOfBedEvent = new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
+        final Event outOfBedEvent = OutOfBedEvent.createForPeriod(outOfBedSegment.getStartTimestamp(),
                 outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                outOfBedSegment.getOffsetMillis());
+                outOfBedSegment.getOffsetMillis(), period);
 
         final SleepEvents<Event> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
 

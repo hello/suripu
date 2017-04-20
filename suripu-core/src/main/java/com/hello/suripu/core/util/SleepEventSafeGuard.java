@@ -131,14 +131,14 @@ public class SleepEventSafeGuard {
 
 
         if(isEventOverlapped(sleep.get(), goToBed.get())){
-            sleep = Optional.of((Event) new FallingAsleepEvent(sleep.get().getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+            sleep = Optional.of((Event) new FallingAsleepEvent(sleep.get().getSleepPeriod(),sleep.get().getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleep.get().getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,  sleep.get().getTimezoneOffset()));
             LOGGER.warn("Sleep {} has the same time with in bed, set to in bed +1 minute.",
                     new DateTime(sleep.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.get().getTimezoneOffset())));
         }
 
         if(isEventOverlapped(wakeUp.get(), outOfBed.get())){
-            outOfBed = Optional.of((Event) new OutOfBedEvent(outOfBed.get().getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+            outOfBed = Optional.of((Event) new OutOfBedEvent(outOfBed.get().getSleepPeriod(), outOfBed.get().getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     outOfBed.get().getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     outOfBed.get().getTimezoneOffset()));
             LOGGER.warn("Out of bed {} has the same time with wake up, set to wake up +1 minute.",
@@ -153,7 +153,7 @@ public class SleepEventSafeGuard {
                         new DateTime(goToBed.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.get().getTimezoneOffset())),
                         new DateTime(sleep.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.get().getTimezoneOffset())));
 
-                goToBed = Optional.of((Event) new InBedEvent(sleep.get().getStartTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                goToBed = Optional.of((Event) new InBedEvent(sleep.get().getSleepPeriod(), sleep.get().getStartTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                         sleep.get().getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                         sleep.get().getTimezoneOffset()));
             }else{
@@ -176,7 +176,7 @@ public class SleepEventSafeGuard {
                         new DateTime(outOfBed.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.get().getTimezoneOffset())));
 
 
-                outOfBed = Optional.of((Event) new OutOfBedEvent(wakeUp.get().getEndTimestamp(),
+                outOfBed = Optional.of((Event) new OutOfBedEvent(wakeUp.get().getSleepPeriod(), wakeUp.get().getEndTimestamp(),
                         wakeUp.get().getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         wakeUp.get().getTimezoneOffset()));
             }else{

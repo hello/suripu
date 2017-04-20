@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepPeriod;
@@ -380,7 +381,8 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData, final SleepPeriod sleepPeriod, final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
+public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData, final SleepPeriod sleepPeriod, final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
+
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData, sleepPeriod);
@@ -434,12 +436,12 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
             final Integer [] sleepSegments = getSleepSegments(accountId, algorithmOutput.output, iEnd);
 
             if (Arrays.asList(sleepSegments).contains(0)) {
-                LOGGER.info("action=return_no_prediction reason=missing_key_events account_id={} night={}",accountId, oneDaysSensorData.date);
+                LOGGER.info("action=return_no_prediction reason=missing_key_events account_id={} date={}",accountId, oneDaysSensorData.date);
                 log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.MISSING_KEY_EVENTS);
 
                 return Optional.absent();
             }
-            final List<Event> events = getEventTimes(offsetMap,t0, sleepSegments, xPartial);
+            final List<Event> events = getEventTimes(offsetMap,t0, sleepPeriod, sleepSegments, xPartial);
 
             final Map<Event.Type,Event> eventMap = Maps.newHashMap();
             for (final Event event : events) {
@@ -488,7 +490,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         return Optional.absent();
     }
 
-    static protected List<Event> getEventTimes(final TreeMap<Long,Integer> offsetMap, final long t0,  final Integer[] sleepSegments, final double[][] xPartial) {
+    static protected List<Event> getEventTimes(final TreeMap<Long,Integer> offsetMap, final long t0, final SleepPeriod sleepPeriod, final Integer[] sleepSegments, final double[][] xPartial) {
 
 
         final int timeSteps = xPartial[0].length;
@@ -518,6 +520,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
         //create all events
 
         events.add(Event.createFromType(Event.Type.IN_BED,
+                sleepPeriod.period,
                 inBedTime,
                 inBedTime+DateTimeConstants.MILLIS_PER_MINUTE,
                 getOffset(inBedTime,offsetMap),
@@ -526,6 +529,7 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 Optional.<Integer>absent()));
 
         events.add(Event.createFromType(Event.Type.SLEEP,
+                sleepPeriod.period,
                 sleepTime,
                 sleepTime+DateTimeConstants.MILLIS_PER_MINUTE,
                 getOffset(sleepTime,offsetMap),
@@ -533,15 +537,13 @@ public class NeuralNetFourEventAlgorithm implements TimelineAlgorithm {
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent()));
 
-        events.add(Event.createFromType(Event.Type.WAKE_UP,
+        events.add(new WakeupEvent(sleepPeriod.period,
                 wakeTime,
                 wakeTime+DateTimeConstants.MILLIS_PER_MINUTE,
-                getOffset(wakeTime,offsetMap),
-                Optional.of(English.WAKE_UP_MESSAGE),
-                Optional.<SleepSegment.SoundInfo>absent(),
-                Optional.<Integer>absent()));
+                getOffset(wakeTime,offsetMap)));
 
         events.add(Event.createFromType(Event.Type.OUT_OF_BED,
+                sleepPeriod.period,
                 outOfBedTime,
                 outOfBedTime+DateTimeConstants.MILLIS_PER_MINUTE,
                 getOffset(outOfBedTime,offsetMap),

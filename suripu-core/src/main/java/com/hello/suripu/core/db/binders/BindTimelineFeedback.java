@@ -29,6 +29,7 @@ public @interface BindTimelineFeedback{
                     final Integer delta = arg.getDeltaInMinutes();
 
                     q.bind("date_of_night", arg.dateOfNight);
+                    q.bind("sleep_period", arg.sleepPeriod.getValue());
                     q.bind("event_type", arg.eventType.getValue());
                     q.bind("old_time", arg.oldTimeOfEvent);
                     q.bind("new_time", arg.newTimeOfEvent);

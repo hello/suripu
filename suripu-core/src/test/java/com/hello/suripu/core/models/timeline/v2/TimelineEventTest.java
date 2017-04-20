@@ -2,6 +2,7 @@ package com.hello.suripu.core.models.timeline.v2;
 
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorReading;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -24,6 +25,7 @@ public class TimelineEventTest {
                 1300,
                 date.getZone().getOffset(date),
                 type,
+                SleepPeriod.Period.NIGHT,
                 "Test segment"
         );
     }

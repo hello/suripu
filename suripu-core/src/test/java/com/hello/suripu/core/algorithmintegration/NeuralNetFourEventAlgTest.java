@@ -126,7 +126,7 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
         }
 
 
-        final List<Event> eventTimes = getEventTimes(offsetMap, startTimeLocalUTC.getMillis(), sleepSegments, xPartial);
+        final List<Event> eventTimes = getEventTimes(offsetMap, startTimeLocalUTC.getMillis(), SleepPeriod.night(date), sleepSegments, xPartial);
         assert(eventTimes.size() == 4);
         assert(eventTimes.get(0).getStartTimestamp() == 1463786220000L);
         assert(eventTimes.get(1).getStartTimestamp() == 1463787660000L);

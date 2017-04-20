@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.SleepPeriod;
 import org.joda.time.DateTimeConstants;
 
 import java.util.ArrayList;
@@ -38,21 +39,25 @@ public class VotingSleepEvents {
         }
 
         //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        final Optional<Event> inBedEvent = Optional.of((Event)new InBedEvent(goToBedSegment.getStartTimestamp(),
+        final Optional<Event> inBedEvent = Optional.of((Event) InBedEvent.createForPeriod(goToBedSegment.getStartTimestamp(),
                 goToBedSegment.getEndTimestamp(),
-                goToBedSegment.getOffsetMillis()));
+                goToBedSegment.getOffsetMillis(),
+                SleepPeriod.Period.NIGHT));
 
-        final Optional<Event> fallAsleepEvent = Optional.of((Event)new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
+        final Optional<Event> fallAsleepEvent = Optional.of((Event) FallingAsleepEvent.createForPeriod(fallAsleepSegment.getStartTimestamp(),
                 fallAsleepSegment.getEndTimestamp(),
-                fallAsleepSegment.getOffsetMillis()));
+                fallAsleepSegment.getOffsetMillis(),
+                SleepPeriod.Period.NIGHT));
 
-        final Optional<Event> wakeUpEvent = Optional.of((Event)new WakeupEvent(wakeUpSegment.getStartTimestamp(),
+        final Optional<Event> wakeUpEvent = Optional.of((Event) WakeupEvent.createForPeriod(wakeUpSegment.getStartTimestamp(),
                 wakeUpSegment.getEndTimestamp(),
-                wakeUpSegment.getOffsetMillis()));
+                wakeUpSegment.getOffsetMillis(),
+                SleepPeriod.Period.NIGHT));
 
-        final Optional<Event> outOfBedEvent = Optional.of((Event)new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
+        final Optional<Event> outOfBedEvent = Optional.of((Event) OutOfBedEvent.createForPeriod(outOfBedSegment.getStartTimestamp(),
                 outOfBedSegment.getEndTimestamp(),
-                outOfBedSegment.getOffsetMillis()));
+                outOfBedSegment.getOffsetMillis(),
+                SleepPeriod.Period.NIGHT));
 
         final SleepEvents<Optional<Event>> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
         this.sleepEvents = events;
@@ -71,12 +76,13 @@ public class VotingSleepEvents {
                 continue;
             }
 
-            this.extraEvents.add(new WakeupEvent(segment.getStartTimestamp(),
+            this.extraEvents.add(WakeupEvent.createForPeriod(segment.getStartTimestamp(),
                     segment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                    segment.getOffsetMillis()));
-            this.extraEvents.add(new FallingAsleepEvent(segment.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                    segment.getOffsetMillis(), SleepPeriod.Period.NIGHT));
+            this.extraEvents.add(FallingAsleepEvent.createForPeriod(segment.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                     segment.getEndTimestamp(),
-                    segment.getOffsetMillis()));
+                    segment.getOffsetMillis(),
+                    SleepPeriod.Period.NIGHT));
         }
     }
 }

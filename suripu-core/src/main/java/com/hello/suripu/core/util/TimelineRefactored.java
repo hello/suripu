@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
+import com.hello.suripu.core.models.SleepPeriod;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Minutes;
@@ -33,6 +34,7 @@ public class TimelineRefactored {
 
         final Long tsForFirstMotionEvent = motionEventList.get(0).getStartTimestamp();
         final Long tsForLastMotionEvent = motionEventList.get(motionEventList.size() -1).getStartTimestamp();
+        final SleepPeriod.Period sleepPeriod = motionEventList.get(0).getSleepPeriod();
 
         final DateTime start = new DateTime(tsForFirstMotionEvent, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
         final DateTime end = new DateTime(tsForLastMotionEvent, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
@@ -42,7 +44,7 @@ public class TimelineRefactored {
             final DateTime key = start.plusMinutes(i);
             final Integer offset = timeZoneOffsetMap.getOffsetWithDefaultAsZero(key.getMillis());
             LOGGER.trace("Inserting {}", key);
-            map.put(key.getMillis(), new SleepingEvent(key.getMillis(), key.plusMinutes(1).getMillis(), offset, 100));
+            map.put(key.getMillis(), new SleepingEvent(sleepPeriod, key.getMillis(), key.plusMinutes(1).getMillis(), offset, 100));
         }
 
         for(final Event motionEvent : motionEventList) {

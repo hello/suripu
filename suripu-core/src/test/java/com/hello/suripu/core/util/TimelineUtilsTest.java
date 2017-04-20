@@ -60,7 +60,7 @@ public class TimelineUtilsTest {
     public void testComputeStats() {
         //false positive night - motion at start and end of night
         final List<TrackerMotion> trackerMotions =  loadTrackerMotionFromCSV("fixtures/algorithm/millionaires_challenge_2015_02_20_raw.csv");
-        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions, SleepPeriod.Period.NIGHT);
         final long sleepTime = trackerMotions.get(0).timestamp;
         final long wakeTime = trackerMotions.get(0).timestamp + 24000000L;
         final TimeZoneHistory timeZoneHistory1 = new TimeZoneHistory(1428408400000L, 3600000, "America/Los_Angeles");

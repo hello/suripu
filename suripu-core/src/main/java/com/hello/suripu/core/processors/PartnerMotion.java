@@ -74,7 +74,7 @@ public class PartnerMotion {
             }
 
             if (noPriorMovement) {
-                affectedEvents.add(new PartnerMotionEvent(
+                affectedEvents.add(new PartnerMotionEvent(myMotionEvent.getSleepPeriod(),
                         myMotionEvent.getStartTimestamp(),
                         myMotionEvent.getEndTimestamp(),
                         myMotionEvent.getTimezoneOffset(),

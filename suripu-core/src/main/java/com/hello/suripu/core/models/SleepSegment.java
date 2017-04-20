@@ -80,10 +80,14 @@ public class SleepSegment implements Comparable {
         return this.event.getType();
     }
 
+
     @JsonProperty("message")
     public String getMessage(){
         return this.event.getDescription();
     }
+
+    @JsonProperty("sleep_period")
+    public SleepPeriod.Period getSleepPeriod(){return this.event.getSleepPeriod();}
 
     @JsonIgnore
     public Event getEvent(){
@@ -100,10 +104,11 @@ public class SleepSegment implements Comparable {
                         @JsonProperty("duration") final long durationInSeconds,
                         @JsonProperty("offset_millis") final int offsetMillis,
                         @JsonProperty("event_type") final Event.Type type,
+                        @JsonProperty("sleep_period") final SleepPeriod.Period sleepPeriod,
                         @JsonProperty("message") final String message){
         this.id = id;
         this.sensors = sensors;
-        this.event = Event.createFromType(type,
+        this.event = Event.createFromType(type, sleepPeriod,
                 timestamp, timestamp + durationInSeconds * DateTimeConstants.MILLIS_PER_SECOND, offsetMillis,
                 message == null ? Optional.<String>absent() : Optional.of(message),
                 soundInfo == null ? Optional.<SoundInfo>absent() : Optional.of(soundInfo),
@@ -112,7 +117,7 @@ public class SleepSegment implements Comparable {
     }
 
     public SleepSegment createCopyWithNewOffset(final int offsetMillis) {
-        return new SleepSegment(id,sensors,getSleepDepth(),getSound(),getTimestamp(),getDurationInSeconds(),offsetMillis,getType(),getMessage());
+        return new SleepSegment(id,sensors,getSleepDepth(),getSound(),getTimestamp(),getDurationInSeconds(),offsetMillis,getType(),getSleepPeriod(), getMessage());
     }
 
     public SleepSegment(final Long id,
@@ -133,6 +138,7 @@ public class SleepSegment implements Comparable {
                 .add("durationInSeconds", this.getDurationInSeconds())
                 .add("sleepDepth", this.getSleepDepth())
                 .add("eventType", this.getType())
+                .add("sleepPeriod", this.getSleepPeriod())
                 .add("message", this.getMessage())
                 .add("sensors", this.sensors)
                 .add("soundInfo", this.getSound())

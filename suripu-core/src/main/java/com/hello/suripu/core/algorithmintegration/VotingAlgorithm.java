@@ -111,7 +111,7 @@ public class VotingAlgorithm implements TimelineAlgorithm {
 
         Optional<VotingSleepEvents> votingSleepEventsOptional = Optional.absent();
 
-        final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(rawLight, SleepPeriod.Period.NIGHT);
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 

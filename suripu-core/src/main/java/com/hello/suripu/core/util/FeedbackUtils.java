@@ -12,6 +12,7 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.TimelineFeedback;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -34,6 +35,11 @@ public class FeedbackUtils {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(FeedbackUtils.class);
     private static int INVALID_EVENT_ORDER = -1;
     private final Logger LOGGER;
+    private static int INBED_SLEEP_EVENT_LOWER_BOUND_OFFSET = -2;
+    private static int INBED_SLEEP_EVENT_UPPER_BOUND_OFFSET = 4;
+
+    private static int WAKE_OUTOFBED_EVENT_LOWER_BOUND_OFFSET = 0;
+    private static int WAKE_OUTOFBED_EVENT_UPPER_BOUND_OFFSET = 4;
 
     public FeedbackUtils(final Optional<UUID> uuid) {
         LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
@@ -45,42 +51,61 @@ public class FeedbackUtils {
 
     public static Optional<DateTime> convertFeedbackToDateTimeByNewTime(final TimelineFeedback feedback, final Integer offsetMillis) {
 
-        return convertFeedbackStringToDateTime(feedback.eventType,feedback.dateOfNight,feedback.newTimeOfEvent,offsetMillis);
+        return convertFeedbackStringToDateTime(feedback.eventType,feedback.dateOfNight,feedback.sleepPeriod,feedback.newTimeOfEvent,offsetMillis);
 
     }
 
     public static Optional<DateTime> convertFeedbackToDateTimeByOldTime(final TimelineFeedback feedback, final Integer offsetMillis) {
 
-        return convertFeedbackStringToDateTime(feedback.eventType,feedback.dateOfNight,feedback.oldTimeOfEvent,offsetMillis);
+        return convertFeedbackStringToDateTime(feedback.eventType,feedback.dateOfNight, feedback.sleepPeriod,feedback.oldTimeOfEvent,offsetMillis);
 
     }
 
 
-    private static Optional<DateTime> convertFeedbackStringToDateTime(final Event.Type eventType,final DateTime dateOfNight, final String feedbacktime, final Integer offsetMillis) {
+    private static Optional<DateTime> convertFeedbackStringToDateTime(final Event.Type eventType, final DateTime dateOfNight, final SleepPeriod.Period period,  final String feedbacktime, final Integer offsetMillis) {
+        //OLD
         // in bed can not be after after noon AND before 8PM
         // same for fall asleep
         // Wake up has to be after midnight (day +1) and before noon
         // same for out of bed
+        final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(period, dateOfNight);
         final String[] parts = feedbacktime.split(":");
         final Integer hour = Integer.valueOf(parts[0]);
         final Integer minute = Integer.valueOf(parts[1]);
+
+        final int inbedSleepLowerBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, offsetMillis).getHourOfDay() + INBED_SLEEP_EVENT_LOWER_BOUND_OFFSET;
+        final int inbedSleepUpperBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, offsetMillis).getHourOfDay() + INBED_SLEEP_EVENT_UPPER_BOUND_OFFSET;
+        final boolean inbedSleepWindowSpansDay = inbedSleepLowerBound > inbedSleepUpperBound;
+
+        final int wakeOutOfBedLowerBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, offsetMillis).getHourOfDay() + WAKE_OUTOFBED_EVENT_LOWER_BOUND_OFFSET;
+        final int wakeOutOfBedUpperBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, offsetMillis).getHourOfDay() + WAKE_OUTOFBED_EVENT_UPPER_BOUND_OFFSET;
+        final boolean wakeOutOfBedWindowSpansDay = wakeOutOfBedLowerBound > wakeOutOfBedUpperBound;
 
         boolean nextDay = false;
         switch (eventType) {
             case IN_BED:
             case SLEEP:
-                if(hour >= 0 && hour < 16) {
-                    nextDay =  true;
-                } else if(hour >= 16 && hour < 18) {
+                if (inbedSleepWindowSpansDay) {
+                   if (hour >= 0 && hour < inbedSleepUpperBound) {
+                        nextDay = true;
+                    } else if( hour >= inbedSleepUpperBound && hour < inbedSleepLowerBound){
+                       return Optional.absent();
+                   }
+                }else if (hour >= inbedSleepUpperBound || hour < inbedSleepLowerBound) {
                     return Optional.absent();
                 }
 
                 break;
+
             case WAKE_UP:
             case OUT_OF_BED:
-                if(hour >= 0 && hour < 16) {
-                    nextDay =  true;
-                } else {
+                if(wakeOutOfBedWindowSpansDay){
+                    if(hour >= 0 && hour < wakeOutOfBedUpperBound) {
+                        nextDay =  true;
+                    } else if ( hour >= wakeOutOfBedUpperBound && hour < wakeOutOfBedLowerBound){
+                        return Optional.absent();
+                    }
+                } else if(hour >= wakeOutOfBedUpperBound || hour < wakeOutOfBedLowerBound){
                     return Optional.absent();
                 }
                 break;
@@ -107,28 +132,28 @@ public class FeedbackUtils {
         Event event;
         switch (feedback.eventType) {
             case WAKE_UP:
-                event = new WakeupEvent(
+                event = new WakeupEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case SLEEP:
-                event = new FallingAsleepEvent(
+                event = new FallingAsleepEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case IN_BED:
-                event = new InBedEvent(
+                event = new InBedEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
                 );
                 break;
             case OUT_OF_BED:
-                event = new OutOfBedEvent(
+                event = new OutOfBedEvent(feedback.sleepPeriod,
                         adjustedTime.getMillis(),
                         adjustedTime.plusMinutes(1).getMillis(),
                         offsetMillis
@@ -167,11 +192,14 @@ public class FeedbackUtils {
     }
 
     /* returns map of events by event type */
-    public static Map<Event.Type, Event> getFeedbackAsEventsByType(final ImmutableList<TimelineFeedback> timelineFeedbackList, final TimeZoneOffsetMap timeZoneOffsetMap) {
+    public static Map<Event.Type, Event> getFeedbackAsEventsByType(final SleepPeriod.Period period, final ImmutableList<TimelineFeedback> timelineFeedbackList, final TimeZoneOffsetMap timeZoneOffsetMap) {
         final Map<Event.Type, Event> eventsByType = Maps.newHashMap();
         /* iterate through list*/
         for(final TimelineFeedback timelineFeedback : timelineFeedbackList) {
-
+            //if feedback for different period, skip
+            if(timelineFeedback.sleepPeriod != period){
+                continue;
+            }
             /* get datetime of the new time */
             final Optional<DateTime> optionalDateTime = convertFeedbackToDateTimeByNewTime(timelineFeedback, 0);
 
@@ -333,6 +361,7 @@ public class FeedbackUtils {
         //create new event
         final Event newEvent = Event.createFromType(
                 event.getType(),
+                event.getSleepPeriod(),
                 newTime,
                 newTime + MINUTE,
                 event.getTimezoneOffset(),
@@ -343,11 +372,11 @@ public class FeedbackUtils {
         return newEvent;
     }
 
-    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableCollection<Event> algEvents, final ImmutableList<Event> extraEvents, final TimeZoneOffsetMap timeZoneOffsetMap) {
+    public ReprocessedEvents reprocessEventsBasedOnFeedback(final SleepPeriod.Period period, final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableCollection<Event> algEvents, final ImmutableList<Event> extraEvents, final TimeZoneOffsetMap timeZoneOffsetMap) {
 
 
         /* get feedback events by time  */
-        final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(timelineFeedbackList, timeZoneOffsetMap);
+        final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(period, timelineFeedbackList, timeZoneOffsetMap);
 
 
         for (final Event event : algEvents) {
