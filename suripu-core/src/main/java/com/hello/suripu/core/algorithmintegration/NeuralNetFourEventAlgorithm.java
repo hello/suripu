@@ -436,12 +436,12 @@ public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSens
             final Integer [] sleepSegments = getSleepSegments(accountId, algorithmOutput.output, iEnd);
 
             if (Arrays.asList(sleepSegments).contains(0)) {
-                LOGGER.info("action=return_no_prediction reason=missing_key_events account_id={} night={}",accountId, oneDaysSensorData.date);
+                LOGGER.info("action=return_no_prediction reason=missing_key_events account_id={} date={}",accountId, oneDaysSensorData.date);
                 log.addMessage(AlgorithmType.NEURAL_NET_FOUR_EVENT, TimelineError.MISSING_KEY_EVENTS);
 
                 return Optional.absent();
             }
-            final List<Event> events = getEventTimes(offsetMap,t0, SleepPeriod.night(oneDaysSensorData.date), sleepSegments, xPartial);
+            final List<Event> events = getEventTimes(offsetMap,t0, sleepPeriod, sleepSegments, xPartial);
 
             final Map<Event.Type,Event> eventMap = Maps.newHashMap();
             for (final Event event : events) {
