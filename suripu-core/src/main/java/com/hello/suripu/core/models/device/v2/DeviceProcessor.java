@@ -246,6 +246,33 @@ public class DeviceProcessor {
         return new Devices(senses, pills);
     }
 
+    /**
+     * Use when no dependency on sense required. No pill color included
+     * @param accountId internal accountId
+     * @param account external account
+     * @return list of pills paired with account
+     */
+    public List<Pill> getPills(final Long accountId, final Account account) {
+        final List<DeviceAccountPair> pillAccountPairs = deviceDAO.getPillsForAccountId(accountId);
+        return getPills(pillAccountPairs, Optional.absent(), account, DateTime.now(DateTimeZone.UTC));
+    }
+
+    /**
+     * Use when no dependency on pill required
+     * @param accountId internal accountId
+     * @return list of senses paired with accountId
+     */
+    public List<Sense> getSenses(final Long accountId) {
+        // We only want to return the most recently paired sense
+        final Optional<DeviceAccountPair> senseAccountPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        final List<DeviceAccountPair> senseAccountPairs = new ArrayList<>();
+        if(senseAccountPair.isPresent()) {
+            senseAccountPairs.add(senseAccountPair.get());
+        }
+        final Map<String, Optional<WifiInfo>> wifiInfoMap = retrieveWifiInfoMap(senseAccountPairs);
+        return getSenses(senseAccountPairs, wifiInfoMap);
+    }
+
     private List<Sense> getSenses(final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
         final List<Sense> senses = Lists.newArrayList();
         for (final DeviceAccountPair senseAccountPair : senseAccountPairs) {
