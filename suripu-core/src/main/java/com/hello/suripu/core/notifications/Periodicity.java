@@ -1,7 +1,8 @@
 package com.hello.suripu.core.notifications;
 
 public enum Periodicity {
-    CURRENT,
+    MINUTELY,
+    HOURLY,
     DAILY,
     WEEKLY,
     MONTHLY;

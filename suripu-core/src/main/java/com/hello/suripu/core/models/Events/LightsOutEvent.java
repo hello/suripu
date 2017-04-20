@@ -12,8 +12,8 @@ public class LightsOutEvent extends Event {
         super(Type.LIGHTS_OUT, sleepPeriod, startTimestamp, endTimestamp, offsetMillis);
     }
 
-    public static LightsOutEvent createForNight(final long startTimestamp, final long endTimestamp, final int offsetMillis){
-        return new LightsOutEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, offsetMillis);
+    public static LightsOutEvent createForPeriod(final long startTimestamp, final long endTimestamp, final int offsetMillis, final SleepPeriod.Period period){
+        return new LightsOutEvent(period, startTimestamp, endTimestamp, offsetMillis);
     }
 
     @Override

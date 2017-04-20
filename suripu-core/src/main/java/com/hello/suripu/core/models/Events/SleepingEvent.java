@@ -13,8 +13,8 @@ public class SleepingEvent extends Event {
         this.sleepDepth = sleepDepth;
     }
 
-    public static SleepingEvent createForNight(long startTimestamp, long endTimestamp, int timezoneOffset, final Integer sleepDepth){
-        return new SleepingEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, timezoneOffset, sleepDepth);
+    public static SleepingEvent createForPeriod(long startTimestamp, long endTimestamp, int timezoneOffset, final Integer sleepDepth, final SleepPeriod.Period period){
+        return new SleepingEvent(period, startTimestamp, endTimestamp, timezoneOffset, sleepDepth);
     }
 
     @Override

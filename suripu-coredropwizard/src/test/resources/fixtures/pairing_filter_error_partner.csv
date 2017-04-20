@@ -1,0 +1,3 @@
+id,account_id,tracker_id,timestamp,value,timezone_offset,motion_range,kickoff_counts,on_duration_seconds
+ 0,80910,,1490789102000,36480,-14400000,0,0,44
+ 1,80910,,1490789162000,13948,-14400000,0,0,39

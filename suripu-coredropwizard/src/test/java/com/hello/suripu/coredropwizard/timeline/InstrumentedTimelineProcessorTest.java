@@ -11,6 +11,7 @@ import com.hello.suripu.core.db.HistoricalPairingDAO;
 import com.hello.suripu.core.db.PairingDAO;
 import com.hello.suripu.core.db.SenseDataDAODynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.models.DataCompleteness;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepScore;
@@ -115,7 +116,7 @@ public class InstrumentedTimelineProcessorTest {
 
         instrumentedTimelineProcessor = InstrumentedTimelineProcessor.createTimelineProcessor(
                 helpers.pillDataReadDAO,helpers.deviceReadDAO,helpers.deviceDataReadAllSensorsDAO,
-                helpers.ringTimeHistoryDAODynamoDB,helpers.feedbackDAO, helpers.sleepHmmDAO,helpers.accountDAO,helpers.sleepStatsDAO,
+                helpers.ringTimeHistoryDAODynamoDB,helpers.feedbackDAO, helpers.sleepHmmDAO,helpers.accountDAO,helpers.sleepStatsDAO, helpers.mainEventTimesDAO,
                 new SenseDataDAODynamoDB(pairingDAO, helpers.deviceDataReadAllSensorsDAO, helpers.senseColorDAO, helpers.calibrationDAO),helpers.timeZoneHistoryDAO, helpers.priorsDAO,helpers.featureExtractionModelsDAO,
                 helpers.defaultModelEnsembleDAO,helpers.userTimelineTestGroupDAO,
                 helpers.sleepScoreParametersDAO,
@@ -125,7 +126,7 @@ public class InstrumentedTimelineProcessorTest {
 
     final public static List<LoggingProtos.TimelineLog> getLogsFromTimeline(InstrumentedTimelineProcessor timelineProcessor) {
 
-        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(DateTimeZone.UTC),Optional.<TimelineFeedback>absent());
 
         TestCase.assertTrue(timelineResult.timelines.size() > 0);
         TestCase.assertTrue(timelineResult.logV2.isPresent());
@@ -268,6 +269,21 @@ public class InstrumentedTimelineProcessorTest {
         TestCase.assertTrue(outOfBedEvent);
         TestCase.assertTrue(asleepEvent);
         TestCase.assertTrue(wakeEvent);TestCase.assertTrue(alarmEvent);
+    }
+
+    @Test
+    public void testPairingFilterErrorFix() {
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime("2017-03-28");
+        final long accountId = 80935;
+
+        features.put(FeatureFlipper.PILL_PAIR_MOTION_FILTER,true);
+        features.put(FeatureFlipper.OUTLIER_FILTER,true);
+        features.put(FeatureFlipper.HMM_PARTNER_FILTER, true);
+
+
+        final TimelineResult timelineResult = instrumentedTimelineProcessor.retrieveTimelinesFast(accountId,targetDate,Optional.absent());
+        assert(timelineResult.logV2.isPresent());
+        assert(timelineResult.dataCompleteness == DataCompleteness.NO_DATA);
     }
 
     //@Test

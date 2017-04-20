@@ -700,6 +700,33 @@ UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_cho
 -- jyfan 2016-09-20 survey text tweak Matt
 UPDATE questions SET question_text='How often do you find yourself waking earlier than you want to?' WHERE question_text='How often do you find yourself waking earlier than you should?';
 
+-- jyfan 2017-02-28 add demo category
+ALTER TYPE question_category ADD VALUE 'demo';
+
+UPDATE questions SET category='demo' WHERE (category='none' AND frequency='one_time');
+
+-- jyfan 2017-02-28 add another daily question
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+  VALUES (
+      'How refreshed do you feel?', -- text
+      'EN', -- lang
+      'daily', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+      'choice', --response_type,
+      '{"Not at all", "A little bit", "Very much", "Completely"}', --text responses
+      null, -- dependency
+      'morning', -- ask_time
+      'daily' --category
+);
+
+INSERT INTO response_choices (question_id, response_text)
+    (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 1));
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
+
 
 
 

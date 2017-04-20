@@ -14,7 +14,6 @@ import org.joda.time.DateTime;
 import org.mindrot.jbcrypt.BCrypt;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -23,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,6 +36,10 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getById(@Bind("id") final Long id);
 
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM accounts WHERE external_id=:external_id")
+    public abstract Optional<Account> getByExternalId(@Bind("external_id") UUID uuid);
+
     @SqlQuery("SELECT * FROM accounts WHERE email = :email LIMIT 1;")
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getByEmail(@Bind("email") final String email);
@@ -46,9 +50,8 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SqlQuery("SELECT * FROM accounts ORDER BY id DESC;")
     public abstract List<Account> getAll();
 
-    @SqlUpdate("INSERT INTO accounts (name, firstname, lastname, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :firstname, :lastname, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
-    @GetGeneratedKeys
-    public abstract long insertAccount(@BindRegistration Registration registration, @Bind("last_modified") Long lastModified);
+    @SqlQuery("INSERT INTO accounts (name, firstname, lastname, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :firstname, :lastname, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified) RETURNING *")
+    public abstract Account insertNewAccount(@BindRegistration Registration registration, @Bind("last_modified") Long lastModified);
 
     @SqlUpdate("UPDATE accounts SET password_hash = :new_password_hash WHERE password_hash = :current_password_hash AND id = :account_id;")
     public abstract int updatePassword(@Bind("new_password_hash") final String newPasswordHash, @Bind("current_password_hash") final String currentPasswordHash, @Bind("account_id") final Long accountId);
@@ -60,8 +63,8 @@ public abstract class AccountDAOImpl implements AccountDAO {
     protected abstract int updateEmail(@Bind("email") final String email, @Bind("account_id") final Long accountId, @Bind("last_modified") final Long lastModified, @Bind("new_last_modified") final Long newLastModified);
 
     public Account register(final Registration registration) {
-        long id = insertAccount(registration, registration.created.getMillis());
-        return Account.fromRegistration(registration, id);
+        final Account account = insertNewAccount(registration, registration.created.getMillis());
+        return Account.fromRegistration(registration, account.id.get(), account.externalId.get());
     }
 
 
@@ -124,7 +127,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     }
 
 
-    @SqlUpdate("UPDATE accounts SET name=:name, firstname=:firstname, lastname=:lastname, gender=:gender, dob=:dob, height=:height, weight=:weight, " +
+    @SqlUpdate("UPDATE accounts SET name=:name, firstname=:firstname, lastname=:lastname, gender=:gender, gender_name=:gender_name, dob=:dob, height=:height, weight=:weight, " +
             "tz_offset=:tz_offset, last_modified= :new_last_modified WHERE id=:account_id AND last_modified=:last_modified;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId, @Bind("new_last_modified") final Long lastModified);
 

@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,6 +64,23 @@ public class AllSensorSampleList {
         results.put(Sensor.PARTICULATES, Collections.EMPTY_LIST);
         return results;
 
+    }
+
+    public AllSensorSampleList getSensorDataForTimeWindow(final long startTime, final long endTime){
+        final List<Sensor> sensorList = getAvailableSensors();
+        final AllSensorSampleList currentPeriodSensorSampleList = new AllSensorSampleList();
+
+        for (final Sensor sensor : sensorList){
+            final List<Sample> currentPeriodSampleList = new ArrayList<>();
+            final List<Sample> sampleList = this.get(sensor);
+            for (final Sample sample: sampleList){
+                if (sample.dateTime >=startTime && sample.dateTime  < endTime){
+                    currentPeriodSampleList.add(sample);
+                }
+            }
+            currentPeriodSensorSampleList.add(sensor, currentPeriodSampleList);
+        }
+        return currentPeriodSensorSampleList;
     }
 
 }

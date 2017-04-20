@@ -3,8 +3,6 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
-import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.InternalServerErrorException;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
@@ -18,7 +16,9 @@ import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.SleepPeriod;
+import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.TimelineError;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -53,6 +53,8 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
         WAKE_UP_OFFSET("wake_up_offset", "S"),
         OUT_OF_BED_TIME("out_of_bed_time", "S"),
         OUT_OF_BED_OFFSET("out_of_bed_offset", "S"),
+        ALGORITHM_TYPE("algorithm_type", "N"),
+        TIMELINE_ERROR("timeline_error", "N")
         ;
 
         private final String name;
@@ -105,6 +107,14 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 return null;
             }
             return Integer.valueOf(av.getN());
+        }
+
+        Optional<Integer> getOptionalInteger(final Map<String, AttributeValue> item) {
+            final AttributeValue av = get(item);
+            if (av == null) {
+                return Optional.absent();
+            }
+            return Optional.of(Integer.valueOf(av.getN()));
         }
 
         DateTime getDateTime(final Map<String, AttributeValue> item) {
@@ -195,7 +205,9 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 .put(Attribute.WAKE_UP_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.WAKE_UP).offset))
 
                 .put(Attribute.OUT_OF_BED_TIME.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).time))
-                .put(Attribute.OUT_OF_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).offset));
+                .put(Attribute.OUT_OF_BED_OFFSET.shortName(), toAttributeValue(model.eventTimeMap.get(Event.Type.OUT_OF_BED).offset))
+                .put(Attribute.ALGORITHM_TYPE.shortName(), toAttributeValue(model.algorithmType.getValue()))
+                .put(Attribute.TIMELINE_ERROR.shortName(), toAttributeValue(model.timelineError.getValue()));
 
         return builder.build();
     }
@@ -228,9 +240,8 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
         int numTries = 0;
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(getTableName(mainEventTimes.sleepPeriod.targetDate))
-                .withItem(toAttributeMap(mainEventTimes))
-                // Ensure that the item does not exist. If it exists, this throws a ConditionalCheckFailedException.
-                .withExpected(ImmutableMap.of(Attribute.DATE_SLEEP_PERIOD.shortName(), new ExpectedAttributeValue(false)));
+                .withItem(toAttributeMap(mainEventTimes));
+
         do {
             try {
                 dynamoDBClient.putItem(putItemRequest);
@@ -239,11 +250,6 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 LOGGER.error("error=ProvisionedThroughputExceededException account_id={}", mainEventTimes.accountId);
             } catch (InternalServerErrorException isee) {
                 LOGGER.error("error=InternalServerErrorException account_id={}", mainEventTimes.accountId);
-            } catch (ConditionalCheckFailedException ccfe) {
-                // The item already exists or we already have an item with this timestamp / account ID!
-                LOGGER.warn("warn=item-already-exists account_id={} timestamp={}",
-                        mainEventTimes.accountId, mainEventTimes.sleepPeriod.targetDate);
-                return false;
             }
             backoff(numTries);
             numTries++;
@@ -319,6 +325,9 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
     }
 
     private static MainEventTimes toMainEventTimes(final Map<String, AttributeValue> item) {
+        final long accountId = Attribute.ACCOUNT_ID.getLong(item);
+
+
         final ImmutableMap<Event.Type, MainEventTimes.EventTime > eventTimeMap = ImmutableMap.<Event.Type, MainEventTimes.EventTime>builder()
                 .put(Event.Type.IN_BED, new MainEventTimes.EventTime(Attribute.IN_BED_TIME.getLong(item), Attribute.IN_BED_OFFSET.getInteger(item)))
                 .put(Event.Type.SLEEP, new MainEventTimes.EventTime(Attribute.SLEEP_TIME.getLong(item), Attribute.SLEEP_OFFSET.getInteger(item)))
@@ -326,12 +335,36 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
                 .put(Event.Type.OUT_OF_BED, new MainEventTimes.EventTime(Attribute.OUT_OF_BED_TIME.getLong(item), Attribute.OUT_OF_BED_OFFSET.getInteger(item)))
                 .build();
         final SleepPeriod.Period period = SleepPeriod.Period.fromString(Attribute.SLEEP_PERIOD.getString(item));
+        final DateTime targetDate = Attribute.DATE.getDateTime(item);
+
+        final Optional<Integer> algTypeValueOptional = Attribute.ALGORITHM_TYPE.getOptionalInteger(item);
+        final Optional<Integer> timelineErrorValueOptional = Attribute.TIMELINE_ERROR.getOptionalInteger(item);
+
+        final AlgorithmType algorithmType;
+        if(algTypeValueOptional.isPresent()) {
+            algorithmType = AlgorithmType.fromInteger(algTypeValueOptional.get());
+        } else{
+            LOGGER.warn("msg=main-event-times-missing-alg-type account_id={} sleep_period={} date={}", accountId, period, targetDate);
+            algorithmType = AlgorithmType.NONE;
+        }
+
+        final TimelineError timelineError;
+        if (timelineErrorValueOptional.isPresent()){
+            timelineError = TimelineError.fromInteger(timelineErrorValueOptional.get());
+        } else {
+            LOGGER.warn("msg=main-event-times-missing-timeline-error account_id={} sleep_period={} date={}", accountId, period, targetDate);
+
+            timelineError = TimelineError.NO_ERROR;
+        }
+
         final MainEventTimes mainEventTimes= MainEventTimes.createMainEventTimes(
-                Attribute.ACCOUNT_ID.getLong(item),
-                SleepPeriod.createSleepPeriod(period, Attribute.DATE.getDateTime(item)),
+                accountId,
+                SleepPeriod.createSleepPeriod(period, targetDate),
                 Attribute.CREATED_AT_TIME.getLong(item),
                 Attribute.CREATED_AT_OFFSET.getInteger(item),
-                eventTimeMap
+                eventTimeMap,
+                algorithmType,
+                timelineError
         );
         return mainEventTimes;
 
@@ -357,13 +390,27 @@ public class MainEventTimesDynamoDB extends TimeSeriesDAODynamoDB<MainEventTimes
 
     //endregion private helpers
 
-    public boolean updateEventTimes(MainEventTimes mainEventTimes){
-        return insert(mainEventTimes);
 
+    public boolean updateEventTimes(final MainEventTimes mainEventTimes){
+        return insert(mainEventTimes);
     }
 
-    public List<MainEventTimes> getEventTimes(Long accountId, DateTime date){
-        return query(accountId, date, date.plusDays(1)).data;
+    public List<MainEventTimes> getEventTimesForDate(final Long accountId, final DateTime targetDate){
+        return query(accountId, targetDate, targetDate.plusDays(1)).data;
+    }
+
+    public List<MainEventTimes> getEventTimes(final Long accountId, final DateTime startDate, final DateTime endDate){
+        return query(accountId, startDate, endDate.plusDays(1)).data;
+    }
+
+    public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period){
+        final List<MainEventTimes> mainEventTimesList = query(accountId, date, date.plusDays(1)).data;
+        for(MainEventTimes mainEventTimes : mainEventTimesList){
+            if(mainEventTimes.sleepPeriod.period == period){
+                return Optional.of(mainEventTimes);
+            }
+        }
+        return Optional.absent();
     }
 
 }

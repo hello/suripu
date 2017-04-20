@@ -23,8 +23,8 @@ public class WakeupEvent extends Event {
         this.wakeupMessage = wakeupMessage;
     }
 
-    public static WakeupEvent createForNight(long startTimestamp, long endTimestamp, int timezoneOffset) {
-        return new WakeupEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, timezoneOffset);
+    public static WakeupEvent createForPeriod(long startTimestamp, long endTimestamp, int timezoneOffset, SleepPeriod.Period period) {
+        return new WakeupEvent(period, startTimestamp, endTimestamp, timezoneOffset);
     }
 
     @Override

@@ -12,6 +12,7 @@ public class UserBioInfo {
     public final int male;
     public final int female;
     public final int partner;
+    public final SleepPeriod.Period primarySleepPeriod;
 
     private final static int BMI_MIN = 5;
     private final static int BMI_MAX = 50;
@@ -20,22 +21,42 @@ public class UserBioInfo {
     private final static int AGE_MAX = 90;
     private final static double AGE_DEFAULT = 0.0;
 
+    public UserBioInfo( final double age, final double bmi, final int male, final int female, final int partner, final SleepPeriod.Period sleepPeriod){
+        this.age = age;
+        this.bmi = bmi;
+        this.male = male;
+        this.female = female;
+        this.partner = partner;
+        this.primarySleepPeriod = sleepPeriod;
+    }
+
     public UserBioInfo( final double age, final double bmi, final int male, final int female, final int partner){
         this.age = age;
         this.bmi = bmi;
         this.male = male;
         this.female = female;
         this.partner = partner;
+        this.primarySleepPeriod = SleepPeriod.Period.NIGHT;
     }
+
     public UserBioInfo() {
         this.age = AGE_DEFAULT;
         this.bmi = BMI_DEFAULT;
         this.male = 0;
         this.female = 0;
         this.partner = 0;
+        this.primarySleepPeriod =  SleepPeriod.Period.NIGHT;
     }
 
-    public static UserBioInfo getUserBioInfo(Optional<Account> accountOptional, final boolean hasPartnerPresent) {
+    public static UserBioInfo forDaySleeper(Optional<Account> accountOptional, final boolean hasPartnerPresent){
+        return getUserBioInfo(accountOptional, true, hasPartnerPresent);
+    }
+
+    public static UserBioInfo forNightSleeper(Optional<Account> accountOptional, final boolean hasPartnerPresent){
+        return getUserBioInfo(accountOptional, false, hasPartnerPresent);
+    }
+
+    public static UserBioInfo getUserBioInfo(Optional<Account> accountOptional, final boolean daySleeper, final boolean hasPartnerPresent) {
         final int male, female, partner;
         final double age, bmi;
         if (accountOptional.isPresent()) {
@@ -83,7 +104,14 @@ public class UserBioInfo {
         } else {
             partner = 0;
         }
-        return new UserBioInfo(age, bmi, male, female, partner);
+        final SleepPeriod.Period sleepPeriod;
+        if (daySleeper){
+            sleepPeriod = SleepPeriod.Period.MORNING;
+        } else {
+            sleepPeriod = SleepPeriod.Period.NIGHT;
+        }
+
+        return new UserBioInfo(age, bmi, male, female, partner, sleepPeriod);
     }
 
 }

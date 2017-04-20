@@ -1,5 +1,11 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -10,17 +16,13 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -490,6 +492,44 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         }
 
         return Optional.absent();
+    }
+
+    public List<TrackerMotion> getNumMostRecent(final String externalPillId, final Long accountId, final DateTime now, final Integer resultLimit) {
+        final DateTime startTime = now.minusDays(15);
+        final Expression keyConditionExpression = Expressions.and(
+            Expressions.equals(PillDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+            Expressions.between(PillDataAttribute.TS_PILL_ID, getRangeKey(startTime, externalPillId), getRangeKey(now, externalPillId)));
+
+        final List<Map<String, AttributeValue>> latestRecords = getNumLatest(getTableName(now), keyConditionExpression, TARGET_ATTRIBUTES, resultLimit);
+
+        if (latestRecords.isEmpty()) {
+            return Lists.newArrayList();
+        }
+
+        final List<TrackerMotion> motionRecords = Lists.newArrayList();
+
+        for(final Map<String, AttributeValue> record : latestRecords) {
+            final TrackerMotion trackerMotion = fromDynamoDBItem(record);
+            if (trackerMotion.externalTrackerId.equals(externalPillId)) {
+                motionRecords.add(trackerMotion);
+            }
+        }
+        if(!motionRecords.isEmpty()) {
+            return motionRecords;
+        }
+
+        // Getting the absolute most recent didn't work, so try querying relevant tables.
+        final Response<List<Map<String, AttributeValue>>> response = queryTables(getTableNames(startTime, now), keyConditionExpression, TARGET_ATTRIBUTES);
+
+        // Iterate through results in reverse order (most recent first)
+        for (final Map<String, AttributeValue> item: Lists.reverse(response.data)) {
+            final TrackerMotion trackerMotion = fromDynamoDBItem(item);
+            if (trackerMotion.externalTrackerId.equals(externalPillId)) {
+                motionRecords.add(trackerMotion);
+            }
+        }
+
+        return motionRecords;
     }
 
 

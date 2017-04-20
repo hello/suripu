@@ -13,6 +13,7 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
@@ -300,7 +301,7 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData oneDaysSensorData, final SleepPeriod sleepPeriod, final TimelineLog log, final long accountId, final boolean feedbackChanged, final Set<String> features) {
 
         try {
             final double [][] x = getSensorData(oneDaysSensorData);
@@ -377,19 +378,24 @@ public class NeuralNetAlgorithm implements TimelineAlgorithm {
 
             final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inbedOptional,sleepOptional,wakeOptional,outOfBedOptional);
 
+            final boolean isPrimarySleepPeriod = true;
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
-                    accountId, AlgorithmType.NEURAL_NET,
+                    accountId,
+                    true,
+                    Optional.absent(),
+                    AlgorithmType.NEURAL_NET,
                     sleepEvents,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(oneDaysSensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(oneDaysSensorData.oneDaysTrackerMotion.processedtrackerMotions));
 
             //IF NO ERROR, THEN RETURN
             if (error.equals(TimelineError.NO_ERROR)) {
 
                 log.addMessage(AlgorithmType.NEURAL_NET,events);
 
-                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events));
+                return Optional.of(new TimelineAlgorithmResult(AlgorithmType.NEURAL_NET,events, false));
 
             }
 

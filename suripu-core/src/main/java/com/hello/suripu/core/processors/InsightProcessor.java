@@ -33,6 +33,7 @@ import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.CaffeineAlarm;
+import com.hello.suripu.core.processors.insights.CorrelationTemperature;
 import com.hello.suripu.core.processors.insights.GoalsInsights;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
@@ -427,10 +428,7 @@ public class InsightProcessor {
                 return Optional.of(InsightCard.Category.TEMPERATURE);
 
             case 13:
-                if (!InsightsLastSeen.checkQualifiedInsight(recentCategories, InsightCard.Category.LIGHT, LAST_TWO_WEEKS)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.LIGHT);
+                return Optional.absent(); //Previously scheduled for light
             case 18:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_CAFFEINE, accountId, Collections.EMPTY_LIST)) {
                     return Optional.absent();
@@ -575,12 +573,26 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    public Optional<InsightCard.Category> generateFutureInsightsByCategory(final Long accountId, final InsightCard.Category category, final DateTime dateVisible) {
+    public Optional<InsightCard.Category> generateFutureInsightsByCategory(final Long accountId, final InsightCard.Category category, final DateTime publicationDateLocal) {
+
+        //Get dateVisibleUTC
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        if (!timeZoneOffsetOptional.isPresent()) {
+            LOGGER.info("action=insight-absent insight=correlation_temperature reason=timezoneoffset-absent account_id={}", accountId);
+            return Optional.absent(); //cannot compute insight without timezone info
+        }
+
+        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
+        final DateTime publicationDateUTC = publicationDateLocal.minusMillis(timeZoneOffset);
+
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
             case PARTNER_MOTION:
-                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB, dateVisible);
+                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB, publicationDateUTC);
+                break;
+            case CORRELATION_TEMP:
+                insightCardOptional = CorrelationTemperature.getInsights(accountId, publicationDateUTC);
                 break;
         }
 
@@ -592,7 +604,7 @@ public class InsightProcessor {
             // save to dynamo
             LOGGER.info("action=generated_insight_card category={} account_id={} next_action=insert_into_dynamo", insightCardOptional.get(), accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
-            final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, dateVisible);
+            final InsightsLastSeen newInsight = new InsightsLastSeen(accountId, insightCardOptional.get().category, publicationDateUTC);
             this.insightsLastSeenDAO.markLastSeen(newInsight);
             return Optional.of(category);
         }

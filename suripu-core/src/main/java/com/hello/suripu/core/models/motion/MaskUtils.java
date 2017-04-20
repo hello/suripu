@@ -24,7 +24,7 @@ public class MaskUtils {
         return ((mask >> offsetSeconds) & 1) == 1;
     }
 
-    static List<Boolean> toBooleans(final Long mask) {
+    public static List<Boolean> toBooleans(final Long mask) {
         final List<Boolean> result = Lists.newArrayListWithExpectedSize(SECONDS_IN_MINUTE);
         for (int i = 0; i < SECONDS_IN_MINUTE; i++) {
             final Boolean didMove = getBit(mask, i);

@@ -596,3 +596,53 @@ INSERT INTO voice_commands(command, voice_command_subtopic_id) VALUES
     ('Brighten the lights.', (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Dim the lights.',  (SELECT id FROM voice_command_subtopics where command_title = 'Lights')),
     ('Set the thermostat to 70°.',  (SELECT id FROM voice_command_subtopics where command_title = 'Thermostat'));
+
+
+-- Added Feb 22nd
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";  -- need this for the uuid generation
+ALTER TABLE accounts ADD COLUMN external_id uuid DEFAULT uuid_generate_v4();
+
+-- Added Feb 23rd
+ALTER TABLE accounts ADD COLUMN gender_name VARCHAR(100);
+
+-- 2017-03-22 file_info for Sense 1.5
+CREATE TABLE file_info_one_five (
+    id SERIAL PRIMARY KEY,
+    sort_key INTEGER NOT NULL,          -- How to sort the values for displaying
+    firmware_version INTEGER NOT NULL,  -- Minimum firmware version
+    type VARCHAR(255),
+    path VARCHAR(255),
+    sha VARCHAR(255),
+    uri VARCHAR(255),
+    preview_uri VARCHAR(255),
+    name VARCHAR(255),
+    size_bytes INTEGER,
+    is_public BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE sense_file_info_one_five (
+    id SERIAL PRIMARY KEY,
+    sense_id VARCHAR(255) NOT NULL,
+    file_info_id INTEGER NOT NULL REFERENCES file_info_one_five (id)
+);
+
+CREATE INDEX sense_id_one_five_idx on sense_file_info_one_five(sense_id);
+
+GRANT ALL PRIVILEGES ON file_info_one_five TO ingress_user;
+GRANT ALL PRIVILEGES ON sense_file_info_one_five TO ingress_user;
+
+INSERT INTO file_info_one_five
+(id, sort_key, firmware_version, type, path, sha, uri, preview_uri, name, is_public, size_bytes)
+VALUES
+( 9, 11, 4215, 'SLEEP_SOUND', '/SLPTONES/ST001.RAW', '7dd42ec7e55b00afbbcb2a8e129dc0fc573961eb', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST001.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Brown_Noise.mp3', 'Brown Noise', true,    161552),
+(10,  5, 4215, 'SLEEP_SOUND', '/SLPTONES/ST002.RAW', 'd30817227ce93708167be1022de1f1625853ffce', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST002.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Cosmos.mp3', 'Cosmos', true,    628054),
+(11,  6, 4215, 'SLEEP_SOUND', '/SLPTONES/ST003.RAW', '777a25489420095ce034bd082d964fc47d9c7c78', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST003.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Autumn_Wind.mp3', 'Autumn Wind', true,   2304000),
+(12,  7, 4215, 'SLEEP_SOUND', '/SLPTONES/ST004.RAW', '686ab4987f6014611b1bc18872364e76ab98277d', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST004.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Fireside.mp3', 'Fireside', true,    905342),
+(13,  8, 4215, 'SLEEP_SOUND', '/SLPTONES/ST005.RAW', '25f05b2302ae69c1a501989852497257a1cf31d7', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST005.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Ocean_Waves.mp3', 'Ocean Waves', false,  1669802),
+(14,  9, 4215, 'SLEEP_SOUND', '/SLPTONES/ST006.RAW', '128cf3d664e39667e4eabff647f8ed0cc4edd109', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST006.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Rainfall.mp3', 'Rainfall', true,    539354),
+(15, 12, 4215, 'SLEEP_SOUND', '/SLPTONES/ST007.RAW', 'bd26a9cbbe9781852c5454706c1b04e742d72f2e', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST007.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/White_Noise.mp3', 'White Noise', true,     81866),
+(16, 10, 4215, 'SLEEP_SOUND', '/SLPTONES/ST008.RAW', '56ac9affc489328cd14bdd35bd0c256635ab0faa', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST008.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Forest_Creek.mp3', 'Forest Creek', true,    595286),
+(17,  3, 4215, 'SLEEP_SOUND', '/SLPTONES/ST009.RAW', 'a0a370f64cd543449f055f8ca666bfff40bf6620', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST009.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Morpheus.mp3', 'Morpheus', true,  11004180),
+(18,  1, 4215, 'SLEEP_SOUND', '/SLPTONES/ST010.RAW', 'f7b36fb9c4ade09397ce3135b1bd0d2c3b0cfb12', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST010.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Aura.mp3', 'Aura', true,   6247766),
+(19,  4, 4215, 'SLEEP_SOUND', '/SLPTONES/ST011.RAW', '684dcf2842df76cf0409bf51c7e303bae92e25d0', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST011.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Horizon.mp3', 'Horizon', true,   8476982),
+(20,  2, 4215, 'SLEEP_SOUND', '/SLPTONES/ST012.RAW', '3fa21852f29d15b3d8d8eeb0d05c6c42b7ca9041', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST012.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Nocturne.mp3', 'Nocturne', true,   6323200);

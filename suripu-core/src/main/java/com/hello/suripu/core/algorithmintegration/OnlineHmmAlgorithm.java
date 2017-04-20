@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.TimelineError;
@@ -50,7 +51,7 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
 
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final TimelineLog log, final long accountId, final boolean feedbackChanged,final Set<String> features) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final SleepPeriod sleepPeriod, final TimelineLog log, final long accountId, final boolean feedbackChanged, final Set<String> features) {
 
         LOGGER.info("alg=ONLINE-HMM account_id={}",accountId);
 
@@ -69,14 +70,17 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
                     feedbackChanged,
                     false);
 
-
+            final boolean isPrimarySleepPeriod = true;
             //verify that algorithm produced something useable
             final TimelineError error = timelineSafeguards.checkIfValidTimeline(
                     accountId,
+                    true,
+                    Optional.absent(),
                     AlgorithmType.ONLINE_HMM,
                     events,
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
-                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)),
+                    ImmutableList.copyOf(sensorData.oneDaysTrackerMotion.processedtrackerMotions));
 
             LOGGER.info("alg_status={} account_id={} date={}",error,accountId,sensorData.date.toDate());
 
@@ -88,7 +92,7 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
             final List<Event> eventsList = timelineUtils.eventsFromOptionalEvents(events.toList());
             log.addMessage(AlgorithmType.ONLINE_HMM, eventsList);
 
-            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.ONLINE_HMM,eventsList));
+            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.ONLINE_HMM,eventsList, false));
         }
         catch (Exception e) {
             log.addMessage(AlgorithmType.ONLINE_HMM, TimelineError.UNEXEPECTED);

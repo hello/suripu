@@ -12,6 +12,7 @@ import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
+import com.hello.suripu.core.db.MainEventTimesDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
@@ -28,12 +29,14 @@ import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.MainEventTimes;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepScoreParameters;
 import com.hello.suripu.core.models.SleepStats;
@@ -65,6 +68,8 @@ public class InstrumentedTimelineProcessorHelpers {
     private static final Logger LOGGER = LoggerFactory.getLogger(InstrumentedTimelineProcessorHelpers.class);
     private static long ACCOUNT_ID_DST = 62801L;
     private static long ACCOUNT_ID_DST_2 = 66376L;
+    private static long ACCOUNT_ID_PAIRING_ERROR = 80935L;
+    private static long ACCOUNT_ID_PAIRING_ERROR_PARTNER= 80910L;
 
 
     final public PillDataReadDAO pillDataReadDAO = new PillDataReadDAO() {
@@ -74,6 +79,16 @@ public class InstrumentedTimelineProcessorHelpers {
             if (accountId == ACCOUNT_ID_DST_2){
                 //get from dst germany
                 final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_11_05_dst.csv");
+                return ImmutableList.copyOf(trackerMotions);
+            }
+
+            if (accountId == ACCOUNT_ID_PAIRING_ERROR ){
+                final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/pairing_filter_error.csv");
+                return ImmutableList.copyOf(trackerMotions);
+            }
+
+            if (accountId == ACCOUNT_ID_PAIRING_ERROR_PARTNER ){
+                final List<TrackerMotion> trackerMotions= CSVLoader.loadTrackerMotionFromCSV("fixtures/pairing_filter_error_partner.csv");
                 return ImmutableList.copyOf(trackerMotions);
             }
 
@@ -254,6 +269,11 @@ public class InstrumentedTimelineProcessorHelpers {
         }
 
         @Override
+        public Optional<Account> getByExternalId(UUID externalId) {
+            return Optional.absent();
+        }
+
+        @Override
         public com.google.common.base.Optional<Account> getByEmail(String email) {
             return null;
         }
@@ -305,6 +325,29 @@ public class InstrumentedTimelineProcessorHelpers {
         public ImmutableList<AggregateSleepStats> getBatchStats(Long accountId, String startDate, String endDate) {
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
+    };
+
+    final public MainEventTimesDAO mainEventTimesDAO = new MainEventTimesDAO() {
+       @Override
+        public boolean updateEventTimes(MainEventTimes mainEventTimes) {
+            return true;
+        }
+
+        @Override
+        public List<MainEventTimes> getEventTimesForDate(Long accountId, DateTime targetDate) {
+            return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        public List<MainEventTimes> getEventTimes(Long accountId, DateTime startDate, DateTime endDate) {
+            return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        public Optional<MainEventTimes> getEventTimesForSleepPeriod(Long accountId, DateTime date, SleepPeriod.Period period) {
+            return Optional.absent();
+        }
+
     };
 
     final public TimeZoneHistoryDAO timeZoneHistoryDAO= new TimeZoneHistoryDAO(){
@@ -534,11 +577,22 @@ public class InstrumentedTimelineProcessorHelpers {
 
         @Override
         public com.google.common.base.Optional<Long> getPartnerAccountId(@Bind("account_id") Long accountId) {
+            if (accountId == ACCOUNT_ID_PAIRING_ERROR){
+                return Optional.of(ACCOUNT_ID_PAIRING_ERROR_PARTNER);
+            }
             return com.google.common.base.Optional.absent();
         }
 
         @Override
         public ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId) {
+            DeviceAccountPair deviceAccountPair = new DeviceAccountPair(accountId, 0L,"foobar", new DateTime(2017, 03,29,12,05,02, DateTimeZone.UTC));
+            DeviceAccountPair deviceAccountPairPartner = new DeviceAccountPair(accountId, 0L,"foobar", new DateTime(2017, 03,28,10,05,02, DateTimeZone.UTC));
+            if(accountId == ACCOUNT_ID_PAIRING_ERROR){
+                return (ImmutableList.copyOf(Lists.newArrayList(deviceAccountPair)));
+            }
+            if(accountId == ACCOUNT_ID_PAIRING_ERROR_PARTNER){
+                return (ImmutableList.copyOf(Lists.newArrayList(deviceAccountPairPartner)));
+            }
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 
@@ -582,7 +636,6 @@ public class InstrumentedTimelineProcessorHelpers {
             return null;
         }
     };
-
 
     public void clear() {
     }

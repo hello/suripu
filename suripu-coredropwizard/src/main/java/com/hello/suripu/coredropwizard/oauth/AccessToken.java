@@ -2,20 +2,21 @@ package com.hello.suripu.coredropwizard.oauth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.oauth.OAuthScope;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.UUID;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AccessToken implements Principal {
+    public static final Long DEFAULT_INTERNAL_ID = 0L;
 
     @JsonIgnore
     public final UUID token;
@@ -36,8 +37,17 @@ public class AccessToken implements Principal {
     @JsonIgnore
     public final DateTime createdAt;
 
+    @JsonIgnore
+    public final Optional<UUID> externalId;
+
     @JsonProperty("account_id")
-    @JsonSerialize(using = ToStringSerializer.class)
+    public String externalId() {
+        final String internalId = String.valueOf(DEFAULT_INTERNAL_ID);
+        return externalId.isPresent() ? externalId.get().toString() : internalId;
+
+    }
+
+    @JsonIgnore
     public final Long accountId;
 
     @JsonIgnore
@@ -83,8 +93,46 @@ public class AccessToken implements Principal {
         this.accountId = accountId;
         this.appId = appId;
         this.scopes = scopes;
+        this.externalId = Optional.absent();
     }
 
+    private AccessToken(
+            final UUID token,
+            final UUID refreshToken,
+            final Long expiresIn,
+            final Long refreshExpiresIn,
+            final DateTime createdAt,
+            final Long accountId,
+            final Long appId,
+            final OAuthScope[] scopes,
+            final Optional<UUID> externalId) {
+
+        checkNotNull(token, "token can not be null");
+        checkNotNull(refreshToken, "refreshToken can not be null");
+        checkNotNull(expiresIn, "expiresIn can not be null");
+        checkNotNull(refreshExpiresIn, "refreshExpiresIn can not be null");
+        checkNotNull(createdAt, "createdAt can not be null");
+        checkNotNull(accountId, "accountId can not be null");
+        checkNotNull(appId, "appId can not be null");
+        checkNotNull(scopes, "scopes can not be null");
+
+        this.token = token;
+        this.refreshToken = refreshToken;
+        this.expiresIn = expiresIn;
+        this.refreshExpiresIn = refreshExpiresIn;
+        this.createdAt = createdAt;
+        this.accountId = accountId;
+        this.appId = appId;
+        this.scopes = scopes;
+        this.externalId = externalId;
+    }
+
+    public static AccessToken createWithExternalId(final AccessToken accessToken, final UUID externalId) {
+        return new AccessToken(accessToken.token, accessToken.refreshToken,
+                accessToken.expiresIn, accessToken.refreshExpiresIn, accessToken.createdAt,
+                accessToken.accountId, accessToken.appId, accessToken.scopes,
+                Optional.of(externalId));
+    }
 
     public static class Builder {
         private UUID token;
@@ -95,9 +143,11 @@ public class AccessToken implements Principal {
         private Long accountId;
         private Long appId;
         private OAuthScope[] scopes;
+        private Optional<UUID> externalId;
 
         public Builder() {
             createdAt = DateTime.now(DateTimeZone.UTC);
+            externalId = Optional.absent();
         }
 
         public Builder withToken(final UUID token) {
@@ -140,8 +190,13 @@ public class AccessToken implements Principal {
             return this;
         }
 
+        public Builder withExternalId(final UUID externalId) {
+            this.externalId = Optional.of(externalId);
+            return this;
+        }
+
         public AccessToken build() {
-            return new AccessToken(token, refreshToken, expiresIn, refreshExpiresIn, createdAt, accountId, appId, scopes);
+            return new AccessToken(token, refreshToken, expiresIn, refreshExpiresIn, createdAt, accountId, appId, scopes, externalId);
         }
     }
 

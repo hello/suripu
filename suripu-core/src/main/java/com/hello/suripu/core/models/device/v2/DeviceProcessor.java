@@ -11,6 +11,7 @@ import com.google.common.primitives.Longs;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.analytics.AnalyticsTracker;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
@@ -18,6 +19,7 @@ import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PairingInfo;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -59,9 +61,11 @@ public class DeviceProcessor {
     private final AnalyticsTracker analyticsTracker;
     private final SenseMetadataDAO senseMetadataDAO;
     private final VoiceMetadataDAO voiceMetadataDAO;
+    private final KeyStore pillKeyStore;
 
     private final static Integer MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING = 28; // days
     private final static Integer BATTERY_LEVEL_LOW_BATTERY_WARNING = 15;
+    public static final Integer RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD = 80; // allow 80 mins for first heartbeat to be uploaded
 
     private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
@@ -70,7 +74,8 @@ public class DeviceProcessor {
                             final WifiInfoDAO wifiInfoDAO,
                             final AnalyticsTracker analyticsTracker,
                             final SenseMetadataDAO senseMetadataDAO,
-                            final VoiceMetadataDAO voiceMetadataDAO) {
+                            final VoiceMetadataDAO voiceMetadataDAO,
+                            final KeyStore pillKeyStore) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
@@ -80,6 +85,7 @@ public class DeviceProcessor {
         this.analyticsTracker = analyticsTracker;
         this.senseMetadataDAO = senseMetadataDAO;
         this.voiceMetadataDAO = voiceMetadataDAO;
+        this.pillKeyStore = pillKeyStore;
     }
 
     /**
@@ -98,7 +104,6 @@ public class DeviceProcessor {
         final ImmutableList<DeviceAccountPair> pairs = deviceDAO.getAccountIdsForDeviceId(senseAccountPair.externalDeviceId);
         return Optional.of(PairingInfo.create(senseAccountPair.externalDeviceId, pairs.size()));
     }
-
 
     /**
      * Unpair a pill from an account
@@ -237,7 +242,7 @@ public class DeviceProcessor {
             return new Devices(senses, pills);
         }
 
-        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional, DateTime.now(DateTimeZone.UTC));
         return new Devices(senses, pills);
     }
 
@@ -263,18 +268,58 @@ public class DeviceProcessor {
         return senses;
     }
 
-    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional) {
+    private static Pill.BatteryType fromSN(String metadata) {
+        if(metadata.startsWith("90500007A")) {
+            // og pill
+            return Pill.BatteryType.REMOVABLE;
+        } else if(metadata.startsWith("905000071")) {
+            // 2nd gen pill
+            return Pill.BatteryType.SEALED;
+        }
+
+        return Pill.BatteryType.UNKNOWN;
+    }
+
+    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final DateTime now) {
         final List<Pill> pills = Lists.newArrayList();
+
         for (final DeviceAccountPair pillAccountPair : pillAccountPairs) {
-            final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair);
-            final Pill pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional);
+            final Optional<PillHeartBeat> pillStatusOptional = retrievePillHeartBeat(pillAccountPair, now);
+            final Optional<DeviceKeyStoreRecord> recordOptional = pillKeyStore.getKeyStoreRecord(pillAccountPair.externalDeviceId);
+            final Pill.BatteryType batteryType = (recordOptional.isPresent()) ? fromSN(recordOptional.get().metadata) : Pill.BatteryType.UNKNOWN;
+
+            // choose between heartbeat created or pairing created time for pill's last seen
+            final Pill pill;
+            if (usePillPairedTimeAsLastSeen(pillStatusOptional, pillAccountPair.created, now)) {
+                LOGGER.debug("action=pill-last-seen-from-paired-time pill_id={} account_id={}", pillAccountPair.externalDeviceId, pillAccountPair.accountId);
+                pill = Pill.createRecentlyPaired(pillAccountPair, pillColorOptional, batteryType);
+            } else {
+                pill = Pill.create(pillAccountPair, pillStatusOptional, pillColorOptional, batteryType);
+            }
             pills.add(pill);
         }
+
         return pills;
     }
 
+    public static Boolean usePillPairedTimeAsLastSeen(final Optional<PillHeartBeat> pillStatusOptional, final DateTime pairedDateTime, final DateTime now) {
+        final DateTime lastHeartBeatThreshold = now.minusMinutes(RECENTLY_PAIRED_PILL_UNSEEN_THRESHOLD);
+
+        if (pillStatusOptional.isPresent()) {
+            if (pillStatusOptional.get().createdAtUTC.isBefore(pairedDateTime)) {
+                // if paired time is too long ago, and an old heart beat exist, return heartbeat time
+                // else if paired time is after threshold and heartbeat, return paired time
+                return pairedDateTime.isAfter(lastHeartBeatThreshold);
+            }
+        } else if (pairedDateTime.isAfter(lastHeartBeatThreshold)) {
+            // newly-paired pill, no previous heartbeat
+            return true;
+        }
+        return false;
+    }
+
     private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional, final Account account, final DateTime referenceTime) {
-        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional, referenceTime);
         final Days days = Days.daysBetween(referenceTime,account.created);
         final int accountCreatedInDays = Math.abs(days.getDays());
         if(accountCreatedInDays > MIN_ACCOUNT_AGE_FOR_LOW_BATTERY_WARNING ) {
@@ -360,6 +405,7 @@ public class DeviceProcessor {
         private AnalyticsTracker analyticsTracker;
         private SenseMetadataDAO senseMetadataDAO;
         private VoiceMetadataDAO voiceMetadataDAO;
+        private KeyStore pillKeyStore;
 
         public Builder withDeviceDAO(final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -406,13 +452,18 @@ public class DeviceProcessor {
             return this;
         }
 
+        public Builder withKeyStore(final KeyStore pillKeyStore) {
+            this.pillKeyStore = pillKeyStore;
+            return this;
+        }
+        
         public DeviceProcessor build() {
             checkNotNull(analyticsTracker, "analytics tracker can not be null");
 
             return new DeviceProcessor(deviceDAO, mergedUserInfoDynamoDB,
                     sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB,
                     pillDataDAODynamoDB, wifiInfoDAO, analyticsTracker,
-                    senseMetadataDAO, voiceMetadataDAO
+                    senseMetadataDAO, voiceMetadataDAO, pillKeyStore
             );
         }
     }

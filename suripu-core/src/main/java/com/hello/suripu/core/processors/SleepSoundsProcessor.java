@@ -205,6 +205,7 @@ public class SleepSoundsProcessor implements SoundMap {
                     if (Arrays.equals(fileInfoSha, file.getDownloadInfo().getSha1().toByteArray())) {
                         return true;
                     } else if(HardwareVersion.SENSE_ONE_FIVE.equals(hardwareVersion)) {
+                        // TODO: use FileInfoSenseOneFive to get correct file-info for Sense 1p5, override for now
                         LOGGER.info("action=play-sleep-sound-override sense-id={}", senseManifest.getSenseId());
                         return true;
                     }

@@ -4,34 +4,47 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SensorReading;
+import com.hello.suripu.core.models.SleepPeriod;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.AlgorithmType;
+import com.hello.suripu.core.util.CSVLoader;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.TimeZoneOffsetMap;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import junit.framework.TestCase;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /**
  * Created by benjo on 5/7/15.
  */
 public class InstrumentedTimelineSafeguardTest {
-    final long t0 = 1431044132000L;
+    final long t0 = 1477764420000L;
     final long hourInMillis = 3600000L;
     final int hourInMinutes = 60;
     final private ImmutableList<Event> emptyEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
     final long accountId = 0L;
     final AlgorithmType algType = AlgorithmType.NONE;
+    final SleepPeriod sleepPeriod = SleepPeriod.createSleepPeriod(new DateTime(t0, DateTimeZone.UTC));
+    final ImmutableList<TrackerMotion> trackerMotions = ImmutableList.copyOf(CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv"));
+
 
     private Event getEvent(Event.Type type, final long time) {
         return Event.createFromType(type, time, time + 60000L, 0, Optional.of("BLAH BLAH"), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
@@ -84,9 +97,11 @@ public class InstrumentedTimelineSafeguardTest {
 
         ImmutableList<Sample> light = ImmutableList.copyOf(getContiguousLightSensorData(t0, 8 * hourInMillis));
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, light).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsDurationFail, emptyEvents, light).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, true,Optional.absent(), algType, mainEventsSucceed, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true, Optional.absent(),algType, mainEventsDurationFail, emptyEvents, light, trackerMotions).equals(TimelineError.NO_ERROR));
 
+        //no motion case
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, true,Optional.absent(), algType, mainEventsDurationFail, emptyEvents, light, ImmutableList.copyOf(Collections.EMPTY_LIST)).equals(TimelineError.NO_MOTION_DURING_SLEEP));
 
     }
 
@@ -198,11 +213,11 @@ public class InstrumentedTimelineSafeguardTest {
         final int res2 = safeguards.getMaximumDataGapInMinutes(lightWithOverOneHourGap);
         TestCase.assertEquals(res1, 30);
         TestCase.assertEquals(res2, 120);
-
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId, algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(accountId, true,Optional.absent(),algType, mainEventsSucceed, emptyEvents, lightWithHalfHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(accountId,true,Optional.absent(),algType, mainEventsSucceed, emptyEvents, lightWithOverOneHourGap, trackerMotions).equals(TimelineError.NO_ERROR));
 
     }
+
 
     @Test
     public void testInvalidNight() {
@@ -214,7 +229,7 @@ public class InstrumentedTimelineSafeguardTest {
         final List<TrackerMotion> originalMotionDataLowerThreshold = Lists.newArrayList();
 
 
-        TestCase.assertTrue(InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData, originalPartnerMotionData, false) == TimelineError.NO_DATA);
+        TestCase.assertTrue(InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData, originalPartnerMotionData, false, true) == TimelineError.NO_DATA);
         /*@JsonProperty("id") final long id,
                          @JsonProperty("account_id") final long accountId,
                          @JsonProperty("tracker_id") final Long trackerId,
@@ -238,49 +253,48 @@ public class InstrumentedTimelineSafeguardTest {
         }
 
 
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false, true));
 
         originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.LOW_AMP_DATA, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.LOW_AMP_DATA, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false, true));
 
         originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * (InstrumentedTimelineProcessor.MIN_TRACKER_MOTION_COUNT + 1),highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.TIMESPAN_TOO_SHORT, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.TIMESPAN_TOO_SHORT, InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false, true));
 
         originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData,originalPartnerMotionData, false, true));
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false, true));
 
         for (int i = 0; i < InstrumentedTimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT - 1; i++) {
             filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * i,lowval,0,0L,0L,0L));
         }
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false, true));
 
         filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * InstrumentedTimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false, true));
 
         filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,lowval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData,originalPartnerMotionData, false, true));
 
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true, true));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true,true));
 
         originalMotionDataLowerThreshold.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
 
-        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true));
+        TestCase.assertEquals(TimelineError.NO_ERROR,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalPartnerMotionData, true, true));
 
-        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalMotionDataLowerThreshold, true));
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,InstrumentedTimelineProcessor.isValidNight(0L, originalMotionDataLowerThreshold, originalMotionDataLowerThreshold,originalMotionDataLowerThreshold, true, true));
 
 
 
     }
-
     @Test
     public void testTimelineTimezoneOffsetMapping() {
         final List<Sample> samples = Lists.newArrayList();
@@ -347,10 +361,6 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(remapped.get(2).getOffsetMillis(),1);
         TestCase.assertEquals(remapped.get(3).getOffsetMillis(),2);
         TestCase.assertEquals(remapped.get(4).getOffsetMillis(),3);
-
-
-
-
     }
 
     @Test
@@ -381,4 +391,59 @@ public class InstrumentedTimelineSafeguardTest {
         TestCase.assertEquals(offsetB,offsetAfter);
         TestCase.assertEquals(offsetB,offsetLast);
     }
+
+    @Test
+    public void testMaxMotionGap(){
+        final long sleep1 = 1477764420000L;
+        final long wake1 = 1477805040000L;
+        final long sleep2 = 1477746060000L;
+        final long wake2 = 1477805040000L;
+
+        final int motionGap1 = TimelineSafeguards.getMaximumMotionGapInMinutes(trackerMotions, sleep1,wake1);
+        assert (motionGap1 < TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
+
+        final int motionGap2 = TimelineSafeguards.getMaximumMotionGapInMinutes(trackerMotions, sleep2,wake2);
+        assert (motionGap2 > TimelineSafeguards.MAXIMUM_ALLOWABLE_MOTION_GAP_ALTERNATIVE_PERIOD);
+
+    }
+
+    @Test
+    public void testMotionDuringSleepCheck(){
+        //false positive night - motion at start and end of night
+        ImmutableList<TrackerMotion> trackerMotions = ImmutableList.copyOf(CSVLoader.loadTrackerMotionFromCSV("fixtures/motion_2016_10_29_dst.csv"));
+        long fallAsleepTime = 1478391100000L;
+        long wakeUpTime = 1478401100000L;
+        boolean testMotionDuringSleep = TimelineSafeguards.motionDuringSleepCheck(1,trackerMotions, fallAsleepTime, wakeUpTime);
+        assertThat(testMotionDuringSleep, is(false));
+        //okay night
+        fallAsleepTime = 1477776780000L;
+        wakeUpTime = 1477823640000L;
+        testMotionDuringSleep = TimelineSafeguards.motionDuringSleepCheck(1, trackerMotions, fallAsleepTime, wakeUpTime);
+        assertThat(testMotionDuringSleep, is(true));
+
+    }
+
+    @Test
+    public void testIsProbableSleepPeriod(){
+        final List<Sample> sensorDataLight= CSVLoader.loadSensorDataFromCSV("fixtures/light_2016_10_29_dst.csv");
+        final List<Sample> sensorDataSound= CSVLoader.loadSensorDataFromCSV("fixtures/sound_2016_10_29_dst.csv");
+        final DateTime targetDate = new DateTime(2016,10,29,00,00,00, DateTimeZone.forID("Europe/Berlin"));
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        final DateTime currentTime = DateTime.now(DateTimeZone.UTC);
+        allSensorSampleList.add(Sensor.LIGHT, sensorDataLight);
+        allSensorSampleList.add(Sensor.SOUND_PEAK_DISTURBANCE, sensorDataSound);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(allSensorSampleList, trackerMotions,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST), targetDate, targetDate.plusHours(4), targetDate.plusHours(36), currentTime, trackerMotions.get(0).offsetMillis);
+        final SleepPeriod periodNight = SleepPeriod.night(targetDate);
+        final SleepPeriod periodAfternoon = SleepPeriod.afternoon(targetDate);
+        final SleepPeriod periodMorning= SleepPeriod.morning(targetDate);
+
+        final boolean probablePeriod = TimelineSafeguards.isProbablePeriod(false, periodNight, oneDaysSensorData);
+        final boolean improbablePeriodMorning = TimelineSafeguards.isProbablePeriod(false, periodMorning, oneDaysSensorData);
+        final boolean improbablePeriodAfternoon = TimelineSafeguards.isProbablePeriod(false, periodAfternoon, oneDaysSensorData);
+        assert(probablePeriod);
+        assert(!improbablePeriodMorning);
+        assert(!improbablePeriodAfternoon);
+    }
+
+
 }

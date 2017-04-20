@@ -35,6 +35,12 @@ public class Pill {
         UNKNOWN
     }
 
+    public enum BatteryType {
+        UNKNOWN,
+        REMOVABLE,
+        SEALED
+    }
+
     @JsonIgnore
     public final Long internalId;
 
@@ -56,7 +62,12 @@ public class Pill {
     @JsonProperty("color")
     public final Color color;
 
-    private Pill(final Long internalId, final String externalId, final Optional<String> firmwareVersionOptional, final Optional<Integer> batteryLevelOptional, final Optional<DateTime> lastUpdatedOptional, final State state, final Color color) {
+    @JsonProperty("battery_type")
+    public final BatteryType batteryType;
+
+    private Pill(final Long internalId, final String externalId, final Optional<String> firmwareVersionOptional,
+                 final Optional<Integer> batteryLevelOptional, final Optional<DateTime> lastUpdatedOptional,
+                 final State state, final Color color, final BatteryType batteryType) {
         this.internalId = internalId;
         this.externalId = externalId;
         this.firmwareVersionOptional = firmwareVersionOptional;
@@ -64,21 +75,38 @@ public class Pill {
         this.lastUpdatedOptional = lastUpdatedOptional;
         this.state = state;
         this.color = color;
+        this.batteryType = batteryType;
     }
 
-    public static Pill create(DeviceAccountPair pillAccountPair, Optional<PillHeartBeat> pillHeartBeatOptional, final Optional<Color> pillColorOptional) {
-        final Color color = pillColorOptional.isPresent() ? pillColorOptional.get() : DEFAULT_COLOR;
+    public static Pill create(final DeviceAccountPair pillAccountPair, final Optional<PillHeartBeat> pillHeartBeatOptional,
+                              final Optional<Color> pillColorOptional, final BatteryType batteryType) {
+        final Color color = pillColorOptional.or(DEFAULT_COLOR);
         if (!pillHeartBeatOptional.isPresent()) {
-            return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.<String>absent(), Optional.<Integer>absent(), Optional.<DateTime>absent(), State.UNKNOWN, color);
+            return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.<String>absent(), Optional.<Integer>absent(), Optional.<DateTime>absent(), State.UNKNOWN, color, null);
         }
         final PillHeartBeat pillHeartBeat = pillHeartBeatOptional.get();
         final State state = pillHeartBeat.batteryLevel < MIN_IDEAL_BATTERY_LEVEL ? State.LOW_BATTERY : State.NORMAL;
-        return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.of(String.valueOf(pillHeartBeat.firmwareVersion)), Optional.of(pillHeartBeat.batteryLevel), Optional.of(pillHeartBeat.createdAtUTC), state, color);
+        return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.of(String.valueOf(pillHeartBeat.firmwareVersion)), Optional.of(pillHeartBeat.batteryLevel), Optional.of(pillHeartBeat.createdAtUTC), state, color, batteryType);
     }
 
+    public static Pill create(final DeviceAccountPair pillAccountPair, final Optional<PillHeartBeat> pillHeartBeatOptional, final Optional<Color> pillColorOptional) {
+        return create(pillAccountPair,pillHeartBeatOptional, pillColorOptional, BatteryType.UNKNOWN);
+    }
+
+    public static Pill createRecentlyPaired(final DeviceAccountPair pillAccountPair, final Optional<Color> pillColorOptional, final BatteryType batteryType) {
+        final Color color = pillColorOptional.or(DEFAULT_COLOR);
+        return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId,
+                Optional.absent(),
+                Optional.absent(),
+                Optional.of(pillAccountPair.created),
+                State.UNKNOWN,
+                color,
+                batteryType
+        );
+    }
 
     public static Pill withState(final Pill pill, final State state) {
-        return new Pill(pill.internalId, pill.externalId, pill.firmwareVersionOptional, pill.batteryLevelOptional, pill.lastUpdatedOptional, state, pill.color);
+        return new Pill(pill.internalId, pill.externalId, pill.firmwareVersionOptional, pill.batteryLevelOptional, pill.lastUpdatedOptional, state, pill.color, pill.batteryType);
     }
 
 }

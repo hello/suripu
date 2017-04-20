@@ -21,6 +21,7 @@ public class FeatureFlipper {
     public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
     public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
 
+    public final static String DAY_SLEEPER = "day_sleeper";
     public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
     public final static String DECAYING_SMART_ALARM_THRESHOLD = "decaying-smart-alarm_threshold";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
@@ -59,6 +60,8 @@ public class FeatureFlipper {
 
     public final static String MEASURE_CLOCK_DRIFT = "measure_clock_drift";
     public final static String MISSING_DATA_DEFAULT_VALUE = "missing_data_default_value";
+    public final static String MOTION_MASK_PARTNER_FILTER = "motion_mask_partner_filter";
+    public final static String MIN_MOTION_AMPLITUDE_HIGH_THRESHOLD = "min_motion_amplitude_high_threshold";
 
 
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
@@ -86,6 +89,7 @@ public class FeatureFlipper {
     public final static String QUESTION_ANOMALY_LIGHT_VISIBLE = "question_anomaly_light_enabled";
     public final static String QUESTION_ASK_TIME_ENABLED = "question_ask_time_enabled";
     public final static String QUESTION_SURVEY_PROCESSOR_ENABLED = "question_survey_processor_enabled";
+    public final static String QUESTION_CORE_PROCESSOR_ENABLED = "question_core_processor_enabled";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";
@@ -123,7 +127,10 @@ public class FeatureFlipper {
 
     public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
+    public final static String TIMELINE_SLEEP_PERIOD = "timeline_sleep_period";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
+    public final static String TIMELINE_LOCKDOWN = "timeline_lockdown";
+    public final static String TIMELINE_PROCESSOR_V3_ENABLED = "timeline_processor_v3_enabled";
 
     public final static String VIEW_SENSORS_UNAVAILABLE = "view_sensors_unavailable";
     public final static String VIEW_TIMELINE_UNAVAILABLE = "view_timeline_unavailable";

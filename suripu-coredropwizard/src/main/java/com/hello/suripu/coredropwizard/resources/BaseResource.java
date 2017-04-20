@@ -1,6 +1,7 @@
 package com.hello.suripu.coredropwizard.resources;
 
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.analytics.AnalyticsTracker;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.librato.rollout.RolloutClient;
 import org.slf4j.Logger;
@@ -20,6 +21,9 @@ public class BaseResource {
     @Inject
     RolloutClient featureFlipper;
 
+
+    @Inject
+    public AnalyticsTracker analyticsTracker;
 
     protected BaseResource()  {
         ObjectGraphRoot.getInstance().inject(this);
@@ -144,5 +148,13 @@ public class BaseResource {
 
     protected Boolean hasQuestionSurveyProcessorEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_SURVEY_PROCESSOR_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasQuestionCoreProcessorEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_CORE_PROCESSOR_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasTimelineProcessorV3(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_PROCESSOR_V3_ENABLED, accountId, Collections.EMPTY_LIST);
     }
 }

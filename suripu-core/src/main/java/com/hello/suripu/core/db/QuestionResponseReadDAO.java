@@ -113,7 +113,6 @@ public interface QuestionResponseReadDAO {
     ImmutableList<Response> getAccountResponseByQuestionCategoryStr(@Bind("account_id") long account_id,
                                                                     @Bind("question_category") String question_category);
 
-
     @RegisterMapper(AccountQuestionMapper.class)
     @SqlQuery("SELECT * FROM account_questions WHERE account_id = :account_id and question_id = :question_id ORDER BY id DESC LIMIT :limit")
     ImmutableList<AccountQuestion> getRecentAskedQuestionByQuestionId (@Bind("account_id") final long account_id,

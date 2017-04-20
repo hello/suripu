@@ -6,6 +6,11 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType;
+import com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder;
+import com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType;
+import com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Prediction;
+import com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -13,7 +18,6 @@ import com.hello.suripu.core.util.TimelineError;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import com.hello.suripu.api.logging.LoggingProtos.TimelineLog.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +63,10 @@ public class TimelineLog {
         invalidNightErrorMap.put(TimelineError.EVENTS_OUT_OF_ORDER, ErrorType.EVENTS_OUT_OF_ORDER);
         invalidNightErrorMap.put(TimelineError.PARTNER_FILTER_REJECTED_DATA,ErrorType.PARTNER_FILTER_REJECTED_MY_DATA);
         invalidNightErrorMap.put(TimelineError.UNEXEPECTED, ErrorType.UNEXEPECTED);
+        invalidNightErrorMap.put(TimelineError.NO_MOTION_DURING_SLEEP, ErrorType.NO_MOTION_DURING_SLEEP);
+        invalidNightErrorMap.put(TimelineError.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD, ErrorType.IN_BED_EVENT_OUTSIDE_SLEEP_PERIOD);
+        invalidNightErrorMap.put(TimelineError.MOTION_GAP_TOO_LARGE, ErrorType.MOTION_GAP_TOO_LARGE);
+        invalidNightErrorMap.put(TimelineError.IMPROBABLE_SLEEP_PERIOD, ErrorType.IMPROBABLE_SLEEP_PERIOD);
 
 
 

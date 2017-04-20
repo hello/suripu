@@ -101,10 +101,10 @@ public class NeuralNetFourEventAlgTest extends NeuralNetFourEventAlgorithm{
 
     @Test
     public void testGetEventTimesFromNNOutput() throws Exception {
-        final OneDaysSensorData oneDaysSensorData = getOneDaySensorData();
-        final double[][] x = getSensorData(oneDaysSensorData);
-        final double[][] output = getOutput(9,1201,"fixtures/neuralNet/neuralNetFourEventOutput.csv");
         final DateTime date = DateTime.parse("2016-05-20").withZone(DateTimeZone.UTC);
+        final OneDaysSensorData oneDaysSensorData = getOneDaySensorData();
+        final double[][] x = getSensorData(oneDaysSensorData, SleepPeriod.night(date));
+        final double[][] output = getOutput(9,1201,"fixtures/neuralNet/neuralNetFourEventOutput.csv");
         final DateTime startTimeLocalUTC = date.withHourOfDay(20);
 
 

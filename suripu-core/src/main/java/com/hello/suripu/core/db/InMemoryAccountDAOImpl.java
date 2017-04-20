@@ -2,6 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
@@ -9,14 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class InMemoryAccountDAOImpl implements AccountDAO{
     final AtomicLong currentId = new AtomicLong();
-    final Map<Long, Account> store = new HashMap<Long, Account>();
+    final Map<Long, Account> store = Maps.newHashMap();
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryAccountDAOImpl.class);
 
 
@@ -28,6 +29,11 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
 
         final Account account = store.get(id);
         return Optional.of(account);
+    }
+
+    @Override
+    public Optional<Account> getByExternalId(UUID externalId) {
+        return Optional.absent();
     }
 
     @Override
@@ -43,7 +49,8 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
 
     public Account register(final Registration registration) {
         long id = currentId.incrementAndGet();
-        final Account account = Account.fromRegistration(registration, id);
+        final UUID externalId = UUID.randomUUID();
+        final Account account = Account.fromRegistration(registration, id, externalId);
         LOGGER.debug("{}", account);
         store.put(id, account);
         return account;

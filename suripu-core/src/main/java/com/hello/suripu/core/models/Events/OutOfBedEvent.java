@@ -13,8 +13,8 @@ public class OutOfBedEvent extends Event {
         super(Type.OUT_OF_BED, sleepPeriod, startTimestamp, endTimestamp, timezoneOffset);
     }
 
-    public static OutOfBedEvent createForNight(long startTimestamp, long endTimestamp, int timezoneOffset) {
-        return new OutOfBedEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, timezoneOffset);
+    public static OutOfBedEvent createForPeriod(long startTimestamp, long endTimestamp, int timezoneOffset, final SleepPeriod.Period period) {
+        return new OutOfBedEvent(period, startTimestamp, endTimestamp, timezoneOffset);
     }
 
     @Override

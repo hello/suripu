@@ -34,6 +34,10 @@ public class Alert {
         return new Alert(0L, accountId, "Sense Muted", "Sense is currently muted, and will not respond to Voice commands until unmuted.", AlertCategory.SENSE_MUTED, createdAt);
     }
 
+    public static Alert pairingConflict(final Long accountId, final DateTime createdAt) {
+        return Alert.create(0L, accountId, "Remove inactive accounts", "Your Sense may have old, inactive accounts paired to it. Please review and remove inactive accounts.", AlertCategory.REVIEW_ACCOUNTS_PAIRED_TO_SENSE, createdAt);
+    }
+
     @JsonProperty("title")
     public String title() {
         return title;

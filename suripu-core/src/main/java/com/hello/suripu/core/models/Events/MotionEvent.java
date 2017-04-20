@@ -20,11 +20,12 @@ public class MotionEvent extends Event {
         this.sleepDepth = sleepDepth;
     }
 
-    public static MotionEvent createForNight(final long startTimestamp,
+    public static MotionEvent createForPeriod(final long startTimestamp,
                        final long endTimestamp,
                        final int offsetMillis,
-                       final int sleepDepth){
-       return  new MotionEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, offsetMillis, sleepDepth);
+                       final int sleepDepth,
+                       final SleepPeriod.Period period){
+       return  new MotionEvent(period, startTimestamp, endTimestamp, offsetMillis, sleepDepth);
     }
 
     @Override

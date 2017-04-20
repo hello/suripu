@@ -22,8 +22,8 @@ public class InBedEvent extends Event {
         this.message = message;
     }
 
-    public static InBedEvent createForNight(long startTimestamp, long endTimestamp, int timezoneOffset){
-        return new InBedEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, timezoneOffset);
+    public static InBedEvent createForPeriod(long startTimestamp, long endTimestamp, int timezoneOffset, SleepPeriod.Period period){
+        return new InBedEvent(period, startTimestamp, endTimestamp, timezoneOffset);
     }
 
     @Override

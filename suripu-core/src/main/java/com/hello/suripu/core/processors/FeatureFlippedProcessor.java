@@ -191,4 +191,25 @@ public class FeatureFlippedProcessor {
     protected Boolean useSmartAlarmRefactored(final Long accountId){
         return featureFlipper.userFeatureActive(FeatureFlipper.SMART_ALARM_REFACTORED, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean useTimelineSleepPeriods(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_SLEEP_PERIOD, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean isDaySleeper(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.DAY_SLEEPER, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasMotionMaskPartnerFilter(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.MOTION_MASK_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean useTimelineLockdown(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_LOCKDOWN, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean useHigherMotionAmplitudeThreshold(final Long accountId){
+        return featureFlipper.userFeatureActive(FeatureFlipper.MIN_MOTION_AMPLITUDE_HIGH_THRESHOLD, accountId, Collections.EMPTY_LIST);
+    }
+
 }

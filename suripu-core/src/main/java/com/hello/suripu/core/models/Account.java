@@ -10,6 +10,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 
+import java.util.UUID;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @JsonDeserialize(builder = Account.Builder.class)
@@ -24,6 +26,9 @@ public class Account {
     @JsonIgnore
     public final Optional<Long> id;
 
+    @JsonIgnore
+    public final Optional<UUID> externalId;
+
     @JsonProperty("id")
     public String generateExternalId() {
 //        final StringBuilder sb = new StringBuilder();
@@ -33,8 +38,17 @@ public class Account {
 //
 //        final String digest = DigestUtils.md5Hex(sb.toString());
 //        return digest;
-        return (id.isPresent()) ? id.get().toString() : "0";
+//        return id.or(0L).toString();
+        return extId();
     }
+
+    @JsonProperty("ext_id")
+    public String extId() {
+        // Default to internal ID to not eff MP
+        final String internalId = id.or(0L).toString();
+        return externalId.isPresent() ? externalId.get().toString() : internalId;
+    }
+
 
     @JsonProperty("email")
     public final String email;
@@ -60,6 +74,18 @@ public class Account {
 
     @JsonProperty("gender")
     public final Gender gender;
+
+
+    private final String genderName;
+
+    @JsonProperty("gender_other")
+    public final String genderName() {
+        if(Gender.OTHER.equals(gender)) {
+            return genderName;
+        }
+
+        return "";
+    }
 
     @JsonProperty("height")
     public final Integer height;
@@ -96,6 +122,8 @@ public class Account {
     @JsonProperty("profile_photo")
     public final Optional<MultiDensityImage> profilePhoto;
 
+
+
     /**
      *
      * @param id
@@ -111,6 +139,7 @@ public class Account {
      * @param DOB
      */
     private Account(final Optional<Long> id,
+                    final Optional<UUID> externalId,
                     final String email,
                     final String password,
                     final Integer tzOffsetMillis,
@@ -118,6 +147,7 @@ public class Account {
                     final String firstname,
                     final Optional<String> lastname,
                     final Gender gender,
+                    final String genderName,
                     final Integer height,
                     final Integer weight,
                     final DateTime created,
@@ -130,6 +160,7 @@ public class Account {
     ) {
 
         this.id = id;
+        this.externalId = externalId;
         this.email = email;
         this.password = password;
         this.tzOffsetMillis = tzOffsetMillis;
@@ -138,6 +169,7 @@ public class Account {
         this.firstname = firstname;
         this.lastname = lastname;
         this.gender = gender;
+        this.genderName = genderName;
         this.height = height;
         this.weight = weight;
 
@@ -156,15 +188,16 @@ public class Account {
     /**
      * Transform registration to account
      * @param registration
-     * @param id
+     * @param externalId
      * @return
      */
-    public static Account fromRegistration(final Registration registration, final Long id) {
+    public static Account fromRegistration(final Registration registration, final Long id, final UUID externalId) {
         final String firstname = (registration.firstname == null) ? registration.name : registration.firstname;
-        return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
-                registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender, registration.height, registration.weight, registration.created,
-                registration.created.getMillis(), registration.DOB, Boolean.FALSE,
-                registration.latitude, registration.longitude, Optional.<MultiDensityImage>absent());
+
+        return new Account(Optional.fromNullable(id), Optional.of(externalId), registration.email, registration.password, registration.tzOffsetMillis,
+                registration.name, firstname, Optional.fromNullable(registration.lastname), registration.gender,
+                registration.genderName, registration.height, registration.weight,registration.created, registration.created.getMillis(),
+                registration.DOB, Boolean.FALSE, registration.latitude, registration.longitude, Optional.absent());
     }
 
     /**
@@ -188,10 +221,12 @@ public class Account {
 
     public static class Builder {
         private Optional<Long> id;
+        private Optional<UUID> externalID;
         private String name;
         private String firstname;
         private Optional<String> lastname;
         private Gender gender;
+        private String genderName;
         private Integer height;
         private Integer weight;
         private String password;
@@ -207,10 +242,12 @@ public class Account {
 
         public Builder() {
             this.id = Optional.absent();
+            this.externalID = Optional.absent();
             this.name = "";
             this.firstname = "";
             this.lastname = Optional.absent();
             this.gender = Gender.OTHER;
+            this.genderName = "";
             this.height = 0;
             this.weight = 0;
             this.password = "";
@@ -226,6 +263,7 @@ public class Account {
 
         public Builder(final Account account) {
             this.id = account.id;
+            this.externalID = account.externalId;
             this.email = account.email;
             this.password = account.password;
             this.tzOffsetMillis = account.tzOffsetMillis;
@@ -233,6 +271,7 @@ public class Account {
             this.firstname = account.firstname;
             this.lastname = account.lastname;
             this.gender = account.gender;
+            this.genderName = account.genderName;
             this.height = account.height;
             this.weight = account.weight;
             this.created = account.created;
@@ -276,6 +315,12 @@ public class Account {
             return this;
         }
 
+        @JsonProperty("gender_other")
+        public Builder withGenderName(final String genderName) {
+            this.genderName = (genderName == null) ? "" : genderName;
+            return this;
+        }
+
         @JsonProperty("height")
         public Builder withHeight(final Integer height) {
             this.height = height;
@@ -300,9 +345,14 @@ public class Account {
             return this;
         }
 
-        @JsonProperty("id")
+        @JsonIgnore
         public Builder withId(final Long id) {
             this.id = Optional.fromNullable(id);
+            return this;
+        }
+
+        public Builder withExternalId(final UUID uuid) {
+            this.externalID = Optional.fromNullable(uuid);
             return this;
         }
 
@@ -374,7 +424,7 @@ public class Account {
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tzOffsetMillis, name, firstname, lastname, gender, height, weight,
+            return new Account(id, externalID, email, password, tzOffsetMillis, name, firstname, lastname, gender, genderName, height, weight,
                     created, lastModified, DOB, emailVerified, latitude, longitude, profilePhoto);
         }
     }
@@ -383,7 +433,7 @@ public class Account {
     public String toString() {
         return MoreObjects.toStringHelper(Account.class)
                 .add("id", (id.isPresent()) ? id.get() : "N/A")
-                .add("external_id", generateExternalId())
+                .add("external_id", externalId.or(new UUID(0L, 0L)))
                 .add("email", email)
                 .add("password", obscurePassword(password))
                 .add("tz", tzOffsetMillis)
@@ -394,6 +444,7 @@ public class Account {
                 .add("height", height)
                 .add("weight", weight)
                 .add("gender", gender)
+                .add("gender_name", genderName)
                 .add("created", created)
                 .add("last_modified", lastModified)
                 .add("DOB", DOB)
@@ -419,6 +470,7 @@ public class Account {
     public static Account normalizeWithId(final Account account, final Long accountId) {
         return new Account(
                 Optional.fromNullable(accountId),
+                account.externalId,
                 account.email.toLowerCase().trim(),
                 account.password,
                 account.tzOffsetMillis,
@@ -426,6 +478,7 @@ public class Account {
                 account.firstname,
                 account.lastname,
                 account.gender,
+                account.genderName,
                 account.height,
                 account.weight,
                 account.created,
@@ -438,9 +491,9 @@ public class Account {
         );
     }
 
-    public static Account forApplication(final Long aaplicationId, final Account account) {
+    public static Account forApplication(final Long applicationId, final Account account) {
 //        return new Account();
-        return null;
+        return account;
     }
 
     @JsonIgnore

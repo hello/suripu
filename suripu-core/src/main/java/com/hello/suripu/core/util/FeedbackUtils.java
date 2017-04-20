@@ -73,12 +73,12 @@ public class FeedbackUtils {
         final Integer hour = Integer.valueOf(parts[0]);
         final Integer minute = Integer.valueOf(parts[1]);
 
-        final int inbedSleepLowerBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START).getHourOfDay() + INBED_SLEEP_EVENT_LOWER_BOUND_OFFSET;
-        final int inbedSleepUpperBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA).getHourOfDay() + INBED_SLEEP_EVENT_UPPER_BOUND_OFFSET;
+        final int inbedSleepLowerBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, offsetMillis).getHourOfDay() + INBED_SLEEP_EVENT_LOWER_BOUND_OFFSET;
+        final int inbedSleepUpperBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, offsetMillis).getHourOfDay() + INBED_SLEEP_EVENT_UPPER_BOUND_OFFSET;
         final boolean inbedSleepWindowSpansDay = inbedSleepLowerBound > inbedSleepUpperBound;
 
-        final int wakeOutOfBedLowerBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START).getHourOfDay() + WAKE_OUTOFBED_EVENT_LOWER_BOUND_OFFSET;
-        final int wakeOutOfBedUpperBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA).getHourOfDay() + WAKE_OUTOFBED_EVENT_UPPER_BOUND_OFFSET;
+        final int wakeOutOfBedLowerBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.START, offsetMillis).getHourOfDay() + WAKE_OUTOFBED_EVENT_LOWER_BOUND_OFFSET;
+        final int wakeOutOfBedUpperBound = sleepPeriod.getSleepPeriodTime(SleepPeriod.Boundary.END_DATA, offsetMillis).getHourOfDay() + WAKE_OUTOFBED_EVENT_UPPER_BOUND_OFFSET;
         final boolean wakeOutOfBedWindowSpansDay = wakeOutOfBedLowerBound > wakeOutOfBedUpperBound;
 
         boolean nextDay = false;

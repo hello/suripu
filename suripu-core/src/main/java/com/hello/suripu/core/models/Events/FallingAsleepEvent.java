@@ -22,8 +22,8 @@ public class FallingAsleepEvent extends Event {
         this.message = message;
     }
 
-    public static FallingAsleepEvent createForNight(long startTimestamp, long endTimestamp, int timezoneOffset){
-        return new FallingAsleepEvent(SleepPeriod.Period.NIGHT, startTimestamp,endTimestamp, timezoneOffset);
+    public static FallingAsleepEvent createForPeriod(long startTimestamp, long endTimestamp, int timezoneOffset, final SleepPeriod.Period period){
+        return new FallingAsleepEvent(period, startTimestamp,endTimestamp, timezoneOffset);
     }
 
     @Override

@@ -13,8 +13,8 @@ public class NoiseEvent extends Event {
         this.sleepDepth = sleepDepth;
     }
 
-    public static NoiseEvent createForNight(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth) {
-        return new NoiseEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, offsetMillis, sleepDepth);
+    public static NoiseEvent createForPeriod(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth, final SleepPeriod.Period period) {
+        return new NoiseEvent(period, startTimestamp, endTimestamp, offsetMillis, sleepDepth);
     }
 
     @Override

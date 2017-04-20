@@ -19,9 +19,11 @@ public class PushNotificationEvent {
     public final HelloPushMessage helloPushMessage;
     public final Optional<String> senseId;
     public final DateTimeZone timeZone;
+    public final Periodicity periodicity;
 
     protected PushNotificationEvent(final Long accountId, final PushNotificationEventType type, final DateTime timestamp,
-                                    final HelloPushMessage helloPushMessage, final Optional<String> senseId, final DateTimeZone timeZone)
+                                    final HelloPushMessage helloPushMessage, final Optional<String> senseId,
+                                    final DateTimeZone timeZone, final Periodicity periodicity)
     {
         this.accountId = accountId;
         this.type = type;
@@ -29,8 +31,8 @@ public class PushNotificationEvent {
         this.helloPushMessage = helloPushMessage;
         this.senseId = senseId;
         this.timeZone = timeZone;
+        this.periodicity = periodicity;
     }
-
 
     //region Object overrides
 
@@ -74,14 +76,30 @@ public class PushNotificationEvent {
         private HelloPushMessage helloPushMessage;
         private Optional<String> senseId = Optional.absent();
         private DateTimeZone timeZone = DateTimeZone.UTC;
+        private Periodicity periodicity = Periodicity.MINUTELY;
+
+        public Builder() {
+
+        }
+
+        public Builder(final PushNotificationEvent pushNotificationEvent) {
+            this.accountId = pushNotificationEvent.accountId;
+            this.type = pushNotificationEvent.type;
+            this.timestamp = pushNotificationEvent.timestamp;
+            this.helloPushMessage = pushNotificationEvent.helloPushMessage;
+            this.senseId = pushNotificationEvent.senseId;
+            this.timeZone = pushNotificationEvent.timeZone;
+            this.periodicity = pushNotificationEvent.periodicity;
+        }
 
         public PushNotificationEvent build() {
-            checkNotNull(accountId);
-            checkNotNull(type);
-            checkNotNull(helloPushMessage);
-            checkNotNull(timeZone);
+            checkNotNull(accountId,"accountId cannot be null");
+            checkNotNull(type, "type cannot be null");
+            checkNotNull(helloPushMessage, "message cannot be null");
+            checkNotNull(timeZone, "timezone cannot be null");
+
             final DateTime eventTimestamp = timestamp == null ? DateTime.now(DateTimeZone.UTC) : timestamp;
-            return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId, timeZone);
+            return new PushNotificationEvent(accountId, type, eventTimestamp, helloPushMessage, senseId, timeZone, periodicity);
         }
 
         public Builder withAccountId(final Long accountId) {
@@ -119,6 +137,11 @@ public class PushNotificationEvent {
 
         public Builder withTimeZone(final DateTimeZone timeZone) {
             this.timeZone = timeZone;
+            return this;
+        }
+
+        public Builder withPeriodicity(final Periodicity periodicity) {
+            this.periodicity = periodicity;
             return this;
         }
     }

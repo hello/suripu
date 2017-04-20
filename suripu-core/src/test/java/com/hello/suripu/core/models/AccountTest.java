@@ -1,7 +1,6 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.hello.suripu.core.util.FileUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
@@ -34,10 +33,12 @@ public class AccountTest {
     }
 
 
-    @Test(expected = InvalidFormatException.class)
+    @Test
     public void testAccountWithExternalId() throws IOException {
         final File jsonFile = new File(FileUtils.getResourceFilePath("fixtures/account/valid_account_with_id.json"));
         final Account account = objectMapper.readValue(jsonFile, Account.class);
+        assertThat(account.id.isPresent(), is(false));
+        assertThat(account.externalId.isPresent(), is(false));
     }
 
     @Test

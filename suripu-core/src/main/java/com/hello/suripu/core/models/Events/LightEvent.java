@@ -13,8 +13,8 @@ public class LightEvent extends Event {
         setDescription(description);
     }
 
-    public static LightEvent createForNight(final long startTimestamp, final long endTimestamp, final int offsetMillis, final String description){
-        return new LightEvent(SleepPeriod.Period.NIGHT, startTimestamp, endTimestamp, offsetMillis, description);
+    public static LightEvent createForPeriod(final long startTimestamp, final long endTimestamp, final int offsetMillis, final String description, final SleepPeriod.Period period){
+        return new LightEvent(period, startTimestamp, endTimestamp, offsetMillis, description);
     }
 
     @Override
