@@ -45,18 +45,5 @@ public class MainEventTimesTest {
         assert(sleepPeriodsMainEventTimesMapD2.size()==1);
         assert(sleepPeriodsMainEventTimesMapD2.containsKey(SleepPeriod.Period.NIGHT));
     }
-    @Test
-    public void test(){
-        int j = 1;
-        int m = 2;
-        switch(j){
-            case 1: m= 1;
-            case 3: m = 3;
-            default: j =1;
 
-
-        }
-
-        j = 2;
-    }
 }

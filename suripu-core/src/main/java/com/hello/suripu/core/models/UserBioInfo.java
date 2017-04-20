@@ -48,6 +48,14 @@ public class UserBioInfo {
         this.primarySleepPeriod =  SleepPeriod.Period.NIGHT;
     }
 
+    public static UserBioInfo forDaySleeper(Optional<Account> accountOptional, final boolean hasPartnerPresent){
+        return getUserBioInfo(accountOptional, true, hasPartnerPresent);
+    }
+
+    public static UserBioInfo forNightSleeper(Optional<Account> accountOptional, final boolean hasPartnerPresent){
+        return getUserBioInfo(accountOptional, false, hasPartnerPresent);
+    }
+
     public static UserBioInfo getUserBioInfo(Optional<Account> accountOptional, final boolean daySleeper, final boolean hasPartnerPresent) {
         final int male, female, partner;
         final double age, bmi;

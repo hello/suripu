@@ -68,6 +68,7 @@ public class NeuralNetAlgTest extends NeuralNetAlgorithm {
 
     }
     //@Test new safeguards broke test
+    //TODO: Fix Test
     public void testGetPredictionWithPastTime() throws Exception {
         DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
         DateTime startTime = date.withHourOfDay(18);

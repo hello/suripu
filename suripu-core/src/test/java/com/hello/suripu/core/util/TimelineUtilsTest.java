@@ -115,7 +115,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetTargetDate(){
-        final TimeZoneHistory timeZoneHistory1 = new TimeZoneHistory(1428408400000L, 3600000, "America/Los_Angeles");
+        final TimeZoneHistory timeZoneHistory1 = new TimeZoneHistory(1428408400000L, 3600000, "America/Los_Angeles"); //updated at 4/7/2015
         final List<TimeZoneHistory> timeZoneHistoryList = new ArrayList<>();
         timeZoneHistoryList.add(timeZoneHistory1);
         final TimeZoneOffsetMap timeZoneOffsetMap = TimeZoneOffsetMap.createFromTimezoneHistoryList(timeZoneHistoryList);

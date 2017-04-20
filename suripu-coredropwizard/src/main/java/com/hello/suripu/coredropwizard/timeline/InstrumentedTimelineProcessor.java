@@ -529,7 +529,7 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
         }
 
         final Optional<Account> accountOptional = accountDAO.getById(accountId);
-        final UserBioInfo userBioInfo = UserBioInfo.getUserBioInfo(accountOptional, isDaySleeper(accountId), !originalPartnerMotions.isEmpty());
+        final UserBioInfo userBioInfo = UserBioInfo.forNightSleeper(accountOptional, !originalPartnerMotions.isEmpty());
 
 
         List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;

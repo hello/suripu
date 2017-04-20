@@ -6,6 +6,7 @@ import com.hello.suripu.core.models.DataCompleteness;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
+import com.hello.suripu.core.models.Timeline.Period;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +26,7 @@ public class Timeline {
     public final String dateNight;
 
     @JsonProperty("sleep_periods")
-    public final List<com.hello.suripu.core.models.Timeline.Period> sleepPeriods;
+    public final List<Period> sleepPeriods;
 
     @JsonProperty("events")
     public final List<TimelineEvent> events;
@@ -40,7 +41,7 @@ public class Timeline {
                     final ScoreCondition scoreCondition,
                     final String message,
                     final String dateNight,
-                    final List<com.hello.suripu.core.models.Timeline.Period> sleepPeriods,
+                    final List<Period> sleepPeriods,
                     final List<TimelineEvent> events,
                     final List<SleepMetrics> metrics,
                     final boolean lockedDown) {
