@@ -24,17 +24,21 @@ import java.util.List;
  */
 public class SleepSoundsProcessor implements SoundMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsProcessor.class);
-    
-    private final FileInfoDAO fileInfoDAO;
+
+    private final FileInfoDAO fileInfoSenseOneDAO;
+    private final FileInfoDAO fileInfoSenseOneFiveDAO;
     private final FileManifestDAO fileManifestDAO;
 
-    private SleepSoundsProcessor(final FileInfoDAO fileInfoDAO, final FileManifestDAO fileManifestDAO) {
-        this.fileInfoDAO = fileInfoDAO;
+    private SleepSoundsProcessor(final FileInfoDAO fileInfoSenseOneDAO, final FileInfoDAO fileInfoSenseOneFiveDAO, final FileManifestDAO fileManifestDAO) {
+        this.fileInfoSenseOneDAO = fileInfoSenseOneDAO;
+        this.fileInfoSenseOneFiveDAO = fileInfoSenseOneFiveDAO;
         this.fileManifestDAO = fileManifestDAO;
     }
 
-    public static SleepSoundsProcessor create(final FileInfoDAO fileInfoDAO, final FileManifestDAO fileManifestDAO) {
-        return new SleepSoundsProcessor(fileInfoDAO, fileManifestDAO);
+    public static SleepSoundsProcessor create(final FileInfoDAO fileInfoDAO,
+                                              final FileInfoDAO fileInfoSenseOneFiveDAO,
+                                              final FileManifestDAO fileManifestDAO) {
+        return new SleepSoundsProcessor(fileInfoDAO, fileInfoSenseOneFiveDAO, fileManifestDAO);
     }
 
 
@@ -54,7 +58,7 @@ public class SleepSoundsProcessor implements SoundMap {
         }
 
         @Override
-        public Optional<Sound> getSoundByFilePath(String filePath) {
+        public Optional<Sound> getSoundByFilePath(String filePath, HardwareVersion hardwareVersion) {
             for (final Sound sound : sounds) {
                 if (sound.filePath.equals(filePath)) {
                     return Optional.of(sound);
@@ -90,6 +94,8 @@ public class SleepSoundsProcessor implements SoundMap {
                 ? manifestOptional.get().getFirmwareVersion()
                 : 0;
 
+        final FileInfoDAO fileInfoDAO = (hardwareVersion.equals(HardwareVersion.SENSE_ONE)) ? fileInfoSenseOneDAO : fileInfoSenseOneFiveDAO;
+
         final List<FileInfo> fileInfoList = fileInfoDAO.getAll(firmwareVersion, senseId);
 
         final List<FileInfo> sleepSoundFileInfoList = Lists.newArrayList();
@@ -120,9 +126,12 @@ public class SleepSoundsProcessor implements SoundMap {
 
     /**
      * @param filePath Full path of the file found on Sense.
+     * @param hardwareVersion hardware version to choose correct file_info table
      * @return Sound if the filePath maps to one, else absent.
      */
-    public Optional<Sound> getSoundByFilePath(final String filePath) {
+    public Optional<Sound> getSoundByFilePath(final String filePath, final HardwareVersion hardwareVersion) {
+        final FileInfoDAO fileInfoDAO = (hardwareVersion.equals(HardwareVersion.SENSE_ONE)) ? fileInfoSenseOneDAO : fileInfoSenseOneFiveDAO;
+
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(filePath);
         if (!fileInfoOptional.isPresent() || !fileInfoOptional.get().fileType.equals(FileInfo.FileType.SLEEP_SOUND)) {
             LOGGER.warn("dao=fileInfoDAO error=path-not-found file_path={}", filePath);
@@ -133,7 +142,9 @@ public class SleepSoundsProcessor implements SoundMap {
         return Optional.of(sound);
     }
 
-    public Optional<Sound> getSoundByFileName(final String fileName) {
+    public Optional<Sound> getSoundByFileName(final String fileName, final HardwareVersion hardwareVersion) {
+        final FileInfoDAO fileInfoDAO = (hardwareVersion.equals(HardwareVersion.SENSE_ONE)) ? fileInfoSenseOneDAO : fileInfoSenseOneFiveDAO;
+
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFileName(fileName);
         if (!fileInfoOptional.isPresent() || !fileInfoOptional.get().fileType.equals(FileInfo.FileType.SLEEP_SOUND)) {
             LOGGER.warn("dao=fileInfoDAO error=path-not-found file_name={}", fileName);
@@ -148,6 +159,8 @@ public class SleepSoundsProcessor implements SoundMap {
      * @return a sleep sound for this Sense to play, but only if this Sense can play the sound and if the sound ID is valid.
      */
     public Optional<Sound> getSound(final String senseId, final Long soundId, final HardwareVersion hardwareVersion) {
+        final FileInfoDAO fileInfoDAO = (hardwareVersion.equals(HardwareVersion.SENSE_ONE)) ? fileInfoSenseOneDAO : fileInfoSenseOneFiveDAO;
+
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getById(soundId);
         if (!fileInfoOptional.isPresent()) {
             LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-found", soundId);
