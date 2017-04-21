@@ -212,4 +212,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.MIN_MOTION_AMPLITUDE_HIGH_THRESHOLD, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasTimelineProcessorV3(Long accountId) {
+        return Boolean.valueOf(this.featureFlipper.userFeatureActive("timeline_processor_v3_enabled", accountId.longValue(), Collections.EMPTY_LIST));
+    }
+
 }
