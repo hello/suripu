@@ -763,8 +763,11 @@ public class TimelineUtils {
         final Integer sleepDurationInMinutes = Math.round((float) sleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer inBedDurationInMinutes = Math.round((float) inBedDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
 
-        if (firstInBedTimestampMillis > 0 && firstInBedTimestampMillis < firstSleepTimestampMillis) {
-            sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis)/MINUTE_IN_MILLIS);
+        if (firstInBedTimestampMillis > 0) {
+            sleepOnsetTimeMinutes = 1;
+            if (firstInBedTimestampMillis < firstSleepTimestampMillis) {
+                sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis) / MINUTE_IN_MILLIS);
+            }
         }
         int uninterruptedSleepDurationInMinutes = soundSleepDurationInMinutes;
         if (useUninterruptedDuration) {
