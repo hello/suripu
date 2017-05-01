@@ -82,6 +82,7 @@ public class FeatureFlipper {
     public final static String PILL_HEARTBEAT_DYNAMODB = "pill_heartbeat_dynamodb";
     public final static String PILL_HEARTBEAT_DYNAMODB_READ = "pill_heartbeat_dynamodb_read";
     public final static String PILL_PAIR_MOTION_FILTER = "pill_pair_motion_filter";
+    public final static String POLLY_RESPONSE_SERVICE = "polly_response_service";
     public final static String PRINT_RAW_PB = "print_raw_pb";
     public final static String PROGRESSIVE_SMART_ALARM = "progressive_smart_alarm";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
