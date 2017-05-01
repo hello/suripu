@@ -20,6 +20,8 @@ import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableResult;
+import com.amazonaws.services.dynamodbv2.model.DescribeLimitsRequest;
+import com.amazonaws.services.dynamodbv2.model.DescribeLimitsResult;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
@@ -40,6 +42,7 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.amazonaws.services.dynamodbv2.model.UpdateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateTableResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.services.dynamodbv2.waiters.AmazonDynamoDBWaiters;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.util.List;
@@ -193,6 +196,11 @@ public class InstrumentedDynamoDBClient implements AmazonDynamoDB {
     }
 
     @Override
+    public DescribeLimitsResult describeLimits(DescribeLimitsRequest describeLimitsRequest) {
+        return client.describeLimits(describeLimitsRequest);
+    }
+
+    @Override
     public BatchWriteItemResult batchWriteItem(Map<String,List<WriteRequest>> requestItems) throws AmazonServiceException, AmazonClientException {
         return client.batchWriteItem(requestItems);
     }
@@ -285,5 +293,10 @@ public class InstrumentedDynamoDBClient implements AmazonDynamoDB {
     @Override
     public ResponseMetadata getCachedResponseMetadata(AmazonWebServiceRequest amazonWebServiceRequest) {
         return client.getCachedResponseMetadata(amazonWebServiceRequest);
+    }
+
+    @Override
+    public AmazonDynamoDBWaiters waiters() {
+        return client.waiters();
     }
 }
