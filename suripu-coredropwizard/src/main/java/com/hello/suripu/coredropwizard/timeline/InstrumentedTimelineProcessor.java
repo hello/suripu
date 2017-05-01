@@ -873,16 +873,21 @@ public class InstrumentedTimelineProcessor extends FeatureFlippedProcessor {
 
         //"not enough", not "no data", because there must have been some original data to get to this point
         if (filteredMotionData.isEmpty()) {
+            STATIC_LOGGER.info("action=partner-filter-rejected-data reason=no_data account_id={}", accountId);
+
             return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
         //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS, post partner-filtering.  trying to avoid case where partner filter lets a couple through even though the user is not there.
         if (filteredMotionData.size() < MIN_PARTNER_FILTERED_MOTION_COUNT) {
+            STATIC_LOGGER.info("action=partner-filter-rejected-data reason=insufficient_motion account_id={}", accountId);
+
             return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
         //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT OF PARTNER-FILTERED DATA IS ABOVE 3 HOURS
         if(filteredMotionData.get(filteredMotionData.size() - 1).timestamp - filteredMotionData.get(0).timestamp < MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
+            STATIC_LOGGER.info("action=partner-filter-rejected-data reason=insufficient_duration account_id={}", accountId);
             return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
