@@ -349,8 +349,6 @@ public class TrackerMotion {
         public static final double GRAVITY_IN_MS2 = 9.81;
         public static final double ACC_RESOLUTION_32BIT = 65536.0;
         public static final double COUNTS_IN_G = (ACC_RANGE_IN_G  * GRAVITY_IN_MS2)/ ACC_RESOLUTION_32BIT;
-        public static final int PILL_1P5_MOTION_OFFSET = 383;
-        public static final int PILL_1P5_MOTION_MULTIPLIER = 2;
 
 
         public static Long convertTimestampInSecondsToTimestampInMillis(final Long timestampInSeconds) {
@@ -481,8 +479,7 @@ public class TrackerMotion {
             }catch (IOException ioe){
                 throw new InvalidEncryptedPayloadException(ioe.getMessage());
             }
-            // offsets and scales motion values for 1.5 pills based off initial comparison of 1.0 and 1.5 pills
-            return PillPayloadV2.createWithMotionMask((((long) (1000 * maxAccelerationMS2)) - PILL_1P5_MOTION_OFFSET) * PILL_1P5_MOTION_MULTIPLIER, motionMask, cosTheta);
+            return PillPayloadV2.createWithMotionMask((long) (1000 * maxAccelerationMS2), motionMask, cosTheta);
         }
 
         public static List<TrackerMotion> removeDuplicates(final List<TrackerMotion> original){
