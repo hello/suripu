@@ -646,3 +646,10 @@ VALUES
 (18,  1, 4215, 'SLEEP_SOUND', '/SLPTONES/ST010.RAW', 'f7b36fb9c4ade09397ce3135b1bd0d2c3b0cfb12', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST010.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Aura.mp3', 'Aura', true,   6247766),
 (19,  4, 4215, 'SLEEP_SOUND', '/SLPTONES/ST011.RAW', '684dcf2842df76cf0409bf51c7e303bae92e25d0', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST011.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Horizon.mp3', 'Horizon', true,   8476982),
 (20,  2, 4215, 'SLEEP_SOUND', '/SLPTONES/ST012.RAW', '3fa21852f29d15b3d8d8eeb0d05c6c42b7ca9041', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST012.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Nocturne.mp3', 'Nocturne', true,   6323200);
+
+-- Special non-public sound files for 60D3DE89DB96F490 (ST106) and B87BC42357A797BF (ST101) to address buffer-underrun problem
+INSERT INTO file_info_one_five
+(id, sort_key, firmware_version, type, path, sha, uri, preview_uri, name, is_public, size_bytes)
+VALUES
+( 100, 13, 4215, 'SLEEP_SOUND', '/SLPTONES/ST101.RAW', '7dd42ec7e55b00afbbcb2a8e129dc0fc573961eb', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST101.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Brown_Noise.mp3', 'Brown Noise Special', false, 161552),
+( 101, 14, 4215, 'SLEEP_SOUND', '/SLPTONES/ST106.RAW', '128cf3d664e39667e4eabff647f8ed0cc4edd109', 's3://hello-audio/sleep-tones-raw-one-five/2017-03-23/ST106.raw', 'https://s3.amazonaws.com/hello-audio/sleep-tones-preview/Rainfall.mp3', 'Rainfall Special', false, 539354);
