@@ -4,6 +4,9 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.CreatePlatformEndpointRequest;
 import com.amazonaws.services.sns.model.CreatePlatformEndpointResult;
 import com.amazonaws.services.sns.model.DeleteEndpointRequest;
+import com.amazonaws.services.sns.model.GetEndpointAttributesRequest;
+import com.amazonaws.services.sns.model.NotFoundException;
+import com.amazonaws.services.sns.model.SetEndpointAttributesRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -67,27 +71,87 @@ public class NotificationSubscriptionDAOWrapper {
         return notificationSubscriptionsDAO.getSubscriptions(accountId);
     }
 
+
     /**
-     * To subscribe we need to make sure that no endpoint has been created with the same deviceToken but different metadata
-     * It is VERY likely to happen if you log in /log out often.
-     * @param accountId
-     * @param mobilePushRegistration
+     * Creates a new SNS endpoint and saves the ARN if it doesn't exist, or updates the device token / other metadata
+     * if they are outdated.
+     *
+     * Implements the pseudocode in http://docs.aws.amazon.com/sns/latest/dg/mobile-platform-endpoint.html
      */
     public void subscribe(final Long accountId, final MobilePushRegistration mobilePushRegistration) {
-        final Optional<MobilePushRegistration> previousRegistration = notificationSubscriptionsDAO.getSubscription(mobilePushRegistration.deviceToken);
-        if(previousRegistration.isPresent()) {
-            deleteFromSNS(Lists.newArrayList(previousRegistration.get()));
-            notificationSubscriptionsDAO.deleteByDeviceToken(mobilePushRegistration.deviceToken);
+        // retrieve the latest device token from the mobile operating system
+        final String deviceToken = mobilePushRegistration.deviceToken;
+        String endpointArn;
+
+        // if the platform endpoint ARN is not stored
+        final Optional<MobilePushRegistration> previousRegistrationOptional = notificationSubscriptionsDAO.getSubscription(accountId, deviceToken);
+        if (!previousRegistrationOptional.isPresent())
+        {
+            if (!previousRegistrationOptional.get().endpoint.isPresent())
+            {
+                // It shouldn't happen that we have a row with no ARN, but just in case, delete the row so we can recreate it.
+                LOGGER.error("empty_registration_endpoint account_id={} device_token={}", accountId, deviceToken);
+                notificationSubscriptionsDAO.unsubscribe(accountId, deviceToken);
+            }
+
+            // This is a first-time registration
+            // Call create platform endpoint, Store the returned platform ARN.
+            final Optional<MobilePushRegistration> newRegistrationOptional = createAndStoreSNSEndpoint(accountId, mobilePushRegistration);
+            if (newRegistrationOptional.isPresent()) {
+                endpointArn = newRegistrationOptional.get().endpoint.get();
+            } else {
+                // Impail the fail whale on a snail tale.
+                return;
+            }
+        }
+        else
+        {
+            endpointArn = previousRegistrationOptional.get().endpoint.get();
         }
 
-        final Optional<MobilePushRegistration> updated = createSNSEndpoint(accountId, mobilePushRegistration);
-        if(updated.isPresent()) {
-            notificationSubscriptionsDAO.subscribe(accountId, updated.get());
-            return;
+        // call get endpoint attributes on the platform endpoint ARN
+        try {
+            final GetEndpointAttributesRequest getEndpointAttributesRequest = new GetEndpointAttributesRequest()
+                    .withEndpointArn(endpointArn);
+            final Map<String, String> endpointAttributes = amazonSNSClient.getEndpointAttributes(getEndpointAttributesRequest).getAttributes();
+            final String expectedUserData = String.valueOf(accountId);
+
+            final String userData = endpointAttributes.get("CustomUserData");
+            final boolean isCorrectAccountId = Objects.equals(expectedUserData, userData);
+
+            final String endpointToken = endpointAttributes.get("Token");
+            final boolean isCorrectDeviceToken = Objects.equals(deviceToken, endpointToken);
+
+            final String enabledAttribute = endpointAttributes.get("Enabled");
+            final boolean isEnabled = enabledAttribute != null && enabledAttribute.equalsIgnoreCase("true");
+
+            // if the device token in the endpoint does not match the latest one
+            // or get endpoint attributes shows the endpoint as disabled
+            if (!(isCorrectAccountId && isCorrectDeviceToken && isEnabled))
+            {
+                LOGGER.debug("account_id={} device_token={} user_data={} endpoint_token={} is_correct_account_id={} is_correct_device_token={} is_enabled={}",
+                        accountId, deviceToken, userData, endpointToken, isCorrectAccountId, isCorrectDeviceToken, isEnabled);
+                // call set endpoint attributes to set the latest device token and then enable the platform endpoint
+                setEndpointAttributes(expectedUserData, deviceToken, previousRegistrationOptional.get().endpoint.get());
+            }
+        } catch (NotFoundException nfe) {
+            // if while getting the attributes a not-found exception is thrown, the platform endpoint was deleted.
+            // Call create platform endpoint, Store the returned platform ARN
+            createAndStoreSNSEndpoint(accountId, mobilePushRegistration);
         }
-        LOGGER.error("Did not subscribe account_id {}", accountId);
+
     }
 
+
+    private void setEndpointAttributes(final String userData, final String deviceToken, final String endpointArn) {
+        final SetEndpointAttributesRequest setEndpointAttributesRequest = new SetEndpointAttributesRequest()
+                .addAttributesEntry("CustomUserData", userData)
+                .addAttributesEntry("Token", deviceToken)
+                .addAttributesEntry("Enabled", "true")
+                .withEndpointArn(endpointArn);
+        amazonSNSClient.setEndpointAttributes(setEndpointAttributesRequest);
+    }
+    
 
     /**
      * Unsubscribe just this account for this deviceToken
@@ -170,6 +234,18 @@ public class NotificationSubscriptionDAOWrapper {
             LOGGER.error("Failed creating SNS endpoint for account_id: {}. Reason: {}", accountId, e.getMessage());
         }
 
+        return Optional.absent();
+    }
+
+    private Optional<MobilePushRegistration> createAndStoreSNSEndpoint(final Long accountId, final MobilePushRegistration mobilePushRegistration) {
+        final Optional<MobilePushRegistration> newRegistrationOptional = createSNSEndpoint(accountId, mobilePushRegistration);
+
+        // Store the returned platform ARN
+        if(newRegistrationOptional.isPresent()) {
+            notificationSubscriptionsDAO.subscribe(accountId, newRegistrationOptional.get());
+            return newRegistrationOptional;
+        }
+        LOGGER.error("error=could_not_create_sns_endpoint account_id={} device_token={}", accountId, mobilePushRegistration.deviceToken);
         return Optional.absent();
     }
 }
