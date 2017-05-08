@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db.util;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import java.util.List;
 import java.util.Map;
@@ -93,5 +94,22 @@ public class DynamoDBItemAggregator {
             currMin = Math.min(currMin, toDouble(item.get(key)));
         }
         return currMin;
+    }
+
+
+    /**
+     * Computes the median for a key or defaultValue if items are empty
+     * @param key
+     * @return
+     */
+    public double median(final String key) {
+        if(items.isEmpty()) {
+            return defaultValue;
+        }
+        DescriptiveStatistics statistics = new DescriptiveStatistics();
+        for(final Map<String, AttributeValue> item: items) {
+            statistics.addValue(toDouble(item.get(key)));
+        }
+        return statistics.getPercentile(50);
     }
 }
