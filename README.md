@@ -53,3 +53,5 @@ To tail the logs:
 3. cd into `/logging`
 4. python kinesis.py
 5. Enjoy
+
+
