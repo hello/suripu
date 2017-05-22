@@ -2233,6 +2233,579 @@ public final class AudioCommands {
     // @@protoc_insertion_point(class_scope:VoiceControl)
   }
 
+  public interface RemoteApiControlOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:RemoteApiControl)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required string ip_address = 1;</code>
+     */
+    boolean hasIpAddress();
+    /**
+     * <code>required string ip_address = 1;</code>
+     */
+    java.lang.String getIpAddress();
+    /**
+     * <code>required string ip_address = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getIpAddressBytes();
+
+    /**
+     * <code>required bytes body = 2;</code>
+     */
+    boolean hasBody();
+    /**
+     * <code>required bytes body = 2;</code>
+     */
+    com.google.protobuf.ByteString getBody();
+  }
+  /**
+   * Protobuf type {@code RemoteApiControl}
+   */
+  public static final class RemoteApiControl extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:RemoteApiControl)
+      RemoteApiControlOrBuilder {
+    // Use RemoteApiControl.newBuilder() to construct.
+    private RemoteApiControl(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private RemoteApiControl(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final RemoteApiControl defaultInstance;
+    public static RemoteApiControl getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public RemoteApiControl getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private RemoteApiControl(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              ipAddress_ = bs;
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              body_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.messeji.api.AudioCommands.internal_static_RemoteApiControl_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.messeji.api.AudioCommands.internal_static_RemoteApiControl_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.messeji.api.AudioCommands.RemoteApiControl.class, com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<RemoteApiControl> PARSER =
+        new com.google.protobuf.AbstractParser<RemoteApiControl>() {
+      public RemoteApiControl parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RemoteApiControl(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RemoteApiControl> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int IP_ADDRESS_FIELD_NUMBER = 1;
+    private java.lang.Object ipAddress_;
+    /**
+     * <code>required string ip_address = 1;</code>
+     */
+    public boolean hasIpAddress() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string ip_address = 1;</code>
+     */
+    public java.lang.String getIpAddress() {
+      java.lang.Object ref = ipAddress_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          ipAddress_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string ip_address = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getIpAddressBytes() {
+      java.lang.Object ref = ipAddress_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        ipAddress_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int BODY_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString body_;
+    /**
+     * <code>required bytes body = 2;</code>
+     */
+    public boolean hasBody() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes body = 2;</code>
+     */
+    public com.google.protobuf.ByteString getBody() {
+      return body_;
+    }
+
+    private void initFields() {
+      ipAddress_ = "";
+      body_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasIpAddress()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasBody()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getIpAddressBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, body_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getIpAddressBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, body_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.AudioCommands.RemoteApiControl parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.messeji.api.AudioCommands.RemoteApiControl prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code RemoteApiControl}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:RemoteApiControl)
+        com.hello.messeji.api.AudioCommands.RemoteApiControlOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.messeji.api.AudioCommands.internal_static_RemoteApiControl_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.messeji.api.AudioCommands.internal_static_RemoteApiControl_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.messeji.api.AudioCommands.RemoteApiControl.class, com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder.class);
+      }
+
+      // Construct using com.hello.messeji.api.AudioCommands.RemoteApiControl.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        ipAddress_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        body_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.messeji.api.AudioCommands.internal_static_RemoteApiControl_descriptor;
+      }
+
+      public com.hello.messeji.api.AudioCommands.RemoteApiControl getDefaultInstanceForType() {
+        return com.hello.messeji.api.AudioCommands.RemoteApiControl.getDefaultInstance();
+      }
+
+      public com.hello.messeji.api.AudioCommands.RemoteApiControl build() {
+        com.hello.messeji.api.AudioCommands.RemoteApiControl result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.messeji.api.AudioCommands.RemoteApiControl buildPartial() {
+        com.hello.messeji.api.AudioCommands.RemoteApiControl result = new com.hello.messeji.api.AudioCommands.RemoteApiControl(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.ipAddress_ = ipAddress_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.body_ = body_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.messeji.api.AudioCommands.RemoteApiControl) {
+          return mergeFrom((com.hello.messeji.api.AudioCommands.RemoteApiControl)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.messeji.api.AudioCommands.RemoteApiControl other) {
+        if (other == com.hello.messeji.api.AudioCommands.RemoteApiControl.getDefaultInstance()) return this;
+        if (other.hasIpAddress()) {
+          bitField0_ |= 0x00000001;
+          ipAddress_ = other.ipAddress_;
+          onChanged();
+        }
+        if (other.hasBody()) {
+          setBody(other.getBody());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasIpAddress()) {
+          
+          return false;
+        }
+        if (!hasBody()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.messeji.api.AudioCommands.RemoteApiControl parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.messeji.api.AudioCommands.RemoteApiControl) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object ipAddress_ = "";
+      /**
+       * <code>required string ip_address = 1;</code>
+       */
+      public boolean hasIpAddress() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required string ip_address = 1;</code>
+       */
+      public java.lang.String getIpAddress() {
+        java.lang.Object ref = ipAddress_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            ipAddress_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string ip_address = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getIpAddressBytes() {
+        java.lang.Object ref = ipAddress_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          ipAddress_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string ip_address = 1;</code>
+       */
+      public Builder setIpAddress(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ipAddress_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string ip_address = 1;</code>
+       */
+      public Builder clearIpAddress() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ipAddress_ = getDefaultInstance().getIpAddress();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string ip_address = 1;</code>
+       */
+      public Builder setIpAddressBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ipAddress_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString body_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes body = 2;</code>
+       */
+      public boolean hasBody() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes body = 2;</code>
+       */
+      public com.google.protobuf.ByteString getBody() {
+        return body_;
+      }
+      /**
+       * <code>required bytes body = 2;</code>
+       */
+      public Builder setBody(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        body_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes body = 2;</code>
+       */
+      public Builder clearBody() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        body_ = getDefaultInstance().getBody();
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:RemoteApiControl)
+    }
+
+    static {
+      defaultInstance = new RemoteApiControl(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:RemoteApiControl)
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_StopAudio_descriptor;
   private static
@@ -2253,6 +2826,11 @@ public final class AudioCommands {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_VoiceControl_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_RemoteApiControl_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_RemoteApiControl_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -2270,7 +2848,9 @@ public final class AudioCommands {
       "duration_seconds\030\005 \002(\r\022)\n!timeout_fade_o" +
       "ut_duration_seconds\030\006 \001(\r\"\030\n\006Volume\022\016\n\006v" +
       "olume\030\001 \002(\r\"\036\n\014VoiceControl\022\016\n\006enable\030\001 " +
-      "\002(\010B\027\n\025com.hello.messeji.api"
+      "\002(\010\"4\n\020RemoteApiControl\022\022\n\nip_address\030\001 " +
+      "\002(\t\022\014\n\004body\030\002 \002(\014B\027\n\025com.hello.messeji.a",
+      "pi"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2308,6 +2888,12 @@ public final class AudioCommands {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_VoiceControl_descriptor,
         new java.lang.String[] { "Enable", });
+    internal_static_RemoteApiControl_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_RemoteApiControl_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_RemoteApiControl_descriptor,
+        new java.lang.String[] { "IpAddress", "Body", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
