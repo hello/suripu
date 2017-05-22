@@ -647,6 +647,760 @@ public final class Messeji {
     // @@protoc_insertion_point(class_scope:ReceiveMessageRequest)
   }
 
+  public interface LedDemoOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:LedDemo)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required int32 r = 1;</code>
+     */
+    boolean hasR();
+    /**
+     * <code>required int32 r = 1;</code>
+     */
+    int getR();
+
+    /**
+     * <code>required int32 g = 2;</code>
+     */
+    boolean hasG();
+    /**
+     * <code>required int32 g = 2;</code>
+     */
+    int getG();
+
+    /**
+     * <code>required int32 b = 3;</code>
+     */
+    boolean hasB();
+    /**
+     * <code>required int32 b = 3;</code>
+     */
+    int getB();
+
+    /**
+     * <code>required .LedDemo.Animation animation = 4;</code>
+     */
+    boolean hasAnimation();
+    /**
+     * <code>required .LedDemo.Animation animation = 4;</code>
+     */
+    com.hello.messeji.api.Messeji.LedDemo.Animation getAnimation();
+  }
+  /**
+   * Protobuf type {@code LedDemo}
+   */
+  public static final class LedDemo extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:LedDemo)
+      LedDemoOrBuilder {
+    // Use LedDemo.newBuilder() to construct.
+    private LedDemo(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private LedDemo(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final LedDemo defaultInstance;
+    public static LedDemo getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public LedDemo getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private LedDemo(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              r_ = input.readInt32();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              g_ = input.readInt32();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              b_ = input.readInt32();
+              break;
+            }
+            case 32: {
+              int rawValue = input.readEnum();
+              com.hello.messeji.api.Messeji.LedDemo.Animation value = com.hello.messeji.api.Messeji.LedDemo.Animation.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(4, rawValue);
+              } else {
+                bitField0_ |= 0x00000008;
+                animation_ = value;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.messeji.api.Messeji.internal_static_LedDemo_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.messeji.api.Messeji.internal_static_LedDemo_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.messeji.api.Messeji.LedDemo.class, com.hello.messeji.api.Messeji.LedDemo.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<LedDemo> PARSER =
+        new com.google.protobuf.AbstractParser<LedDemo>() {
+      public LedDemo parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new LedDemo(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<LedDemo> getParserForType() {
+      return PARSER;
+    }
+
+    /**
+     * Protobuf enum {@code LedDemo.Animation}
+     */
+    public enum Animation
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>SPIN = 0;</code>
+       */
+      SPIN(0, 0),
+      /**
+       * <code>GLOW = 1;</code>
+       */
+      GLOW(1, 1),
+      ;
+
+      /**
+       * <code>SPIN = 0;</code>
+       */
+      public static final int SPIN_VALUE = 0;
+      /**
+       * <code>GLOW = 1;</code>
+       */
+      public static final int GLOW_VALUE = 1;
+
+
+      public final int getNumber() { return value; }
+
+      public static Animation valueOf(int value) {
+        switch (value) {
+          case 0: return SPIN;
+          case 1: return GLOW;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<Animation>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<Animation>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<Animation>() {
+              public Animation findValueByNumber(int number) {
+                return Animation.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.hello.messeji.api.Messeji.LedDemo.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final Animation[] VALUES = values();
+
+      public static Animation valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private Animation(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:LedDemo.Animation)
+    }
+
+    private int bitField0_;
+    public static final int R_FIELD_NUMBER = 1;
+    private int r_;
+    /**
+     * <code>required int32 r = 1;</code>
+     */
+    public boolean hasR() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int32 r = 1;</code>
+     */
+    public int getR() {
+      return r_;
+    }
+
+    public static final int G_FIELD_NUMBER = 2;
+    private int g_;
+    /**
+     * <code>required int32 g = 2;</code>
+     */
+    public boolean hasG() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required int32 g = 2;</code>
+     */
+    public int getG() {
+      return g_;
+    }
+
+    public static final int B_FIELD_NUMBER = 3;
+    private int b_;
+    /**
+     * <code>required int32 b = 3;</code>
+     */
+    public boolean hasB() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required int32 b = 3;</code>
+     */
+    public int getB() {
+      return b_;
+    }
+
+    public static final int ANIMATION_FIELD_NUMBER = 4;
+    private com.hello.messeji.api.Messeji.LedDemo.Animation animation_;
+    /**
+     * <code>required .LedDemo.Animation animation = 4;</code>
+     */
+    public boolean hasAnimation() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>required .LedDemo.Animation animation = 4;</code>
+     */
+    public com.hello.messeji.api.Messeji.LedDemo.Animation getAnimation() {
+      return animation_;
+    }
+
+    private void initFields() {
+      r_ = 0;
+      g_ = 0;
+      b_ = 0;
+      animation_ = com.hello.messeji.api.Messeji.LedDemo.Animation.SPIN;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasR()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasG()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasB()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasAnimation()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, r_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, g_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(3, b_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeEnum(4, animation_.getNumber());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, r_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, g_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, b_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(4, animation_.getNumber());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.messeji.api.Messeji.LedDemo parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.messeji.api.Messeji.LedDemo prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code LedDemo}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:LedDemo)
+        com.hello.messeji.api.Messeji.LedDemoOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.messeji.api.Messeji.internal_static_LedDemo_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.messeji.api.Messeji.internal_static_LedDemo_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.messeji.api.Messeji.LedDemo.class, com.hello.messeji.api.Messeji.LedDemo.Builder.class);
+      }
+
+      // Construct using com.hello.messeji.api.Messeji.LedDemo.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        r_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        g_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        b_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        animation_ = com.hello.messeji.api.Messeji.LedDemo.Animation.SPIN;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.messeji.api.Messeji.internal_static_LedDemo_descriptor;
+      }
+
+      public com.hello.messeji.api.Messeji.LedDemo getDefaultInstanceForType() {
+        return com.hello.messeji.api.Messeji.LedDemo.getDefaultInstance();
+      }
+
+      public com.hello.messeji.api.Messeji.LedDemo build() {
+        com.hello.messeji.api.Messeji.LedDemo result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.messeji.api.Messeji.LedDemo buildPartial() {
+        com.hello.messeji.api.Messeji.LedDemo result = new com.hello.messeji.api.Messeji.LedDemo(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.r_ = r_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.g_ = g_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.b_ = b_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.animation_ = animation_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.messeji.api.Messeji.LedDemo) {
+          return mergeFrom((com.hello.messeji.api.Messeji.LedDemo)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.messeji.api.Messeji.LedDemo other) {
+        if (other == com.hello.messeji.api.Messeji.LedDemo.getDefaultInstance()) return this;
+        if (other.hasR()) {
+          setR(other.getR());
+        }
+        if (other.hasG()) {
+          setG(other.getG());
+        }
+        if (other.hasB()) {
+          setB(other.getB());
+        }
+        if (other.hasAnimation()) {
+          setAnimation(other.getAnimation());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasR()) {
+          
+          return false;
+        }
+        if (!hasG()) {
+          
+          return false;
+        }
+        if (!hasB()) {
+          
+          return false;
+        }
+        if (!hasAnimation()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.messeji.api.Messeji.LedDemo parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.messeji.api.Messeji.LedDemo) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int r_ ;
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      public boolean hasR() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      public int getR() {
+        return r_;
+      }
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      public Builder setR(int value) {
+        bitField0_ |= 0x00000001;
+        r_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 r = 1;</code>
+       */
+      public Builder clearR() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        r_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int g_ ;
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      public boolean hasG() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      public int getG() {
+        return g_;
+      }
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      public Builder setG(int value) {
+        bitField0_ |= 0x00000002;
+        g_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 g = 2;</code>
+       */
+      public Builder clearG() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        g_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int b_ ;
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      public boolean hasB() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      public int getB() {
+        return b_;
+      }
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      public Builder setB(int value) {
+        bitField0_ |= 0x00000004;
+        b_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 b = 3;</code>
+       */
+      public Builder clearB() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        b_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.hello.messeji.api.Messeji.LedDemo.Animation animation_ = com.hello.messeji.api.Messeji.LedDemo.Animation.SPIN;
+      /**
+       * <code>required .LedDemo.Animation animation = 4;</code>
+       */
+      public boolean hasAnimation() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>required .LedDemo.Animation animation = 4;</code>
+       */
+      public com.hello.messeji.api.Messeji.LedDemo.Animation getAnimation() {
+        return animation_;
+      }
+      /**
+       * <code>required .LedDemo.Animation animation = 4;</code>
+       */
+      public Builder setAnimation(com.hello.messeji.api.Messeji.LedDemo.Animation value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        animation_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required .LedDemo.Animation animation = 4;</code>
+       */
+      public Builder clearAnimation() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        animation_ = com.hello.messeji.api.Messeji.LedDemo.Animation.SPIN;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:LedDemo)
+    }
+
+    static {
+      defaultInstance = new LedDemo(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:LedDemo)
+  }
+
   public interface MessageOrBuilder extends
       // @@protoc_insertion_point(interface_extends:Message)
       com.google.protobuf.MessageOrBuilder {
@@ -784,6 +1538,32 @@ public final class Messeji {
      * <code>optional .VoiceControl voice_control = 8;</code>
      */
     com.hello.messeji.api.AudioCommands.VoiceControlOrBuilder getVoiceControlOrBuilder();
+
+    /**
+     * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+     */
+    boolean hasRemoteApiControl();
+    /**
+     * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+     */
+    com.hello.messeji.api.AudioCommands.RemoteApiControl getRemoteApiControl();
+    /**
+     * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+     */
+    com.hello.messeji.api.AudioCommands.RemoteApiControlOrBuilder getRemoteApiControlOrBuilder();
+
+    /**
+     * <code>optional .LedDemo led_demo = 10;</code>
+     */
+    boolean hasLedDemo();
+    /**
+     * <code>optional .LedDemo led_demo = 10;</code>
+     */
+    com.hello.messeji.api.Messeji.LedDemo getLedDemo();
+    /**
+     * <code>optional .LedDemo led_demo = 10;</code>
+     */
+    com.hello.messeji.api.Messeji.LedDemoOrBuilder getLedDemoOrBuilder();
   }
   /**
    * Protobuf type {@code Message}
@@ -914,6 +1694,32 @@ public final class Messeji {
                 voiceControl_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000080;
+              break;
+            }
+            case 74: {
+              com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                subBuilder = remoteApiControl_.toBuilder();
+              }
+              remoteApiControl_ = input.readMessage(com.hello.messeji.api.AudioCommands.RemoteApiControl.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(remoteApiControl_);
+                remoteApiControl_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000100;
+              break;
+            }
+            case 82: {
+              com.hello.messeji.api.Messeji.LedDemo.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000200) == 0x00000200)) {
+                subBuilder = ledDemo_.toBuilder();
+              }
+              ledDemo_ = input.readMessage(com.hello.messeji.api.Messeji.LedDemo.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(ledDemo_);
+                ledDemo_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000200;
               break;
             }
           }
@@ -1268,6 +2074,48 @@ public final class Messeji {
       return voiceControl_;
     }
 
+    public static final int REMOTE_API_CONTROL_FIELD_NUMBER = 9;
+    private com.hello.messeji.api.AudioCommands.RemoteApiControl remoteApiControl_;
+    /**
+     * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+     */
+    public boolean hasRemoteApiControl() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+     */
+    public com.hello.messeji.api.AudioCommands.RemoteApiControl getRemoteApiControl() {
+      return remoteApiControl_;
+    }
+    /**
+     * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+     */
+    public com.hello.messeji.api.AudioCommands.RemoteApiControlOrBuilder getRemoteApiControlOrBuilder() {
+      return remoteApiControl_;
+    }
+
+    public static final int LED_DEMO_FIELD_NUMBER = 10;
+    private com.hello.messeji.api.Messeji.LedDemo ledDemo_;
+    /**
+     * <code>optional .LedDemo led_demo = 10;</code>
+     */
+    public boolean hasLedDemo() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional .LedDemo led_demo = 10;</code>
+     */
+    public com.hello.messeji.api.Messeji.LedDemo getLedDemo() {
+      return ledDemo_;
+    }
+    /**
+     * <code>optional .LedDemo led_demo = 10;</code>
+     */
+    public com.hello.messeji.api.Messeji.LedDemoOrBuilder getLedDemoOrBuilder() {
+      return ledDemo_;
+    }
+
     private void initFields() {
       senderId_ = "";
       order_ = 0L;
@@ -1277,6 +2125,8 @@ public final class Messeji {
       stopAudio_ = com.hello.messeji.api.AudioCommands.StopAudio.getDefaultInstance();
       volume_ = com.hello.messeji.api.AudioCommands.Volume.getDefaultInstance();
       voiceControl_ = com.hello.messeji.api.AudioCommands.VoiceControl.getDefaultInstance();
+      remoteApiControl_ = com.hello.messeji.api.AudioCommands.RemoteApiControl.getDefaultInstance();
+      ledDemo_ = com.hello.messeji.api.Messeji.LedDemo.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1316,6 +2166,18 @@ public final class Messeji {
           return false;
         }
       }
+      if (hasRemoteApiControl()) {
+        if (!getRemoteApiControl().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasLedDemo()) {
+        if (!getLedDemo().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -1346,6 +2208,12 @@ public final class Messeji {
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeMessage(8, voiceControl_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeMessage(9, remoteApiControl_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeMessage(10, ledDemo_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -1387,6 +2255,14 @@ public final class Messeji {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, voiceControl_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, remoteApiControl_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, ledDemo_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1501,6 +2377,8 @@ public final class Messeji {
           getStopAudioFieldBuilder();
           getVolumeFieldBuilder();
           getVoiceControlFieldBuilder();
+          getRemoteApiControlFieldBuilder();
+          getLedDemoFieldBuilder();
         }
       }
       private static Builder create() {
@@ -1541,6 +2419,18 @@ public final class Messeji {
           voiceControlBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000080);
+        if (remoteApiControlBuilder_ == null) {
+          remoteApiControl_ = com.hello.messeji.api.AudioCommands.RemoteApiControl.getDefaultInstance();
+        } else {
+          remoteApiControlBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        if (ledDemoBuilder_ == null) {
+          ledDemo_ = com.hello.messeji.api.Messeji.LedDemo.getDefaultInstance();
+        } else {
+          ledDemoBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -1617,6 +2507,22 @@ public final class Messeji {
         } else {
           result.voiceControl_ = voiceControlBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        if (remoteApiControlBuilder_ == null) {
+          result.remoteApiControl_ = remoteApiControl_;
+        } else {
+          result.remoteApiControl_ = remoteApiControlBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        if (ledDemoBuilder_ == null) {
+          result.ledDemo_ = ledDemo_;
+        } else {
+          result.ledDemo_ = ledDemoBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1659,6 +2565,12 @@ public final class Messeji {
         if (other.hasVoiceControl()) {
           mergeVoiceControl(other.getVoiceControl());
         }
+        if (other.hasRemoteApiControl()) {
+          mergeRemoteApiControl(other.getRemoteApiControl());
+        }
+        if (other.hasLedDemo()) {
+          mergeLedDemo(other.getLedDemo());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -1692,6 +2604,18 @@ public final class Messeji {
         }
         if (hasVoiceControl()) {
           if (!getVoiceControl().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasRemoteApiControl()) {
+          if (!getRemoteApiControl().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasLedDemo()) {
+          if (!getLedDemo().isInitialized()) {
             
             return false;
           }
@@ -2437,6 +3361,238 @@ public final class Messeji {
           voiceControl_ = null;
         }
         return voiceControlBuilder_;
+      }
+
+      private com.hello.messeji.api.AudioCommands.RemoteApiControl remoteApiControl_ = com.hello.messeji.api.AudioCommands.RemoteApiControl.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.AudioCommands.RemoteApiControl, com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder, com.hello.messeji.api.AudioCommands.RemoteApiControlOrBuilder> remoteApiControlBuilder_;
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public boolean hasRemoteApiControl() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.RemoteApiControl getRemoteApiControl() {
+        if (remoteApiControlBuilder_ == null) {
+          return remoteApiControl_;
+        } else {
+          return remoteApiControlBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public Builder setRemoteApiControl(com.hello.messeji.api.AudioCommands.RemoteApiControl value) {
+        if (remoteApiControlBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          remoteApiControl_ = value;
+          onChanged();
+        } else {
+          remoteApiControlBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public Builder setRemoteApiControl(
+          com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder builderForValue) {
+        if (remoteApiControlBuilder_ == null) {
+          remoteApiControl_ = builderForValue.build();
+          onChanged();
+        } else {
+          remoteApiControlBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public Builder mergeRemoteApiControl(com.hello.messeji.api.AudioCommands.RemoteApiControl value) {
+        if (remoteApiControlBuilder_ == null) {
+          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+              remoteApiControl_ != com.hello.messeji.api.AudioCommands.RemoteApiControl.getDefaultInstance()) {
+            remoteApiControl_ =
+              com.hello.messeji.api.AudioCommands.RemoteApiControl.newBuilder(remoteApiControl_).mergeFrom(value).buildPartial();
+          } else {
+            remoteApiControl_ = value;
+          }
+          onChanged();
+        } else {
+          remoteApiControlBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public Builder clearRemoteApiControl() {
+        if (remoteApiControlBuilder_ == null) {
+          remoteApiControl_ = com.hello.messeji.api.AudioCommands.RemoteApiControl.getDefaultInstance();
+          onChanged();
+        } else {
+          remoteApiControlBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        return this;
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder getRemoteApiControlBuilder() {
+        bitField0_ |= 0x00000100;
+        onChanged();
+        return getRemoteApiControlFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      public com.hello.messeji.api.AudioCommands.RemoteApiControlOrBuilder getRemoteApiControlOrBuilder() {
+        if (remoteApiControlBuilder_ != null) {
+          return remoteApiControlBuilder_.getMessageOrBuilder();
+        } else {
+          return remoteApiControl_;
+        }
+      }
+      /**
+       * <code>optional .RemoteApiControl remote_api_control = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.AudioCommands.RemoteApiControl, com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder, com.hello.messeji.api.AudioCommands.RemoteApiControlOrBuilder> 
+          getRemoteApiControlFieldBuilder() {
+        if (remoteApiControlBuilder_ == null) {
+          remoteApiControlBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.messeji.api.AudioCommands.RemoteApiControl, com.hello.messeji.api.AudioCommands.RemoteApiControl.Builder, com.hello.messeji.api.AudioCommands.RemoteApiControlOrBuilder>(
+                  getRemoteApiControl(),
+                  getParentForChildren(),
+                  isClean());
+          remoteApiControl_ = null;
+        }
+        return remoteApiControlBuilder_;
+      }
+
+      private com.hello.messeji.api.Messeji.LedDemo ledDemo_ = com.hello.messeji.api.Messeji.LedDemo.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.Messeji.LedDemo, com.hello.messeji.api.Messeji.LedDemo.Builder, com.hello.messeji.api.Messeji.LedDemoOrBuilder> ledDemoBuilder_;
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public boolean hasLedDemo() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public com.hello.messeji.api.Messeji.LedDemo getLedDemo() {
+        if (ledDemoBuilder_ == null) {
+          return ledDemo_;
+        } else {
+          return ledDemoBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public Builder setLedDemo(com.hello.messeji.api.Messeji.LedDemo value) {
+        if (ledDemoBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ledDemo_ = value;
+          onChanged();
+        } else {
+          ledDemoBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public Builder setLedDemo(
+          com.hello.messeji.api.Messeji.LedDemo.Builder builderForValue) {
+        if (ledDemoBuilder_ == null) {
+          ledDemo_ = builderForValue.build();
+          onChanged();
+        } else {
+          ledDemoBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public Builder mergeLedDemo(com.hello.messeji.api.Messeji.LedDemo value) {
+        if (ledDemoBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) == 0x00000200) &&
+              ledDemo_ != com.hello.messeji.api.Messeji.LedDemo.getDefaultInstance()) {
+            ledDemo_ =
+              com.hello.messeji.api.Messeji.LedDemo.newBuilder(ledDemo_).mergeFrom(value).buildPartial();
+          } else {
+            ledDemo_ = value;
+          }
+          onChanged();
+        } else {
+          ledDemoBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public Builder clearLedDemo() {
+        if (ledDemoBuilder_ == null) {
+          ledDemo_ = com.hello.messeji.api.Messeji.LedDemo.getDefaultInstance();
+          onChanged();
+        } else {
+          ledDemoBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
+        return this;
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public com.hello.messeji.api.Messeji.LedDemo.Builder getLedDemoBuilder() {
+        bitField0_ |= 0x00000200;
+        onChanged();
+        return getLedDemoFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      public com.hello.messeji.api.Messeji.LedDemoOrBuilder getLedDemoOrBuilder() {
+        if (ledDemoBuilder_ != null) {
+          return ledDemoBuilder_.getMessageOrBuilder();
+        } else {
+          return ledDemo_;
+        }
+      }
+      /**
+       * <code>optional .LedDemo led_demo = 10;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.messeji.api.Messeji.LedDemo, com.hello.messeji.api.Messeji.LedDemo.Builder, com.hello.messeji.api.Messeji.LedDemoOrBuilder> 
+          getLedDemoFieldBuilder() {
+        if (ledDemoBuilder_ == null) {
+          ledDemoBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.messeji.api.Messeji.LedDemo, com.hello.messeji.api.Messeji.LedDemo.Builder, com.hello.messeji.api.Messeji.LedDemoOrBuilder>(
+                  getLedDemo(),
+                  getParentForChildren(),
+                  isClean());
+          ledDemo_ = null;
+        }
+        return ledDemoBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:Message)
@@ -3784,6 +4940,11 @@ public final class Messeji {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ReceiveMessageRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_LedDemo_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_LedDemo_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Message_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -3809,20 +4970,24 @@ public final class Messeji {
     java.lang.String[] descriptorData = {
       "\n\rmesseji.proto\032\024audio_commands.proto\"B\n" +
       "\025ReceiveMessageRequest\022\020\n\010sense_id\030\001 \002(\t" +
-      "\022\027\n\017message_read_id\030\002 \003(\003\"\246\002\n\007Message\022\021\n" +
-      "\tsender_id\030\001 \001(\t\022\r\n\005order\030\002 \002(\003\022\022\n\nmessa" +
-      "ge_id\030\003 \001(\003\022\033\n\004type\030\004 \002(\0162\r.Message.Type" +
-      "\022\036\n\nplay_audio\030\005 \001(\0132\n.PlayAudio\022\036\n\nstop" +
-      "_audio\030\006 \001(\0132\n.StopAudio\022\027\n\006volume\030\007 \001(\013" +
-      "2\007.Volume\022$\n\rvoice_control\030\010 \001(\0132\r.Voice" +
-      "Control\"I\n\004Type\022\016\n\nPLAY_AUDIO\020\000\022\016\n\nSTOP_" +
-      "AUDIO\020\001\022\016\n\nSET_VOLUME\020\002\022\021\n\rVOICE_CONTROL",
-      "\020\003\")\n\014BatchMessage\022\031\n\007message\030\001 \003(\0132\010.Me" +
-      "ssage\"\203\001\n\rMessageStatus\022\022\n\nmessage_id\030\001 " +
-      "\002(\003\022#\n\005state\030\002 \002(\0162\024.MessageStatus.State" +
-      "\"9\n\005State\022\013\n\007PENDING\020\000\022\010\n\004SENT\020\001\022\014\n\010RECE" +
-      "IVED\020\002\022\013\n\007EXPIRED\020\003B\027\n\025com.hello.messeji" +
-      ".api"
+      "\022\027\n\017message_read_id\030\002 \003(\003\"r\n\007LedDemo\022\t\n\001" +
+      "r\030\001 \002(\005\022\t\n\001g\030\002 \002(\005\022\t\n\001b\030\003 \002(\005\022%\n\tanimati" +
+      "on\030\004 \002(\0162\022.LedDemo.Animation\"\037\n\tAnimatio" +
+      "n\022\010\n\004SPIN\020\000\022\010\n\004GLOW\020\001\"\361\002\n\007Message\022\021\n\tsen" +
+      "der_id\030\001 \001(\t\022\r\n\005order\030\002 \002(\003\022\022\n\nmessage_i" +
+      "d\030\003 \001(\003\022\033\n\004type\030\004 \002(\0162\r.Message.Type\022\036\n\n" +
+      "play_audio\030\005 \001(\0132\n.PlayAudio\022\036\n\nstop_aud" +
+      "io\030\006 \001(\0132\n.StopAudio\022\027\n\006volume\030\007 \001(\0132\007.V",
+      "olume\022$\n\rvoice_control\030\010 \001(\0132\r.VoiceCont" +
+      "rol\022-\n\022remote_api_control\030\t \001(\0132\021.Remote" +
+      "ApiControl\022\032\n\010led_demo\030\n \001(\0132\010.LedDemo\"I" +
+      "\n\004Type\022\016\n\nPLAY_AUDIO\020\000\022\016\n\nSTOP_AUDIO\020\001\022\016" +
+      "\n\nSET_VOLUME\020\002\022\021\n\rVOICE_CONTROL\020\003\")\n\014Bat" +
+      "chMessage\022\031\n\007message\030\001 \003(\0132\010.Message\"\203\001\n" +
+      "\rMessageStatus\022\022\n\nmessage_id\030\001 \002(\003\022#\n\005st" +
+      "ate\030\002 \002(\0162\024.MessageStatus.State\"9\n\005State" +
+      "\022\013\n\007PENDING\020\000\022\010\n\004SENT\020\001\022\014\n\010RECEIVED\020\002\022\013\n" +
+      "\007EXPIRED\020\003B\027\n\025com.hello.messeji.api"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3843,20 +5008,26 @@ public final class Messeji {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_ReceiveMessageRequest_descriptor,
         new java.lang.String[] { "SenseId", "MessageReadId", });
-    internal_static_Message_descriptor =
+    internal_static_LedDemo_descriptor =
       getDescriptor().getMessageTypes().get(1);
+    internal_static_LedDemo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_LedDemo_descriptor,
+        new java.lang.String[] { "R", "G", "B", "Animation", });
+    internal_static_Message_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_Message_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_Message_descriptor,
-        new java.lang.String[] { "SenderId", "Order", "MessageId", "Type", "PlayAudio", "StopAudio", "Volume", "VoiceControl", });
+        new java.lang.String[] { "SenderId", "Order", "MessageId", "Type", "PlayAudio", "StopAudio", "Volume", "VoiceControl", "RemoteApiControl", "LedDemo", });
     internal_static_BatchMessage_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_BatchMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_BatchMessage_descriptor,
         new java.lang.String[] { "Message", });
     internal_static_MessageStatus_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_MessageStatus_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_MessageStatus_descriptor,
